@@ -1,0 +1,7 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+
+# Allow esbuild (used by tsup and Vite) to install its native binary.
+onlyBuiltDependencies:
+  - esbuild

@@ -1,0 +1,27 @@
+{
+  "name": "remold",
+  "private": true,
+  "description": "Keeps track of what became what in an interface: headless core plus framework adapters.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.34.6",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish",
+    "clean": "turbo run clean && rm -rf node_modules .turbo"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.1",
+    "tsup": "8.5.1",
+    "turbo": "2.11.7",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  }
+}
