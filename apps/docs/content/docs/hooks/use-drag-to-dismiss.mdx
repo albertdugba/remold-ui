@@ -1,0 +1,62 @@
+---
+title: "useDragToDismiss"
+description: "Let a sheet, card or panel be pulled away: it follows the finger, goes when pulled far or flicked, and otherwise springs back."
+---
+
+## Usage
+
+```tsx
+import { Remold, useDragToDismiss } from "@remold-ui/react";
+
+function CardPage({ card, onClose }) {
+  const drag = useDragToDismiss({ onDismiss: onClose });
+  return <div ref={drag.ref}>{/* the card */}</div>;
+}
+
+// The view swap is a Layout transition, so the card flies home from where the finger let go.
+<Remold.Layout trigger={open}>{open ? <CardPage card={open} onClose={close} /> : <Wallet />}</Remold.Layout>;
+```
+
+- It follows the finger along one axis. Pulling the wrong way stretches with resistance instead of moving freely.
+- Let go past `distance`, or flick faster than `velocity`, and `onDismiss` runs. Otherwise it springs back, starting at the speed of your finger.
+- After a dismiss the offset stays on the element, so the `Layout` transition that follows flies it from exactly there.
+- Taps and clicks inside still work: a press only becomes a drag after a few pixels, and a drag never ends in a click. Text fields and anything marked `data-rm-no-drag` never start one.
+- The page can still scroll along the other axis (it sets `touch-action` for you).
+- With reduced motion it jumps back instead of springing.
+
+## Without React
+
+```ts
+import { dragToDismiss } from "@remold-ui/dom";
+
+const drag = dragToDismiss(sheet, { onDismiss: close, axis: "y" });
+// later
+drag.destroy();
+```
+
+## Options
+
+<TypeTable
+  type={{
+    onDismiss: { type: "() => void", required: true, description: <>{"Called once when it's pulled far enough or flicked."}</> },
+    axis: { type: '"x" | "y"', default: '"y"', description: <>{"The axis it moves along."}</> },
+    direction: { type: "1 | -1", default: "1", description: <>{"Which way dismisses: 1 is down or right, -1 up or left."}</> },
+    distance: { type: "number", default: "110", description: <>{"Pixels past which letting go dismisses."}</> },
+    velocity: { type: "number", default: "700", description: <>{"A flick faster than this, in pixels per second, dismisses once it has moved 24 px."}</> },
+    resistance: { type: "number", default: "200", description: <>{"How far the wrong way can stretch before it stiffens."}</> },
+    spring: { type: "{ duration, bounce }", default: "{ duration: 0.45, bounce: 0.2 }", description: <>{"The spring back."}</> },
+    slop: { type: "number", default: "4", description: <>{"Movement before a press becomes a drag."}</> },
+    onDrag: { type: "(offset: number) => void", description: <>{"Called on every move, for dimming a backdrop as it goes."}</> },
+    disabled: { type: "boolean", default: "false", description: <>{"Turn dragging off."}</> },
+    reducedMotion: { type: '"user" | "always" | "never"', default: '"user"', description: <>{"Follow the system setting, or override it."}</> },
+  }}
+/>
+
+## Returns
+
+<TypeTable
+  type={{
+    ref: { type: "RefCallback<HTMLElement>", description: <>{"Put it on the element that can be dragged away."}</> },
+    reset: { type: "() => void", description: <>{"Put the element back where it started, at once."}</> },
+  }}
+/>

@@ -1,0 +1,41 @@
+---
+title: "Motion values"
+description: "Springs you drive yourself, one number or thousands at once."
+---
+
+## value()
+
+```ts
+import { value, springs } from "@remold-ui/core";
+import { frames } from "@remold-ui/dom";
+
+const x = value(0, { spring: springs.snappy });
+x.to(100);
+
+frames((dt) => {
+  x.step(dt);
+  element.style.translate = `${x.current}px`;
+  return !x.settled;
+});
+```
+
+| Member                                     | What it does                                                           |
+| ------------------------------------------ | ---------------------------------------------------------------------- |
+| `to(target, options?)`                     | Spring towards a target, keeping position and speed.                   |
+| `set(value)`                               | Jump and stop.                                                         |
+| `hold()` / `release(options?)`             | Grab it for a drag, then let go with a velocity.                       |
+| `step(dt)`                                 | Advance by `dt` seconds. Returns true while moving.                    |
+| `current`, `velocity`, `target`, `settled` | Where it is, how fast, where it's heading, and whether it has stopped. |
+
+## values()
+
+The same, for many numbers in flat typed arrays, so a renderer can read thousands of positions each frame without allocating.
+
+```ts
+const dots = values(positions, { stride: 2 }); // [x0, y0, x1, y1, …]
+dots.toAll(next);
+dots.step(dt);
+draw(dots.current);
+```
+
+<Callout>`frames()` comes from `@remold-ui/dom`. In tests or a worker, call `step` yourself.</Callout>

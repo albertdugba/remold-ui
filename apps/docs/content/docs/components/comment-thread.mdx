@@ -1,0 +1,49 @@
+---
+title: "Comment thread"
+description: "Questions and answers on a product page, or comments under an article: typing that grows into the reply, lines that light the path to it, and a summary the whole discussion condenses into."
+tags: ["Connectors", "Layout", "Text"]
+---
+
+<Stage name="comment-thread" code={<Source demo="comment-thread" />}>
+  <CommentThreadDemo />
+</Stage>
+
+The same component in two looks most sites need: **Product Q&A** on a store page, with the shop answering buyers, and **Article** comments under an essay, with the author replying. Switch between them at the top. It plays a short scene by itself while it's on screen; touch it and it's yours, or press **Autoplay** to watch again.
+
+## Things to try
+
+- **Summarize.** The discussion condenses into "What buyers say" (or "Readers are saying"). Each person's avatar flies from their comment into the point they made. Press **Show all** and it opens back out, lines drawing themselves in.
+- **Hover a reply.** The lines from the top down to it darken, and everything off that path fades.
+- **Watch the typing.** "Halden is typing…" is a small bubble that grows into the shop's answer when it's sent.
+- **Answer or reply.** Yours appears at once marked "Sending…", its line drawing in. When the server confirms it, only the label changes.
+- **Vote.** Mark an answer helpful (or like a comment) and the count ticks over.
+- **Hide replies.** The branch folds into a pill with the repliers' faces, and its lines retract.
+- **Sort** by Top or Newest. Whole branches move, lines and all.
+
+## Install
+
+<AddCommand name="comment-thread" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="comment-thread" />
+
+## How it works
+
+- Every avatar is an anchor (`data-rm-anchor`), and a reply's avatar links to its parent's (`data-rm-link`). [Connectors](/docs/primitives/connectors) draws the lines.
+- [Layout](/docs/primitives/layout) moves the comments when the thread's shape changes: a reply added, a branch hidden, the order changed.
+- [Text](/docs/primitives/text) changes "Sending…" to the time and ticks the votes.
+- **Typing becomes the comment.** The typing indicator is a small bubble; the comment is a bigger one. They're different markup, but Remold pairs the two bubbles, so the small one grows into the big one and the words fade in.
+- **Lit lines.** Each avatar on the hovered path carries `data-rm-line="lit"`. Connectors copies it onto the line drawn to that avatar as `data-line`, so CSS can make those lines glow.
+- **The summary** is new markup too. Its chips are small copies of the same avatar images as the thread's, and images are matched by what they show, so each one flies from a comment into the summary.
+
+### Optimistic replies
+
+A reply is shown before the server has it. When the server answers, it usually comes back as new markup with a new id, which in most apps makes the comment flicker or jump. Remold matches elements by what they show, so the reply is recognised as the same one. Keep a client id for the line's anchor, and the line stays put too.
+
+<Callout>
+  The shop, the product, the publication and the people are made up. Avatars are illustrations from [DiceBear](https://www.dicebear.com)
+  (the Notionists style), drawn rather than photographed.
+</Callout>

@@ -1,0 +1,60 @@
+---
+title: "scene()"
+description: "A canvas scene of objects that springs between named layouts. No framework needed."
+---
+
+## Usage
+
+```ts
+import { scene } from "@remold-ui/canvas";
+
+const diagram = scene(canvas, {
+  label: "Our architecture",
+  objects: { api: { look: "chip", label: "API" }, db: { look: "cylinder", label: "Database" } },
+  layouts: {
+    simple: { objects: { api: { x: 0, y: 0, width: 80, depth: 80 }, db: { x: 160, y: 0, width: 80, depth: 80 } } },
+    scaled: { objects: { api: { x: 0, y: -60, width: 80, depth: 80 }, db: { x: 200, y: 40, width: 120, depth: 120 } } },
+  },
+  links: [{ from: "api", to: "db", flow: true }],
+});
+
+diagram.to("scaled");
+```
+
+Objects are drawn with a `look`: `plate`, `chip`, `cylinder`, `tower`, `glass`, `wire`, `portrait`, `atlas` or `grid`, or your own. Positions are floor units, so the same layout fits any canvas size. In React, use [Scene](/docs/primitives/scene).
+
+## Placing objects
+
+`layout` does the arithmetic for common layouts. Each helper returns boxes keyed by id, ready to spread into a layout's `objects`:
+
+```ts
+import { layout, scene } from '@remold-ui/canvas';
+
+layouts: {
+  hub: { objects: { lumen: layout.square(0, 0, 150), ...layout.ring(tiles, { radius: 280, size: 80 }) } },
+  stack: { objects: layout.stack(layers, { size: 300, gap: 22 }) },
+  steps: { objects: layout.row(layers, { gap: 200, size: 150 }) },
+  board: { objects: layout.grid(cards, { columns: 4, gap: 120, size: 90 }) },
+}
+```
+
+| Helper                                      | Puts                                                                             |
+| ------------------------------------------- | -------------------------------------------------------------------------------- |
+| `layout.square(cx, cy, size)`               | One square, centred. `layout.box(x, y, width, depth)` takes the top-left corner. |
+| `layout.ring(ids, { radius, size, start })` | Squares round a circle, the first at the top.                                    |
+| `layout.row(ids, { gap, size, axis })`      | Squares in a line, centred.                                                      |
+| `layout.stack(ids, { gap, size, z })`       | Squares on top of each other, the first at the bottom.                           |
+| `layout.grid(ids, { columns, gap, size })`  | Squares in rows, centred.                                                        |
+
+All take `at: [x, y]` to move the group and `extra` for anything else a box can carry, such as `height`, `opacity` or `label`.
+
+## Methods
+
+| Method                     | Returns            | What it does                                                  |
+| -------------------------- | ------------------ | ------------------------------------------------------------- |
+| `to(layout)`               | `void`             | Spring to another layout.                                     |
+| `focus(id \| null)`        | `void`             | Lift an object and dim the rest, or clear focus.              |
+| `points(points, options?)` | `void`             | Show a cloud of cubes. Calling again morphs to the new cloud. |
+| `anchor(id, port?)`        | `{ x, y } \| null` | Where an object is on the canvas, for placing HTML over it.   |
+| `pick(x, y)`               | `string \| null`   | The object at a canvas point.                                 |
+| `destroy()`                | `void`             | Stop and remove listeners.                                    |

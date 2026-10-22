@@ -1,0 +1,26 @@
+/* The dotted world: a canvas that curls from a map into a globe. */
+.rm-world {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.rm-world-canvas {
+  display: block;
+  width: 100%;
+  height: 280px;
+  /* Horizontal drags spin the globe; vertical ones still scroll the page. */
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.rm-world-canvas:active {
+  cursor: grabbing;
+}
+
+.rm-world-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgb(255 255 255 / 0.7);
+}

@@ -1,0 +1,48 @@
+---
+title: "Course outline"
+description: "Modules and lessons joined by lines that stay attached while modules open, lessons get ticked off and finished work drops away."
+tags: ["Connectors", "Layout", "Text", "Icon"]
+---
+
+<Stage name="course-outline" code={<Source demo="course-outline" />}>
+  <CourseOutlineDemo />
+</Stage>
+
+Every course platform, creator site and onboarding flow has an outline like this. Here the lines from each module to its lessons are redrawn on every frame of the animation, so they bend and stretch with the rows instead of jumping when something opens, closes or drops away.
+
+## Things to try
+
+- **Open and close modules.** The lessons slide out of the way and the lines grow and retract with them.
+- **Tick a lesson off.** The circle becomes a tick, the module's count and the progress bar update, and "Up next" moves on. Finish every lesson in a module and its number fills in.
+- **Show only what's remaining.** Finished lessons leave, their lines drawing back out, and the rest close up. A finished module disappears entirely.
+- **Use the keyboard.** Up and down move through the outline; right opens a module, left closes it or goes up to it.
+
+## Install
+
+<AddCommand name="course-outline" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="course-outline" />
+
+## How it works
+
+Each module's number carries `data-rm-anchor` with the module's id, and each lesson's tick carries `data-rm-link` with its module's id. [Connectors](/docs/primitives/connectors) draws a line from every anchor to everything that links to it. [Layout](/docs/primitives/layout) moves the rows when the visible list changes.
+
+```tsx
+<Remold.Connectors radius={10}>
+  <Remold.Layout trigger={rows.map((r) => r.id).join("|")}>
+    {rows.map((row) =>
+      row.module ? (
+        <Module key={row.id} number={<span data-rm-anchor={row.id}>{row.n}</span>} />
+      ) : (
+        <Lesson key={row.id} tick={<button data-rm-anchor={row.id} data-rm-link={row.parent} />} />
+      ),
+    )}
+  </Remold.Layout>
+</Remold.Connectors>
+```
+
+<Callout>The course and its lessons are made up.</Callout>

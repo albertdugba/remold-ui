@@ -1,0 +1,83 @@
+---
+title: "Particles"
+description: "Morph a word, shape or image into another as dots: each dot is matched to its nearest place in the next one."
+---
+
+<Stage code={<Source demo="particles" />}>
+  <ParticlesDemo />
+</Stage>
+
+Choose **Image** in the demo to see the field jacket photograph become an olive-and-brass halftone, then switch back to text or an SVG shape to watch the dots reform. A dark-pixel mask separates the jacket from its light backdrop. The demo scales its dot count with the preview size, up to 9,000 on wide screens. The photograph is a local demo asset, not part of the package.
+
+## Installation
+
+<Install packages="@remold-ui/react" vanilla="@remold-ui/canvas" />
+
+## Usage
+
+Give `Remold.Particles` a shape, and change it to morph. Each dot heads for its nearest place in the new shape; spare dots shrink away and new ones grow in. Dots near the pointer lean away.
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+import { Remold } from '@remold-ui/react';
+
+<Remold.Particles shape="Just landed" className="h-64 w-full" />
+<Remold.Particles shape={{ path: HEART }} />
+<Remold.Particles shape={{ image: '/logo.png', by: 'dark' }} />
+<Remold.Particles
+  shape={{
+    image: '/returns-field-jacket.jpg',
+    by: 'dark',
+    threshold: 100,
+    pattern: 'grid',
+    jitter: 0,
+  }}
+  count={9000}
+  palette={['#23251b', '#484d37', '#707456', '#8a8060', '#aa946e']}
+/>
+<Remold.Particles shape={{ image: '/flower.png' }} palette={['#2563eb', '#8d9bf8', '#eee4bd']} />
+<Remold.Particles shape={{ points: myPoints }} />
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+import { particles, sampleImagePoints, sampleTextPoints } from "@remold-ui/canvas";
+import { samplePath } from "@remold-ui/core";
+
+const palette = ["#2563eb", "#8d9bf8", "#eee4bd"];
+const dots = particles(canvas, { points: sampleTextPoints("Just landed", { count: 1200 }), palette });
+
+// Each call flows the dots into the next shape.
+dots.to(samplePath(HEART, { count: 1200 }));
+dots.to(sampleImagePoints(logo, { count: 1200, by: "dark" })); // once the image has loaded
+dots.to(sampleImagePoints(flower, { count: 7000, palette })); // keep colour detail from the image
+dots.to(myPoints);
+```
+
+</Variant>
+</CodeVariants>
+
+| `shape`                                              | Dots fill                                                                                                                                                               |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"words"` or `{ text, font }`                        | Text in a CSS font. Load web fonts first.                                                                                                                               |
+| `{ path, fillRule, mode }`                           | An SVG path's inside, or its outline with `mode: "outline"`.                                                                                                            |
+| `{ image, by, threshold, pattern, jitter, details }` | An image's opaque, `dark`, `light`, or saturated pixels. Use `pattern: "grid"` and `jitter: 0` for regular halftone dots; `details` adds small features the mask omits. |
+| `{ points }`                                         | Your own points. A new array is a new shape.                                                                                                                            |
+
+`count` sets how many dots (default 1200). Keep it the same for every shape and no dots need to arrive or leave: each one just travels. `pairing="index"` sends the first point to the first point, and so on, for shapes from the same generator (equaliser bars, a waveform).
+
+Image `details` use normalized source-image coordinates from `0` to `1` and count toward `count`. A `tone` of `1` uses the last color in the palette, useful for eye reflections or other tiny highlights.
+
+<Callout>Shapes are sampled in the browser. On the server the canvas renders empty and fills in on load.</Callout>
+
+## Without React
+
+`particles(canvas, options)` from `@remold-ui/canvas` does the same: call `to(points)` with each new shape, with points from `sampleTextPoints`, `samplePath` (in core), `sampleImagePoints` or `sampleMask`.
+
+## API reference
+
+See [particles()](/docs/canvas/particles) for every option. The React part takes the same ones as props, plus `shape`, `count` and `label`.

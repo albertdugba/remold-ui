@@ -1,0 +1,57 @@
+---
+title: "Quick start"
+description: "Animate a list that sorts and filters, in a few lines."
+---
+
+## Wrap the part that changes
+
+Put `Remold.Layout` around the content and give it a `trigger`: any value that changes when the content does. Render your content as you normally would.
+
+```tsx
+import { Remold } from "@remold-ui/react";
+
+function Files({ files, sort, kind }) {
+  return (
+    <Remold.Layout trigger={`${sort}:${kind}`}>
+      {files.map((file) => (
+        <Row key={file.name} file={file} />
+      ))}
+    </Remold.Layout>
+  );
+}
+```
+
+<Stage>
+  <FilesDemo />
+</Stage>
+
+React's `key` is still there for React's own reasons. Remold doesn't read it: it would animate the same if the rows were rebuilt from scratch.
+
+## Animate from an event handler
+
+When there's no single value to watch, use `useRemold` and wrap the state change.
+
+```tsx
+const { ref, animate } = useRemold();
+
+<ul ref={ref}>{items.map(renderItem)}</ul>
+<button onClick={() => animate(() => setItems(shuffle(items)))}>Shuffle</button>
+```
+
+## Change text in place
+
+```tsx
+<Remold.Text>{status}</Remold.Text>
+```
+
+<Stage>
+  <StatusDemo />
+</Stage>
+
+Letters the old and new text share stay and slide into place; the rest fade in and out. See [Text](/docs/primitives/text).
+
+## Next steps
+
+- [How matching works](/docs/concepts/matching), and how to steer it.
+- [Springs](/docs/concepts/springs): choosing how things move.
+- [Accessibility](/docs/concepts/accessibility): reduced motion, announcements and focus.

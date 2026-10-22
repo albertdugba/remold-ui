@@ -1,0 +1,39 @@
+---
+title: "Canvas gallery"
+description: "A globe that unrolls into a map, cubes that rebuild into new shapes, and a screen that comes apart into its layers."
+kind: canvas
+tags: ["canvas", "springs"]
+---
+
+<Stage name="gallery" code={<Source demo="gallery" />} wide>
+  <GalleryDemo />
+</Stage>
+
+The same springs and the same idea of "what becomes what" work for any picture you draw on a canvas.
+
+## Things to try
+
+- **Globe:** fling it to spin, then press Flat map. About 2,000 dots unroll to their own spots on the map, and the routes bend with them.
+- **Voxels:** press through the shapes. Each cube flies to the nearest free spot, spare ones shrink away, and the stack builds from the bottom. Sweep your pointer across to push cubes up.
+- **Layers:** press Exploded and point at a layer to lift it out and see what it is.
+
+## Install
+
+<AddCommand name="gallery" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="gallery" />
+
+## How it works
+
+Every moving number here (a cube's position, a layer's lift, the globe's turn) is its own spring from `@remold-ui/core`, stepped every frame. A state is just a new set of targets, so switching mid-flight carries on from wherever things are, at the speed they were going. Flicks are measured with `velocityTracker` and projected to where they would coast.
+
+```ts
+import { value } from "@remold-ui/core";
+
+const turn = value(0, { spring: { duration: 0.8, bounce: 0.18 } });
+canvas.onpointerup = (e) => turn.to(turn.current + flick(e));
+```

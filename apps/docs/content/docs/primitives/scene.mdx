@@ -1,0 +1,114 @@
+---
+title: "Scene"
+description: "A canvas scene of objects that springs between layouts."
+---
+
+<Stage code={<Source demo="scene" />}>
+  <SceneDemo />
+</Stage>
+
+## Installation
+
+<Install packages="@remold-ui/react" vanilla="@remold-ui/canvas" />
+
+## Usage
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+<Remold.Scene label="Our architecture" objects={objects} layouts={layouts} layout={layout} />
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+import { scene } from "@remold-ui/canvas";
+
+const diagram = scene(canvas, { label: "Our architecture", objects, layouts });
+
+// Spring every object, link and the camera to another layout.
+diagram.to("scaled");
+```
+
+</Variant>
+</CodeVariants>
+
+Describe the objects once and each layout as plain data: where every object sits, and the camera. Changing `layout` springs every object, link and the camera to the new arrangement. People can drag to turn the scene, tap an object to focus it, or tab through the objects with a screen reader. Without React, use [scene()](/docs/canvas/scene).
+
+## API reference
+
+<TypeTable
+  type={{
+    objects: { type: "Record<string, SceneObject>", required: true, description: <>{"Every object: its look, label and description."}</> },
+    layouts: {
+      type: "Record<string, SceneLayout>",
+      required: true,
+      description: <>{"Named arrangements: where each object sits, and the camera."}</>,
+    },
+    links: { type: "SceneLink[]", description: <>{"Lines between objects, optionally with flowing dots."}</> },
+    layout: { type: "string", description: <>{"The layout to show (controlled)."}</> },
+    defaultLayout: { type: "string", default: "first layout", description: <>{"The first layout when not controlled."}</> },
+    focused: { type: "string | null", description: <>{"The focused object (controlled)."}</> },
+    defaultFocused: { type: "string | null", description: <>{"The first focused object when not controlled."}</> },
+    onFocusedChange: { type: "(id: string | null) => void", description: <>{"Called when the user focuses an object or clears focus."}</> },
+    label: { type: "string", description: <>{"The canvas's accessible name."}</> },
+    palette: { type: "PaletteName | Palette", description: <>{"Colours for every object."}</> },
+    interact: { type: "{ hover, tap, drag, keyboard }", default: "all true", description: <>{"Which interactions are on."}</> },
+    spring: {
+      type: "{ duration, bounce }",
+      default: "{ duration: 0.8, bounce: 0.18 }",
+      description: (
+        <>
+          {"How it moves. See "}
+          <a href="/docs/concepts/springs">{"Springs"}</a>
+          {"."}
+        </>
+      ),
+    },
+    actionsRef: {
+      type: "RefObject<Actions>",
+      description: (
+        <>
+          {"Extra controls: "}
+          <code>{"points"}</code>
+          {", "}
+          <code>{"pick"}</code>
+          {", "}
+          <code>{"anchor"}</code>
+          {", "}
+          <code>{"box"}</code>
+          {" and "}
+          <code>{"redraw"}</code>
+          {"."}
+        </>
+      ),
+    },
+    reducedMotion: {
+      type: '"user" | "always" | "never"',
+      default: '"user"',
+      description: (
+        <>
+          {"Follow the system setting, or override it. See "}
+          <a href="/docs/concepts/accessibility">{"Accessibility"}</a>
+          {"."}
+        </>
+      ),
+    },
+    loop: {
+      type: "FrameLoop",
+      default: "shared loop",
+      description: <>{"The frame loop to run on. Pass your own to slow down or test."}</>,
+    },
+    className: { type: "string | ((state) => string)", description: <>{"A class name, or a function of the state."}</> },
+    render: { type: "ReactElement | ((props, state) => ReactElement)", description: <>{"Replace the default element."}</> },
+  }}
+/>
+
+### Data attributes
+
+| Attribute         | Meaning                     |
+| ----------------- | --------------------------- |
+| `data-rm-layout`  | The layout on screen.       |
+| `data-rm-focused` | The focused object, if any. |

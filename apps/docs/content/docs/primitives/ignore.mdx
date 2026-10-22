@@ -1,0 +1,47 @@
+---
+title: "Ignore"
+description: "Leaves its contents out of transitions."
+---
+
+## Installation
+
+<Install packages="@remold-ui/react" vanilla="@remold-ui/dom" />
+
+## Usage
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+<Remold.Layout trigger={view}>
+  <Remold.Ignore>
+    <LiveChart />
+  </Remold.Ignore>
+</Remold.Layout>
+```
+
+</Variant>
+<Variant framework="js">
+
+```html
+<!-- Anything inside data-rm-ignore is left out of matching and animation. -->
+<section id="dashboard">
+  <div data-rm-ignore>
+    <canvas id="live-chart"></canvas>
+  </div>
+</section>
+```
+
+</Variant>
+</CodeVariants>
+
+Anything inside is left out of transitions: it isn't measured, paired or moved. Use it for videos, live charts and anything that animates by itself. It renders a `span` with `data-rm-ignore`; you can put that attribute on any element instead.
+
+## API reference
+
+<TypeTable
+  type={{
+    className: { type: "string | ((state) => string)", description: <>{"A class name, or a function of the state."}</> },
+    render: { type: "ReactElement | ((props, state) => ReactElement)", description: <>{"Replace the default element."}</> },
+  }}
+/>

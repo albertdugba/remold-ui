@@ -1,0 +1,43 @@
+---
+title: "Product anatomy"
+description: "Your product drawn as the layers it's made of: assembled, exploded with a note beside each layer, or laid out in the order a request passes through."
+kind: canvas
+tags: ["Scene"]
+---
+
+<Stage name="product-anatomy" code={<Source demo="product-anatomy" />} wide>
+  <ProductAnatomyDemo />
+</Stage>
+
+It walks through the three views by itself while it's on screen. Pick a view or tap a layer and it's yours.
+
+## Things to try
+
+- **Exploded.** The block pulls apart into its layers, and a note fades in beside each one, joined to it by a dashed line.
+- **Request.** The same layers lie down in a row, in the order a request passes through them, with data flowing from one to the next.
+- **Tap a layer** in any view. It lifts, the others dim, and the line underneath says what it does.
+- **Drag sideways** to turn it and see the stack from the other side.
+
+## Install
+
+<AddCommand name="product-anatomy" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="product-anatomy" />
+
+## Make it yours
+
+- **Your layers** are the `LAYERS` list, bottom to top: a name, a short note for the exploded view, one line about it and an outline icon. Three to six layers read best.
+- **Not software?** The same scene draws a device (case, battery, board, screen), a building (floors) or a plan (tiers). Change the slab's `shape` in `extrude()` to any outline: a phone, a circle, your logo.
+- **Your views** are the layouts. Add one, give each layer a box in it, and it becomes a tab.
+
+## How it works
+
+- The three views are three layouts of the same five slabs and five notes. [Scene](/docs/primitives/scene) springs each slab's position, size and height between them, and the camera's zoom with them.
+- Notes use the `caption` look: text that always faces the screen. They're in every layout, but only visible in Exploded, so they fade in place instead of flying in.
+- Lines belong to layouts: the dashed note lines to Exploded, the flowing request lines to Request.
+
+<Callout>Lumen and its layers are made up, with icons drawn for this demo.</Callout>

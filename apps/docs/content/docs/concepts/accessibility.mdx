@@ -1,0 +1,30 @@
+---
+title: "Accessibility"
+description: "What Remold does for people using reduced motion, screen readers and keyboards."
+---
+
+## Reduced motion
+
+By default every part follows the system's reduced-motion setting: changes happen at once, with no movement. Override it with `reducedMotion`.
+
+| Value      | Behaviour                                                    |
+| ---------- | ------------------------------------------------------------ |
+| `"user"`   | Follow the system setting. The default.                      |
+| `"always"` | Never animate movement, for example behind your own setting. |
+| `"never"`  | Always animate. Use sparingly.                               |
+
+## Announcements
+
+Pass `announce` to have a short summary of each change read to screen-reader users, such as "2 moved, 1 added", or a function that writes your own message.
+
+```tsx
+<Remold.Layout trigger={sort} announce={(s) => `Sorted. ${s.moved} files moved.`}>
+```
+
+## Focus
+
+If the focused element is replaced by its new version, focus moves to the new one, so keyboard users don't lose their place. Text morphs keep the real text available to screen readers while the letters move.
+
+## Canvas
+
+Scenes and particles take a `label`, which becomes the canvas's accessible name. Scenes also describe their objects and can be explored with the keyboard.

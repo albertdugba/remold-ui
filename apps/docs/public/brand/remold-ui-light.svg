@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" width="320" height="80" role="img" aria-label="remold/ui">
+  <path transform="translate(-1 0) scale(1.25)" d="M7 23.5V8.5A1.5 1.5 0 0 1 8.5 7H14A11 11 0 0 1 25 18H18A4 4 0 0 0 14 14V23.5A1.5 1.5 0 0 1 12.5 25H8.5A1.5 1.5 0 0 1 7 23.5Z" fill="#18181b"/>
+  <text x="38" y="27.5" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, system-ui, sans-serif" font-size="22" font-weight="600" letter-spacing="-0.5" fill="#18181b">remold<tspan fill="#a1a1aa" font-weight="500">/ui</tspan></text>
+</svg>

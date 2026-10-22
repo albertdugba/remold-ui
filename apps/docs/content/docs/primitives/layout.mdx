@@ -1,0 +1,199 @@
+---
+title: "Layout"
+description: "Animates everything inside it whenever its trigger changes."
+---
+
+<Stage code={<Source demo="files" />}>
+  <FilesDemo />
+</Stage>
+
+## Installation
+
+<Install packages="@remold-ui/react" vanilla="@remold-ui/dom" />
+
+## Usage
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+import { Remold } from "@remold-ui/react";
+
+<Remold.Layout trigger={view}>{/* anything that changes when `view` does */}</Remold.Layout>;
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+import { transition } from "@remold-ui/dom";
+
+const root = document.querySelector("#files");
+
+// Wrap any change to the page. Remold reads it before and after, and animates the difference.
+transition(root, () => {
+  root.innerHTML = renderFiles(files, view);
+});
+```
+
+</Variant>
+</CodeVariants>
+
+`trigger` is any value that changes when the content does: a view, a sort order, a route. Layout reads the page during the render in which it changes and animates after React commits, so it works with any state library. It renders a `div`.
+
+When more than one thing can change, pass them as a list. It's compared item by item, like an effect's dependencies, so a new array with the same items doesn't animate:
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+<Remold.Layout trigger={[view, sort, filter]}>
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+// No trigger needed: wrap each change, whatever caused it.
+for (const control of [viewToggle, sortSelect, filterInput]) {
+  control.addEventListener("change", () => {
+    transition(root, () => renderPeople(root, { view, sort, filter }));
+  });
+}
+```
+
+</Variant>
+</CodeVariants>
+
+## Examples
+
+### Different markup for each view
+
+The grid and the list below are rendered by different elements. Remold pairs each person by what they show, not by where they sit in the tree.
+
+<Stage code={<Source demo="layout" />}>
+  <LayoutDemo />
+</Stage>
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+<Remold.Layout trigger={view}>{view === "Grid" ? <PeopleGrid people={people} /> : <PeopleList people={people} />}</Remold.Layout>
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+transition(root, () => {
+  // Different markup each time; people are matched by what they show.
+  root.innerHTML = view === "Grid" ? peopleGrid(people) : peopleList(people);
+});
+```
+
+</Variant>
+</CodeVariants>
+
+### Announcing changes
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+<Remold.Layout trigger={sort} announce={(s) => `Sorted. ${s.moved} files moved.`}>
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+transition(list, () => renderFiles(list, files, sort), {
+  announce: (summary) => `Sorted. ${summary.moved} files moved.`,
+});
+```
+
+</Variant>
+</CodeVariants>
+
+## API reference
+
+<TypeTable
+  type={{
+    trigger: {
+      type: "unknown",
+      required: true,
+      description: <>{"Animate whenever this changes (compared with Object.is): a view, a sort order, a route."}</>,
+    },
+    disabled: { type: "boolean", default: "false", description: <>{"Leave changes unanimated."}</> },
+    onTransition: {
+      type: "(transition) => void",
+      description: (
+        <>
+          {"Called as each transition starts. Await "}
+          <code>{"ready"}</code>
+          {" or "}
+          <code>{"finished"}</code>
+          {", or call "}
+          <code>{"skip()"}</code>
+          {"."}
+        </>
+      ),
+    },
+    spring: {
+      type: "{ duration, bounce }",
+      default: "springs.smooth",
+      description: (
+        <>
+          {"How it moves. See "}
+          <a href="/docs/concepts/springs">{"Springs"}</a>
+          {"."}
+        </>
+      ),
+    },
+    match: {
+      type: "MatchNodesOptions",
+      description: (
+        <>
+          {"Steer the matcher. See "}
+          <a href="/docs/concepts/matching">{"How matching works"}</a>
+          {"."}
+        </>
+      ),
+    },
+    lift: {
+      type: "boolean",
+      default: "true",
+      description: <>{"Raise elements above their neighbours while they travel, farthest on top, so a card flying across the layout never slides under what it passes. Put back when they land."}</>,
+    },
+    announce: {
+      type: "boolean | ((summary) => string)",
+      default: "false",
+      description: <>{"Read a summary of each change to screen-reader users."}</>,
+    },
+    reducedMotion: {
+      type: '"user" | "always" | "never"',
+      default: '"user"',
+      description: (
+        <>
+          {"Follow the system setting, or override it. See "}
+          <a href="/docs/concepts/accessibility">{"Accessibility"}</a>
+          {"."}
+        </>
+      ),
+    },
+    loop: {
+      type: "FrameLoop",
+      default: "shared loop",
+      description: <>{"The frame loop to run on. Pass your own to slow down or test."}</>,
+    },
+    className: { type: "string | ((state) => string)", description: <>{"A class name, or a function of the state."}</> },
+    render: { type: "ReactElement | ((props, state) => ReactElement)", description: <>{"Replace the default element."}</> },
+  }}
+/>
+
+### Data attributes
+
+| Attribute           | Meaning                                |
+| ------------------- | -------------------------------------- |
+| `data-rm-animating` | Present while a transition is running. |

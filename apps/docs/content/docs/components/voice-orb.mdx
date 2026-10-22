@@ -1,0 +1,51 @@
+---
+title: "Voice orb"
+description: "A living voice and agent orb on a canvas. The sphere isn't a circle — its edge undulates with the voice, light swirls inside it, and a soft glow breathes. Drive it with a level prop from your own audio, or let it read the microphone."
+kind: canvas
+status: "new"
+tags: ["value", "Icon", "canvas", "audio"]
+---
+
+<Stage name="voice-orb" code={<Source demo="voice-orb" />}>
+  <VoiceOrbDemo />
+</Stage>
+
+It cycles through the states on its own; tap a state, or turn on the mic and talk to it.
+
+## Things to try
+
+- **Speak to it.** Press **Use mic** and allow access. The orb's edge ripples to your voice — louder speech pushes the surface out further and brightens the glow, then it eases back. (No audio is recorded; it only reads the level.)
+- **Switch states.** Idle breathes; Listening opens up with soft intake rings; Thinking swirls faster with a comet circling it; Speaking undulates with the voice. Each one springs from wherever it is.
+- **Watch the centre.** The icon is a `Remold.Icon` — three strokes that morph straight into the next state's three strokes.
+
+## Two ways to drive it
+
+```tsx
+// 1. Prop-driven — feed a 0–1 level from your own audio or agent:
+<VoiceOrb state="speaking" level={amplitude} />
+
+// 2. Microphone — opt in and it reads the mic itself:
+<VoiceOrb state="listening" mic />
+```
+
+With neither, it simulates a believable voice while speaking or listening, so it looks alive out of the box. `state` is `idle | listening | thinking | speaking`; `size` sets the square size; `onMicError` fires if permission is refused.
+
+## Install
+
+<AddCommand name="voice-orb" />
+
+## Dependencies
+
+<Dependencies demo="voice-orb" />
+
+## How it works
+
+- The sphere's outline is a **blob**, not a circle: a ring of points perturbed by a few rotating harmonics and drawn as a smooth closed curve. The voice level scales how far the edge deforms, so it looks like a soft, living membrane.
+- The incoming level — from the mic's analyser, your `level` prop, or the simulation — is smoothed with a **fast attack and slow release**, so the orb leaps to a sound and settles back rather than flickering.
+- Every quantity (radius, glow, swirl speed, wobble, the rings and the comet, and both colours) is a core [`value`](/docs/core/motion) spring, so a state is just a new set of targets and the orb flows between them, mid-change or not.
+- Inside the clipped blob: a base gradient, two or three drifting light blobs that brighten with the voice, and a specular highlight that wanders a little — all on the GPU-cheap path, with the glow drawn as a radial gradient (no per-frame blur).
+- Reduced motion holds it still and calm.
+
+<Callout>
+  The microphone is read only for its loudness; nothing is recorded or sent anywhere. The simulated voice is made up.
+</Callout>

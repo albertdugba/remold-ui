@@ -1,0 +1,131 @@
+/* Feedback face: each part of the face morphs on its own, and its colour follows with a transition. */
+.ff {
+  --ff-ink: #2a1a0c;
+  --ff-face: #ffd23f;
+  --ff-extra: #ff8a8a;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 8px 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  text-align: center;
+}
+
+.ff[data-rating="1"] {
+  --ff-face: #ff7a5c;
+  --ff-extra: transparent;
+}
+
+.ff[data-rating="2"] {
+  --ff-face: #ffae4f;
+  --ff-extra: #60a5fa;
+}
+
+.ff[data-rating="3"] {
+  --ff-face: #ffcf4a;
+  --ff-extra: transparent;
+}
+
+.ff[data-rating="5"] {
+  --ff-face: #ffc93d;
+  --ff-extra: #ff7096;
+}
+
+.ff[data-rating="5"] .ff-eyes {
+  fill: #f43f5e;
+}
+
+.ff[data-rating="5"] .ff-mouth {
+  fill: #7a1f2b;
+}
+
+.ff-art {
+  width: 168px;
+  height: 168px;
+}
+
+/* Each part is its own svg; the path inside inherits these colours. */
+.ff-art > svg {
+  transition:
+    fill 0.45s ease,
+    stroke 0.45s ease;
+}
+
+.ff-face {
+  fill: var(--ff-face);
+}
+
+.ff-extra {
+  fill: var(--ff-extra);
+}
+
+.ff-brows {
+  stroke: var(--ff-ink);
+}
+
+.ff-eyes,
+.ff-mouth {
+  fill: var(--ff-ink);
+}
+
+.ff-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.ff-question {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-fd-muted-foreground, #71717a);
+}
+
+.ff-label {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-fd-foreground, #18181b);
+}
+
+.ff-scale {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--color-fd-muted, #f4f4f5);
+}
+
+.ff-scale button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-fd-muted-foreground, #71717a);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.ff-scale button:hover {
+  color: var(--color-fd-foreground, #18181b);
+}
+
+.ff-scale button[aria-checked="true"] {
+  background: var(--color-fd-background, #fff);
+  color: var(--color-fd-foreground, #18181b);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.ff-scale button:focus-visible {
+  outline: 2px solid var(--color-fd-ring, #2563eb);
+  outline-offset: 2px;
+}
+
+.ff-ask {
+  font-size: 14px;
+  color: var(--color-fd-muted-foreground, #71717a);
+}

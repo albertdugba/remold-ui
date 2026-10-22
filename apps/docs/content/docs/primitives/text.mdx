@@ -1,0 +1,89 @@
+---
+title: "Text"
+description: "Text that changes letter by letter: shared letters slide, the rest fade."
+---
+
+<Stage code={<Source demo="text" />}>
+  <PriceDemo />
+</Stage>
+
+## Installation
+
+<Install packages="@remold-ui/react" vanilla="@remold-ui/dom" />
+
+## Usage
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+<Remold.Text>{status}</Remold.Text>
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+import { morphText } from "@remold-ui/dom";
+
+const status = document.querySelector("#status");
+
+// Only the letters that differ move; the rest slide into place.
+morphText(status, "Saving…");
+```
+
+</Variant>
+</CodeVariants>
+
+Letters the old and new text share stay on screen and slide into place; the rest fade out and in. It renders a `span`, and screen readers get the whole new text at once.
+
+## Examples
+
+### Status line
+
+<Stage code={<Source demo="text" />}>
+  <StatusDemo />
+</Stage>
+
+## API reference
+
+<TypeTable
+  type={{
+    children: { type: "string", required: true, description: <>{"The text."}</> },
+    spring: {
+      type: "{ duration, bounce }",
+      default: "springs.snappy",
+      description: (
+        <>
+          {"How it moves. See "}
+          <a href="/docs/concepts/springs">{"Springs"}</a>
+          {"."}
+        </>
+      ),
+    },
+    reducedMotion: {
+      type: '"user" | "always" | "never"',
+      default: '"user"',
+      description: (
+        <>
+          {"Follow the system setting, or override it. See "}
+          <a href="/docs/concepts/accessibility">{"Accessibility"}</a>
+          {"."}
+        </>
+      ),
+    },
+    loop: {
+      type: "FrameLoop",
+      default: "shared loop",
+      description: <>{"The frame loop to run on. Pass your own to slow down or test."}</>,
+    },
+    className: { type: "string | ((state) => string)", description: <>{"A class name, or a function of the state."}</> },
+    render: { type: "ReactElement | ((props, state) => ReactElement)", description: <>{"Replace the default element."}</> },
+  }}
+/>
+
+### Data attributes
+
+| Attribute           | Meaning                           |
+| ------------------- | --------------------------------- |
+| `data-rm-animating` | Present while letters are moving. |

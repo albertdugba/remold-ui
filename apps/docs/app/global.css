@@ -1,0 +1,802 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* `dark:` follows the site's theme switch (the `dark` class), as in shadcn projects. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Remold docs theme: quiet and crafted. Refined neutrals with hairline borders, the system font
+ * (SF on Apple devices) with a tight large title, and one consistent look for code, demos, tabs,
+ * tables and the sidebar. Everything here sits on top of Fumadocs through its colour variables and
+ * a few targeted rules, so Fumadocs updates keep working.
+ */
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, monospace;
+}
+
+:root {
+  --color-fd-background: #ffffff;
+  --color-fd-foreground: #0a0a0a;
+  --color-fd-muted: #f4f4f5;
+  --color-fd-muted-foreground: #71717a;
+  --color-fd-popover: #ffffff;
+  --color-fd-popover-foreground: #18181b;
+  --color-fd-card: #fafafa;
+  --color-fd-card-foreground: #0a0a0a;
+  --color-fd-border: #ebebed;
+  --color-fd-primary: #0a0a0a;
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-secondary: #f4f4f5;
+  --color-fd-secondary-foreground: #18181b;
+  --color-fd-accent: rgb(0 0 0 / 0.045);
+  --color-fd-accent-foreground: #0a0a0a;
+  --color-fd-ring: #a1a1aa;
+  --rm-label-halo: #ffffff;
+}
+
+.dark {
+  --color-fd-background: #0a0a0b;
+  --color-fd-foreground: #ededed;
+  --color-fd-muted: #161618;
+  --color-fd-muted-foreground: #a1a1aa;
+  --color-fd-popover: #121214;
+  --color-fd-popover-foreground: #e4e4e7;
+  --color-fd-card: #0f0f11;
+  --color-fd-card-foreground: #ededed;
+  --color-fd-border: rgb(255 255 255 / 0.08);
+  --color-fd-primary: #fafafa;
+  --color-fd-primary-foreground: #0a0a0b;
+  --color-fd-secondary: #18181b;
+  --color-fd-secondary-foreground: #e4e4e7;
+  --color-fd-accent: rgb(255 255 255 / 0.06);
+  --color-fd-accent-foreground: #fafafa;
+  --color-fd-ring: #52525b;
+  --rm-label-halo: #0a0a0b;
+}
+
+/* The sidebar's own darker tint from the neutral preset is replaced by the page's colours. */
+.dark #nd-sidebar {
+  --color-fd-muted: #161618;
+  --color-fd-secondary: #18181b;
+  --color-fd-muted-foreground: #a1a1aa;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Sidebar: same colour as the page, lighter items, a quiet current page */
+#nd-sidebar {
+  background: var(--color-fd-background);
+  border-color: var(--color-fd-border);
+}
+
+#nd-sidebar a {
+  padding: 4.5px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  color: var(--color-fd-muted-foreground);
+  transition:
+    color 0.15s,
+    background-color 0.15s;
+}
+
+#nd-sidebar a:hover {
+  background: var(--color-fd-accent);
+  color: var(--color-fd-foreground);
+}
+
+#nd-sidebar a[data-active="true"] {
+  background: var(--color-fd-accent);
+  color: var(--color-fd-foreground);
+  font-weight: 500;
+}
+
+/* Section titles: the main sections carry an icon and read a little stronger; the groups inside
+   a section (Interface, Canvas) are small capitals, set in line with the items. */
+#nd-sidebar p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  margin-bottom: 6px;
+  padding-inline: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-fd-foreground);
+}
+
+#nd-sidebar p svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.25;
+  color: var(--color-fd-foreground);
+}
+
+#nd-sidebar p:not(:has(svg)) {
+  margin-top: 14px;
+  margin-bottom: 2px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-fd-muted-foreground) 80%, transparent);
+}
+
+#nd-sidebar p:first-child {
+  margin-top: 0;
+}
+
+/* A page's status from its frontmatter ("new"), next to its name. */
+.rm-badge {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in oklab, #6366f1 12%, transparent);
+  color: #4f46e5;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 16px;
+}
+
+.dark .rm-badge {
+  color: #a5b4fc;
+  background: color-mix(in oklab, #6366f1 22%, transparent);
+}
+
+/* The page: a large, tight title and comfortable reading text */
+#nd-page {
+  gap: 14px;
+}
+
+#nd-page h1 {
+  font-size: clamp(1.9rem, 3.4vw, 2.35rem);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+#nd-page h1 + p {
+  max-width: 62ch;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--color-fd-muted-foreground);
+}
+
+#nd-page .prose {
+  font-size: 15px;
+  line-height: 1.75;
+  color: color-mix(in srgb, var(--color-fd-foreground) 86%, transparent);
+}
+
+/*
+ * Demos start from plain page text instead of the article's softened prose. Zero specificity
+ * (:where), so any colour or size a demo sets on itself still wins.
+ */
+:where(#nd-page .prose .not-prose) {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-fd-foreground);
+}
+
+/* Not inside demos (.not-prose): they choose their own colours. */
+#nd-page .prose :is(h2, h3, h4, strong):not(.not-prose *) {
+  color: var(--color-fd-foreground);
+}
+
+#nd-page .prose h2 {
+  margin-top: 2.6em;
+  font-size: 1.375rem;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+}
+
+#nd-page .prose h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+#nd-page .prose a:not(.not-prose a) {
+  text-decoration-color: color-mix(in srgb, var(--color-fd-foreground) 25%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s;
+}
+
+#nd-page .prose a:not(.not-prose a):hover {
+  text-decoration-color: var(--color-fd-foreground);
+}
+
+/* Inline code: small, quiet, no border */
+#nd-page .prose :not(pre) > code {
+  padding: 0.14em 0.4em;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-fd-muted);
+  font-size: 0.84em;
+  font-weight: 500;
+  color: var(--color-fd-foreground);
+}
+
+/* Code blocks: hairline frame, card background, comfortable lines */
+#nd-page figure.shiki {
+  border: 1px solid var(--color-fd-border);
+  border-radius: 12px;
+  background: var(--color-fd-card);
+  box-shadow: none;
+}
+
+#nd-page figure.shiki pre,
+.rm-bare-code pre {
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* A highlighted block inside a frame of our own (install tabs, comparisons): no second frame */
+figure.rm-bare-code {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Tabs (Preview / Code and others): a small segmented switch instead of underlined tabs */
+#nd-page .prose div:has(> [role="tablist"]):not(.rm-pm-bar, .rm-stage *) {
+  border-color: var(--color-fd-border);
+  background: var(--color-fd-background);
+}
+
+#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) {
+  gap: 2px;
+  margin: 8px 8px 0;
+  padding: 3px;
+  width: fit-content;
+  border-radius: 9px;
+  background: var(--color-fd-muted);
+}
+
+#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) [role="tab"] {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--color-fd-muted-foreground);
+}
+
+#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) [role="tab"][data-state="active"],
+#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) [role="tab"][aria-selected="true"] {
+  background: var(--color-fd-background);
+  color: var(--color-fd-foreground);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) [role="tab"]::after {
+  display: none;
+}
+
+/* The preview panel: a faint dot grid instead of a grey box */
+#nd-page .prose div:has(> [role="tablist"]):not(.rm-stage *) > [role="tabpanel"] {
+  background-color: var(--color-fd-background);
+  background-image: radial-gradient(color-mix(in srgb, var(--color-fd-foreground) 9%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* The demo stage: plain, so the demo has all the room and nothing competes with it. */
+.rm-stage-preview {
+  background-color: var(--color-fd-background);
+}
+
+/* A demo sits straight in the stage: its own outer card (border, shadow, corners, fill) goes, so
+   there's one frame, not a card in a card. Dark pieces and media players keep theirs
+   (`.dark-stage`, or `data-keep-frame` on the demo's root). */
+.rm-stage-demo > :not(.dark-stage, [data-keep-frame]) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Demos that bring their own light frame sit straight on the stage. Dark ones keep their backdrop. */
+.rm-stage .rm-demo:not(.dark-stage) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.rm-stage .rm-demo.dark-stage {
+  margin: 0;
+}
+
+/* The source in the Code view: no frame inside the stage's frame. */
+.rm-stage-code > div,
+.rm-stage-code figure {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Code in each framework: the block sits inside the switcher's frame, so it loses its own. */
+.rm-variants-body figure {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 0 12px 12px !important;
+  background: transparent !important;
+}
+
+/* Tables: hairlines and a muted header */
+#nd-page .prose table {
+  font-size: 13.5px;
+}
+
+#nd-page .prose th {
+  font-weight: 500;
+  color: var(--color-fd-muted-foreground);
+}
+
+#nd-page .prose :is(th, td) {
+  border-color: var(--color-fd-border);
+}
+
+/* "On this page": smaller and quieter */
+#nd-toc {
+  font-size: 13px;
+}
+
+#nd-toc a {
+  color: var(--color-fd-muted-foreground);
+  transition: color 0.15s;
+}
+
+#nd-toc a:hover,
+#nd-toc a[data-active="true"] {
+  color: var(--color-fd-foreground);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* Brand mark in the nav */
+.rm-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.rm-brand svg {
+  width: 20px;
+  height: 20px;
+  color: var(--color-fd-primary);
+}
+
+/* Showcase grid (landing page and Components overview) */
+.rm-showcase {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.rm-showcase-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 14px;
+  background: var(--color-fd-card);
+  overflow: hidden;
+}
+
+.rm-showcase-card.wide {
+  grid-column: span 2;
+}
+
+.rm-showcase-preview {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 28px 20px;
+  background-color: var(--color-fd-background);
+  background-image: radial-gradient(var(--color-fd-border) 1px, transparent 1px);
+  background-size: 16px 16px;
+  border-bottom: 1px solid var(--color-fd-border);
+}
+
+.rm-showcase-meta {
+  padding: 14px 18px 16px;
+}
+
+.rm-showcase-meta h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.rm-showcase-meta h3 a::after {
+  content: " →";
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-showcase-meta h3 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rm-showcase-meta p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--color-fd-muted-foreground);
+}
+
+@media (max-width: 760px) {
+  .rm-showcase {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rm-showcase-card.wide {
+    grid-column: auto;
+  }
+}
+
+/* Install command (home page) */
+.rm-command {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 10px;
+  background: var(--color-fd-card);
+  font-size: 13px;
+}
+
+.rm-command code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.rm-command code span {
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-command button {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-command button:hover {
+  background: var(--color-fd-accent);
+  color: var(--color-fd-foreground);
+}
+
+/* Install commands: one per package manager */
+.rm-pm {
+  margin: 1rem 0;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 12px;
+  background: var(--color-fd-card);
+  /* Visible, so the framework menu can open below the bar. */
+  overflow: visible;
+}
+
+.rm-pm .rm-bare-code {
+  font-size: 13px;
+}
+
+.rm-pm-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px 0 10px;
+  border-bottom: 1px solid var(--color-fd-border);
+}
+
+.rm-pm-bar [role="tablist"] {
+  display: flex;
+  gap: 2px;
+}
+
+.rm-pm-bar [role="tab"] {
+  padding: 8px 8px 9px;
+  border-bottom: 2px solid transparent;
+  font-size: 12.5px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-pm-bar [role="tab"][aria-selected="true"] {
+  border-bottom-color: var(--color-fd-foreground);
+  color: var(--color-fd-foreground);
+  font-weight: 500;
+}
+
+.rm-pm-copy {
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-pm-copy:hover {
+  background: var(--color-fd-accent);
+  color: var(--color-fd-foreground);
+}
+
+.rm-pm .rm-bare-code pre {
+  padding-block: 12px;
+}
+
+/* Tags under a page's title, and on component cards */
+.rm-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+}
+
+.rm-tags em {
+  padding: 2px 8px;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-style: normal;
+  color: var(--color-fd-muted-foreground);
+}
+
+/* Browse all */
+.rm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  margin-top: 1.5rem;
+}
+
+.rm-grid-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 14px;
+  background: var(--color-fd-card);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.rm-grid-card:hover {
+  border-color: color-mix(in oklab, var(--color-fd-foreground) 35%, transparent);
+  box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.18);
+}
+
+/* The live preview: the component, scaled to fill the card. */
+.rm-preview {
+  position: relative;
+  aspect-ratio: 16 / 11;
+  overflow: hidden;
+  background: var(--color-fd-background);
+}
+
+.dark .rm-preview:not(.dark) {
+  background: #fafafa;
+}
+
+.rm-preview.dark {
+  background: #0b0b0e;
+}
+
+.rm-preview-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flow-root;
+  transform-origin: center;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.rm-preview.live .rm-preview-inner {
+  pointer-events: auto;
+}
+
+/* Each demo's own frame would be a frame inside the card's, so it goes. */
+.rm-preview-inner > * {
+  margin: 0 !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* "Browse all" */
+.rm-browser-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.rm-browser-count {
+  margin: 0 auto 0 0;
+  font-size: 13px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-browser-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 240px);
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 10px;
+  background: var(--color-fd-card);
+}
+
+.rm-browser-search svg {
+  width: 15px;
+  height: 15px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-browser-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  outline: none;
+}
+
+.rm-browser-search:focus-within,
+.rm-browser-select:focus-visible {
+  border-color: var(--color-fd-foreground);
+}
+
+.rm-browser-select {
+  height: 36px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 10px;
+  background: var(--color-fd-card)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 10px center / 14px;
+  font-size: 14px;
+  appearance: none;
+  outline: none;
+}
+
+.rm-browser-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+}
+
+.rm-browser-empty {
+  padding: 48px 0;
+  text-align: center;
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-card {
+  display: grid;
+  gap: 2px;
+  padding: 6px 6px 0;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 16px;
+  background: var(--color-fd-card);
+  transition:
+    border-color 0.15s,
+    transform 0.2s;
+}
+
+.rm-card:hover {
+  border-color: color-mix(in oklab, var(--color-fd-foreground) 30%, transparent);
+}
+
+.rm-card .rm-preview {
+  border-radius: 11px;
+  outline: 1px solid color-mix(in oklab, var(--color-fd-foreground) 9%, transparent);
+  outline-offset: -1px;
+}
+
+.rm-card-meta {
+  display: grid;
+  gap: 3px;
+  padding: 12px 10px 14px;
+}
+
+.rm-card-meta strong {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.rm-card-meta span {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-grid-text {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px 16px;
+}
+
+.rm-grid-card strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.rm-grid-text > span {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-fd-muted-foreground);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rm-tags em.kind {
+  border-color: var(--color-fd-foreground);
+  color: var(--color-fd-foreground);
+  font-weight: 500;
+}
+
+.rm-grid-card .rm-tags {
+  margin-top: 4px;
+}
+
+/* Remold UI mark: a lowercase r, a block and an arc */
+.rm-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.rm-mark {
+  display: block;
+  flex: none;
+  fill: var(--color-fd-foreground);
+}
+
+.rm-word {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.rm-word span {
+  font-weight: 500;
+  color: var(--color-fd-muted-foreground);
+}
+
+/* The docs share the landing page's frame (1520 px, like its navbar), and the article fills the
+   column between the sidebar and "On this page" instead of stopping at Fumadocs' 900 px. */
+#nd-docs-layout {
+  --fd-layout-width: 1520px;
+}
+
+#nd-page {
+  max-width: none;
+}

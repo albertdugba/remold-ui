@@ -1,0 +1,153 @@
+---
+title: "Logo morph"
+description: "A name that turns into its logo and back again. The letters flow into the mark instead of fading, in either direction, and you can turn it round halfway."
+status: "new"
+tags: ["createMorph", "useAutoplay", "Customize"]
+---
+
+<Customize name="logo-morph" code={<Source demo="logo-morph" />} />
+
+It plays each name into its logo and back while it's on screen. Pick a brand or flip **Text / Logo**, and it's yours.
+
+## Take it apart
+
+Every colour below is one piece of the outline, from start to finish, so you can see which letter becomes which part of the logo. Drag the slider, or press play.
+
+<LogoMorphAnatomy />
+
+Switch **Leftover pieces** to `merge` and drag to 100%: the extra letters are still there, parked as small shapes beside the logo. That's why the component uses `collapse`.
+
+## Things to try
+
+- **Flip Text and Logo quickly.** Each change starts from the outline as it is at that moment, so it turns round mid-air instead of snapping back to the start.
+- **Go from one logo to another.** With Logo on, pick a brand that has a mark too: the marks morph straight into each other.
+- **Turn on Reduce motion** in your system settings. It jumps to the new shape instead of moving.
+
+## Install
+
+<AddCommand name="logo-morph" />
+
+## Dependencies
+
+<Dependencies demo="logo-morph" />
+
+## Usage
+
+<Tabs items={['Your brands', 'One logo', 'Colour and timing']}>
+<Tab value="Your brands">
+
+Each brand is a name and, if you have one, its logo as SVG path data. The path can be in any coordinates: it's scaled into the same box as the word.
+
+```tsx
+import { LogoMorph } from "@/components/remold/logo-morph";
+
+export function Partners() {
+  return (
+    <LogoMorph
+      brands={[
+        { name: "Halden", mark: "M4 4h16v16H4Z" },
+        { name: "Ridgeway", mark: "M12 3 21 20H3Z" },
+        { name: "Lumen" }, // a name on its own
+      ]}
+    />
+  );
+}
+```
+
+</Tab>
+<Tab value="One logo">
+
+One brand with autoplay off is a header mark that turns into your name when someone reaches for it.
+
+```tsx
+<LogoMorph brands={[{ name: "Remold", mark: REMOLD_MARK }]} autoplay={false} height={160} />
+```
+
+</Tab>
+<Tab value="Colour and timing">
+
+```tsx
+<LogoMorph
+  color="#4f46e5" // any CSS colour
+  every={2400} // how long each shape is held, in ms
+  bounce={0.2} // how much the morph overshoots
+/>
+```
+
+</Tab>
+</Tabs>
+
+## How it works
+
+<Steps>
+<Step>
+
+### Letters become shapes
+
+The name is laid out from real glyph outlines (Barlow Condensed), letter by letter with its kerning, so every letter is a closed shape rather than text.
+
+</Step>
+<Step>
+
+### Both are fitted into one box
+
+The word and the logo are each scaled to fit a 640 × 220 box and centred in it, so a long name and a square mark end up the same visual size, whatever coordinates the logo's path was drawn in.
+
+</Step>
+<Step>
+
+### Pieces are paired
+
+Core's [`createMorph`](/docs/core) splits both outlines into pieces and pairs them by position and size, using the Hungarian method, so each letter goes to the nearest part of the logo. The side with fewer pieces gets padding: here, extra pieces that shrink to nothing (`padding: "collapse"`).
+
+</Step>
+<Step>
+
+### A spring drives it, from wherever it is
+
+A spring takes the morph from 0 to 1. Every change builds a new morph from the outline on screen right now, so flipping halfway turns round smoothly and keeps going.
+
+</Step>
+</Steps>
+
+## API reference
+
+### Props
+
+<ControlsTable name="logo-morph" />
+
+### `brands`
+
+<TypeTable
+  type={{
+    name: {
+      type: "string",
+      required: true,
+      description: "The name, set as a word from glyph outlines. It also labels the brand’s button and is read out.",
+    },
+    mark: {
+      type: "string",
+      description:
+        "The logo as SVG path data, in any coordinates. Leave it out for a name only: the Logo switch is turned off for that brand.",
+    },
+  }}
+/>
+
+## Picking marks that morph well
+
+- **Solid, filled marks** morph best. If a logo is drawn with strokes, convert the strokes to outlines first (in Figma: _Outline stroke_).
+- **One colour, one path.** The morph uses the shape, not the colours. Join a logo's paths into one `d` string.
+- **Roughly the visual weight of the word.** A heavy wordmark into a hairline mark looks thin halfway.
+- **Fewer pieces than the name is fine.** The extra letters shrink into their partners.
+
+## Accessibility
+
+- The picture is an image labelled with what it shows ("Cursor" or "Cursor logo"), and the label changes with it.
+- The brand buttons are tabs, and Text / Logo are toggle buttons with their pressed state, so screen readers hear what's chosen.
+- Autoplay only runs while it's on screen and stops for good as soon as someone clicks or types inside it ([WCAG 2.2.2](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide)). Play and Pause stay available.
+- With reduced motion, it changes shape without moving.
+
+<Callout>
+  The Cursor and X marks come from [Simple Icons](https://simpleicons.org) (CC0) and belong to their owners. Simple Icons doesn't carry AWS
+  or OpenAI marks, so those two are names only.
+</Callout>

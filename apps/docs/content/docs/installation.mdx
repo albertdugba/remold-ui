@@ -1,0 +1,28 @@
+---
+title: "Installation"
+description: "Install the package for your framework. The packages it builds on come with it."
+---
+
+## React
+
+<Install packages="@remold-ui/react" />
+
+React 18 or later. The package ships ES modules, CommonJS and TypeScript types.
+
+## Without a framework
+
+<Install packages="@remold-ui/dom" js />
+
+```ts
+import { transition } from "@remold-ui/dom";
+
+transition(list, () => {
+  list.innerHTML = render(sortedItems);
+});
+```
+
+## Canvas and core
+
+Install `@remold-ui/canvas` for scenes and particles, or `@remold-ui/core` on its own for the matching and spring maths, for example in a Web Worker or on the server.
+
+<Callout>Everything is tree-shakeable. Importing `Remold.Text` doesn't pull in the canvas code.</Callout>

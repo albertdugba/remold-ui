@@ -1,0 +1,47 @@
+---
+title: "Integrations hub"
+description: "Your product in the middle and the tools it connects to around it, with data flowing along the lines. Pick a category and the tiles rearrange."
+kind: canvas
+tags: ["Scene"]
+---
+
+<Customize name="integrations-hub" code={<Source demo="integrations-hub" />} wide />
+
+It walks through the categories by itself while it's on screen. Pick a tab or tap a tile and it's yours.
+
+## Things to try
+
+- **Pick a category.** The integrations in it step forward into a ring around Lumen and their lines light up with flowing data. The rest step back to the outer ring and sink.
+- **Watch Webhooks and Keyring.** They belong to two categories, so between Data and Messaging (or Data and Payments) they stay lit and only move.
+- **Tap a tile.** It lifts, everything else dims with its line, and the line underneath says what it does. Tap it again, or the floor, to let go.
+- **Drag sideways** to turn the scene. It keeps turning for a moment when you let go.
+
+## Install
+
+<AddCommand name="integrations-hub" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="integrations-hub" />
+
+## Props
+
+<ControlsTable name="integrations-hub" />
+
+## Make it yours
+
+- **Your product** is the `hub` object. Swap the `SUN` icon for your mark (any 24 × 24 outline path).
+- **Your integrations** are the `INTEGRATIONS` list: a name, an outline icon, the categories it belongs to and one line about it. Categories become the tabs.
+- **The look** comes from canvas `extrude()`: corner radius, height, and the icon on top. The light colours are the `paper` palette.
+
+## How it works
+
+- Every category is a layout of the same objects. [Scene](/docs/primitives/scene) springs each tile from where it is to where it is in the next layout, so a tile in both categories glides instead of disappearing and coming back.
+- Each line belongs to the layouts its tile is a member of, so lines fade in and out with their tiles. Dots run along them while they're shown.
+- Tapping focuses a tile: it lifts and everything else dims to 30%, lines included, which is what makes its path stand out.
+
+<Callout>
+  Lumen and every integration here are made up, with icons drawn for this demo. Use your partners' real icons only where you're allowed to.
+</Callout>

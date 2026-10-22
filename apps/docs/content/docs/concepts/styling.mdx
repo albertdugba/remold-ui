@@ -1,0 +1,30 @@
+---
+title: "Styling"
+description: "Every part renders plain elements you can style, and exposes its state as data attributes."
+---
+
+## Class names
+
+`className` takes a string, or a function of the part's state.
+
+```tsx
+<Remold.Layout trigger={view} className={(state) => (state.animating ? 'list busy' : 'list')}>
+```
+
+## Data attributes
+
+| Attribute           | Set on                                                   |
+| ------------------- | -------------------------------------------------------- |
+| `data-rm-animating` | A part while it's animating.                             |
+| `data-rm-matched`   | Elements paired with an old version during a transition. |
+| `data-rm-changed`   | Matched elements whose box or text changed.              |
+| `data-rm-entering`  | New elements fading in.                                  |
+| `data-rm-exiting`   | Copies of removed elements fading out.                   |
+
+## Rendering your own element
+
+`render` replaces the default element and keeps Remold's props and ref. Pass an element, or a function of the props and state.
+
+```tsx
+<Remold.Layout trigger={view} render={<ul className="grid" />}>
+```

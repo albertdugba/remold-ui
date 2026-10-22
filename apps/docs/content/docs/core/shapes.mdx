@@ -1,0 +1,25 @@
+---
+title: "Shapes"
+description: "Parse, morph and sample SVG paths."
+---
+
+## createMorph()
+
+```ts
+import { createMorph } from "@remold-ui/core";
+
+const morph = createMorph(fromPath, toPath);
+path.setAttribute("d", morph.d(0.5)); // halfway
+```
+
+Handles different numbers of points, several pieces and holes. `t` can go past 0 and 1, so springs can overshoot.
+
+## pointCloud()
+
+The motion behind [particles()](/docs/canvas/particles), without any drawing: give it new points and read positions, sizes and tones from `data` each frame. Use it with WebGL, SVG or anything else.
+
+```ts
+const cloud = pointCloud(samplePath(a, { count: 3000 }));
+cloud.to(samplePath(b, { count: 3000 }));
+cloud.step(dt); // then draw cloud.data: [x, y, size, tone, …]
+```

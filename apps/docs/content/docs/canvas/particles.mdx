@@ -1,0 +1,49 @@
+---
+title: "particles()"
+description: "Thousands of dots that rebuild themselves into each new shape."
+---
+
+## Usage
+
+```ts
+import { particles, sampleTextPoints } from "@remold-ui/canvas";
+import { samplePath } from "@remold-ui/core";
+
+const dots = particles(canvas, { points: sampleTextPoints("Hello", { count: 2000 }), label: "Hello" });
+
+dots.to(samplePath(logoPath, { count: 2000 }), { label: "Our logo" });
+```
+
+Each dot pairs with a nearby spot in the next shape and springs there; spare dots shrink away and new ones grow in. Dots near the pointer lean away.
+
+## Options
+
+<TypeTable
+  type={{
+    points: { type: "CloudPoint[]", description: "The first shape. A point’s tone picks its palette colour." },
+    fit: { type: '"contain" | "none"', default: '"contain"', description: "Scale each shape to the canvas, or use points as CSS pixels." },
+    padding: { type: "number", default: "24", description: "Space kept round a fitted shape." },
+    radius: { type: "number", default: "2.5", description: "Dot radius at full size." },
+    shape: { type: '"circle" | "square"', default: '"circle"', description: "Squares are cheaper for very large clouds." },
+    color: { type: "fill | ((ctx, size) => fill)", default: "CSS color", description: "One fill for every dot, such as a gradient." },
+    palette: { type: "string[]", description: "Colours by tone, from 0 (first) to 1 (last)." },
+    pointer: {
+      type: "false | { radius, strength }",
+      default: "{ radius: 90, strength: 22 }",
+      description: "How dots lean away from the pointer.",
+    },
+    label: { type: "string", description: "The canvas’s accessible name." },
+    spring: { type: "{ duration, bounce }", default: "{ duration: 0.9, bounce: 0.2 }", description: "How dots move." },
+  }}
+/>
+
+## Sampling shapes
+
+| Function                            | Gives points for                                                                                                                                                                |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `samplePath(d, options)`            | An SVG path's inside, or its outline with `mode: "outline"`.                                                                                                                    |
+| `sampleTextPoints(text, options)`   | Text in a CSS font. Load web fonts first.                                                                                                                                       |
+| `sampleImagePoints(image, options)` | An image's opaque, dark, light, or saturated pixels; pass the same hex `palette` to sample colour tones. Optional normalized `details` preserve tiny features outside the mask. |
+| `sampleMask(mask, options)`         | Any pixel data, such as `ImageData`.                                                                                                                                            |
+
+All take `count` (exactly that many points) or `spacing`, plus `pattern` and `jitter`.

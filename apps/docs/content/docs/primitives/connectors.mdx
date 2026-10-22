@@ -1,0 +1,127 @@
+---
+title: "Connectors"
+description: "Lines between elements that stay attached while the elements move."
+---
+
+<Stage code={<Source demo="course-outline" />}>
+  <CourseOutlineDemo />
+</Stage>
+
+## Installation
+
+<Install packages="@remold-ui/react" vanilla="@remold-ui/dom" />
+
+## Usage
+
+Mark the points lines run between with `Remold.Anchor`: give each a `name`, and `linkTo` the anchor its line comes from. Put a [Layout](/docs/primitives/layout) inside, and the lines follow every element while it moves.
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+import { Remold } from "@remold-ui/react";
+
+<Remold.Connectors radius={12}>
+  <Remold.Layout trigger={thread}>
+    {comments.map((c) => (
+      <article key={c.id}>
+        <Remold.Anchor name={c.id} linkTo={c.parentId} render={<Avatar user={c.author} />} />
+        <p>{c.text}</p>
+      </article>
+    ))}
+  </Remold.Layout>
+</Remold.Connectors>;
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+import { connectors, transition } from "@remold-ui/dom";
+
+// In your markup, name each point and the one its line comes from:
+// <img data-rm-anchor="c2" data-rm-link="c1" />
+
+// `svg` is laid over `thread`: absolutely positioned, the same size.
+const lines = connectors(thread, svg, { radius: 12 });
+
+// Lines follow the elements while a transition moves them.
+transition(thread, () => renderComments(thread, comments));
+```
+
+</Variant>
+</CodeVariants>
+
+`linkTo` can be `undefined` for anchors with no line coming in, like the top-level comments. `Anchor` renders a `span`; `render` puts the anchor on your own element instead. Under the hood it's two attributes, `data-rm-anchor` and `data-rm-link`, which you can also write yourself.
+
+- Lines start under the anchor's middle and end at the left side of the linked element, so they suit trees and threads where children sit below and to the right.
+- A line that appears draws itself in; a line whose element goes draws itself out. Lines that are there when the page loads are simply there.
+- With reduced motion, lines still follow the elements, but appear and disappear at once.
+- Style them with CSS: each line is a `path.rm-connector`. Lines drawing in or out carry `data-rm-drawing`.
+- Give the linked element `data-rm-line="something"` and its line gets `data-line="something"`: a way to style one line differently, like lighting up the path to a hovered reply.
+
+```css
+.my-tree .rm-connector {
+  stroke: #cbd5e1;
+  stroke-width: 1.5;
+}
+
+.my-tree .rm-connector[data-line="lit"] {
+  stroke: #a78bfa;
+  filter: drop-shadow(0 0 6px #a78bfa);
+}
+```
+
+## API reference
+
+<TypeTable
+  type={{
+    shape: {
+      type: '"elbow" | "curve" | "straight"',
+      default: '"elbow"',
+      description: <>{"Elbow goes straight down from the anchor, then turns across with a rounded corner. Curve is one smooth bend."}</>,
+    },
+    end: {
+      type: '"side" | "top"',
+      default: '"side"',
+      description: (
+        <>{"Where a line meets the linked element: the middle of its left side (trees, threads) or of its top (timelines, steps)."}</>
+      ),
+    },
+    radius: { type: "number", default: "12", description: <>{"The elbow's corner radius, in pixels."}</> },
+    gap: { type: "number", default: "4", description: <>{"Space between each end of a line and the element it touches, in pixels."}</> },
+    spring: {
+      type: "{ duration, bounce }",
+      default: "springs.smooth",
+      description: (
+        <>
+          {"How lines draw in and out. See "}
+          <a href="/docs/concepts/springs">{"Springs"}</a>
+          {"."}
+        </>
+      ),
+    },
+    reducedMotion: {
+      type: '"user" | "always" | "never"',
+      default: '"user"',
+      description: <>{"Follow the system setting, or override it."}</>,
+    },
+    loop: {
+      type: "FrameLoop",
+      default: "shared loop",
+      description: <>{"The frame loop to run on. Pass your own to slow down or test."}</>,
+    },
+    className: { type: "string | ((state) => string)", description: <>{"A class name, or a function of the state."}</> },
+    render: { type: "ReactElement | ((props, state) => ReactElement)", description: <>{"Replace the default element."}</> },
+  }}
+/>
+
+### Without React
+
+```ts
+import { connectors } from "@remold-ui/dom";
+
+// `svg` is laid over `root`: absolutely positioned, the same size.
+const lines = connectors(root, svg, { shape: "elbow", radius: 12 });
+lines.destroy();
+```

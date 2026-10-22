@@ -1,0 +1,97 @@
+---
+title: "useRemold"
+description: "Animate a state change you make from an event handler."
+---
+
+## Usage
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+const { ref, animate } = useRemold();
+
+<ul ref={ref}>{items.map(renderItem)}</ul>
+<button onClick={() => animate(() => setSort('price'))}>Sort by price</button>
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+import { transition } from "@remold-ui/dom";
+
+sortButton.addEventListener("click", () => {
+  transition(list, () => renderItems(list, items, "price"));
+});
+```
+
+</Variant>
+</CodeVariants>
+
+## Options
+
+<TypeTable
+  type={{
+    spring: {
+      type: "{ duration, bounce }",
+      default: "springs.smooth",
+      description: (
+        <>
+          {"How it moves. See "}
+          <a href="/docs/concepts/springs">{"Springs"}</a>
+          {"."}
+        </>
+      ),
+    },
+    match: {
+      type: "MatchNodesOptions",
+      description: (
+        <>
+          {"Steer the matcher. See "}
+          <a href="/docs/concepts/matching">{"How matching works"}</a>
+          {"."}
+        </>
+      ),
+    },
+    announce: {
+      type: "boolean | ((summary) => string)",
+      default: "false",
+      description: <>{"Read a summary of each change to screen-reader users."}</>,
+    },
+    reducedMotion: {
+      type: '"user" | "always" | "never"',
+      default: '"user"',
+      description: (
+        <>
+          {"Follow the system setting, or override it. See "}
+          <a href="/docs/concepts/accessibility">{"Accessibility"}</a>
+          {"."}
+        </>
+      ),
+    },
+    loop: {
+      type: "FrameLoop",
+      default: "shared loop",
+      description: <>{"The frame loop to run on. Pass your own to slow down or test."}</>,
+    },
+  }}
+/>
+
+## Returns
+
+<TypeTable
+  type={{
+    ref: { type: "(node) => void", description: <>{"Attach to the element whose contents change."}</> },
+    animate: {
+      type: "(update, options?) => Transition | null",
+      description: (
+        <>
+          {"Runs "}
+          <code>{"update"}</code>
+          {" synchronously and animates what it changed. Use it in event handlers, not effects."}
+        </>
+      ),
+    },
+  }}
+/>

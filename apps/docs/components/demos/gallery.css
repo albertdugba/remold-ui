@@ -1,0 +1,103 @@
+/* Canvas galleries (Living diagrams, Not just diagrams) */
+.gx {
+  position: relative;
+  margin: 1.5rem 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: radial-gradient(110% 80% at 50% 0%, #1b1d2e 0%, #0a0b12 72%);
+  color: #f4f4f5;
+}
+
+.gx-canvas {
+  display: block;
+  width: 100%;
+  height: 460px;
+  touch-action: pan-y;
+}
+
+.gx-ui {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.gx-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgb(120 110 255 / 0.18);
+  pointer-events: auto;
+}
+
+.gx-seg.quiet {
+  background: rgb(255 255 255 / 0.07);
+}
+
+.gx-seg button {
+  padding: 5px 11px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  color: rgb(255 255 255 / 0.65);
+}
+
+.gx-seg button[aria-pressed="true"] {
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+}
+
+.gx-info {
+  min-height: 44px;
+  margin: 0;
+  padding: 0 18px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgb(255 255 255 / 0.6);
+}
+
+.gx-info b {
+  color: #fff;
+  font-weight: 600;
+}
+
+.gx-hint {
+  color: rgb(255 255 255 / 0.4);
+}
+
+@media (max-width: 640px) {
+  .gx-canvas {
+    height: 380px;
+  }
+
+  .gx-ui {
+    position: static;
+    padding: 12px 12px 0;
+  }
+}
+
+/* The ink stage: flat near-black, for scenes built with the "ink" palette. */
+.gx.ink {
+  background: radial-gradient(120% 90% at 50% 10%, #1a1924 0%, #0f0e15 70%);
+}
+
+.gx.ink .gx-canvas {
+  height: 520px;
+}
+
+.gx-seg .gx-play {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  padding: 5px 0;
+}
+
+.gx-play svg {
+  width: 14px;
+  height: 14px;
+}

@@ -1,0 +1,39 @@
+---
+title: "Springs"
+description: "Everything moves on springs, described by how long they take and how much they bounce."
+---
+
+## Duration and bounce
+
+A spring has no fixed end time, so it can be redirected at any moment and keep its speed. It's described the way SwiftUI describes it:
+
+<TypeTable
+  type={{
+    duration: { type: "number", description: "Roughly how long it takes to feel finished, in seconds.", required: true },
+    bounce: {
+      type: "number",
+      description: "0 settles as fast as possible without overshooting. Up to 1 overshoots more; below 0 settles more slowly.",
+      required: true,
+    },
+  }}
+/>
+
+```tsx
+<Remold.Layout trigger={view} spring={{ duration: 0.6, bounce: 0.2 }}>
+```
+
+## Presets
+
+| Preset           | Value                             | Suits                   |
+| ---------------- | --------------------------------- | ----------------------- |
+| `springs.smooth` | `{ duration: 0.5, bounce: 0 }`    | Layout changes          |
+| `springs.snappy` | `{ duration: 0.5, bounce: 0.15 }` | Small controls and text |
+| `springs.bouncy` | `{ duration: 0.5, bounce: 0.3 }`  | Playful moments         |
+
+```ts
+import { springs } from "@remold-ui/react";
+```
+
+## Interruptions
+
+When something changes again mid-animation, nothing restarts. Each element heads for its new place from where it is now, at the speed it was moving, so rapid clicks feel continuous. Motion runs at the same speed on 60 Hz and 120 Hz screens.

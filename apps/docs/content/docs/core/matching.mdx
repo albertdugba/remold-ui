@@ -1,0 +1,20 @@
+---
+title: "Matching"
+description: "The pairing functions everything else uses, available on their own."
+---
+
+## matchNodes()
+
+Pairs two lists of element descriptions (kind, text, box, colour, parent). This is what [transitions](/docs/concepts/matching) use.
+
+```ts
+const { pairs, added, removed, splits, merges } = matchNodes(before, after, { threshold: 0.5 });
+```
+
+## matchPoints()
+
+Pairs two clouds of points so the total distance travelled is as small as possible. Exact for small clouds; for large ones a fast approximation lands within a few percent of the best.
+
+```ts
+const { pairs, leaving, arriving } = matchPoints(oldPoints, newPoints, { maxDistance: 80 });
+```

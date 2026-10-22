@@ -1,0 +1,41 @@
+---
+title: "How matching works"
+description: "How Remold decides which element became which, and how to steer it."
+---
+
+## The four steps
+
+1. **Read the page.** Before the update, every element that has its own text, an image or a visible box is measured: its kind, text, media, size, position and colour. After the update, the same is read again.
+2. **Score every pair.** Each old element is compared with each new one. Same text scores high, a similar image or size scores a little, and an element whose parent was already paired gets a bonus.
+3. **Pick partners.** The best overall pairing is chosen at once (with the Hungarian algorithm), so one strong pair is given up when that lets two others do better. Weak pairs are left unmatched rather than guessed.
+4. **Move.** Paired elements spring from their old box to their new one. Unmatched new elements fade in; unmatched old ones fade out from where they were.
+
+Text that splits into several elements, or several that merge into one ("3 items" becoming "3" and "items"), is detected too.
+
+## Steering it
+
+Pass `match` to [Layout](/docs/primitives/layout), `useRemold` or `transition()`.
+
+<TypeTable
+  type={{
+    threshold: {
+      type: "number",
+      default: "0.5",
+      description: "Pairs scoring below this (0 to 1) stay unmatched. Raise it to be stricter.",
+    },
+    structure: { type: "boolean", default: "true", description: "Use parents and neighbours to settle pairs that look alike." },
+    splits: { type: "boolean", default: "true", description: "Detect text that splits apart or merges." },
+  }}
+/>
+
+## Leaving things out
+
+Wrap anything that shouldn't move, such as a video or a live chart, in [Ignore](/docs/primitives/ignore), or add a `data-rm-ignore` attribute. It and everything inside it is skipped.
+
+```tsx
+<Remold.Ignore>
+  <VideoPlayer />
+</Remold.Ignore>
+```
+
+<Callout>To see what was paired, add a style for `[data-rm-matched]`, `[data-rm-entering]` and `[data-rm-exiting]`.</Callout>

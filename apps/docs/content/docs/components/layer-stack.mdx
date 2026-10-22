@@ -1,0 +1,38 @@
+---
+title: "Layer stack"
+description: "A toolchain or a product drawn as stacked layers in line art. One layer at a time takes the focus: its sides fill with colour and the layers above turn to ghosts."
+kind: canvas
+tags: ["Scene", "extrude", "Customize"]
+---
+
+<Customize name="layer-stack" code={<Source demo="layer-stack" />} wide />
+
+It steps through the layers by itself while it's on screen. Hover or tap a label and it's yours.
+
+## Things to try
+
+- **Hover a label.** That layer's sides fill with its colour and a little sheen, every layer above it fades to a ghost outline so you can see down to it, and its label turns dark with a short caption.
+- **Move between labels quickly.** Colours, ghosts and labels change on springs, so they turn round mid-way instead of jumping.
+- **Drag the stack sideways** to turn it. The labels are real HTML, and they follow their layers every frame.
+
+## Install
+
+<AddCommand name="layer-stack" />
+
+## Dependencies
+
+<Dependencies demo="layer-stack" />
+
+## Props
+
+<ControlsTable name="layer-stack" />
+
+`layers` takes your own list, top to bottom: `{ id, name, role, color, icon }`, where `icon` is a 24 × 24 outline icon as path data.
+
+## How it works
+
+- Each layer is `extrude({ ink: true, sides: "sheen" })` on the `sketch` palette. There's one scene layout per layer, and in each one the focused layer has `fill: 1` and its `color`, and the layers above it have `ghost`. All three spring between layouts, like position and size.
+- `ghost` fades a solid's fills but keeps its ink edges, and shows its far edges through it: a see-through outline rather than a faded one.
+- The labels are buttons laid over the canvas. After every frame, the scene's `onDraw` places each one level with its layer's wall (`anchor(id, "front" | "right")`), and the leader line reaches exactly to the edge.
+
+<Callout>Harbor and its layers are made up. Use your own names, colours and icons.</Callout>

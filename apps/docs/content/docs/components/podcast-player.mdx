@@ -1,0 +1,38 @@
+---
+title: "Podcast"
+description: "A grid of episode cards that open into the episode's details, with an inline player: tap a card and the artwork grows from the tile into the hero while the title lifts off it into place — two different layouts matched with no ids."
+status: "new"
+tags: ["Layout", "Icon", "Real audio"]
+---
+
+<Stage name="podcast-player" code={<Source demo="podcast-player" />} wide>
+  <PodcastPlayerDemo source="/api/podcasts" credit="Episodes from Apple Podcasts." />
+</Stage>
+
+Tap any episode to open its details; the back arrow returns to the grid.
+
+## Things to try
+
+- **Open an episode.** The small tile's artwork grows into the big hero, and the title — which sat on top of the artwork in the grid — lifts off and settles next to it. The two views share no ids; the engine matches the episode and its title by what they show.
+- **Press play.** The details view has an inline player — scrubber, skip back 15, forward 30, speed — and on this page it plays the real episode.
+- **Go back.** The hero shrinks back into exactly the tile it came from, in reverse.
+- **Open another halfway through.** Every change starts from where things are on screen, so switching mid-flight just turns toward the new episode.
+
+## Install
+
+<AddCommand name="podcast-player" />
+
+## Dependencies
+
+<Dependencies demo="podcast-player" />
+
+## How it works
+
+- The grid and the details page are two different pieces of markup. One [Layout](/docs/primitives/layout) wraps them with `trigger={[view, currentId]}` and matches what they share — the artwork and the title — by content, then springs each from its old box to its new one. No `layoutId`s to wire up.
+- The artwork is the same image in both places, so it flies from the tile to the hero and resizes as it goes; the title moves from its overlay on the artwork to its spot beside it, changing colour on the way. The play/pause button is one [Icon](/docs/primitives/icon) that morphs between the two symbols.
+- `episodes` takes `{ id, show, title, artwork, colors, audio, seconds, date, summary }`. With `audio` the player plays the file; without it, play just runs the clock.
+
+<Callout>
+  On this page the episodes are the newest design podcasts from Apple Podcasts, through a small cached server route; the shows and artwork
+  belong to their creators. Installed, the component shows made-up shows with drawn artwork.
+</Callout>

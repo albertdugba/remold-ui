@@ -1,0 +1,41 @@
+---
+title: "Onboarding checklist"
+description: "The setup checklist every SaaS app shows new accounts, over the app it sets up. Each finished step changes the app behind it too, and the checklist and the app move together."
+status: "new"
+tags: ["Layout", "Connectors", "Icon", "Text", "Customize"]
+---
+
+<Customize name="onboarding-checklist" code={<Source demo="onboarding-checklist" />} wide />
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Do the open step.** The button says what's happening ("Connecting…"), the step's icon turns into a tick, the ring and the count move on, and the next step opens. The app behind it changes too: connect a source and it appears in the sidebar and the empty state turns into a connected card.
+- **Invite your team, then build the dashboard.** Avatars slide into the header, and the dashboard's tiles arrive in the same motion as the checklist.
+- **Skip for now.** The step moves to a Skipped group at the bottom and the line joining the steps re-routes around the gap. **Do it now** brings it back.
+- **Minimise.** The checklist docks into a pill that shows the ring and the next step. Click it to open it again.
+- **Finish every step.** The checklist collapses into a "You're all set" card with every tick in a row.
+
+## Install
+
+<AddCommand name="onboarding-checklist" />
+
+## Dependencies
+
+<Dependencies demo="onboarding-checklist" />
+
+## Props
+
+<ControlsTable name="onboarding-checklist" />
+
+Replace `STEPS` with your own steps (`{ id, title, body, action, busy, icon }`, where `icon` is any Lucide icon), and `App` with your own app, or turn it off with `showApp={false}`.
+
+## How it works
+
+- The open card, the docked pill and the done card are three different pieces of markup, and the app behind them changes as well. One [Layout](/docs/primitives/layout) wraps all of it, so whatever they share (the title, the count, the ticks, the tiles) moves instead of being swapped out.
+- Each step's mark is an [Anchor](/docs/primitives/connectors) that links to the step before it. [Connectors](/docs/primitives/connectors) with `end="top"` draws one straight line down through them, and redraws it as steps open, close and move.
+- [Icon](/docs/primitives/icon) morphs the step's own Lucide icon into a tick. [Text](/docs/primitives/text) changes the count and the button label in place.
+- The scene is a list of whole states played by [`useAutoplay`](/docs/hooks/use-autoplay), which stops as soon as someone touches it.
+
+<Callout>"Ridgeway", "Northwind Co." and the people are made up.</Callout>

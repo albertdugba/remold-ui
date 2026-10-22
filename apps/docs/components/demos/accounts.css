@@ -1,0 +1,466 @@
+/* Accounts: a bank's accounts page. Navy ink with one coral action; follows the light and dark theme. */
+.ac {
+  --ac-ink: #14233c;
+  --ac-muted: #5b6577;
+  --ac-faint: #8a93a3;
+  --ac-surface: #fff;
+  --ac-soft: #f2f4f7;
+  --ac-softer: #e6e9ef;
+  --ac-line: #e4e7ec;
+  --ac-in: #1d8a5a;
+  --ac-accent: #ff4f40;
+  --ac-accent-hover: #f23b2c;
+  width: 100%;
+  color: var(--ac-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .ac {
+  --ac-ink: #f3f5f8;
+  --ac-muted: #a3adbd;
+  --ac-faint: #7c8697;
+  --ac-surface: #13223a;
+  --ac-soft: #1b2d48;
+  --ac-softer: #243a5a;
+  --ac-line: #243a5a;
+  --ac-in: #4fd18b;
+}
+
+.ac button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.ac button:focus-visible {
+  outline: 2px solid var(--ac-accent);
+  outline-offset: 2px;
+}
+
+/* One fixed height, so the page around it never jumps; the list scrolls inside when it's long. */
+.ac-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  height: 640px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  container-type: inline-size;
+}
+
+.ac-stage::-webkit-scrollbar {
+  display: none;
+}
+
+.ac-page {
+  display: grid;
+  gap: 18px;
+}
+
+.ac-glyph {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Header row: the total (or Back) on the left, Move money on the right. */
+.ac-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px 24px;
+}
+
+.ac-total {
+  display: grid;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.ac-total > span:first-child {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ac-muted);
+}
+
+.ac-total-amount {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ac .ac-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  border-radius: 999px;
+  background: var(--ac-soft);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.15s;
+}
+
+.ac .ac-back:hover {
+  background: var(--ac-softer);
+}
+
+.ac .ac-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--ac-accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.15s;
+}
+
+.ac .ac-primary:not(:disabled):hover {
+  background: var(--ac-accent-hover);
+}
+
+.ac .ac-primary:not(:disabled):active {
+  scale: 0.97;
+}
+
+.ac .ac-primary:disabled {
+  background: var(--ac-softer);
+  color: var(--ac-muted);
+  cursor: default;
+}
+
+.ac .ac-quiet {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ac-muted);
+}
+
+.ac .ac-quiet:hover {
+  background: var(--ac-soft);
+  color: var(--ac-ink);
+}
+
+/* The transfer form: Move money opens into it. */
+.ac-panel {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 460px);
+  padding: 16px;
+  border-radius: 22px;
+  background: var(--ac-surface);
+  box-shadow: inset 0 0 0 1px var(--ac-line);
+}
+
+.ac-field {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.ac-field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ac-muted);
+}
+
+.ac-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--ac-soft);
+  width: fit-content;
+}
+
+.ac .ac-choice button {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ac-muted);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.ac .ac-choice button[aria-checked="true"] {
+  background: var(--ac-surface);
+  color: var(--ac-ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.ac .ac-choice button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.ac-panel-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+/* Account cards */
+.ac-tiles {
+  display: grid;
+  gap: 12px;
+}
+
+@container (min-width: 620px) {
+  .ac-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.ac .ac-tile,
+.ac-hero {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 22px;
+  background: var(--ac-surface);
+  box-shadow: inset 0 0 0 1px var(--ac-line);
+  text-align: left;
+}
+
+.ac .ac-tile {
+  min-height: 132px;
+  transition: box-shadow 0.15s;
+}
+
+.ac .ac-tile:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--c) 45%, var(--ac-line));
+}
+
+.ac-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ac-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--c);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ac-tile-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ac-tile-num {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--ac-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-tile-balance {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The amount on its way: a chip in the corner of whichever card holds it. */
+.ac-coin {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--ac-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The open account */
+.ac-hero {
+  gap: 10px;
+  padding: 22px;
+}
+
+.ac-hero .ac-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.ac-hero-balance {
+  margin-top: 8px;
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-hero-meta {
+  font-size: 13px;
+  color: var(--ac-muted);
+}
+
+.ac-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ac .ac-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px 0 7px;
+  border-radius: 999px;
+  background: var(--ac-soft);
+  transition: background-color 0.15s;
+}
+
+.ac .ac-pill:hover {
+  background: var(--ac-softer);
+}
+
+.ac-pill .ac-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 13px;
+}
+
+.ac-pill .ac-tile-name {
+  font-size: 14px;
+}
+
+.ac-pill-balance {
+  font-size: 14px;
+  color: var(--ac-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Activity */
+.ac-list h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.ac-list ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ac-list li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  height: 58px;
+}
+
+.ac-row-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--c) 12%, var(--ac-surface));
+  color: var(--c);
+}
+
+.ac-row-icon .ac-glyph {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.8;
+}
+
+.ac-row-name {
+  display: grid;
+  min-width: 0;
+}
+
+.ac-row-name strong {
+  overflow: hidden;
+  font-size: 14.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ac-row-name span {
+  font-size: 13px;
+  color: var(--ac-muted);
+}
+
+.ac-row-amount {
+  font-size: 14.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-row-amount.in {
+  color: var(--ac-in);
+}
+
+.ac-row-amount.pending {
+  color: var(--ac-faint);
+}
+
+/* Narrow: the cards stack, so they get shorter. */
+@container (max-width: 619px) {
+  .ac .ac-tile {
+    min-height: 0;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .ac-tile-balance {
+    font-size: 22px;
+  }
+
+  .ac-total-amount,
+  .ac-hero-balance {
+    font-size: 34px;
+  }
+}

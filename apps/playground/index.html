@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Remold playground</title>
+    <style>
+      body {
+        margin: 0;
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+        background: #f3f5f8;
+        color: #141b26;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 32px 20px;
+        display: grid;
+        gap: 16px;
+      }
+      section {
+        display: grid;
+        gap: 12px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+      h2 {
+        margin: 16px 0 0;
+        font-size: 20px;
+      }
+      p {
+        margin: 0;
+        color: #556070;
+      }
+      svg {
+        width: 100%;
+        height: auto;
+        background: #fff;
+        border: 1px solid #d3dae3;
+        border-radius: 6px;
+      }
+      label {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      input[type="range"] {
+        flex: 1;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+      }
+      #shape {
+        fill: #0e7c72;
+        fill-opacity: 0.85;
+        fill-rule: nonzero;
+      }
+      #anchors circle {
+        fill: #c2355a;
+      }
+      .rail {
+        stroke: currentColor;
+        stroke-opacity: 0.25;
+        stroke-width: 2;
+      }
+      .stop {
+        fill: currentColor;
+        fill-opacity: 0.4;
+      }
+      #ball,
+      #handle {
+        fill: #0e7c72;
+      }
+      #track,
+      #handle {
+        cursor: pointer;
+      }
+      #throw {
+        touch-action: none;
+      }
+      #curve {
+        fill: none;
+        stroke: #c2355a;
+        stroke-width: 2.5;
+      }
+      #views button[aria-pressed="true"] {
+        font-weight: 700;
+      }
+      #stage {
+        min-height: 300px;
+        padding: 12px;
+        border: 1px solid #d3dae3;
+        border-radius: 10px;
+        background: #fff;
+      }
+      .task {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        margin: 6px 0;
+        border-radius: 8px;
+        background: #f3f5f8;
+        border: 1px solid #e1e6ec;
+      }
+      .who,
+      .pill {
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #0e7c72;
+        color: #fff;
+      }
+      .pill {
+        background: #556070;
+      }
+      .v-people,
+      .v-board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+      .group,
+      .column {
+        display: block;
+        padding: 8px;
+        border-radius: 10px;
+        background: #e9edf2;
+      }
+      .group h3,
+      .column h3 {
+        margin: 4px 4px 8px;
+        font-size: 14px;
+      }
+      .v-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .v-table td {
+        padding: 8px 6px;
+        border-bottom: 1px solid #e1e6ec;
+      }
+      .status-pill {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: #e9edf2;
+        font-weight: 600;
+      }
+      .react-demo {
+        display: grid;
+        gap: 12px;
+      }
+      .fruit {
+        padding: 8px 12px;
+        border: 1px solid #d3dae3;
+        border-radius: 10px;
+      }
+      .scene-canvas {
+        width: 100%;
+        height: 460px;
+        display: block;
+        border-radius: 12px;
+        background: radial-gradient(circle at 50% 45%, #1d1a2e, #0b0a10);
+      }
+      .scene-canvas.short {
+        height: 360px;
+      }
+      .scene-canvas:focus-visible {
+        outline: 3px solid #7a5bff;
+        outline-offset: 3px;
+      }
+      #scene-kinds button[aria-pressed="true"],
+      #scene-layouts button[aria-pressed="true"],
+      #voxel-shapes button[aria-pressed="true"] {
+        font-weight: 700;
+      }
+      .pages {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .pages figure {
+        flex: 1 1 300px;
+        margin: 0;
+        display: grid;
+        gap: 6px;
+      }
+      .pages figcaption {
+        font-weight: 600;
+      }
+      .pages rect {
+        stroke-width: 1;
+        transition: fill-opacity 0.15s;
+      }
+      .pages .matched rect {
+        fill: hsl(var(--hue) 70% 55%);
+        fill-opacity: 0.28;
+        stroke: hsl(var(--hue) 70% 40%);
+      }
+      .pages .matched.hot rect {
+        fill-opacity: 0.85;
+      }
+      .pages .unmatched rect {
+        fill: #8892a0;
+        fill-opacity: 0.12;
+        stroke: #8892a0;
+        stroke-dasharray: 3 2;
+      }
+      .pages .wrong rect {
+        stroke: #d32f2f;
+        stroke-width: 2.5;
+        stroke-dasharray: none;
+      }
+      .pages text {
+        font-size: 8px;
+        fill: currentColor;
+        pointer-events: none;
+      }
+      #match-scores {
+        margin: 0;
+        padding-left: 20px;
+        color: #556070;
+      }
+      #match-scores .current {
+        font-weight: 700;
+        color: inherit;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #0d1118;
+          color: #e7ecf3;
+        }
+        p {
+          color: #97a3b4;
+        }
+        svg,
+        #stage {
+          background: #141a23;
+          border-color: #283242;
+        }
+        .task {
+          background: #1b2330;
+          border-color: #283242;
+        }
+        .group,
+        .column,
+        .status-pill {
+          background: #1b2330;
+        }
+        #shape {
+          fill: #3fbfae;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Remold playground</h1>
+
+      <section>
+        <h2>Markup rewritten from scratch</h2>
+        <p>
+          Each button replaces the HTML below with brand-new markup: no keys, no ids.
+          <code>transition(stage, update)</code> works out what became what and springs every element from where it was. Click another view
+          mid-flight to interrupt it.
+        </p>
+        <div class="row">
+          <div id="views" class="row" role="group" aria-label="View"></div>
+          <label><input id="use-vt" type="checkbox" /> View Transitions API</label>
+          <label
+            >Reduced motion
+            <select id="reduced">
+              <option value="user">System</option>
+              <option value="always">On</option>
+              <option value="never">Off</option>
+            </select></label
+          >
+        </div>
+        <div id="stage"></div>
+        <p id="page-info"></p>
+        <div class="row">
+          <button id="next-status" type="button">Next status</button>
+          <span class="status-pill"><span id="status"></span></span>
+        </div>
+      </section>
+
+      <section>
+        <h2>React</h2>
+        <p>
+          <code>&lt;Remold.Root trigger={sort}&gt;</code> from <code>@remold-ui/react</code>. Every item gets a brand-new key on each
+          change, so React rebuilds them all, and Remold still works out which is which. The status is
+          <code>&lt;Remold.Text&gt;</code>; the canvas is <code>&lt;Remold.Scene layout={layout}&gt;</code>.
+        </p>
+        <div id="react-demo"></div>
+      </section>
+
+      <section>
+        <h2>Illustrations that are alive</h2>
+        <p>
+          <code>scene(canvas, { objects, layouts, links })</code> from <code>@remold-ui/canvas</code>. Switch layout mid-flight and it
+          turns round smoothly. Hover to lift a piece, click to focus it, drag to turn the scene (flick it), or Tab in and use the arrow
+          keys.
+        </p>
+        <div id="scene-kinds" class="row" role="group" aria-label="Scene"></div>
+        <div id="scene-layouts" class="row" role="group" aria-label="Layout"></div>
+        <canvas id="scene" class="scene-canvas"></canvas>
+        <p id="scene-info"></p>
+        <h3>Rebuilt from cubes</h3>
+        <p>
+          <code>scene.points(cubes)</code>: each new cube is paired with the nearest old one (<code>matchPoints</code>), so the shape
+          rebuilds instead of popping.
+        </p>
+        <div id="voxel-shapes" class="row" role="group" aria-label="Shape"></div>
+        <canvas id="voxels" class="scene-canvas short"></canvas>
+      </section>
+
+      <section>
+        <h2>In-between</h2>
+        <p>Drag the slider. The dot is <code>lerpPoint(start, end, t)</code> from <code>@remold-ui/core</code>.</p>
+        <svg viewBox="0 0 400 200" role="img" aria-label="A dot moving between two points">
+          <line x1="40" y1="160" x2="360" y2="40" stroke="currentColor" stroke-opacity="0.25" stroke-width="2" />
+          <circle cx="40" cy="160" r="6" fill="#c2355a" />
+          <circle cx="360" cy="40" r="6" fill="#0e7c72" />
+          <circle id="dot" r="12" fill="currentColor" />
+        </svg>
+        <label
+          >t
+          <input id="t" type="range" min="0" max="1" step="0.01" value="0.5" />
+          <output id="out">0.50</output></label
+        >
+      </section>
+
+      <section>
+        <h2>Shape morph</h2>
+        <p>
+          <code>createMorph(a, b)</code> parses both shapes, pairs their pieces, matches point counts and start points, then each frame is
+          one lerp over a <code>Float32Array</code>.
+        </p>
+        <div class="row">
+          <label
+            >From
+            <select id="from"></select
+          ></label>
+          <label
+            >To
+            <select id="to"></select
+          ></label>
+          <label><input id="points" type="checkbox" /> Show points</label>
+          <button id="play" type="button">Play with a spring</button>
+        </div>
+        <svg viewBox="0 0 200 200" role="img" aria-label="A shape morphing into another">
+          <path id="shape" />
+          <g id="anchors"></g>
+        </svg>
+        <label
+          >t
+          <input id="mt" type="range" min="0" max="1" step="0.005" value="0" />
+          <output id="mout">0.00</output></label
+        >
+        <p id="stats"></p>
+      </section>
+
+      <section>
+        <h2>Springs</h2>
+        <p>
+          <code>value()</code> with <code>{ duration, bounce }</code>. Click the track to send the ball to the other end. Click again
+          mid-flight: it turns round without jumping, because the new move starts from where it is, at the speed it is going.
+        </p>
+        <div class="row">
+          <button type="button" data-preset="smooth">Smooth</button>
+          <button type="button" data-preset="snappy">Snappy</button>
+          <button type="button" data-preset="bouncy">Bouncy</button>
+        </div>
+        <label
+          >Duration
+          <input id="duration" type="range" min="0.1" max="1.5" step="0.05" value="0.5" />
+          <output id="duration-out">0.50 s</output></label
+        >
+        <label
+          >Bounce
+          <input id="bounce" type="range" min="-0.6" max="0.9" step="0.05" value="0.3" />
+          <output id="bounce-out">0.30</output></label
+        >
+        <svg id="track" viewBox="0 0 400 60" role="button" aria-label="Spring track: click to move the ball">
+          <line x1="30" y1="30" x2="370" y2="30" class="rail" />
+          <circle id="ball" cx="30" cy="30" r="16" />
+        </svg>
+        <svg viewBox="0 0 400 140" role="img" aria-label="The spring's path from 0 to 1 over 1.5 seconds">
+          <line x1="0" y1="115" x2="400" y2="115" class="rail" />
+          <line x1="0" y1="55" x2="400" y2="55" class="rail" stroke-dasharray="4 4" />
+          <polyline id="curve" />
+        </svg>
+      </section>
+
+      <section>
+        <h2>Throw</h2>
+        <p>
+          Drag the handle. Past the ends it resists (<code>rubberband</code>). Let go with a flick and it lands on the stop the flick would
+          coast to (<code>velocityTracker</code> → <code>project</code> → <code>release</code>).
+        </p>
+        <svg id="throw" viewBox="0 0 400 80" aria-label="A handle that snaps to three stops">
+          <line x1="40" y1="40" x2="360" y2="40" class="rail" />
+          <circle cx="40" cy="40" r="4" class="stop" />
+          <circle cx="200" cy="40" r="4" class="stop" />
+          <circle cx="360" cy="40" r="4" class="stop" />
+          <rect id="handle" x="-22" y="18" width="44" height="44" rx="12" />
+        </svg>
+      </section>
+
+      <section>
+        <h2>What became what</h2>
+        <p>
+          <code>matchNodes(before, after)</code> with no ids, keys or names. Matched elements share a colour; hover one to light up its
+          partner. Grey means unmatched (removed or added); a red outline is a wrong match. Switch the matcher to compare with the two
+          baselines.
+        </p>
+        <div class="row">
+          <label
+            >Scenario
+            <select id="scenario"></select
+          ></label>
+          <label
+            >Matcher
+            <select id="matcher"></select
+          ></label>
+        </div>
+        <p id="scenario-note"></p>
+        <div class="pages">
+          <figure>
+            <figcaption>Before</figcaption>
+            <svg id="before" role="img" aria-label="The page before the change"></svg>
+          </figure>
+          <figure>
+            <figcaption>After</figcaption>
+            <svg id="after" role="img" aria-label="The page after the change"></svg>
+          </figure>
+        </div>
+        <p id="match-summary"></p>
+        <ul id="match-scores"></ul>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
