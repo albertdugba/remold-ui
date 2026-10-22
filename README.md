@@ -12,8 +12,8 @@ It is **headless**: the core is plain TypeScript with no browser code, and thin 
 | `packages/dom` | `@remold-ui/dom` | Reads the screen (elements, SVG, canvas) into plain data; plays transitions. |
 | `packages/react` | `@remold-ui/react` | React primitives plus `useRemold()` and `useViewTransition()` hooks. |
 | `packages/vue` | `@remold-ui/vue` | `v-remold` directive. |
-| `packages/angular` | `@remold-ui/angular` | Function API now; a compiled directive in lesson 10. |
-| `apps/playground` | — | A Vite page for seeing each lesson work. |
+| `packages/angular` | `@remold-ui/angular` | Angular bindings for Remold. |
+| `apps/playground` | — | A Vite playground for experimenting with Remold. |
 
 ## Commands
 
@@ -26,8 +26,6 @@ pnpm build          # builds everything (Turborepo caches unchanged packages)
 ```
 
 Requires Node 22.12 or newer and pnpm 10.
-
-See [LEARNING.md](./LEARNING.md) for the lesson plan.
 
 ## React
 

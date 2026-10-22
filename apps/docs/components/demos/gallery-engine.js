@@ -4,8 +4,8 @@
  * its layers. (The prototype's canvas wallet is kept below but not shown: the Wallet app example
  * replaces it with real HTML.)
  *
- * Ported from the prototype page (prototypes/remold-motion.html). It's plain JavaScript on
- * purpose: dense canvas drawing that typing line by line wouldn't make clearer. The springs are
+ * This is plain JavaScript on purpose: dense canvas drawing that typing line by line wouldn't
+ * make clearer. The springs are
  * core's (`springCoefficients` and `stepSpring`), and frames come from `@remold-ui/dom`.
  *
  * createGallery(canvas, { onCaption }) → { kinds, setKind(key), setState(key), destroy() }
