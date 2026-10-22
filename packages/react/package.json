@@ -1,0 +1,51 @@
+{
+  "name": "@remold-ui/react",
+  "version": "0.0.0",
+  "description": "React bindings for Remold: keyless transitions, text morph and canvas scenes.",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/albertdugba/remold-ui.git" },
+  "publishConfig": { "access": "public" },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup && cp dist/index.d.cts dist/index.d.ts",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@remold-ui/canvas": "workspace:*",
+    "@remold-ui/core": "workspace:*",
+    "@remold-ui/dom": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "happy-dom": "20.14.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  }
+}
