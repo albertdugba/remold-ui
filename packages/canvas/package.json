@@ -1,0 +1,43 @@
+{
+  "name": "@remold-ui/canvas",
+  "version": "0.0.0",
+  "description": "Live canvas scenes: an isometric camera, looks, layouts that spring between each other, and keyless point clouds.",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/albertdugba/remold-ui.git" },
+  "publishConfig": { "access": "public" },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build-worker.mjs && tsup src/index.ts --format esm,cjs --dts --clean",
+    "dev": "node scripts/build-worker.mjs && tsup src/index.ts --format esm,cjs --dts --watch",
+    "typecheck": "node scripts/build-worker.mjs && tsc --noEmit",
+    "clean": "rm -rf dist .turbo",
+    "test": "node scripts/build-worker.mjs && vitest run",
+    "worker": "node scripts/build-worker.mjs"
+  },
+  "dependencies": {
+    "@remold-ui/core": "workspace:*",
+    "@remold-ui/dom": "workspace:*"
+  },
+  "devDependencies": {
+    "happy-dom": "20.14.5"
+  }
+}

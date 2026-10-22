@@ -1,0 +1,49 @@
+import type { CloudPoint, PointCloudOptions } from "@remold-ui/core";
+import type { CanvasSize } from "../canvas-size";
+import type { FrameLoop, ReducedMotion } from "@remold-ui/dom";
+
+export type ParticleFill = string | CanvasGradient | CanvasPattern;
+
+export interface ParticlesToOptions {
+  /** Read to screen-reader users. */
+  label?: string;
+  /** Spring every dot to this radius, in CSS pixels. */
+  radius?: number;
+  /** How dots pair with their destination shape. */
+  pairing?: "match" | "index";
+}
+
+export interface ParticlesOptions extends PointCloudOptions {
+  /** The first shape. More shapes follow with `to`. A point's `tone` picks its `palette` colour. */
+  points?: readonly CloudPoint[];
+  /** Scale shapes to fit the canvas, or leave their coordinates unchanged. */
+  fit?: "contain" | "none";
+  /** Space kept clear round a fitted shape, in CSS pixels. Default 24. */
+  padding?: number;
+  /** Dot radius at full size, in CSS pixels. Default 2.5. */
+  radius?: number;
+  /** Default `"circle"`. Squares are cheaper to draw for very large clouds. */
+  shape?: "circle" | "square";
+  /** The dots' colour, or a function that creates one for the canvas size. */
+  color?: ParticleFill | ((context: CanvasRenderingContext2D, size: CanvasSize) => ParticleFill);
+  /** Colours by tone. Replaces `color`. */
+  palette?: readonly string[];
+  /** Dots near the pointer lean away. `false` turns it off. */
+  pointer?: false | { radius?: number; strength?: number };
+  /** What the dots show, for screen readers. */
+  label?: string;
+  reducedMotion?: ReducedMotion;
+  loop?: FrameLoop;
+  maxPixelRatio?: number;
+}
+
+export interface Particles {
+  /** How many dots make up the current shape. */
+  readonly count: number;
+  /** Rebuild into a new shape. */
+  to(points: readonly CloudPoint[], options?: ParticlesToOptions): void;
+  /** Redraw now. */
+  render(): void;
+  /** Stop animating and remove listeners. */
+  destroy(): void;
+}
