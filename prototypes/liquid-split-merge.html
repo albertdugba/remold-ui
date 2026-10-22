@@ -1,0 +1,234 @@
+<title>Liquid Split and Merge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a heading, controls, then three specimen stages, each a single liquid gesture. */
+:root{
+  --paper:#F1F3F6; --panel:#FFFFFF; --ink:#141B26; --muted:#5A6577; --line:#D6DCE4;
+  --blob:#141B26; --on-blob:#FFFFFF; --danger:#C2355A; --accent:#0E7C72;
+  --display:'Big Shoulders Display','Arial Narrow',Impact,sans-serif; --sans:'IBM Plex Sans',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0D1118; --panel:#151B24; --ink:#E8EDF4; --muted:#97A3B4; --line:#283242;
+  --blob:#E8EDF4; --on-blob:#0D1118; --danger:#FF6F91; --accent:#3DD0BF; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#0D1118; --panel:#151B24; --ink:#E8EDF4; --muted:#97A3B4; --line:#283242;
+  --blob:#E8EDF4; --on-blob:#0D1118; --danger:#FF6F91; --accent:#3DD0BF; color-scheme:dark;
+}
+body{background:var(--paper);color:var(--ink);margin:0}
+.wrap{font-family:var(--sans);max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:28px 56px;display:grid;gap:22px}
+.wrap *{box-sizing:border-box}
+h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(36px,5.4vw,60px);line-height:1;text-wrap:balance}
+.lede{margin:0;max-width:66ch;color:var(--muted);font-size:16px;line-height:1.55}
+.controls{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;font-size:14px}
+.controls label{display:flex;gap:8px;align-items:center}
+.controls input[type=range]{width:140px;accent-color:var(--accent)}
+.seg{display:inline-flex;gap:2px;padding:3px;border-radius:6px;background:var(--line)}
+.seg button{font:inherit;font-size:13.5px;border:0;background:none;color:var(--muted);padding:5px 11px;border-radius:4px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;gap:12px;align-content:start}
+.card h2{margin:0;font-size:16px;font-weight:600}
+.card p{margin:0;font-size:14px;color:var(--muted);line-height:1.5}
+.stage{position:relative;background:var(--paper);border-radius:6px;cursor:pointer;border:0;padding:0;width:100%;display:block;color:inherit;font:inherit}
+.stage svg{display:block;width:100%;height:auto}
+.stage .blobs path{fill:var(--blob)}
+.stage .blobs path.danger{fill:var(--danger)}
+.stage text{font-family:var(--sans);font-weight:600;font-size:14px;fill:var(--on-blob);text-anchor:middle;dominant-baseline:central;pointer-events:none;transition:opacity .16s ease}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.btn{font:inherit;font-weight:600;font-size:14px;background:var(--accent);color:var(--panel);border:0;border-radius:5px;padding:7px 14px;cursor:pointer}
+.state{font-size:13px;color:var(--muted)}
+.note{margin:0;font-size:13.5px;color:var(--muted);max-width:80ch;line-height:1.55}
+.wrap :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+  <h1>Liquid split and merge</h1>
+  <p class="lede">One shape becomes two, or two become one, the way motion designers animate it: a liquid neck stretches and snaps, and the shapes squash and wobble with their own speed. Tap a stage, or tap again mid-motion to reverse it.</p>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Style">
+      <button type="button" aria-pressed="true" data-style="liquid">Liquid</button>
+      <button type="button" aria-pressed="false" data-style="plain">Plain slide</button>
+    </div>
+    <label for="visc">Stretchiness <input id="visc" type="range" min="0.2" max="1" step="0.01" value="0.62"></label>
+    <label for="squash">Squash and stretch <input id="squash" type="range" min="0" max="1" step="0.01" value="0.55"></label>
+    <label for="slow"><input id="slow" type="checkbox"> Slow motion</label>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Delete becomes a confirmation</h2>
+      <button class="stage" type="button" data-demo="delete" aria-label="Toggle the delete confirmation"><svg viewBox="0 0 360 120"><g class="blobs"></g><g class="labels"></g></svg></button>
+      <div class="row"><span class="state" aria-live="polite"></span><button class="btn" type="button" data-toggle="delete">Play</button></div>
+      <p>A destructive action asks for confirmation by splitting in two, so the choice appears exactly where the finger already is.</p>
+    </section>
+    <section class="card">
+      <h2>Filter chips merge into a tag</h2>
+      <button class="stage" type="button" data-demo="chips" aria-label="Toggle merging the filter chips"><svg viewBox="0 0 360 120"><g class="blobs"></g><g class="labels"></g></svg></button>
+      <div class="row"><span class="state" aria-live="polite"></span><button class="btn" type="button" data-toggle="chips">Play</button></div>
+      <p>Three chips flow together into one summary. Merging back shows exactly which filters it holds.</p>
+    </section>
+    <section class="card">
+      <h2>A status pill buds off a control</h2>
+      <button class="stage" type="button" data-demo="island" aria-label="Toggle the recording status"><svg viewBox="0 0 360 120"><g class="blobs"></g><g class="labels"></g></svg></button>
+      <div class="row"><span class="state" aria-live="polite"></span><button class="btn" type="button" data-toggle="island">Play</button></div>
+      <p>A compact status grows when recording starts, and a stop button drips off its side.</p>
+    </section>
+  </div>
+  <p class="note">How it works: each shape is a capsule driven by springs, so it keeps its speed when you interrupt it. Between shapes that belong together, a curved bridge (the metaball technique) is drawn from tangent points on their end caps; it thins as they part and snaps past a distance. Squash and stretch scale each capsule along its velocity while keeping its area. In Remold the split or merge itself comes from the matcher; in this prototype each one is declared by hand.</p>
+</div>
+
+<script>
+(() => {
+  const NS = "http://www.w3.org/2000/svg";
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const opts = { liquid: true, visc: 0.62, squash: 0.55, slow: false };
+
+  /* ── geometry ─────────────────────────────────────────── */
+  const capsule = (x, y, w, h) => {
+    const r = Math.min(h, w) / 2;
+    return `M${x + r} ${y}H${x + w - r}A${r} ${r} 0 0 1 ${x + w - r} ${y + h}H${x + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`;
+  };
+  const vec = (c, a, r) => [c[0] + r * Math.cos(a), c[1] + r * Math.sin(a)];
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  const ang = (a, b) => Math.atan2(a[1] - b[1], a[0] - b[0]);
+  /** The bridge between two circles: tangent points on each, joined by two cubic curves. */
+  function bridge(c1, r1, c2, r2, v, handle = 2.4) {
+    const d = dist(c1, c2), maxD = (r1 + r2) * (0.9 + 0.9 * v); // past this the neck snaps
+    if (!r1 || !r2 || d > maxD || d <= Math.abs(r1 - r2)) return "";
+    let u1 = 0, u2 = 0;
+    if (d < r1 + r2) {
+      u1 = Math.acos(Math.max(-1, Math.min(1, (r1 * r1 + d * d - r2 * r2) / (2 * r1 * d))));
+      u2 = Math.acos(Math.max(-1, Math.min(1, (r2 * r2 + d * d - r1 * r1) / (2 * r2 * d))));
+    }
+    const ab = ang(c2, c1), spread = Math.acos(Math.max(-1, Math.min(1, (r1 - r2) / d)));
+    const a1 = ab + u1 + (spread - u1) * v, a2 = ab - u1 - (spread - u1) * v;
+    const a3 = ab + Math.PI - u2 - (Math.PI - u2 - spread) * v, a4 = ab - Math.PI + u2 + (Math.PI - u2 - spread) * v;
+    const p1 = vec(c1, a1, r1), p2 = vec(c1, a2, r1), p3 = vec(c2, a3, r2), p4 = vec(c2, a4, r2);
+    const k = Math.min(v * handle, dist(p1, p3) / (r1 + r2)) * Math.min(1, (d * 2) / (r1 + r2));
+    const h1 = vec(p1, a1 - Math.PI / 2, r1 * k), h2 = vec(p2, a2 + Math.PI / 2, r1 * k);
+    const h3 = vec(p3, a3 + Math.PI / 2, r2 * k), h4 = vec(p4, a4 - Math.PI / 2, r2 * k);
+    const f = (p) => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`;
+    return `M${f(p1)}C${f(h1)} ${f(h3)} ${f(p3)}A${r2} ${r2} 0 ${d > r1 ? 1 : 0} 0 ${f(p4)}C${f(h4)} ${f(h2)} ${f(p2)}Z`;
+  }
+
+  /* ── springs: every number carries a velocity, so motion can be interrupted smoothly ── */
+  class Spring {
+    constructor(v) { this.x = v; this.v = 0; this.to = v; }
+    step(dt, k = 300, c = 20) { const a = -k * (this.x - this.to) - c * this.v; this.v += a * dt; this.x += this.v * dt; }
+    get rest() { return Math.abs(this.v) < 0.02 && Math.abs(this.x - this.to) < 0.05; }
+  }
+  class Blob {
+    constructor(b, cls = "") { this.s = { x: new Spring(b.x), y: new Spring(b.y), w: new Spring(b.w), h: new Spring(b.h) }; this.cls = cls; }
+    set(b) { for (const k in b) this.s[k].to = b[k]; }
+    jump(b) { for (const k in b) { this.s[k].x = b[k]; this.s[k].to = b[k]; this.s[k].v = 0; } }
+    get box() { return { x: this.s.x.x, y: this.s.y.x, w: this.s.w.x, h: this.s.h.x }; }
+    /** Squash and stretch: scale along horizontal velocity, keep the area. */
+    shaped(amount) {
+      const b = this.box, vx = this.s.x.v + this.s.w.v / 2;
+      const st = 1 + Math.min(0.35, Math.abs(vx) / 1400) * amount;
+      const w = b.w * st, h = b.h / st;
+      return { x: b.x + (b.w - w) / 2, y: b.y + (b.h - h) / 2, w, h };
+    }
+  }
+
+  /* ── the three demos: states are lists of capsules; groups say which capsules are bonded ── */
+  const H = 44, Y = 38;
+  const DEMOS = {
+    delete: {
+      states: [
+        { label: "Delete", blobs: [{ x: 120, y: Y, w: 80, h: H }, { x: 160, y: Y, w: 80, h: H }], labels: [{ t: "Delete", x: 180 }], name: "One button" },
+        { label: "Confirm", blobs: [{ x: 18, y: Y, w: 140, h: H }, { x: 192, y: Y, w: 150, h: H }], labels: [{ t: "Cancel", x: 88 }, { t: "Delete forever", x: 267 }], name: "Split into Cancel and Delete forever" },
+      ],
+      classes: ["danger", "danger"],
+    },
+    chips: {
+      states: [
+        { blobs: [{ x: 14, y: Y, w: 96, h: H }, { x: 136, y: Y, w: 104, h: H }, { x: 266, y: Y, w: 80, h: H }], labels: [{ t: "Design", x: 62 }, { t: "Research", x: 188 }, { t: "Ops", x: 306 }], name: "Three chips" },
+        { blobs: [{ x: 120, y: Y, w: 70, h: H }, { x: 145, y: Y, w: 70, h: H }, { x: 170, y: Y, w: 70, h: H }], labels: [{ t: "3 filters", x: 180 }], name: "Merged into one tag" },
+      ],
+      classes: ["", "", ""],
+    },
+    island: {
+      states: [
+        { blobs: [{ x: 132, y: Y, w: 96, h: H }, { x: 204, y: Y + 17, w: 10, h: 10 }], labels: [{ t: "Ready", x: 172 }], name: "Compact status" },
+        { blobs: [{ x: 50, y: Y, w: 196, h: H }, { x: 272, y: Y, w: 44, h: H }], labels: [{ t: "● Recording 0:12", x: 148 }, { t: "■", x: 294 }], name: "Recording, with a stop button" },
+      ],
+      classes: ["", "danger"],
+    },
+  };
+
+  function mount(id) {
+    const demo = DEMOS[id];
+    const stage = document.querySelector(`[data-demo="${id}"]`);
+    const card = stage.closest(".card");
+    const gB = stage.querySelector(".blobs"), gL = stage.querySelector(".labels");
+    const stateEl = card.querySelector(".state");
+    let at = 0;
+    const blobs = demo.states[0].blobs.map((b, i) => new Blob(b, demo.classes[i]));
+    const paths = blobs.map((b) => { const p = document.createElementNS(NS, "path"); if (b.cls) p.setAttribute("class", b.cls); gB.appendChild(p); return p; });
+    const bridges = blobs.slice(1).map((_, i) => { const p = document.createElementNS(NS, "path"); if (blobs[i].cls) p.setAttribute("class", blobs[i].cls); gB.appendChild(p); return p; });
+    const labelSets = demo.states.map((s, k) => s.labels.map((l) => {
+      const t = document.createElementNS(NS, "text"); t.textContent = l.t; t.setAttribute("x", l.x); t.setAttribute("y", Y + H / 2);
+      t.style.opacity = k === 0 ? "1" : "0"; gL.appendChild(t); return t;
+    }));
+    stateEl.textContent = demo.states[0].name;
+    let raf = 0, last = 0;
+
+    function draw() {
+      const shaped = blobs.map((b) => (opts.liquid ? b.shaped(opts.squash) : b.box));
+      shaped.forEach((b, i) => paths[i].setAttribute("d", capsule(b.x, b.y, b.w, b.h)));
+      bridges.forEach((p, i) => {
+        if (!opts.liquid) { p.setAttribute("d", ""); return; }
+        const a = shaped[i], b = shaped[i + 1];
+        const ra = Math.min(a.h, a.w) / 2, rb = Math.min(b.h, b.w) / 2;
+        // Facing end caps: the right cap of the left shape and the left cap of the right shape.
+        const ca = [a.x + a.w - ra, a.y + a.h / 2], cb = [b.x + rb, b.y + b.h / 2];
+        p.setAttribute("d", ca[0] < cb[0] + 0.01 ? bridge(ca, ra, cb, rb, opts.visc) : "");
+      });
+    }
+    function tick(now) {
+      const dt = Math.min(1 / 30, (now - last) / 1000) * (opts.slow ? 0.25 : 1);
+      last = now;
+      const sub = 4;
+      for (let i = 0; i < sub; i++) for (const b of blobs) for (const k in b.s) {
+        // Plain mode: a well-damped spring, no overshoot. Liquid: a bouncier one.
+        opts.liquid ? b.s[k].step(dt / sub, 260, 17) : b.s[k].step(dt / sub, 260, 34);
+      }
+      draw();
+      if (blobs.some((b) => Object.values(b.s).some((s) => !s.rest))) raf = requestAnimationFrame(tick); else raf = 0;
+    }
+    function go(to) {
+      at = to;
+      const s = demo.states[at];
+      s.blobs.forEach((b, i) => blobs[i].set(b));
+      labelSets.forEach((set, k) => set.forEach((t) => {
+        t.style.transitionDelay = k === at ? (opts.slow ? "0.5s" : "0.16s") : "0s";
+        t.style.opacity = k === at ? "1" : "0";
+      }));
+      stateEl.textContent = s.name;
+      card.querySelector(".btn").textContent = at === 0 ? "Play" : "Play back";
+      if (reduced) { s.blobs.forEach((b, i) => blobs[i].jump(b)); draw(); return; }
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+    }
+    const toggle = () => go(at === 0 ? 1 : 0);
+    stage.addEventListener("click", toggle);
+    card.querySelector(".btn").addEventListener("click", toggle);
+    draw();
+    return { toggle, redraw: draw };
+  }
+
+  const views = Object.keys(DEMOS).map(mount);
+  document.querySelectorAll("[data-style]").forEach((b) => b.addEventListener("click", () => {
+    opts.liquid = b.dataset.style === "liquid";
+    document.querySelectorAll("[data-style]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    views.forEach((v) => v.redraw());
+  }));
+  document.getElementById("visc").addEventListener("input", (e) => { opts.visc = +e.target.value; views.forEach((v) => v.redraw()); });
+  document.getElementById("squash").addEventListener("input", (e) => { opts.squash = +e.target.value; });
+  document.getElementById("slow").addEventListener("change", (e) => { opts.slow = e.target.checked; });
+  window.__liquid = { views, opts };
+})();
+</script>

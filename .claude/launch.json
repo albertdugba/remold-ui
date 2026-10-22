@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "react-playground",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "PATH=\"$HOME/.nvm/versions/node/v22.22.0/bin:$PATH\" pnpm --filter react-playground dev --port 5191 --strictPort"
+      ],
+      "port": 5191
+    },
+    {
+      "name": "docs",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "PATH=\"$HOME/.nvm/versions/node/v22.22.0/bin:$PATH\" pnpm --filter docs dev"
+      ],
+      "port": 5192
+    }
+  ]
+}
