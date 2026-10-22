@@ -1,0 +1,36 @@
+name: Publish packages
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck && pnpm test && pnpm build
+      - name: Verify the tag matches the package version
+        run: node -e 'const fs=require("fs"); const expected=process.env.EXPECTED.replace(/^v/, ""); for (const file of fs.readdirSync("packages")) { const pkg=JSON.parse(fs.readFileSync(`packages/${file}/package.json`, "utf8")); if (pkg.version !== expected) throw new Error(`${pkg.name} is ${pkg.version}; expected ${expected}`); }'
+        env:
+          EXPECTED: ${{ github.ref_name }}
+      - name: Publish public packages
+        run: |
+          for package in core dom canvas react vue angular; do
+            pnpm --filter "@remold-ui/${package}" publish --access public --no-git-checks
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
