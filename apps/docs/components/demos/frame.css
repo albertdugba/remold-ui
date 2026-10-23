@@ -7,8 +7,6 @@
   border: 1px solid var(--color-fd-border);
   border-radius: 0.75rem;
   background-color: var(--color-fd-card);
-  background-image: radial-gradient(var(--color-fd-border) 1px, transparent 1px);
-  background-size: 16px 16px;
 }
 
 .rm-segmented {

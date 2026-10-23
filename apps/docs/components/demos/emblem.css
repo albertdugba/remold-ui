@@ -1,8 +1,13 @@
 /* SVG morph */
 .rm-emblem {
   display: grid;
+  align-self: stretch;
+  align-content: center;
   justify-items: center;
   gap: 14px;
+  min-height: 100%;
+  background-color: var(--color-fd-card, #fff);
+  background-image: none;
 }
 
 .rm-emblem-art {

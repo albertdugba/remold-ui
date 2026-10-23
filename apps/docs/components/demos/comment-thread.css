@@ -82,6 +82,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  margin-left: auto;
   gap: 8px;
 }
 
@@ -105,13 +106,6 @@
   font-size: 12.5px;
   font-style: normal;
   color: var(--cx-muted);
-}
-
-.cx-bartitle {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--cx-text);
 }
 
 .cx-seg {
@@ -175,28 +169,30 @@
 }
 
 .cx-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 12.5px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--cx-border);
+  border-radius: 50%;
+  background: #fff;
   color: var(--cx-muted);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.cx-live i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--cx-faint);
+.cx-live svg {
+  width: 15px;
+  height: 15px;
 }
 
 .cx-live.on {
   color: var(--cx-text);
-}
-
-.cx-live.on i {
-  background: #16a34a;
+  border-color: color-mix(in oklab, var(--cx-ink) 25%, var(--cx-border));
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.07);
 }
 
 /* The panel and its lines */

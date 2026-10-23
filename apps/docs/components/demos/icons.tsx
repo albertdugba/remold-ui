@@ -1,20 +1,21 @@
 "use client";
 import { Remold } from "@remold-ui/react";
+import { Check, Menu, Pause, Play, Plus, Volume2, VolumeX, X, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Frame } from "./frame";
 import "./icons.css";
 
-/** Pairs of outline icons on a 24 × 24 grid, one path each. */
-const PAIRS = [
-  { label: ["Play", "Pause"], d: ["M8 5v14l11-7z", "M7 5h3v14H7zM14 5h3v14h-3z"], filled: true },
-  { label: ["Open menu", "Close menu"], d: ["M4 7h16M4 12h16M4 17h16", "M6 6l12 12M6 18L18 6M12 12h0"], filled: false },
-  { label: ["Add", "Added"], d: ["M12 5v14M5 12h14", "M5 12.5l4.5 4.5L19 7"], filled: false },
-  {
-    label: ["Mute", "Unmute"],
-    d: ["M4 9h4l5-4v14l-5-4H4zM16 9l5 6M21 9l-5 6", "M4 9h4l5-4v14l-5-4H4zM16 8a6 6 0 0 1 0 8M19 5a10 10 0 0 1 0 14"],
-    filled: false,
-  },
-] as const;
+interface IconPair {
+  label: readonly [string, string];
+  icons: readonly [LucideIcon, LucideIcon];
+}
+
+const PAIRS: readonly IconPair[] = [
+  { label: ["Play", "Pause"], icons: [Play, Pause] },
+  { label: ["Open menu", "Close menu"], icons: [Menu, X] },
+  { label: ["Add", "Added"], icons: [Plus, Check] },
+  { label: ["Sound on", "Sound off"], icons: [Volume2, VolumeX] },
+];
 
 /** Icons that reshape from one state into the next. */
 export function IconsDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
@@ -24,8 +25,9 @@ export function IconsDemo({ framed = true, index }: { framed?: boolean; index?: 
   const body = (
     <div className="rm-icons">
       {PAIRS.map((pair, i) => {
-        // Driven by a step number, the icons are pictures, not buttons: the card itself is the control.
         const Tag = index === undefined ? "button" : "span";
+        const Icon = pair.icons[on[i] ? 1 : 0];
+
         return (
           <Tag
             key={pair.label[0]}
@@ -38,15 +40,7 @@ export function IconsDemo({ framed = true, index }: { framed?: boolean; index?: 
               : { "aria-hidden": true })}
             className="rm-icon-button"
           >
-            <Remold.Icon
-              d={pair.d[on[i] ? 1 : 0]}
-              viewBox="0 0 24 24"
-              fill={pair.filled ? "currentColor" : "none"}
-              stroke={pair.filled ? "none" : "currentColor"}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <Remold.Icon icon={Icon} strokeWidth={1.75} aria-hidden="true" />
           </Tag>
         );
       })}
@@ -61,7 +55,7 @@ export function PlayPauseDemo() {
   return (
     <Frame>
       <button type="button" className="rm-icon-button large" aria-label={playing ? "Pause" : "Play"} onClick={() => setPlaying((p) => !p)}>
-        <Remold.Icon d={playing ? PAIRS[0].d[1] : PAIRS[0].d[0]} viewBox="0 0 24 24" fill="currentColor" />
+        <Remold.Icon icon={playing ? Pause : Play} strokeWidth={1.5} aria-hidden="true" />
       </button>
     </Frame>
   );

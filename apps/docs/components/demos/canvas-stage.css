@@ -98,9 +98,7 @@
   display: block;
   width: 100%;
   touch-action: pan-y;
-  /* A faint dotted floor, so the solids sit on something. */
-  background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
-  background-size: 22px 22px;
+  background: #fafafa;
 }
 
 .cs-info {

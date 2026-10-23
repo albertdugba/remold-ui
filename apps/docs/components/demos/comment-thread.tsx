@@ -14,6 +14,7 @@
  * The shop, the product, the publication and the people are made up.
  */
 import { Remold } from "@remold-ui/react";
+import { Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import "./comment-thread.css";
 
@@ -501,7 +502,6 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
   return (
     <div className="cx not-prose" data-look={look.key} ref={frame} onPointerDown={takeOver} onKeyDown={takeOver}>
       <div className="cx-bar">
-        <span className="cx-bartitle">Product Q&amp;A</span>
         <div className="cx-tools">
           <span className="cx-here" aria-label={`${look.here.length} people here`}>
             {look.here.map((name) => (
@@ -516,14 +516,14 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
             type="button"
             className={`cx-live${live ? " on" : ""}`}
             aria-pressed={live}
+            aria-label={live ? "Pause autoplay" : "Start autoplay"}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
               if (!live) switchTo(look.key);
               setLive((v) => !v);
             }}
           >
-            <i aria-hidden="true" />
-            Autoplay
+            <Remold.Icon icon={live ? Pause : Play} strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
       </div>

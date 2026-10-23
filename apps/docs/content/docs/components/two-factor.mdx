@@ -1,0 +1,33 @@
+---
+title: "Two-factor setup"
+description: "A setting that opens a QR code and code field in place, moves the rows below out of the way, and folds back to one line once it's on."
+status: "new"
+tags: ["Layout"]
+---
+
+<Stage name="two-factor" code={<Source demo="two-factor" />}>
+  <TwoFactorDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Switch two-factor on.** The setup opens between the rows and "Sign-in alerts" steps down to make room.
+- **Type any six digits, or paste them.** Once the code is full it's accepted, and the setup folds into "On · Authenticator app".
+- **Switch it off.** Everything returns to where it was.
+
+## Install
+
+<AddCommand name="two-factor" />
+
+## Dependencies
+
+<Dependencies demo="two-factor" />
+
+## How it works
+
+- One [Layout](/docs/primitives/layout) wraps the panel. Opening the setup adds it to the flow; Layout fades it in and moves the row below to its new place in the same motion. Accepting the code removes it, and everything closes up.
+- Each switch's knob sits at the start or the end of its track, so flipping it is a layout change as well.
+- The code boxes sit over one real input, so typing, pasting and one-time-code autofill all work as usual.
+- The QR code is drawn. Put your real one in its place.

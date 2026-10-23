@@ -8,6 +8,7 @@
  * The course and its lessons are made up.
  */
 import { Remold } from "@remold-ui/react";
+import { BookOpen, ChevronDown, ChevronRight, Circle, CircleCheck, CircleHelp, Video, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import "./course-outline.css";
 
@@ -72,14 +73,10 @@ const COURSE: Module[] = [
 const SHOW = ["All", "Remaining"] as const;
 type Show = (typeof SHOW)[number];
 
-const CHEVRON_RIGHT = "M10 7l5 5-5 5";
-const CHEVRON_DOWN = "M7 10l5 5 5-5";
-const CIRCLE = "M12 4a8 8 0 1 1 0 16a8 8 0 1 1 0-16Z";
-const TICK = "M12 4a8 8 0 1 1 0 16a8 8 0 1 1 0-16ZM8.3 12.3l2.6 2.6 4.9-5.4";
-const KIND_ICON: Record<Kind, string> = {
-  video: "M5 6.5h10a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 16V8A1.5 1.5 0 0 1 5 6.5ZM16.5 10.5l4-2.5v8l-4-2.5",
-  reading: "M4 5.5h6a2 2 0 0 1 2 2v11a1.5 1.5 0 0 0-1.5-1.5H4ZM20 5.5h-6a2 2 0 0 0-2 2v11a1.5 1.5 0 0 1 1.5-1.5H20Z",
-  quiz: "M12 3.5a8.5 8.5 0 1 1 0 17a8.5 8.5 0 1 1 0-17ZM9.6 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4M12 16.6v.01",
+const KIND_ICONS: Record<Kind, LucideIcon> = {
+  video: Video,
+  reading: BookOpen,
+  quiz: CircleHelp,
 };
 
 interface Row {
@@ -208,15 +205,7 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
                   onKeyDown={(e) => onKey(e, row)}
                 >
                   <span className="co-chevron" aria-hidden="true">
-                    <Remold.Icon
-                      d={isOpen ? CHEVRON_DOWN : CHEVRON_RIGHT}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
+                    <Remold.Icon icon={isOpen ? ChevronDown : ChevronRight} strokeWidth={2} aria-hidden="true" />
                   </span>
                   <span className="co-number" data-rm-anchor={m.id} data-complete={count === m.lessons.length || undefined}>
                     {COURSE.indexOf(m) + 1}
@@ -228,6 +217,7 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
             }
             const l = row.lesson!;
             const isDone = done.has(l.id);
+            const KindIcon = KIND_ICONS[l.kind];
             return (
               <div
                 key={l.id}
@@ -251,21 +241,11 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
                   }}
                   onKeyDown={(e) => onKey(e, row)}
                 >
-                  <Remold.Icon
-                    d={isDone ? TICK : CIRCLE}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.8}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  <Remold.Icon icon={isDone ? CircleCheck : Circle} strokeWidth={1.8} aria-hidden="true" />
                 </button>
                 <span className="co-lesson-title">{l.title}</span>
                 <span className="co-kind" aria-label={l.kind}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d={KIND_ICON[l.kind]} />
-                  </svg>
+                  <KindIcon aria-hidden="true" />
                 </span>
                 <span className="co-minutes">{l.minutes} min</span>
               </div>

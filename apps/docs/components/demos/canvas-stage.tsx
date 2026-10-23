@@ -6,6 +6,7 @@
  * go. Drag sideways to turn the scene. Any tap or tab stops the autoplay.
  */
 import { Remold } from "@remold-ui/react";
+import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import "./canvas-stage.css";
 
@@ -17,9 +18,6 @@ export interface StageScene {
   links?: SceneProps["links"];
   layouts: SceneProps["layouts"];
 }
-
-const PLAY = "M8 5.5v13l10.5-6.5Z";
-const PAUSE = "M8.5 5.5v13M15.5 5.5v13";
 
 export function CanvasStage({
   scene,
@@ -89,15 +87,7 @@ export function CanvasStage({
             aria-pressed={playing}
             onClick={() => setPlaying((p) => !p)}
           >
-            <Remold.Icon
-              d={playing ? PAUSE : PLAY}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <Remold.Icon icon={playing ? Pause : Play} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
       </div>

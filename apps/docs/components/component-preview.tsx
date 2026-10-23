@@ -1,8 +1,7 @@
 "use client";
 /**
  * A live, scaled-down copy of a component for its card on "Browse all". The real component is
- * rendered at the size it's designed for, then scaled to fit the card (the engine moves things
- * the right distance inside scaled containers). It's `inert`, so the whole card stays one link,
+ * rendered at the size it's designed for, then scaled to fit the card without cropping. It's `inert`, so the whole card stays one link,
  * and it's only loaded once the card is near the screen. Each component already pauses itself
  * while it's off screen.
  */
@@ -17,8 +16,6 @@ interface Preview {
   height?: number;
   /** Shown on a dark stage. */
   dark?: boolean;
-  /** Show the whole thing instead of filling the card, for pieces whose edges matter. */
-  whole?: boolean;
   /** For demos that are stepped from outside (`index`), how often to step them, in ms. */
   every?: number;
   props?: Record<string, unknown>;
@@ -32,13 +29,24 @@ const PREVIEWS: Record<string, Preview> = {
   // Component pages
   "comment-thread": { Component: load(() => import("./demos/comment-thread").then((m) => m.CommentThreadDemo)) },
   "course-outline": { Component: load(() => import("./demos/course-outline").then((m) => m.CourseOutlineDemo)) },
-  letters: { Component: load(() => import("./demos/letters").then((m) => m.LettersDemo)), whole: true },
+  letters: { Component: load(() => import("./demos/letters").then((m) => m.LettersDemo)) },
   "logo-morph": {
     Component: load(() => import("./demos/logo-morph").then((m) => m.LogoMorphDemo)),
     width: 640,
     props: { controls: false },
   },
   "morph-icons": { Component: load(() => import("./demos/morph-icons").then((m) => m.MorphIconsDemo)) },
+  "search-results": {
+    Component: load(() => import("./demos/search-results").then((m) => m.SearchResultsDemo)),
+    width: 520,
+  },
+  "upload-flow": {
+    Component: load(() => import("./demos/upload-flow").then((m) => m.UploadFlowDemo)),
+    width: 520,
+  },
+  "pricing-toggle": { Component: load(() => import("./demos/pricing-toggle").then((m) => m.PricingToggleDemo)), width: 520 },
+  "two-factor": { Component: load(() => import("./demos/two-factor").then((m) => m.TwoFactorDemo)), width: 520 },
+  "invite-team": { Component: load(() => import("./demos/invite-team").then((m) => m.InviteTeamDemo)), width: 520 },
   "onboarding-checklist": { Component: load(() => import("./demos/onboarding-checklist").then((m) => m.OnboardingChecklistDemo)) },
   "podcast-player": {
     Component: load(() => import("./demos/podcast-player").then((m) => m.PodcastPlayerDemo)),
@@ -117,18 +125,14 @@ export function ComponentPreview({ id, interactive = false }: { id: string; inte
     const fit = () => {
       const height = content.offsetHeight;
       if (!height) return;
-      // Fill the card like a cover image, but never more than a little past fitting whole, so
-      // small things don't blow up and tall ones keep their middle in view.
-      const contain = Math.min(outer.clientWidth / width, outer.clientHeight / height);
-      const cover = Math.max(outer.clientWidth / width, outer.clientHeight / height);
-      setScale(preview?.whole || interactive ? contain : Math.min(cover, contain * 1.45));
+      setScale(Math.min(outer.clientWidth / width, outer.clientHeight / height));
     };
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(outer);
     ro.observe(content);
     return () => ro.disconnect();
-  }, [near, width, preview?.whole, interactive]);
+  }, [near, width]);
 
   if (!preview) return <div className="rm-preview" aria-hidden="true" />;
   const { Component, height, dark, every, props } = preview;

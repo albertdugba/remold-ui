@@ -1,0 +1,361 @@
+/* Invite teammates. Styling only: every movement comes from Remold.Layout.
+   Fixed colours with a dark set, like the comment thread. */
+.iv {
+  --iv-surface: #ffffff;
+  --iv-fill: #f4f4f5;
+  --iv-chip: rgb(24 24 27 / 0.06);
+  --iv-ring: rgb(24 24 27 / 0.14);
+  --iv-halo: rgb(24 24 27 / 0.05);
+  --iv-ink: #18181b;
+  --iv-muted: #71717a;
+  --iv-faint: #a1a1aa;
+  --iv-wait: #d97706;
+  --iv-good: #16a34a;
+  --iv-bad: #dc2626;
+  display: grid;
+  align-content: start;
+  width: min(100%, 340px);
+  /* Tall enough for two pending invites, with the card pinned to the top: the list grows down from
+     the field, instead of the whole card recentring and the header jumping up. */
+  min-height: 262px;
+  color: var(--iv-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .iv {
+  --iv-surface: #232327;
+  --iv-fill: #2c2c31;
+  --iv-chip: rgb(255 255 255 / 0.08);
+  --iv-ring: rgb(255 255 255 / 0.18);
+  --iv-halo: rgb(255 255 255 / 0.06);
+  --iv-ink: #fafafa;
+  --iv-muted: #a1a1aa;
+  --iv-faint: #71717a;
+  --iv-wait: #fbbf24;
+  --iv-good: #4ade80;
+  --iv-bad: #f87171;
+}
+
+.iv p {
+  margin: 0;
+}
+
+.iv-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--iv-surface);
+}
+
+/* Avatars: soft tinted discs, each person's own hue */
+.iv-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: oklch(0.9 0.06 var(--hue));
+  color: oklch(0.38 0.1 var(--hue));
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.dark .iv-avatar {
+  background: oklch(0.42 0.08 var(--hue));
+  color: oklch(0.94 0.04 var(--hue));
+}
+
+/* The team */
+.iv-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iv-copy {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.iv-copy strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.iv-copy > span {
+  color: var(--iv-muted);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.iv-stack {
+  display: flex;
+  padding: 4px 0;
+}
+
+.iv-member {
+  width: 28px;
+  height: 28px;
+  font-size: 10px;
+  box-shadow: 0 0 0 2px var(--iv-surface);
+}
+
+/* Overlapped just enough to read as a group, never enough to cover an initial. Pointing at the
+   stack opens it out so each face can be told apart. */
+.iv-member + .iv-member {
+  margin-left: -4px;
+}
+
+.iv-stack[data-spread] .iv-member + .iv-member {
+  margin-left: 4px;
+}
+
+.iv-more {
+  background: var(--iv-fill);
+  color: var(--iv-muted);
+}
+
+/* The invite field: chips and the input share one box that grows a line if it has to */
+.iv-invite {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.iv-field {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--iv-fill);
+  font-size: 13px;
+  cursor: text;
+}
+
+/* Focused: the field lifts to the card's own colour with a quiet ring, rather than a heavy outline */
+.iv-field:focus-within {
+  background: var(--iv-surface);
+  box-shadow:
+    inset 0 0 0 1px var(--iv-ring),
+    0 0 0 3px var(--iv-halo);
+}
+
+.iv-field[data-invalid] {
+  box-shadow: inset 0 0 0 1px var(--iv-bad);
+}
+
+.iv-input {
+  flex: 1;
+  min-width: 60px;
+  height: 26px;
+  padding: 0 4px;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-overflow: ellipsis;
+}
+
+.iv-input::placeholder {
+  color: var(--iv-faint);
+}
+
+.iv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 150px;
+  height: 26px;
+  padding: 0 3px 0 2px;
+  border-radius: 999px;
+  background: var(--iv-chip);
+}
+
+.iv-chip-avatar {
+  width: 22px;
+  height: 22px;
+  font-size: 9px;
+}
+
+.iv-name {
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iv-chip-remove {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--iv-muted);
+  cursor: pointer;
+}
+
+.iv-chip-remove:hover {
+  background: var(--iv-chip);
+  color: var(--iv-ink);
+}
+
+.iv-chip-remove svg {
+  width: 12px;
+  height: 12px;
+}
+
+.iv-send {
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: 40px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--iv-ink);
+  color: var(--iv-surface);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.iv-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.iv-send:focus-visible,
+.iv-chip-remove:focus-visible,
+.iv-row-cancel:focus-visible {
+  outline: 2px solid var(--iv-ink);
+  outline-offset: 2px;
+}
+
+/* Sent and waiting */
+.iv-pending {
+  display: grid;
+  gap: 4px;
+}
+
+.iv-label {
+  color: var(--iv-faint);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.iv-rows {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.iv-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+
+.iv-row-avatar {
+  width: 26px;
+  height: 26px;
+  font-size: 9.5px;
+}
+
+.iv-row-copy {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.iv-row-email {
+  overflow: hidden;
+  color: var(--iv-muted);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iv-row-cancel {
+  flex: none;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--iv-muted);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.iv-row-cancel:hover {
+  background: var(--iv-fill);
+  color: var(--iv-ink);
+}
+
+/* One status line, its dot coloured by what just happened */
+.iv-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--iv-muted);
+  font-size: 12px;
+}
+
+.iv-note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iv-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--iv-faint);
+}
+
+.iv-status[data-tone="wait"] .iv-dot {
+  background: var(--iv-wait);
+}
+
+.iv-status[data-tone="good"] .iv-dot {
+  background: var(--iv-good);
+}
+
+.iv-status[data-tone="bad"] {
+  color: var(--iv-bad);
+}
+
+.iv-status[data-tone="bad"] .iv-dot {
+  background: var(--iv-bad);
+}
+
+/* On a docs page the stage is as light as the surfaces, so they get a hairline edge there. The home
+   page's tinted cards don't need one. */
+.rm-stage .iv-card {
+  box-shadow: inset 0 0 0 1px rgb(24 24 27 / 0.08);
+}
+
+.dark .rm-stage .iv-card {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}

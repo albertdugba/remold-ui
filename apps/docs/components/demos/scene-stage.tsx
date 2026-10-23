@@ -5,6 +5,7 @@
  * springs from one step to the next; hover to light a piece up, drag sideways to turn the scene.
  */
 import { Remold } from "@remold-ui/react";
+import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { BuiltScene } from "./build-anything-scenes";
 import "./gallery.css";
@@ -14,9 +15,6 @@ export interface StagedScene {
   name: string;
   scene: BuiltScene;
 }
-
-const PLAY = "M8 5.5v13l10.5-6.5Z";
-const PAUSE = "M8.5 5.5v13M15.5 5.5v13";
 
 export function SceneStage({ scenes, autoplay = false, every = 2600 }: { scenes: StagedScene[]; autoplay?: boolean; every?: number }) {
   const [which, setWhich] = useState(scenes[0]!.key);
@@ -84,15 +82,7 @@ export function SceneStage({ scenes, autoplay = false, every = 2600 }: { scenes:
             aria-pressed={playing}
             onClick={() => setPlaying((p) => !p)}
           >
-            <Remold.Icon
-              d={playing ? PAUSE : PLAY}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <Remold.Icon icon={playing ? Pause : Play} strokeWidth={1.75} aria-hidden="true" />
           </button>
           {layouts.map((l) => (
             <button

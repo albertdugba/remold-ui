@@ -282,11 +282,9 @@ figure.rm-bare-code {
   display: none;
 }
 
-/* The preview panel: a faint dot grid instead of a grey box */
+/* The preview panel stays quiet so the example is the focus. */
 #nd-page .prose div:has(> [role="tablist"]):not(.rm-stage *) > [role="tabpanel"] {
   background-color: var(--color-fd-background);
-  background-image: radial-gradient(color-mix(in srgb, var(--color-fd-foreground) 9%, transparent) 1px, transparent 1px);
-  background-size: 18px 18px;
 }
 
 /* The demo stage: plain, so the demo has all the room and nothing competes with it. */
@@ -412,8 +410,6 @@ html > body[data-scroll-locked] {
   min-height: 240px;
   padding: 28px 20px;
   background-color: var(--color-fd-background);
-  background-image: radial-gradient(var(--color-fd-border) 1px, transparent 1px);
-  background-size: 16px 16px;
   border-bottom: 1px solid var(--color-fd-border);
 }
 
@@ -585,7 +581,7 @@ html > body[data-scroll-locked] {
   box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.18);
 }
 
-/* The live preview: the component, scaled to fill the card. */
+/* The live preview: the component, scaled to fit inside the card. */
 .rm-preview {
   position: relative;
   aspect-ratio: 16 / 11;

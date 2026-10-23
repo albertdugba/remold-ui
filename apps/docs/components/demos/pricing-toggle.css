@@ -1,0 +1,157 @@
+/* Pricing toggle. Styling only: every movement comes from Remold.Layout and Remold.Text.
+   Fixed colours with a dark set, like the comment thread. */
+.pt {
+  --pt-surface: #ffffff;
+  --pt-track: #ececef;
+  --pt-ink: #18181b;
+  --pt-muted: #71717a;
+  --pt-good: #15803d;
+  --pt-good-bg: #dcfce7;
+  width: min(100%, 300px);
+  color: var(--pt-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .pt {
+  --pt-surface: #232327;
+  --pt-track: #2c2c31;
+  --pt-ink: #fafafa;
+  --pt-muted: #a1a1aa;
+  --pt-good: #4ade80;
+  --pt-good-bg: rgb(34 197 94 / 0.14);
+}
+
+.pt p {
+  margin: 0;
+}
+
+.pt-stack {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+/* The switch: two halves in one grid row; the thumb shares a cell with whichever is chosen */
+.pt-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 190px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--pt-track);
+}
+
+.pt-thumb,
+.pt-option {
+  grid-row: 1;
+}
+
+.pt-thumb {
+  border-radius: 999px;
+  background: var(--pt-surface);
+}
+
+.pt-option {
+  z-index: 1;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--pt-muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.pt-option:focus-visible {
+  outline: 2px solid var(--pt-ink);
+  outline-offset: 1px;
+}
+
+.pt-option[aria-checked="true"] {
+  color: var(--pt-ink);
+}
+
+/* The plan */
+.pt-card {
+  display: grid;
+  width: 100%;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  background: var(--pt-surface);
+}
+
+.pt-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pt-for {
+  margin-top: 2px !important;
+  color: var(--pt-muted);
+  font-size: 12.5px;
+}
+
+.pt-price {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 16px !important;
+}
+
+.pt-amount {
+  font-size: 38px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.pt-per {
+  color: var(--pt-muted);
+  font-size: 13px;
+}
+
+/* At the end of the line, so arriving shifts nothing */
+.pt-save {
+  align-self: center;
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--pt-good-bg);
+  color: var(--pt-good);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pt-note {
+  margin-top: 6px;
+  color: var(--pt-muted);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pt-cta {
+  display: grid;
+  place-items: center;
+  height: 38px;
+  margin-top: 18px;
+  border-radius: 10px;
+  background: var(--pt-ink);
+  color: var(--pt-surface);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* On a docs page the stage is as light as the surfaces, so they get a hairline edge there. The home
+   page's tinted cards don't need one. */
+.rm-stage .pt-card {
+  box-shadow: inset 0 0 0 1px rgb(24 24 27 / 0.08);
+}
+
+.dark .rm-stage .pt-card {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}

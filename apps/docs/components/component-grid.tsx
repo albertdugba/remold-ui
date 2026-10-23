@@ -55,6 +55,12 @@ const ORDER = [
   "comment-thread",
   "course-outline",
   "podcast-player",
+  // Product UI
+  "search-results",
+  "pricing-toggle",
+  "invite-team",
+  "two-factor",
+  "upload-flow",
   // Text morphing
   "logo-morph",
   "letters",
@@ -81,11 +87,14 @@ const ORDER = [
   "home/particles",
 ];
 
+const HIDDEN_EXAMPLE_IDS = new Set(["accounts"]);
+
 /** Every component and every landing-page piece, for the searchable "Browse all" grid. */
 export function AllComponents() {
   const pages: BrowserItem[] = source
     .getPages()
     .filter((p) => p.url.startsWith("/docs/components/") && p.url !== "/docs/components")
+    .filter((p) => !HIDDEN_EXAMPLE_IDS.has(p.url.split("/").pop()!))
     .sort((a, b) => a.data.title.localeCompare(b.data.title))
     .map((p) => ({
       id: p.url.split("/").pop()!,

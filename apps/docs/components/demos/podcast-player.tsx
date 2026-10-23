@@ -10,7 +10,7 @@
  * shows with drawn artwork and no audio.
  */
 import { Remold } from "@remold-ui/react";
-import { ArrowLeft, Bookmark, Moon, RotateCcw, RotateCw, Share2 } from "lucide-react";
+import { ArrowLeft, Bookmark, Moon, Pause, Play, RotateCcw, RotateCw, Share2 } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 export interface Episode {
@@ -78,9 +78,6 @@ const SAMPLE: Episode[] = [
     summary: "Conversations with the builders behind the software other people build with — and the taste that goes into a good tool.",
   },
 ];
-
-const PLAY = "M8 5.5v13l11-6.5z";
-const PAUSE = "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z";
 
 const clock = (s: number) => {
   const h = Math.floor(s / 3600);
@@ -302,10 +299,10 @@ export function PodcastPlayer({ episodes: given, source, credit, scene, height =
                       className={`grid size-14 place-items-center rounded-full text-zinc-900 transition active:scale-90 dark:text-zinc-100 ${focus}`}
                     >
                       <Remold.Icon
-                        d={playing ? PAUSE : PLAY}
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
+                        icon={playing ? Pause : Play}
                         className={`size-11 ${playing ? "" : "translate-x-0.5"}`}
+                        strokeWidth={1.5}
+                        aria-hidden="true"
                       />
                     </button>
                     <button
