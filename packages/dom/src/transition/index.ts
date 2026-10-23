@@ -10,7 +10,7 @@
  *   fade in, riding along with any animated parent.
  * - Reduced motion keeps the fades (so changes are still visible) and drops the movement.
  */
-import { matchNodes, springs, type MatchNodesOptions, type NodeMatches, type SpringConfig } from "@remold-ui/core";
+import { matchNodes, springs, type NodeMatches, type SpringConfig } from "@remold-ui/core";
 import { announce, resolveReducedMotion } from "../accessibility";
 import { readNodes, type PageSnapshot, type PixelBox } from "../snapshot";
 import { buildExitRecords } from "./exits";

@@ -209,15 +209,23 @@ export function approximate(a: readonly Point3[], b: readonly Point3[], maxDista
   const keptA = n > m ? closestIndexes(from, treeB, m) : allIndexes(n);
   const keptB = m > n ? closestIndexes(to, treeA, n) : allIndexes(m);
 
+  interface HalveOptions {
+    ia: Int32Array;
+    ib: Int32Array;
+    partnerOfA: Int32Array;
+    lo: number;
+    hi: number;
+  }
+
   /** Pair `ia[i]` with `ib[i]` after shuffling both so equal positions hold matching places. */
-  const halve = (ia: Int32Array, ib: Int32Array, partnerOfA: Int32Array, lo: number, hi: number): void => {
+  const halve = ({ ia, ib, partnerOfA, lo, hi }: HalveOptions): void => {
     const size = hi - lo;
     if (size <= EXACT_PIECE) {
       const cost = new Float64Array(size * size);
       for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) cost[r * size + c] = d2(ia[lo + r]!, ib[lo + c]!);
-      solve({ cost, rows: size, cols: size }).forEach(
-        (targetOffset, sourceOffset) => (partnerOfA[ia[lo + sourceOffset]!] = ib[lo + targetOffset]!),
-      );
+      solve({ cost, rows: size, cols: size }).forEach((targetOffset, sourceOffset) => {
+        partnerOfA[ia[lo + sourceOffset]!] = ib[lo + targetOffset]!;
+      });
       return;
     }
     let axis = 0;
@@ -241,14 +249,14 @@ export function approximate(a: readonly Point3[], b: readonly Point3[], maxDista
     const mid = lo + (size >> 1);
     select({ order: ia, coordinates: aAxes[axis]!, start: lo, end: hi - 1, target: mid });
     select({ order: ib, coordinates: bAxes[axis]!, start: lo, end: hi - 1, target: mid });
-    halve(ia, ib, partnerOfA, lo, mid);
-    halve(ia, ib, partnerOfA, mid, hi);
+    halve({ ia, ib, partnerOfA, lo, hi: mid });
+    halve({ ia, ib, partnerOfA, lo: mid, hi });
   };
 
   /** Guess by relative place. */
   const byPlace = () => {
     const partnerOfA = new Int32Array(n).fill(-1);
-    halve(Int32Array.from(keptA), Int32Array.from(keptB), partnerOfA, 0, keptA.length);
+    halve({ ia: Int32Array.from(keptA), ib: Int32Array.from(keptB), partnerOfA, lo: 0, hi: keptA.length });
     return partnerOfA;
   };
 
@@ -297,7 +305,7 @@ export function approximate(a: readonly Point3[], b: readonly Point3[], maxDista
       // right idea here, and wider searches would only get slower. Leave the rest to placing.
       if (before - restA.length < before * NEAREST_GIVE_UP) break;
     }
-    halve(Int32Array.from(restA), Int32Array.from(restB), partnerOfA, 0, restA.length);
+    halve({ ia: Int32Array.from(restA), ib: Int32Array.from(restB), partnerOfA, lo: 0, hi: restA.length });
     return partnerOfA;
   };
 

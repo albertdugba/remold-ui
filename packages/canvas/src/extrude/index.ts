@@ -202,11 +202,23 @@ export interface Wall {
   depth: number;
 }
 
+export interface WallOptions {
+  outline: Outline;
+  z0: number;
+  z1: number;
+  view: Projector;
+  inward?: boolean;
+}
+
+export interface InkLinesOptions extends WallOptions {
+  uprights?: boolean;
+}
+
 /**
  * The walls of an outline raised from z0 to z1 that face the viewer, far to near. For a hole
  * (`inward`), the walls you see are the ones facing into the hole, on its far side.
  */
-export function walls(outline: Outline, z0: number, z1: number, view: Projector, inward = false): Wall[] {
+export function walls({ outline, z0, z1, view, inward = false }: WallOptions): Wall[] {
   if (outline.length < 3 || z1 - z0 <= 0) return [];
   const direction = Math.sign(outlineArea(outline)) || 1;
   const result: Wall[] = [];
@@ -237,7 +249,7 @@ export function walls(outline: Outline, z0: number, z1: number, view: Projector,
 }
 
 /** Which walls of an outline face the viewer, one flag per edge, in outline order. */
-function facingWalls(outline: Outline, z0: number, z1: number, view: Projector, inward = false): boolean[] {
+function facingWalls({ outline, z0, z1, view, inward = false }: WallOptions): boolean[] {
   const direction = Math.sign(outlineArea(outline)) || 1;
   return outline.map((a, i) => {
     const b = outline[(i + 1) % outline.length]!;
@@ -257,16 +269,9 @@ const CREASE = Math.cos((25 * Math.PI) / 180);
  * that faces the viewer, and the upright edges where the solid's silhouette turns away or where
  * two walls meet at a sharp corner. Rounded corners get no upright lines, as in a drawing.
  */
-export function inkLines(
-  outline: Outline,
-  z0: number,
-  z1: number,
-  view: Projector,
-  inward = false,
-  uprights = true,
-): [ScreenPoint, ScreenPoint][] {
+export function inkLines({ outline, z0, z1, view, inward = false, uprights = true }: InkLinesOptions): [ScreenPoint, ScreenPoint][] {
   if (outline.length < 3 || z1 - z0 <= 0) return [];
-  const facing = facingWalls(outline, z0, z1, view, inward);
+  const facing = facingWalls({ outline, z0, z1, view, inward });
   const lines: [ScreenPoint, ScreenPoint][] = [];
   const n = outline.length;
   for (let i = 0; i < n; i++) {
@@ -308,7 +313,10 @@ const scaled = (m: Matrix, k: number): Matrix => [m[0] * k, m[1] * k, m[2] * k, 
 const lerp = (p: ScreenPoint, q: ScreenPoint, k: number): ScreenPoint => ({ x: p.x + (q.x - p.x) * k, y: p.y + (q.y - p.y) * k });
 
 function trace(ctx: CanvasRenderingContext2D, points: readonly ScreenPoint[]): void {
-  points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  for (const [index, point] of points.entries()) {
+    if (index === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
+  }
   ctx.closePath();
 }
 
@@ -356,23 +364,32 @@ function seeded(text: string): () => number {
   return () => {
     h = Math.imul(h ^ (h >>> 15), 2246822507);
     h = Math.imul(h ^ (h >>> 13), 3266489909);
-    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
   };
 }
 
-function paintWalls(ctx: CanvasRenderingContext2D, list: Wall[], palette: Palette, style: ExtrudeOptions["sides"], seed: string): void {
-  if (list.length === 0) return;
-  for (const w of list) {
-    ctx.beginPath();
-    trace(ctx, w.quad);
-    ctx.fillStyle = style === "flat" ? palette.sides[1] : shade(palette, w.light * 0.9 + 0.1);
-    ctx.fill();
+interface PaintWallsOptions {
+  context: CanvasRenderingContext2D;
+  walls: Wall[];
+  palette: Palette;
+  style: ExtrudeOptions["sides"];
+  seed: string;
+}
+
+function paintWalls({ context, walls: wallList, palette, style, seed }: PaintWallsOptions): void {
+  if (wallList.length === 0) return;
+  for (const wall of wallList) {
+    context.beginPath();
+    trace(context, wall.quad);
+    context.fillStyle = style === "flat" ? palette.sides[1] : shade(palette, wall.light * 0.9 + 0.1);
+    context.fill();
     // A hairline in the wall's own colour hides the seams between neighbouring walls.
-    ctx.strokeStyle = ctx.fillStyle;
-    ctx.lineWidth = 0.6;
-    ctx.stroke();
+    context.strokeStyle = context.fillStyle;
+    context.lineWidth = 0.6;
+    context.stroke();
   }
-  if (style === "sheen") paintSheen(ctx, list, seed);
+  if (style === "sheen") paintSheen(context, wallList, seed);
 }
 
 /** Bright streaks across all the walls together, like light caught in brushed metal or glass. */
@@ -527,7 +544,7 @@ export function extrude(options: ExtrudeOptions = {}): Look {
       ctx.globalAlpha = baseAlpha * solid;
       ctx.fillStyle = "rgba(15, 15, 30, 0.06)";
       ctx.fill();
-      halo(ctx, "15, 15, 30", 0.07, 13, 0, 7);
+      halo({ context: ctx, color: "15, 15, 30", alpha: 0.07, radius: 13, core: 0, steps: 7 });
       ctx.restore();
     }
 
@@ -543,9 +560,9 @@ export function extrude(options: ExtrudeOptions = {}): Look {
     /** The walls that face the viewer, with their colour band, streaks and ink: drawn over a container's contents. */
     function drawFront(): void {
       if (!upright) return;
-      const outer = walls(rings.outer, z0, z1, view);
+      const outer = walls({ outline: rings.outer, z0, z1, view });
       ctx.globalAlpha = baseAlpha * solid;
-      paintWalls(ctx, outer, palette, style === "sheen" ? "gradient" : style, seed);
+      paintWalls({ context: ctx, walls: outer, palette, style: style === "sheen" ? "gradient" : style, seed });
       if (level > 0.002) {
         for (const w of outer) {
           const [a0, b0, b1, a1] = w.quad;
@@ -562,7 +579,7 @@ export function extrude(options: ExtrudeOptions = {}): Look {
       ctx.globalAlpha = baseAlpha;
       if (!ink) return;
       inkStyle(1 - 0.5 * ghost);
-      strokeLines(ctx, inkLines(rings.outer, z0, z1, view));
+      strokeLines(ctx, inkLines({ outline: rings.outer, z0, z1, view }));
       // The top edge of each front wall: the near half of the rim's outline.
       strokeLines(
         ctx,
@@ -584,17 +601,17 @@ export function extrude(options: ExtrudeOptions = {}): Look {
 
     function drawSolid(): void {
       if (upright) {
-        const outer = walls(rings.outer, z0, z1, view);
+        const outer = walls({ outline: rings.outer, z0, z1, view });
         ctx.save();
         ctx.globalAlpha = baseAlpha * solid;
         if (!inked) {
           // Without ink, a soft glow around the whole solid (the walls cover its middle).
           ctx.beginPath();
           for (const w of outer) trace(ctx, w.quad);
-          halo(ctx, palette.glow, 0.6 * (0.18 + 0.4 * glow), 18 * (0.5 + glow));
+          halo({ context: ctx, color: palette.glow, alpha: 0.6 * (0.18 + 0.4 * glow), radius: 18 * (0.5 + glow) });
         }
         // Streaks go on last, over the colour band too.
-        paintWalls(ctx, outer, palette, style === "sheen" ? "gradient" : style, seed);
+        paintWalls({ context: ctx, walls: outer, palette, style: style === "sheen" ? "gradient" : style, seed });
         ctx.restore();
         // What it holds: a band of colour up the walls, to the fill level.
         if (level > 0.002) {
@@ -614,7 +631,7 @@ export function extrude(options: ExtrudeOptions = {}): Look {
           if (inked && level < 0.998) {
             // The line where the band meets the wall.
             inkStyle(0.55);
-            strokeLines(ctx, inkLines(rings.outer, zf, z1, view, false, false));
+            strokeLines(ctx, inkLines({ outline: rings.outer, z0: zf, z1, view, inward: false, uprights: false }));
           }
         }
       }
@@ -622,7 +639,7 @@ export function extrude(options: ExtrudeOptions = {}): Look {
       if (upright && style === "sheen") {
         ctx.save();
         ctx.globalAlpha = baseAlpha * solid;
-        paintSheen(ctx, walls(rings.outer, z0, z1, view), seed);
+        paintSheen(ctx, walls({ outline: rings.outer, z0, z1, view }), seed);
         ctx.restore();
       }
 
@@ -639,14 +656,14 @@ export function extrude(options: ExtrudeOptions = {}): Look {
         // A ghost shows its far edges through itself, and its ink lightens a little.
         if (ghost > 0.01 && upright) {
           inkStyle(0.3 * ghost);
-          strokeLines(ctx, inkLines(rings.outer, z0, z1, view, true));
+          strokeLines(ctx, inkLines({ outline: rings.outer, z0, z1, view, inward: true }));
           topPath(holes);
         }
         inkStyle(1 - 0.5 * ghost);
         ctx.stroke();
         if (glow > 0.01) {
           ctx.save();
-          halo(ctx, palette.glow, 0.3 * glow, 7 * glow, inkWidth + 0.5, 8);
+          halo({ context: ctx, color: palette.glow, alpha: 0.3 * glow, radius: 7 * glow, core: inkWidth + 0.5, steps: 8 });
           ctx.strokeStyle = `rgba(${palette.glow}, ${0.9 * glow})`;
           ctx.lineWidth = inkWidth + 0.5;
           ctx.stroke();
@@ -654,7 +671,7 @@ export function extrude(options: ExtrudeOptions = {}): Look {
         }
       } else if (options.edge || glow > 0.01) {
         ctx.save();
-        halo(ctx, palette.glow, 0.6 * (0.5 + 0.4 * glow), 8 * (0.5 + glow), 1.2);
+        halo({ context: ctx, color: palette.glow, alpha: 0.6 * (0.5 + 0.4 * glow), radius: 8 * (0.5 + glow), core: 1.2 });
         ctx.strokeStyle = `rgba(${palette.line}, ${options.edge ? 0.75 + 0.25 * glow : 0.45 * glow})`;
         ctx.lineWidth = 1.2;
         ctx.stroke();
@@ -679,17 +696,17 @@ export function extrude(options: ExtrudeOptions = {}): Look {
           ctx.fillStyle = shade(palette, -0.6);
           ctx.fill();
         }
-        paintWalls(ctx, walls(hole, floor, z1, view, true), palette, style, `${seed}:in`);
+        paintWalls({ context: ctx, walls: walls({ outline: hole, z0: floor, z1, view, inward: true }), palette, style, seed: `${seed}:in` });
         if (inked) {
           inkStyle(0.7);
-          strokeLines(ctx, inkLines(hole, floor, z1, view, true));
+          strokeLines(ctx, inkLines({ outline: hole, z0: floor, z1, view, inward: true }));
         }
         ctx.restore();
       }
 
       if (inked && upright) {
         inkStyle(1 - 0.5 * ghost);
-        strokeLines(ctx, inkLines(rings.outer, z0, z1, view));
+        strokeLines(ctx, inkLines({ outline: rings.outer, z0, z1, view }));
       }
     }
 
@@ -701,7 +718,7 @@ export function extrude(options: ExtrudeOptions = {}): Look {
         trace(ctx, projectOutline(rings.outer, z0, view));
         ctx.fillStyle = css(back, 0.03);
         ctx.fill();
-        for (const w of walls(rings.outer, z0, z1, view, true)) {
+        for (const w of walls({ outline: rings.outer, z0, z1, view, inward: true })) {
           ctx.beginPath();
           trace(ctx, w.quad);
           ctx.fillStyle = css(back, 0.025);
@@ -709,7 +726,7 @@ export function extrude(options: ExtrudeOptions = {}): Look {
         }
         if (ink) {
           inkStyle(0.2);
-          strokeLines(ctx, inkLines(rings.outer, z0, z1, view, true));
+          strokeLines(ctx, inkLines({ outline: rings.outer, z0, z1, view, inward: true }));
         }
       }
 
@@ -717,7 +734,7 @@ export function extrude(options: ExtrudeOptions = {}): Look {
       if (level > 0.002 && upright) {
         const inner = insetRing(rings.outer, box, 0.04);
         const bottom = z0 + Math.min(1.5, box.height * 0.02);
-        for (const w of walls(inner, bottom, zf, view)) {
+        for (const w of walls({ outline: inner, z0: bottom, z1: zf, view })) {
           ctx.beginPath();
           trace(ctx, w.quad);
           ctx.fillStyle = lit(contents, w.light * 0.8);
@@ -737,7 +754,7 @@ export function extrude(options: ExtrudeOptions = {}): Look {
 
       // The front walls: a light haze, so the contents read as behind glass.
       if (upright) {
-        for (const w of walls(rings.outer, z0, z1, view)) {
+        for (const w of walls({ outline: rings.outer, z0, z1, view })) {
           ctx.beginPath();
           trace(ctx, w.quad);
           ctx.fillStyle = `rgba(255, 255, 255, ${0.16 + 0.1 * Math.max(0, w.light)})`;
@@ -752,12 +769,12 @@ export function extrude(options: ExtrudeOptions = {}): Look {
       if (ink) {
         inkStyle(glow > 0.01 ? 1 : 0.85);
         ctx.stroke();
-        if (upright) strokeLines(ctx, inkLines(rings.outer, z0, z1, view));
+        if (upright) strokeLines(ctx, inkLines({ outline: rings.outer, z0, z1, view }));
       } else {
         ctx.strokeStyle = `rgba(${palette.line}, ${0.4 + 0.5 * glow})`;
         ctx.lineWidth = 1;
         ctx.stroke();
-        if (upright) strokeLines(ctx, inkLines(rings.outer, z0, z1, view));
+        if (upright) strokeLines(ctx, inkLines({ outline: rings.outer, z0, z1, view }));
       }
     }
 

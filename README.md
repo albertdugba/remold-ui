@@ -13,13 +13,13 @@ It is **headless**: the core is plain TypeScript with no browser code, and thin 
 | `packages/react` | `@remold-ui/react` | React primitives plus `useRemold()` and `useViewTransition()` hooks. |
 | `packages/vue` | `@remold-ui/vue` | `v-remold` directive. |
 | `packages/angular` | `@remold-ui/angular` | Angular bindings for Remold. |
-| `apps/playground` | — | A Vite playground for experimenting with Remold. |
+| `apps/docs` | — | Documentation and interactive component examples. |
 
 ## Commands
 
 ```bash
 pnpm install        # once
-pnpm dev            # builds the packages, watches them, and starts the playground
+pnpm dev            # builds the packages and starts the documentation app
 pnpm test           # runs every package's tests
 pnpm typecheck      # type-checks every package
 pnpm build          # builds everything (Turborepo caches unchanged packages)

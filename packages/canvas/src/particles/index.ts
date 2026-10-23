@@ -79,14 +79,21 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
   renderer.render();
 
   function tick(deltaTime: number): boolean {
-    if (destroyed) return (running = false);
+    if (destroyed) {
+      running = false;
+      return running;
+    }
     let moving = cloud.step(deltaTime);
     for (const animatedValue of [pointerController.pointer.x, pointerController.pointer.y, pointerController.pointer.presence, radius]) {
       if (animatedValue.step(deltaTime)) moving = true;
     }
-    if (!visible) return (running = false);
+    if (!visible) {
+      running = false;
+      return running;
+    }
     renderer.render();
-    return (running = moving);
+    running = moving;
+    return running;
   }
 
   function transitionTo(points: readonly CloudPoint[], transitionOptions: ParticlesToOptions = {}): void {

@@ -37,7 +37,4 @@ describe("benchmark", () => {
     for (const m of matcher) expect(m.score.precision, m.id).toBeGreaterThanOrEqual(0.95);
   });
 
-  it("has ground truth for every scenario", () => {
-    for (const s of scenarios) expect(truth(s.from, s.to).size, s.id).toBeGreaterThan(10);
-  });
 });

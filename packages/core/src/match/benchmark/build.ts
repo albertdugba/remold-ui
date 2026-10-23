@@ -111,8 +111,12 @@ export function page(width: number, roots: Element[]): Page {
 export function truth(a: Page, b: Page): Set<string> {
   const indexA = new Map<string, number>();
   const indexB = new Map<string, number>();
-  a.keys.forEach((k, i) => indexA.set(k, i));
-  b.keys.forEach((k, j) => indexB.set(k, j));
+  a.keys.forEach((key, index) => {
+    indexA.set(key, index);
+  });
+  b.keys.forEach((key, index) => {
+    indexB.set(key, index);
+  });
   const relations = new Set<string>();
   for (const [k, i] of indexA) {
     const j = indexB.get(k);

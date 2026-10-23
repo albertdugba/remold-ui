@@ -16,14 +16,22 @@ import type { LayoutBox } from "../scene";
 type Extra = Partial<LayoutBox>;
 type Boxes = Record<string, LayoutBox>;
 
+interface BoxOptions {
+  x: number;
+  y: number;
+  width: number;
+  depth: number;
+  extra?: Extra;
+}
+
 /** A box with its top-left corner at (x, y). */
-function box(x: number, y: number, width: number, depth: number, extra: Extra = {}): LayoutBox {
+function box({ x, y, width, depth, extra = {} }: BoxOptions): LayoutBox {
   return { x, y, z: 0, width, depth, ...extra };
 }
 
 /** A square of `size`, centred on (cx, cy). */
 function square(cx: number, cy: number, size: number, extra: Extra = {}): LayoutBox {
-  return box(cx - size / 2, cy - size / 2, size, size, extra);
+  return box({ x: cx - size / 2, y: cy - size / 2, width: size, depth: size, extra });
 }
 
 /** Squares spaced evenly round a circle, the first at the top (or at `start` degrees). */
