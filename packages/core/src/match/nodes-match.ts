@@ -1,16 +1,4 @@
-/**
- * Keyless matching: which element of the old interface became which element of the new one.
- *
- *   1. Score every old/new pair on content, kind, position and paint.
- *   2. Pick the best overall pairing (Hungarian), dropping weak pairs.
- *   3. Re-score with family context (matched parents, anchors, contents that moved together)
- *      and pair again, a few times.
- *   4. Look for splits and merges among the text.
- *   5. Pair lone leftovers: when two matched parents (or the two top levels) each have exactly
- *      one unmatched box, control or image left, painted alike, it's one element changing shape
- *      (a pill growing into a player), however different its size and contents.
- * Whatever is left over on the old side was removed; on the new side, added.
- */
+/** Matches two UI snapshots without relying on element keys. */
 import { assignFlat, type Assignment } from "./hungarian";
 import { descendants, prepare, type MatchNode } from "./nodes";
 import { baseSimilarity, styleSimilarity } from "./similarity";
@@ -41,84 +29,92 @@ export interface NodeMatches {
 
 /** How many times family context is applied. Each pass can settle ties the previous one exposed. */
 const STRUCTURE_PASSES = 3;
-/** How alike in paint (colours, type, corners) two lone leftovers must be to be paired. */
 const LONER_STYLE = 0.7;
 
-/**
- * Two elements that are each the only unmatched child of a matched pair of parents (or of the two
- * top levels), of the same kind and painted alike, are the same element: its size and contents
- * changed too much for a first impression, but there's nothing else it could have become.
- */
-function pairLoners(
-  a: ReturnType<typeof prepare>,
-  b: ReturnType<typeof prepare>,
-  pairs: Assignment[],
-  style: Float64Array,
-  cols: number,
-  splits: readonly Split[],
-  merges: readonly Merge[],
-): Assignment[] {
+type PreparedNodes = ReturnType<typeof prepare>;
+
+interface RefinementOptions {
+  fromNodes: PreparedNodes;
+  toNodes: PreparedNodes;
+  pairs: Assignment[];
+  styleScores: Float64Array;
+  toCount: number;
+  splits: readonly Split[];
+  merges: readonly Merge[];
+}
+
+interface PairIndexes {
+  toByFrom: Map<number, number>;
+  fromByTo: Map<number, number>;
+  excludedFrom: Set<number>;
+  excludedTo: Set<number>;
+}
+
+function createPairIndexes({ pairs, splits, merges }: Pick<RefinementOptions, "pairs" | "splits" | "merges">): PairIndexes {
   const forward = new Map<number, number>();
   const backward = new Map<number, number>();
+
   for (const p of pairs) {
     forward.set(p.from, p.to);
     backward.set(p.to, p.from);
   }
-  // Pieces of a split or merge aren't leftovers.
-  const taken = { a: new Set<number>(), b: new Set<number>() };
-  for (const s of splits) {
-    taken.a.add(s.from);
-    for (const j of s.to) taken.b.add(j);
+
+  const excludedFrom = new Set<number>();
+  const excludedTo = new Set<number>();
+
+  for (const split of splits) {
+    excludedFrom.add(split.from);
+    for (const toIndex of split.to) excludedTo.add(toIndex);
   }
-  for (const m of merges) {
-    taken.b.add(m.to);
-    for (const i of m.from) taken.a.add(i);
+
+  for (const merge of merges) {
+    excludedTo.add(merge.to);
+    for (const fromIndex of merge.from) excludedFrom.add(fromIndex);
   }
+  return { toByFrom: forward, fromByTo: backward, excludedFrom, excludedTo };
+}
+
+function pairLoners({ fromNodes, toNodes, pairs, styleScores, toCount, splits, merges }: RefinementOptions): Assignment[] {
+  const { toByFrom, fromByTo, excludedFrom, excludedTo } = createPairIndexes({ pairs, splits, merges });
   const family = (parent: number, partner: number | undefined) =>
     parent === -1 ? "top" : partner === undefined ? null : `${parent}>${partner}`;
+
   const leftA = new Map<string, number[]>();
   const leftB = new Map<string, number[]>();
-  for (const n of a) {
-    if (forward.has(n.index) || taken.a.has(n.index) || n.node.kind === "text" || n.node.kind === "heading") continue;
-    const key = family(n.node.parent, n.node.parent === -1 ? undefined : forward.get(n.node.parent));
-    if (key) leftA.set(key, [...(leftA.get(key) ?? []), n.index]);
+
+  for (const entry of fromNodes) {
+    if (toByFrom.has(entry.index) || excludedFrom.has(entry.index) || entry.node.kind === "text" || entry.node.kind === "heading") {
+      continue;
+    }
+
+    const key = family(entry.node.parent, entry.node.parent === -1 ? undefined : toByFrom.get(entry.node.parent));
+    if (key) leftA.set(key, [...(leftA.get(key) ?? []), entry.index]);
   }
-  for (const n of b) {
-    if (backward.has(n.index) || taken.b.has(n.index) || n.node.kind === "text" || n.node.kind === "heading") continue;
-    const from = n.node.parent === -1 ? undefined : backward.get(n.node.parent);
-    const key = n.node.parent === -1 ? "top" : from === undefined ? null : `${from}>${n.node.parent}`;
-    if (key) leftB.set(key, [...(leftB.get(key) ?? []), n.index]);
+
+  for (const entry of toNodes) {
+    if (fromByTo.has(entry.index) || excludedTo.has(entry.index) || entry.node.kind === "text" || entry.node.kind === "heading") {
+      continue;
+    }
+
+    const fromParent = entry.node.parent === -1 ? undefined : fromByTo.get(entry.node.parent);
+    const key = entry.node.parent === -1 ? "top" : fromParent === undefined ? null : `${fromParent}>${entry.node.parent}`;
+    if (key) leftB.set(key, [...(leftB.get(key) ?? []), entry.index]);
   }
+
   const added: Assignment[] = [];
   for (const [key, olds] of leftA) {
     const news = leftB.get(key);
     if (olds.length !== 1 || news?.length !== 1) continue;
     const i = olds[0]!;
     const j = news[0]!;
-    const score = style[i * cols + j]!;
-    if (a[i]!.node.kind === b[j]!.node.kind && score >= LONER_STYLE) added.push({ from: i, to: j, score });
+    const score = styleScores[i * toCount + j]!;
+    if (fromNodes[i]!.node.kind === toNodes[j]!.node.kind && score >= LONER_STYLE) added.push({ from: i, to: j, score });
   }
+
   return added.length ? [...pairs, ...added] : pairs;
 }
 
-/**
- * Step 6: containers that carry the same contents. A card that grows into a sheet, or a bar that
- * opens into a page, often changes size and place too much to match on its own, but most of what
- * was inside it ends up inside the new one. For each unmatched box on the old side, find the
- * unmatched box on the new side that received most of its matched contents (at least three
- * things, at least 60% of what it held, and at least 30% of what the new one holds), and pair
- * the best of them, closest in look first. Inner wrappers that hold the same things lose to the
- * outer box that paints, because look breaks ties.
- */
-function pairContainers(
-  a: ReturnType<typeof prepare>,
-  b: ReturnType<typeof prepare>,
-  pairs: Assignment[],
-  style: Float64Array,
-  cols: number,
-  splits: readonly Split[],
-  merges: readonly Merge[],
-): Assignment[] {
+function pairContainers({ fromNodes, toNodes, pairs, styleScores, toCount, splits, merges }: RefinementOptions): Assignment[] {
   const forward = new Map<number, number>();
   const usedB = new Set<number>();
   for (const p of pairs) {
@@ -133,41 +129,52 @@ function pairContainers(
     usedB.add(m.to);
     for (const i of m.from) forward.set(i, -1);
   }
-  const contents = (nodes: ReturnType<typeof prepare>, i: number) => descendants(nodes, i).filter((d) => nodes[d]!.hasContent);
-  const boxes = (n: (typeof a)[number]) => n.node.kind !== "text" && n.node.kind !== "heading";
-  const inB = new Map<number, Set<number>>();
-  for (const q of b) if (!usedB.has(q.index) && boxes(q)) inB.set(q.index, new Set(contents(b, q.index)));
 
-  const candidates: { i: number; j: number; score: number }[] = [];
-  for (const p of a) {
-    if (forward.has(p.index) || !boxes(p)) continue;
-    const held = contents(a, p.index);
-    const sent = held.map((d) => forward.get(d)).filter((j): j is number => j !== undefined && j >= 0);
+  const contents = (nodes: PreparedNodes, index: number) => descendants(nodes, index).filter((descendant) => nodes[descendant]!.hasContent);
+  const isContainer = (entry: (typeof fromNodes)[number]) => entry.node.kind !== "text" && entry.node.kind !== "heading";
+  const inB = new Map<number, Set<number>>();
+
+  for (const entry of toNodes) {
+    if (!usedB.has(entry.index) && isContainer(entry)) inB.set(entry.index, new Set(contents(toNodes, entry.index)));
+  }
+
+  const candidates: { from: number; to: number; score: number }[] = [];
+
+  for (const entry of fromNodes) {
+    if (forward.has(entry.index) || !isContainer(entry)) continue;
+    const held = contents(fromNodes, entry.index);
+    const sent = held.map((descendant) => forward.get(descendant)).filter((index): index is number => index !== undefined && index >= 0);
     if (sent.length < 3) continue;
-    for (const [j, there] of inB) {
-      if (b[j]!.node.kind !== p.node.kind || there.size === 0) continue;
+    for (const [toIndex, contained] of inB) {
+      if (toNodes[toIndex]!.node.kind !== entry.node.kind || contained.size === 0) continue;
       let agree = 0;
-      for (const t of sent) if (there.has(t)) agree++;
-      if (agree < 3 || agree / held.length < 0.6 || agree / there.size < 0.3) continue;
-      candidates.push({ i: p.index, j, score: agree / held.length + agree / there.size + 0.5 * style[p.index * cols + j]! });
+      for (const targetIndex of sent) if (contained.has(targetIndex)) agree++;
+      if (agree < 3 || agree / held.length < 0.6 || agree / contained.size < 0.3) continue;
+      candidates.push({ from: entry.index, to: toIndex, score: agree / held.length + agree / contained.size + 0.5 * styleScores[entry.index * toCount + toIndex]! });
     }
   }
+
   candidates.sort((x, y) => y.score - x.score);
-  const takenA = new Set<number>();
-  const takenB = new Set<number>();
+  const usedFrom = new Set<number>();
+  const usedTo = new Set<number>();
   const added: Assignment[] = [];
-  for (const c of candidates) {
-    if (takenA.has(c.i) || takenB.has(c.j)) continue;
-    takenA.add(c.i);
-    takenB.add(c.j);
-    added.push({ from: c.i, to: c.j, score: c.score / 2.5 });
+
+  for (const candidate of candidates) {
+    if (usedFrom.has(candidate.from) || usedTo.has(candidate.to)) continue;
+    usedFrom.add(candidate.from);
+    usedTo.add(candidate.to);
+    added.push({ from: candidate.from, to: candidate.to, score: candidate.score / 2.5 });
   }
+
   return added.length ? [...pairs, ...added] : pairs;
 }
 
-function samePairs(p: readonly Assignment[], q: readonly Assignment[]): boolean {
-  if (p.length !== q.length) return false;
-  for (let k = 0; k < p.length; k++) if (p[k]!.from !== q[k]!.from || p[k]!.to !== q[k]!.to) return false;
+function samePairs(previousPairs: readonly Assignment[], nextPairs: readonly Assignment[]): boolean {
+  if (previousPairs.length !== nextPairs.length) return false;
+
+  for (let index = 0; index < previousPairs.length; index++) {
+    if (previousPairs[index]!.from !== nextPairs[index]!.from || previousPairs[index]!.to !== nextPairs[index]!.to) return false;
+  }
   return true;
 }
 
@@ -179,61 +186,67 @@ export function matchNodes(
   if (!(threshold >= 0 && threshold <= 1)) {
     throw new RangeError(`matchNodes: threshold must be between 0 and 1, got ${threshold}`);
   }
-  const a = prepare(from);
-  const b = prepare(to);
-  // Every pair is scored into flat tables, row-major. Style is used twice (first impressions and
-  // family context), so it's worked out once.
-  const rows = a.length;
-  const cols = b.length;
-  const style = new Float64Array(rows * cols);
-  const base = new Float64Array(rows * cols);
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      const k = i * cols + j;
-      style[k] = styleSimilarity(a[i]!, b[j]!);
-      base[k] = baseSimilarity(a[i]!, b[j]!, style[k]);
+
+  const fromNodes = prepare(from);
+  const toNodes = prepare(to);
+  const fromCount = fromNodes.length;
+  const toCount = toNodes.length;
+  const styleScores = new Float64Array(fromCount * toCount);
+  const baseScores = new Float64Array(fromCount * toCount);
+
+  for (let fromIndex = 0; fromIndex < fromCount; fromIndex++) {
+    for (let toIndex = 0; toIndex < toCount; toIndex++) {
+      const scoreIndex = fromIndex * toCount + toIndex;
+      styleScores[scoreIndex] = styleSimilarity(fromNodes[fromIndex]!, toNodes[toIndex]!);
+      baseScores[scoreIndex] = baseSimilarity(fromNodes[fromIndex]!, toNodes[toIndex]!, styleScores[scoreIndex]);
     }
   }
-  let pairs = assignFlat({ similarity: base, rows, cols, threshold });
 
-  if (structure && rows > 0 && cols > 0) {
-    const context = structureContext(a, b, style);
-    const scored = new Float64Array(rows * cols);
+  let pairs = assignFlat({ similarity: baseScores, rows: fromCount, cols: toCount, threshold });
+
+  if (structure && fromCount > 0 && toCount > 0) {
+    const context = structureContext(fromNodes, toNodes, styleScores);
+    const contextualScores = new Float64Array(fromCount * toCount);
+
     for (let pass = 0; pass < STRUCTURE_PASSES; pass++) {
-      const next = assignFlat({ similarity: withContext(base, a, b, pairs, context, scored), rows, cols, threshold });
-      // A pass only depends on the pairs before it: once they stop changing, so would every later pass.
-      const settled = samePairs(next, pairs);
-      pairs = next;
+      const nextPairs = assignFlat({ similarity: withContext(baseScores, fromNodes, toNodes, pairs, context, contextualScores), rows: fromCount, cols: toCount, threshold });
+      const settled = samePairs(nextPairs, pairs);
+      pairs = nextPairs;
       if (settled) break;
     }
   }
 
   let splits: Split[] = [];
   let merges: Merge[] = [];
-  if (findSplits) ({ pairs, splits, merges } = splitsAndMerges(a, b, pairs));
-  // Last, so splits and merges get the first say over leftovers.
-  if (structure) pairs = pairLoners(a, b, pairs, style, cols, splits, merges);
-  if (structure) pairs = pairContainers(a, b, pairs, style, cols, splits, merges);
+
+  if (findSplits) ({ pairs, splits, merges } = splitsAndMerges(fromNodes, toNodes, pairs));
+  const refinementOptions = { fromNodes, toNodes, pairs, styleScores, toCount, splits, merges };
+  if (structure) pairs = pairLoners(refinementOptions);
+  if (structure) pairs = pairContainers({ ...refinementOptions, pairs });
 
   const usedA = new Set<number>();
   const usedB = new Set<number>();
+
   for (const p of pairs) {
     usedA.add(p.from);
     usedB.add(p.to);
   }
+
   for (const s of splits) {
     usedA.add(s.from);
     for (const j of s.to) usedB.add(j);
   }
+
   for (const m of merges) {
     usedB.add(m.to);
     for (const i of m.from) usedA.add(i);
   }
+
   return {
     pairs: pairs.sort((p, q) => p.from - q.from),
     splits,
     merges,
-    removed: a.map((p) => p.index).filter((i) => !usedA.has(i)),
-    added: b.map((q) => q.index).filter((j) => !usedB.has(j)),
+    removed: fromNodes.map((entry) => entry.index).filter((index) => !usedA.has(index)),
+    added: toNodes.map((entry) => entry.index).filter((index) => !usedB.has(index)),
   };
 }

@@ -1,7 +1,4 @@
-/**
- * Splits and merges: one text became several ("12 Rue de Rivoli, 75001 Paris" became two
- * lines), or several became one ("Ada" and "Lovelace" became "Ada Lovelace").
- */
+/** Detects text nodes that split into several nodes or merge into one. */
 import type { Assignment } from "./hungarian";
 import type { PreparedNode } from "./nodes";
 
@@ -16,13 +13,13 @@ export interface Merge {
 }
 
 /** Tokens that identify content: words of two or more characters, and anything with a digit. */
-const significant = (n: PreparedNode) => n.significant;
+const significantTokens = (node: PreparedNode) => node.significant;
 
 /** Every significant token of `part` appears in `whole`, and `whole` has more. */
 function isPartOf(part: PreparedNode, whole: PreparedNode): boolean {
-  const p = part.significant;
-  const w = whole.significantSet;
-  return p.length > 0 && p.length < w.size && p.every((t) => w.has(t));
+  const partTokens = part.significant;
+  const wholeTokens = whole.significantSet;
+  return partTokens.length > 0 && partTokens.length < wholeTokens.size && partTokens.every((token) => wholeTokens.has(token));
 }
 
 const closeness = (p: PreparedNode, q: PreparedNode) => Math.exp(-Math.hypot(p.node.x - q.node.x, p.node.y - q.node.y) / 0.6);
@@ -63,8 +60,8 @@ function findGroups(
   for (const [whole, claimed] of claims) {
     if (claimed.length < 2) continue;
     // The parts must cover most of the whole, or it's a coincidence of shared words.
-    const covered = new Set(claimed.flatMap((p) => significant(parts[p]!)));
-    const tokens = new Set(significant(wholes[whole]!));
+    const covered = new Set(claimed.flatMap((partIndex) => significantTokens(parts[partIndex]!)));
+    const tokens = new Set(significantTokens(wholes[whole]!));
     let hits = 0;
     for (const t of tokens) if (covered.has(t)) hits++;
     if (hits / tokens.size >= 0.6) groups.set(whole, claimed);
@@ -77,24 +74,23 @@ const maps = (pairs: readonly Assignment[]) => ({
   backward: new Map(pairs.map((p) => [p.to, p.from])),
 });
 
-/** Detect splits, then merges. Pairs absorbed into a split or merge are removed from `pairs`. */
 export function splitsAndMerges(
-  a: readonly PreparedNode[],
-  b: readonly PreparedNode[],
+  fromNodes: readonly PreparedNode[],
+  toNodes: readonly PreparedNode[],
   pairs: readonly Assignment[],
 ): { pairs: Assignment[]; splits: Split[]; merges: Merge[] } {
   let remaining = [...pairs];
 
   const splits: Split[] = [];
   const before = maps(remaining);
-  for (const [from, to] of findGroups(a, b, before.forward, before.backward)) {
+  for (const [from, to] of findGroups(fromNodes, toNodes, before.forward, before.backward)) {
     splits.push({ from, to });
     remaining = remaining.filter((p) => p.from !== from && !to.includes(p.to));
   }
 
   const merges: Merge[] = [];
   const after = maps(remaining);
-  for (const [to, from] of findGroups(b, a, after.backward, after.forward)) {
+  for (const [to, from] of findGroups(toNodes, fromNodes, after.backward, after.forward)) {
     merges.push({ from, to });
     remaining = remaining.filter((p) => p.to !== to && !from.includes(p.from));
   }

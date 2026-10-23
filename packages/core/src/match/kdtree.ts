@@ -99,7 +99,7 @@ export function kdTree({
           const coordinate = query[axisIndex]!;
           const distanceBelow = boxes[boxOffset + axisIndex]! - coordinate;
           const distanceAbove = coordinate - boxes[boxOffset + 3 + axisIndex]!;
-          const distanceToBox = distanceBelow > 0 ? distanceBelow : distanceAbove > 0 ? distanceAbove : 0;
+          const distanceToBox = distanceBelow > 0 ? distanceBelow : Math.max(distanceAbove, 0);
           boxDistanceSquared += distanceToBox * distanceToBox;
         }
         if (boxDistanceSquared > maximumCandidateDistance()) return;
@@ -149,14 +149,10 @@ export function select({
       firstValue < middleValue
         ? middleValue < lastValue
           ? middleValue
-          : firstValue < lastValue
-          ? lastValue
-          : firstValue
+          : Math.max(firstValue, lastValue)
         : firstValue < lastValue
         ? firstValue
-        : middleValue < lastValue
-        ? lastValue
-        : middleValue;
+        : Math.max(middleValue, lastValue);
     let left = start;
     let right = end;
     while (left <= right) {

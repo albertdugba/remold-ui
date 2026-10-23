@@ -1,17 +1,17 @@
-/**
- * Scoring matchers against ground truth, plus the two baselines the matcher has to beat.
- */
+/** Scores matchers against expected relations and provides baseline matchers. */
 import type { MatchNode } from "../nodes";
 import type { NodeMatches } from "../nodes-match";
 import { normalizeText } from "../text";
 
 /** Every relation a result claims, as "i>j" strings. */
 export function relations(result: NodeMatches): Set<string> {
-  const out = new Set<string>();
-  for (const p of result.pairs) out.add(`${p.from}>${p.to}`);
-  for (const s of result.splits) for (const j of s.to) out.add(`${s.from}>${j}`);
-  for (const m of result.merges) for (const i of m.from) out.add(`${i}>${m.to}`);
-  return out;
+  const relationKeys = new Set<string>();
+
+  for (const pair of result.pairs) relationKeys.add(`${pair.from}>${pair.to}`);
+  for (const split of result.splits) for (const toIndex of split.to) relationKeys.add(`${split.from}>${toIndex}`);
+  for (const merge of result.merges) for (const fromIndex of merge.from) relationKeys.add(`${fromIndex}>${merge.to}`);
+
+  return relationKeys;
 }
 
 export interface Score {
@@ -26,22 +26,23 @@ export interface Score {
 /** Precision: how many claimed relations are right. Recall: how many right ones were found. */
 export function score(claimed: Set<string>, expected: Set<string>): Score {
   let correct = 0;
-  for (const r of claimed) if (expected.has(r)) correct++;
+  for (const relation of claimed) if (expected.has(relation)) correct++;
   const precision = claimed.size > 0 ? correct / claimed.size : 1;
   const recall = expected.size > 0 ? correct / expected.size : 1;
   const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
   return { precision, recall, f1, correct, claimed: claimed.size, expected: expected.size };
 }
 
-function finish(a: readonly MatchNode[], b: readonly MatchNode[], pairs: { from: number; to: number }[]): NodeMatches {
-  const usedA = new Set(pairs.map((p) => p.from));
-  const usedB = new Set(pairs.map((p) => p.to));
+function finish(fromNodes: readonly MatchNode[], toNodes: readonly MatchNode[], pairs: { from: number; to: number }[]): NodeMatches {
+  const usedFrom = new Set(pairs.map((pair) => pair.from));
+  const usedTo = new Set(pairs.map((pair) => pair.to));
+
   return {
-    pairs: pairs.map((p) => ({ ...p, score: 1 })),
+    pairs: pairs.map((pair) => ({ ...pair, score: 1 })),
     splits: [],
     merges: [],
-    removed: a.map((_, i) => i).filter((i) => !usedA.has(i)),
-    added: b.map((_, j) => j).filter((j) => !usedB.has(j)),
+    removed: fromNodes.map((_, index) => index).filter((index) => !usedFrom.has(index)),
+    added: toNodes.map((_, index) => index).filter((index) => !usedTo.has(index)),
   };
 }
 
@@ -49,11 +50,11 @@ function finish(a: readonly MatchNode[], b: readonly MatchNode[], pairs: { from:
 function treePaths(nodes: readonly MatchNode[]): string[] {
   const paths: string[] = [];
   const childCount = new Map<number, number>();
-  nodes.forEach((n, i) => {
-    const sibling = childCount.get(n.parent) ?? 0;
-    childCount.set(n.parent, sibling + 1);
-    const parentPath = n.parent >= 0 ? paths[n.parent]! : "";
-    paths[i] = `${parentPath}/${n.kind}:${sibling}`;
+  nodes.forEach((node, index) => {
+    const sibling = childCount.get(node.parent) ?? 0;
+    childCount.set(node.parent, sibling + 1);
+    const parentPath = node.parent >= 0 ? paths[node.parent]! : "";
+    paths[index] = `${parentPath}/${node.kind}:${sibling}`;
   });
   return paths;
 }

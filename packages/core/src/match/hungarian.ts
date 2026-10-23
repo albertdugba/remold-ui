@@ -1,10 +1,4 @@
-/**
- * Optimal assignment (the Hungarian algorithm, in the Jonker–Volgenant style with potentials).
- *
- * Given a table of costs, pick one column for each row so that no column is used twice and
- * the total cost is as small as possible. Unlike picking the best pair first, a locally great
- * pair is given up when that lets two other rows do much better.
- */
+/** Solves the minimum-cost one-to-one assignment problem. */
 
 /**
  * Minimum-cost assignment. Returns, for each row, the column it was given, or -1 when there are
@@ -29,7 +23,9 @@ export function hungarian(cost: readonly (readonly number[])[]): number[] {
   }
 
   const flatCosts = new Float64Array(rows * cols);
-  cost.forEach((row, rowIndex) => flatCosts.set(row, rowIndex * cols));
+  cost.forEach((row, rowIndex) => {
+    flatCosts.set(row, rowIndex * cols);
+  });
   return Array.from(solve({ cost: flatCosts, rows, cols }));
 }
 
@@ -37,7 +33,13 @@ export function hungarian(cost: readonly (readonly number[])[]): number[] {
  * The solver itself, on a flat row-major table with `rows ≤ cols`, for callers that solve many
  * small tables and want to skip building nested arrays. Returns each row's column.
  */
-export function solve({ cost, rows, cols }: { cost: Float64Array; rows: number; cols: number }): Int32Array {
+interface SolveOptions {
+  cost: Float64Array;
+  rows: number;
+  cols: number;
+}
+
+export function solve({ cost, rows, cols }: SolveOptions): Int32Array {
   const rowPotential = new Float64Array(rows + 1);
   const columnPotential = new Float64Array(cols + 1);
   const rowAtColumn = new Int32Array(cols + 1);
@@ -85,12 +87,12 @@ export function solve({ cost, rows, cols }: { cost: Float64Array; rows: number; 
     } while (currentColumn !== 0);
   }
 
-  const result = new Int32Array(rows).fill(-1);
+  const columnByRow = new Int32Array(rows).fill(-1);
   for (let column = 1; column <= cols; column++) {
     const row = rowAtColumn[column]!;
-    if (row > 0) result[row - 1] = column - 1;
+    if (row > 0) columnByRow[row - 1] = column - 1;
   }
-  return result;
+  return columnByRow;
 }
 
 export interface Assignment {
