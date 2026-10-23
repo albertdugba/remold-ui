@@ -1,11 +1,19 @@
-/**
- * `<Remold.Ignore>`: everything inside is left out of matching and animation, as if it
- * weren't there. By default it renders a `display: contents` span, so layout is unaffected.
- */
-import { forwardRef, type ForwardedRef, type HTMLAttributes } from "react";
+import { forwardRef, type ForwardedRef } from "react";
 import { IGNORE_ATTRIBUTE } from "@remold-ui/dom";
-import { useRenderElement, type BaseProps } from "../utils/useRenderElement.js";
+import { useRenderElement } from "../utils/use-render-element.js";
+import type { RemoldIgnoreProps, RemoldIgnoreState } from "./types.js";
 
+/**
+ * Leaves everything inside out of transitions: videos, live charts, anything that animates by
+ * itself.
+ *
+ * @example
+ * ```tsx
+ * <Remold.Ignore>
+ *   <LiveChart />
+ * </Remold.Ignore>
+ * ```
+ */
 export const RemoldIgnore = forwardRef(function RemoldIgnore(
   componentProps: RemoldIgnore.Props,
   forwardedRef: ForwardedRef<HTMLSpanElement>,
@@ -24,6 +32,6 @@ export const RemoldIgnore = forwardRef(function RemoldIgnore(
 });
 
 export namespace RemoldIgnore {
-  export type State = Record<string, never>;
-  export interface Props extends BaseProps<State>, Omit<HTMLAttributes<HTMLSpanElement>, "className"> {}
+  export type State = RemoldIgnoreState;
+  export type Props = RemoldIgnoreProps;
 }

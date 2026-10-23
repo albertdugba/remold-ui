@@ -1,26 +1,26 @@
-/**
- * `<Remold.Story>` turns a canvas scene into a guided explanation. A chapter selects a
- * layout and subject, while an optional annotation stays pinned to a semantic object port as
- * the scene settles. It deliberately owns no controls or visual theme: products can supply
- * their own stepper, narration, and annotation markup.
- */
-import {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  type CSSProperties,
-  type ForwardedRef,
-  type HTMLAttributes,
-  type ReactNode,
-  type RefObject,
-} from "react";
-import { prefersReducedMotion, type FrameLoop, type ReducedMotion } from "@remold-ui/dom";
-import { type SpringConfig } from "@remold-ui/core";
-import { type Palette, type PaletteName, type SceneLayout, type SceneLink, type SceneObject, type ScenePort } from "@remold-ui/canvas";
-import { RemoldScene } from "../scene/RemoldScene.js";
+import { forwardRef, useCallback, useImperativeHandle, useRef, type ForwardedRef } from "react";
+import { prefersReducedMotion } from "@remold-ui/dom";
+import { RemoldScene } from "../scene/remold-scene.js";
 import { useControlled, useIsoLayoutEffect, useLatest } from "../utils/hooks.js";
-import { useRenderElement, type BaseProps } from "../utils/useRenderElement.js";
+import { useRenderElement } from "../utils/use-render-element.js";
+import type { RemoldStoryActions, RemoldStoryAnnotation, RemoldStoryChapter, RemoldStoryProps, RemoldStoryState } from "./types.js";
 
+/**
+ * A Scene told in chapters. Each chapter picks a layout, an object to focus and an annotation
+ * that follows that object around the canvas.
+ *
+ * @example
+ * ```tsx
+ * <Remold.Story
+ *   objects={objects}
+ *   layouts={layouts}
+ *   chapters={[
+ *     { id: "overview", layout: "simple", title: "The whole system" },
+ *     { id: "api", layout: "scaled", focused: "api", annotation: { object: "api" } },
+ *   ]}
+ * />
+ * ```
+ */
 export const RemoldStory = forwardRef(function RemoldStory(
   componentProps: RemoldStory.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,
@@ -60,12 +60,12 @@ export const RemoldStory = forwardRef(function RemoldStory(
   const annotation = useRef<HTMLDivElement | null>(null);
   const onChange = useLatest(onChapterChange);
 
-  const select = (id: string) => {
+  const select = useCallback((id: string) => {
     if (!chapters.some((item) => item.id === id)) throw new RangeError(`Remold.Story: unknown chapter "${id}"`);
     if (id === chapterId) return;
     setChapterId(id);
     onChange.current?.(id);
-  };
+  }, [chapterId, chapters, onChange, setChapterId]);
 
   useImperativeHandle(
     actionsRef,
@@ -77,11 +77,9 @@ export const RemoldStory = forwardRef(function RemoldStory(
       anchor: (id, port) => sceneActions.current?.anchor(id, port) ?? null,
       redraw: () => sceneActions.current?.redraw(),
     }),
-    [chapterId],
+    [chapterId, select],
   );
 
-  // Update the DOM annotation directly through the same short period that Scene is springing.
-  // This avoids a React render on every animation frame and goes completely still afterwards.
   useIsoLayoutEffect(() => {
     if (!chapter.annotation) return;
     let frame = 0;
@@ -113,7 +111,7 @@ export const RemoldStory = forwardRef(function RemoldStory(
       : "translate(-50%, calc(-100% - 14px))";
   const state: RemoldStory.State = { chapter, index, count: chapters.length };
 
-  return useRenderElement<RemoldStory.State, HTMLDivElement>(
+  return useRenderElement(
     "div",
     { render, className },
     {
@@ -178,66 +176,9 @@ function DefaultAnnotation({ chapter, index }: { chapter: RemoldStory.Chapter; i
 }
 
 export namespace RemoldStory {
-  export interface Annotation {
-    /** The object the annotation follows. */
-    object: string;
-    /** Which semantic port to use. Defaults to `top`. */
-    port?: ScenePort;
-    /** Which side of the port the annotation opens toward. Defaults to `above`. */
-    placement?: "above" | "below" | "left" | "right";
-  }
-
-  export interface Chapter {
-    /** Stable id used by the controlled `chapter` prop and `actionsRef.go()`. */
-    id: string;
-    /** The Scene layout this chapter reveals. */
-    layout: string;
-    /** The object to lift and place in the screen-reader description. */
-    focused?: string | null;
-    title?: ReactNode;
-    description?: ReactNode;
-    annotation?: Annotation;
-  }
-
-  export interface State {
-    chapter: Chapter;
-    index: number;
-    count: number;
-  }
-
-  export interface Actions {
-    readonly chapter: string;
-    /** Move to a chapter. Throws for an unknown id. */
-    go(id: string): void;
-    /** Find any object's semantic port for a custom DOM overlay. */
-    anchor(id: string, port?: ScenePort): { x: number; y: number } | null;
-    redraw(): void;
-  }
-
-  export interface Props extends BaseProps<State, HTMLDivElement>, Omit<HTMLAttributes<HTMLDivElement>, "className" | "children"> {
-    chapters: readonly Chapter[];
-    /** Current chapter id (controlled). */
-    chapter?: string;
-    /** First chapter id when `chapter` isn't controlled. Defaults to the first chapter. */
-    defaultChapter?: string;
-    /** Reports requested chapter changes from controls or `actionsRef.go()`. */
-    onChapterChange?: (chapter: string) => void;
-    actionsRef?: RefObject<Actions | null>;
-    /** Render custom annotation markup. The default uses a chapter's title and description. */
-    renderAnnotation?: (state: State) => ReactNode;
-    annotationClassName?: string;
-    annotationStyle?: CSSProperties;
-    /** Class name for the canvas inside the story. */
-    canvasClassName?: string;
-    objects: Record<string, SceneObject>;
-    layouts: Record<string, SceneLayout>;
-    links?: SceneLink[];
-    palette?: PaletteName | Palette;
-    interact?: { hover?: boolean; tap?: boolean; drag?: boolean; keyboard?: boolean };
-    spring?: SpringConfig;
-    reducedMotion?: ReducedMotion;
-    loop?: FrameLoop;
-    maxPixelRatio?: number;
-    label?: string;
-  }
+  export type Annotation = RemoldStoryAnnotation;
+  export type Chapter = RemoldStoryChapter;
+  export type State = RemoldStoryState;
+  export type Actions = RemoldStoryActions;
+  export type Props = RemoldStoryProps;
 }

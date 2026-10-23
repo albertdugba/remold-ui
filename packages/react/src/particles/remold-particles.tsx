@@ -1,46 +1,9 @@
-/**
- * `<Remold.Particles shape="Just landed" />`: a canvas of dots that take the shape of
- * whatever you give it, and flow into the next shape when it changes. Each dot heads for its
- * nearest place in the new shape.
- *
- * `shape` can be words, an SVG path, an image, or your own points:
- *
- * ```tsx
- * <Remold.Particles shape="Hello" />
- * <Remold.Particles shape={{ path: HEART }} />
- * <Remold.Particles shape={{ image: "/logo.png", by: "dark", threshold: 80 }} />
- * <Remold.Particles shape={{ points: myPoints }} />
- * ```
- *
- * Shapes are sampled in the browser, so server rendering gives an empty canvas that fills in
- * on load. `ref` is the canvas.
- */
 import { forwardRef, useMemo, useRef, useState, type CanvasHTMLAttributes, type ForwardedRef } from "react";
-import {
-  particles as createParticles,
-  sampleImagePoints,
-  sampleTextPoints,
-  type Particles,
-  type ParticlesOptions,
-  type ParticlesToOptions,
-} from "@remold-ui/canvas";
+import { particles as createParticles, sampleImagePoints, sampleTextPoints, type Particles, type ParticlesOptions } from "@remold-ui/canvas";
 import { samplePath, type CloudPoint } from "@remold-ui/core";
 import { useIsoLayoutEffect, useLatest } from "../utils/hooks.js";
-import { useRenderElement, type BaseProps } from "../utils/useRenderElement.js";
-
-export type ParticleShape =
-  | string
-  | { text: string; font?: string }
-  | { path: string; fillRule?: "nonzero" | "evenodd"; mode?: "fill" | "outline" }
-  | {
-      image: string;
-      by?: "alpha" | "dark" | "light" | "saturation";
-      threshold?: number;
-      pattern?: "hex" | "grid";
-      jitter?: number;
-      details?: readonly { x: number; y: number; tone?: number }[];
-    }
-  | { points: readonly CloudPoint[] };
+import { useRenderElement } from "../utils/use-render-element.js";
+import type { ParticleShape, RemoldParticlesProps, RemoldParticlesState } from "./types.js";
 
 /** Gives each points array a stable id, so a new array is a new shape but a re-render isn't. */
 const pointIds = new WeakMap<readonly CloudPoint[], number>();
@@ -92,6 +55,16 @@ function sample(shape: ParticleShape, count: number, palette?: readonly string[]
   });
 }
 
+/**
+ * Thousands of dots that rebuild themselves into each new `shape`: a word, an SVG path, an image
+ * or points you sampled yourself.
+ *
+ * @example
+ * ```tsx
+ * <Remold.Particles shape="Just landed" className="h-64 w-full" />
+ * <Remold.Particles shape={{ image: "/logo.png", by: "dark" }} count={4000} />
+ * ```
+ */
 export const RemoldParticles = forwardRef(function RemoldParticles(
   componentProps: RemoldParticles.Props,
   forwardedRef: ForwardedRef<HTMLCanvasElement>,
@@ -173,7 +146,7 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
   }, [instance, key]);
 
   const state = useMemo<RemoldParticles.State>(() => ({}), []);
-  return useRenderElement<RemoldParticles.State, HTMLCanvasElement>(
+  return useRenderElement(
     "canvas",
     { render, className },
     {
@@ -185,26 +158,6 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
 });
 
 export namespace RemoldParticles {
-  export type State = Record<string, never>;
-
-  export interface Props
-    extends BaseProps<State, HTMLCanvasElement>,
-      Omit<CanvasHTMLAttributes<HTMLCanvasElement>, "className" | "color">,
-      Pick<
-        ParticlesOptions,
-        "color" | "palette" | "padding" | "pointer" | "spring" | "enter" | "reducedMotion" | "loop" | "maxPixelRatio"
-      > {
-    /** What the dots show: words, `{ text, font }`, `{ path }`, `{ image, by, threshold, pattern, jitter, details }` or `{ points }`. Change it to morph. */
-    shape: ParticleShape;
-    /** How many dots. Default 1200. Ignored for `{ points }`, which brings its own. */
-    count?: number;
-    /** What the dots show, for screen readers. Defaults to the words of a text shape. */
-    label?: string;
-    /** How dots find their place in the next shape. See `particles().to`. Default `"match"`. */
-    pairing?: ParticlesToOptions["pairing"];
-    /** Dot radius in CSS pixels. Changing it springs the dots to the new size. Default 2.5. */
-    radius?: number;
-    /** Dot shape. Default `"circle"`; squares are cheaper for very large clouds. Read once. */
-    dot?: "circle" | "square";
-  }
+  export type State = RemoldParticlesState;
+  export type Props = RemoldParticlesProps;
 }

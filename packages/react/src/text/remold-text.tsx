@@ -1,13 +1,17 @@
-/**
- * `<Remold.Text>{status}</Remold.Text>`: text whose shared letters slide when it
- * changes, while the rest fade. The first text renders normally (so server rendering works);
- * after that Remold owns the letters, and React never touches them again.
- */
-import { forwardRef, useRef, useState, type ForwardedRef, type HTMLAttributes } from "react";
-import { morphText, type MorphTextOptions } from "@remold-ui/dom";
+import { forwardRef, useRef, useState, type ForwardedRef } from "react";
+import { morphText } from "@remold-ui/dom";
 import { useIsoLayoutEffect } from "../utils/hooks.js";
-import { useRenderElement, type BaseProps } from "../utils/useRenderElement.js";
+import { useRenderElement } from "../utils/use-render-element.js";
+import type { RemoldTextProps, RemoldTextState } from "./types.js";
 
+/**
+ * Text that changes letter by letter: shared letters slide into place, the rest fade.
+ *
+ * @example
+ * ```tsx
+ * <Remold.Text>{status}</Remold.Text>
+ * ```
+ */
 export const RemoldText = forwardRef(function RemoldText(
   componentProps: RemoldText.Props,
   forwardedRef: ForwardedRef<HTMLSpanElement>,
@@ -29,9 +33,7 @@ export const RemoldText = forwardRef(function RemoldText(
     });
   }, [children, element]);
 
-  // `morphText` deliberately lets a newer call take over from the old one. On unmount there is
-  // no newer call, so invalidate its completion handler instead of allowing it to set state on
-  // a component React has removed.
+  // Ignore completion after unmount because a newer morph normally replaces the prior call.
   useIsoLayoutEffect(
     () => () => {
       latestCall.current++;
@@ -53,13 +55,6 @@ export const RemoldText = forwardRef(function RemoldText(
 });
 
 export namespace RemoldText {
-  export interface State {
-    /** Letters are moving. Also set as `data-rm-animating`. */
-    animating: boolean;
-  }
-
-  export interface Props extends BaseProps<State>, MorphTextOptions, Omit<HTMLAttributes<HTMLSpanElement>, "children" | "className"> {
-    /** The text. */
-    children: string;
-  }
+  export type State = RemoldTextState;
+  export type Props = RemoldTextProps;
 }

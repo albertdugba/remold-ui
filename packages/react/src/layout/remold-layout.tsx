@@ -1,18 +1,20 @@
-/**
- * `<Remold.Layout trigger={view}>`: animate everything inside whenever `trigger` changes.
- * Several things can trigger it at once: `trigger={[view, sort, filter]}`.
- *
- * Remold needs a snapshot of the page from just before React changes it, and no hook runs
- * at that moment. So the snapshot is taken during the render in which `trigger` changes, using
- * React's documented pattern for adjusting state when a prop changes. Taking it only reads the
- * page, so a render React throws away leaves nothing behind. It plays once the change is
- * committed, in a layout effect, before the browser paints.
- */
-import { forwardRef, useState, type ForwardedRef, type HTMLAttributes } from "react";
-import { prepareTransition, type PreparedTransition, type Transition, type TransitionOptions } from "@remold-ui/dom";
+import { forwardRef, useState, type ForwardedRef } from "react";
+import { prepareTransition, type PreparedTransition } from "@remold-ui/dom";
 import { useIsoLayoutEffect, useLatest } from "../utils/hooks.js";
-import { useRenderElement, type BaseProps } from "../utils/useRenderElement.js";
+import { useRenderElement } from "../utils/use-render-element.js";
+import type { RemoldLayoutProps, RemoldLayoutState } from "./types.js";
 
+/**
+ * Animates everything inside it whenever `trigger` changes. Pass an array to watch several
+ * things; it's compared item by item, like an effect's dependencies.
+ *
+ * @example
+ * ```tsx
+ * <Remold.Layout trigger={[view, sort]}>
+ *   {view === "grid" ? <PeopleGrid people={people} /> : <PeopleList people={people} />}
+ * </Remold.Layout>
+ * ```
+ */
 export const RemoldLayout = forwardRef(function RemoldLayout(
   componentProps: RemoldLayout.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,
@@ -38,13 +40,11 @@ export const RemoldLayout = forwardRef(function RemoldLayout(
   const [running, setRunning] = useState(0);
   const onStart = useLatest(onTransition);
 
-  // The trigger changed: snapshot the page as it is now, before React commits the change.
   if (!sameTrigger(committedTrigger, trigger)) {
     setCommittedTrigger(trigger);
     setPending(!disabled && element ? prepareTransition(element, { spring, match, reducedMotion, announce, loop, lift }) : null);
   }
 
-  // The change is committed: work out what became what and play it.
   useIsoLayoutEffect(() => {
     if (!pending) return;
     const transition = pending.play();
@@ -75,20 +75,6 @@ function sameTrigger(a: unknown, b: unknown): boolean {
 }
 
 export namespace RemoldLayout {
-  export interface State {
-    /** A transition is running. Also set as `data-rm-animating`. */
-    animating: boolean;
-  }
-
-  export interface Props extends BaseProps<State>, TransitionOptions, Omit<HTMLAttributes<HTMLDivElement>, "className"> {
-    /**
-     * Animate whenever this changes: a view, a sort order, a route. Pass an array to watch several
-     * things (`[view, sort, filter]`); it changes when any item does, like an effect's dependencies.
-     */
-    trigger: unknown;
-    /** Leave changes unanimated. */
-    disabled?: boolean;
-    /** Called as each transition starts, to await `ready` or `finished`, or to `skip()` it. */
-    onTransition?: (transition: Transition) => void;
-  }
+  export type State = RemoldLayoutState;
+  export type Props = RemoldLayoutProps;
 }

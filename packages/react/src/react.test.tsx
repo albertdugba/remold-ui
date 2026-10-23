@@ -21,7 +21,7 @@ beforeAll(() => {
     return { x, y, width, height, left: x, top: y, right: x + width, bottom: y + height, toJSON() {} } as DOMRect;
   };
   // …and no canvas drawing: a context that accepts every call.
-  HTMLCanvasElement.prototype.getContext = function () {
+  HTMLCanvasElement.prototype.getContext = (() => {
     const gradient = { addColorStop() {} };
     return new Proxy(
       {},
@@ -30,7 +30,7 @@ beforeAll(() => {
         set: () => true,
       },
     );
-  } as unknown as HTMLCanvasElement["getContext"];
+  }) as unknown as HTMLCanvasElement["getContext"];
 });
 
 function manualLoop() {
