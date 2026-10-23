@@ -47,15 +47,15 @@ export function viewTransition(root: HTMLElement, update: () => void | Promise<v
 
   const prefix = `tl${(++sequence).toString(36)}`;
   const named: HTMLElement[] = [];
-  const name = (el: HTMLElement, index: number) => {
-    el.style.setProperty("view-transition-name", `${prefix}-${index}`);
-    el.style.setProperty("view-transition-class", prefix);
-    named.push(el);
+  const nameElement = (element: HTMLElement, index: number) => {
+    element.style.setProperty("view-transition-name", `${prefix}-${index}`);
+    element.style.setProperty("view-transition-class", prefix);
+    named.push(element);
   };
-  const unname = () => {
-    for (const el of named) {
-      el.style.removeProperty("view-transition-name");
-      el.style.removeProperty("view-transition-class");
+  const clearNames = () => {
+    for (const element of named) {
+      element.style.removeProperty("view-transition-name");
+      element.style.removeProperty("view-transition-class");
     }
     named.length = 0;
   };
@@ -63,15 +63,17 @@ export function viewTransition(root: HTMLElement, update: () => void | Promise<v
   const style = document.createElement("style");
   style.textContent = timingRule(prefix, options.spring ?? springs.smooth);
   document.head.append(style);
-  before.elements.forEach((el, i) => name(el, i));
+  before.elements.forEach((element, index) => {
+    nameElement(element, index);
+  });
 
   let result: TransitionResult | undefined;
   const vt = document.startViewTransition(async () => {
     await update();
-    unname();
+    clearNames();
     const after = readNodes(root);
     const matches = matchNodes(before.nodes, after.nodes, options.match);
-    for (const p of matches.pairs) name(after.elements[p.to]!, p.from);
+    for (const pair of matches.pairs) nameElement(after.elements[pair.to]!, pair.from);
     const summary = summarize(before, after, matches);
     result = { before, after, matches, summary };
     if (options.announce) {
@@ -80,7 +82,7 @@ export function viewTransition(root: HTMLElement, update: () => void | Promise<v
   });
 
   const cleanUp = () => {
-    unname();
+    clearNames();
     style.remove();
   };
   const finished = vt.finished.finally(cleanUp);

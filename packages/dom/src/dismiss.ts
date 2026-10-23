@@ -54,7 +54,6 @@ export function dragToDismiss(element: HTMLElement, options: DragToDismissOption
   const slop = options.slop ?? 4;
   const add = options.loop ? options.loop.add.bind(options.loop) : sharedFrames;
   const saved = { transform: element.style.transform, touchAction: element.style.touchAction };
-  // Let the page scroll along the other axis; this axis belongs to the drag.
   element.style.touchAction = axis === "y" ? "pan-x" : "pan-y";
 
   let press: { id: number; start: number; offset: number; dragging: boolean; tracker: ReturnType<typeof velocityTracker> } | null = null;
@@ -73,7 +72,6 @@ export function dragToDismiss(element: HTMLElement, options: DragToDismissOption
     settling = null;
     const tracker = velocityTracker();
     tracker.add(e.timeStamp, coordinate(e));
-    // Start from where a spring back left it, so catching it mid-way doesn't jump.
     const current = Number.parseFloat(/-?\d+(\.\d+)?/.exec(element.style.transform)?.[0] ?? "0") || 0;
     press = { id: e.pointerId, start: coordinate(e) - current, offset: current, dragging: false, tracker };
   };
@@ -87,11 +85,9 @@ export function dragToDismiss(element: HTMLElement, options: DragToDismissOption
       try {
         element.setPointerCapture(e.pointerId);
       } catch {
-        // Synthetic or already-released pointers can't be captured; the drag still works.
       }
     }
     press.tracker.add(e.timeStamp, coordinate(e));
-    // The dismissing way follows the finger; the other way stretches.
     press.offset = raw * direction > 0 ? raw : rubberband(raw, resistance);
     place(press.offset);
   };
@@ -121,7 +117,6 @@ export function dragToDismiss(element: HTMLElement, options: DragToDismissOption
     });
   };
 
-  // A click that ends a drag shouldn't also press what's under the finger.
   const click = (e: MouseEvent) => {
     if (swallow) {
       e.stopPropagation();
@@ -157,7 +152,6 @@ export function dragToDismiss(element: HTMLElement, options: DragToDismissOption
       element.removeEventListener("pointercancel", up);
       element.removeEventListener("click", click, true);
       element.style.touchAction = saved.touchAction;
-      // After a dismiss the offset stays, so whatever follows can fly the element from there.
       if (!dismissed) element.style.transform = saved.transform;
     },
   };

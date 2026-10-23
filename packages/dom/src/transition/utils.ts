@@ -207,8 +207,6 @@ export function applyRecord(record: MotionRecord): void {
     )}px`;
   }
   if (record.shadow) {
-    // One number has to serve both axes, so the geometric mean: right when the scale is uniform,
-    // and never as thin as the squeezed axis alone would make it.
     const scale = Math.sqrt(Math.max(1e-3, scaleX) * Math.max(1e-3, scaleY));
     style.boxShadow = isIdentity ? record.saved.boxShadow : scaledShadow(record.shadow, scale);
   }
@@ -257,7 +255,6 @@ export function liftMovers(ordered: readonly MotionRecord[], root: HTMLElement):
   for (const [el, level] of levels) {
     const style = getComputedStyle(el);
     const own = Number.parseInt(style.zIndex, 10);
-    // Only ever raise: an element that already sits higher keeps its own order.
     if (Number.isFinite(own) && own >= level) continue;
     let position = el.style.position;
     if (!style.position || style.position === "static") {
