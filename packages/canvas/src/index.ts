@@ -61,17 +61,6 @@ export {
   type PaletteName,
 } from "./object-looks";
 export {
-  familyRelations,
-  matchFamilyNames,
-  peopleInFamilyEra,
-  validateFamilyGraph,
-  type FamilyEra,
-  type FamilyGraph,
-  type FamilyPerson,
-  type FamilyRelation,
-  type FamilyUnion,
-} from "./kinship";
-export {
   particles,
   sampleImagePoints,
   sampleTextPoints,
