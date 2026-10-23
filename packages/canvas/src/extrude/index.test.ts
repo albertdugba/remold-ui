@@ -35,7 +35,7 @@ describe("walls", () => {
   const centre = view.depth(0, 0);
 
   it("shows only the walls facing the viewer, far to near", () => {
-    const shown = walls(square, 0, 40, view);
+    const shown = walls({ outline: square, z0: 0, z1: 40, view });
     // An isometric view of a box shows two of its four sides.
     expect(shown).toHaveLength(2);
     for (const w of shown) expect(w.depth).toBeGreaterThan(centre);
@@ -44,19 +44,19 @@ describe("walls", () => {
 
   it("gives the same walls whichever way the outline runs", () => {
     const reversed = [...square].reverse();
-    const a = walls(square, 0, 40, view).map((w) => Math.round(w.depth));
-    const b = walls(reversed, 0, 40, view).map((w) => Math.round(w.depth));
+    const a = walls({ outline: square, z0: 0, z1: 40, view }).map((w) => Math.round(w.depth));
+    const b = walls({ outline: reversed, z0: 0, z1: 40, view }).map((w) => Math.round(w.depth));
     expect(b).toEqual(a);
   });
 
   it("shows the far walls of a hole, facing into it", () => {
-    const shown = walls(square, 0, 40, view, true);
+    const shown = walls({ outline: square, z0: 0, z1: 40, view, inward: true });
     expect(shown).toHaveLength(2);
     for (const w of shown) expect(w.depth).toBeLessThan(centre);
   });
 
   it("lights one side and shades the other", () => {
-    const lights = walls(square, 0, 40, view)
+    const lights = walls({ outline: square, z0: 0, z1: 40, view })
       .map((w) => w.light)
       .sort((a, b) => a - b);
     expect(lights[0]!).toBeLessThan(0);
@@ -67,11 +67,11 @@ describe("walls", () => {
     const { outer } = shapeRings({ path: STAR }, { x: -200, y: -200, width: 400, depth: 400 });
     // A convex hull would show at most about half of the hull's edges; the star's ten sides
     // include inward-facing notches, several of which face the viewer.
-    expect(walls(outer, 0, 30, view).length).toBeGreaterThanOrEqual(4);
+    expect(walls({ outline: outer, z0: 0, z1: 30, view }).length).toBeGreaterThanOrEqual(4);
   });
 
   it("draws nothing for a flat shape", () => {
-    expect(walls(square, 10, 10, view)).toEqual([]);
+    expect(walls({ outline: square, z0: 10, z1: 10, view })).toEqual([]);
   });
 });
 
@@ -94,21 +94,21 @@ describe("inkLines", () => {
   const uprights = (lines: ReturnType<typeof inkLines>) => lines.filter(([p, q]) => Math.abs(p.x - q.x) < 1e-6 && p.y !== q.y);
 
   it("inks the base of every wall you see, and three uprights on a box: both edges and the front corner", () => {
-    const lines = inkLines(square, 0, 40, view);
-    expect(lines.length - uprights(lines).length).toBe(walls(square, 0, 40, view).length);
+    const lines = inkLines({ outline: square, z0: 0, z1: 40, view });
+    expect(lines.length - uprights(lines).length).toBe(walls({ outline: square, z0: 0, z1: 40, view }).length);
     expect(uprights(lines)).toHaveLength(3);
   });
 
   it("leaves rounded corners without uprights, apart from the two edges of the silhouette", () => {
-    expect(uprights(inkLines(rounded, 0, 40, view))).toHaveLength(2);
+    expect(uprights(inkLines({ outline: rounded, z0: 0, z1: 40, view }))).toHaveLength(2);
   });
 
   it("can leave the uprights out, for a line round the walls", () => {
-    expect(uprights(inkLines(square, 0, 40, view, false, false))).toHaveLength(0);
+    expect(uprights(inkLines({ outline: square, z0: 0, z1: 40, view, inward: false, uprights: false }))).toHaveLength(0);
   });
 
   it("draws nothing for something with no height", () => {
-    expect(inkLines(square, 10, 10, view)).toEqual([]);
+    expect(inkLines({ outline: square, z0: 10, z1: 10, view })).toEqual([]);
   });
 });
 

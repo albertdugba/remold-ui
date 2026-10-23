@@ -86,7 +86,10 @@ const scaled = (m: Matrix, k: number): Matrix => [m[0] * k, m[1] * k, m[2] * k, 
 
 function polygon(ctx: CanvasRenderingContext2D, points: readonly ScreenPoint[]): void {
   ctx.beginPath();
-  points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  for (const [index, point] of points.entries()) {
+    if (index === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
+  }
   ctx.closePath();
 }
 
@@ -125,7 +128,7 @@ function prism(context: DrawContext, state: DrawState, outline: Outline, labelSi
     gradient.addColorStop(0.55, palette.sides[1]);
     gradient.addColorStop(1, palette.sides[2]);
     polygon(ctx, sides);
-    halo(ctx, palette.glow, 0.6 * (0.25 + 0.45 * glow), 19 * (0.5 + glow));
+    halo({ context: ctx, color: palette.glow, alpha: 0.6 * (0.25 + 0.45 * glow), radius: 19 * (0.5 + glow) });
     ctx.fillStyle = gradient;
     ctx.fill();
   }
@@ -182,7 +185,7 @@ export const glass: Look = {
     polygon(ctx, projectOutline(glass.outline(box), box.z + box.height, view));
     ctx.fillStyle = `rgba(${palette.glow}, ${0.06 + 0.08 * glow})`;
     ctx.fill();
-    halo(ctx, palette.glow, 0.36, 8 * (0.4 + glow), 1.3);
+    halo({ context: ctx, color: palette.glow, alpha: 0.36, radius: 8 * (0.4 + glow), core: 1.3 });
     ctx.strokeStyle = `rgba(${palette.line}, ${0.8 + 0.2 * glow})`;
     ctx.lineWidth = 1.3;
     ctx.stroke();
@@ -224,7 +227,7 @@ export const portrait: Look = {
     polygon(ctx, projectOutline(portrait.outline(box), box.z + box.height, view));
     ctx.fillStyle = palette.top;
     ctx.fill();
-    halo(ctx, palette.glow, 0.6 * (0.35 + glow * 0.35), 11 * (0.4 + glow), 1.4);
+    halo({ context: ctx, color: palette.glow, alpha: 0.6 * (0.35 + glow * 0.35), radius: 11 * (0.4 + glow), core: 1.4 });
     ctx.strokeStyle = `rgba(${palette.line}, ${0.55 + glow * 0.4})`;
     ctx.lineWidth = 1.4;
     ctx.stroke();

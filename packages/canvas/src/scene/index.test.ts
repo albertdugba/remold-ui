@@ -29,12 +29,8 @@ function fakeContext() {
 let drawing: ReturnType<typeof fakeContext>;
 
 beforeAll(() => {
-  HTMLCanvasElement.prototype.getContext = function () {
-    return drawing.context;
-  } as unknown as HTMLCanvasElement["getContext"];
-  Element.prototype.getBoundingClientRect = function () {
-    return { x: 0, y: 0, left: 0, top: 0, width: 800, height: 800, right: 800, bottom: 800, toJSON() {} } as DOMRect;
-  };
+  HTMLCanvasElement.prototype.getContext = (() => drawing.context) as unknown as HTMLCanvasElement["getContext"];
+  Element.prototype.getBoundingClientRect = () => ({ x: 0, y: 0, left: 0, top: 0, width: 800, height: 800, right: 800, bottom: 800, toJSON() {} } as DOMRect);
 });
 
 function manualLoop() {

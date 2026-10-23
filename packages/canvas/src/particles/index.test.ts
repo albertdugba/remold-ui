@@ -32,9 +32,7 @@ function fakeContext() {
 let drawing: ReturnType<typeof fakeContext>;
 
 beforeAll(() => {
-  HTMLCanvasElement.prototype.getContext = function () {
-    return drawing.context;
-  } as unknown as HTMLCanvasElement["getContext"];
+  HTMLCanvasElement.prototype.getContext = (() => drawing.context) as unknown as HTMLCanvasElement["getContext"];
 });
 
 function manualLoop() {

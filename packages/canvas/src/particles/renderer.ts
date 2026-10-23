@@ -43,7 +43,12 @@ export function createParticleRenderer({
     context.clearRect(0, 0, size.width, size.height);
     const drawParticle = createParticleDrawer({ context, cloud, radius, pointer, shape, pointerEffect, reducedMotion });
     if (!palette || palette.length === 1) {
-      context.fillStyle = palette ? palette[0]! : (fill ??= resolveFill(context));
+      if (palette) {
+        context.fillStyle = palette[0]!;
+      } else {
+        if (fill === null) fill = resolveFill(context);
+        context.fillStyle = fill;
+      }
       context.beginPath();
       drawAll({ count: cloud.length, drawParticle });
       context.fill();
