@@ -5,14 +5,15 @@ on:
     tags: ["v*.*.*"]
 
 permissions:
-  contents: read
-  id-token: write
+  contents: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
           version: 10.34.6
@@ -21,8 +22,9 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
-      - run: pnpm install --frozen-lockfile
+      - run: HUSKY=0 pnpm install --frozen-lockfile
       - run: pnpm typecheck && pnpm test && pnpm build
+      - run: pnpm verify:packages
       - name: Verify the tag matches the package version
         run: node -e 'const fs=require("fs"); const expected=process.env.EXPECTED.replace(/^v/, ""); for (const file of fs.readdirSync("packages")) { const pkg=JSON.parse(fs.readFileSync(`packages/${file}/package.json`, "utf8")); if (pkg.version !== expected) throw new Error(`${pkg.name} is ${pkg.version}; expected ${expected}`); }'
         env:
@@ -34,3 +36,7 @@ jobs:
           done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create GitHub Release
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
