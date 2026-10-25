@@ -7,9 +7,8 @@
     "build": "node scripts/build-registry.mjs && next build --webpack",
     "start": "next start --port 5192",
     "typecheck": "next typegen && tsc --noEmit",
-    "cf:deploy": "pnpm -w build && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf:preview": "pnpm -w build && opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "cf:pages:deploy": "pnpm -w build && wrangler pages deploy out --project-name remold-ui",
+    "cf:pages:preview": "pnpm -w build && wrangler pages dev out --compatibility-date=2026-10-25",
     "clean": "rm -rf .next .source .turbo",
     "registry": "node scripts/build-registry.mjs"
   },
@@ -28,7 +27,6 @@
   },
   "devDependencies": {
     "@fontsource/barlow-condensed": "5.3.0",
-    "@opennextjs/cloudflare": "^1.19.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/mdx": "2.0.14",
     "@types/node": "24.10.1",

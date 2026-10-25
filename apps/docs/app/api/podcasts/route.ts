@@ -2,7 +2,7 @@
  * Real podcast episodes for the docs' player demo, from the iTunes Search API: the newest episodes
  * about design, one per show, with artwork, length and the audio file. Cached for six hours.
  */
-export const revalidate = 21600;
+export const dynamic = "force-static";
 
 interface Result {
   trackId: number;
@@ -19,7 +19,7 @@ interface Result {
 export async function GET() {
   try {
     const res = await fetch("https://itunes.apple.com/search?media=podcast&entity=podcastEpisode&term=design&limit=60&country=gb", {
-      next: { revalidate },
+      cache: "force-cache",
     });
     const data = (await res.json()) as { results?: Result[] };
     const seen = new Set<string>();
