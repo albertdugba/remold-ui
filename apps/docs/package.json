@@ -7,8 +7,8 @@
     "build": "node scripts/build-registry.mjs && next build --webpack",
     "start": "next start --port 5192",
     "typecheck": "next typegen && tsc --noEmit",
-    "cf:pages:deploy": "pnpm -w build && wrangler pages deploy out --project-name remold-ui",
-    "cf:pages:preview": "pnpm -w build && wrangler pages dev out --compatibility-date=2026-10-25",
+    "cf:deploy": "wrangler deploy",
+    "cf:preview": "wrangler dev",
     "clean": "rm -rf .next .source .turbo",
     "registry": "node scripts/build-registry.mjs"
   },
