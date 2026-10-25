@@ -14,6 +14,7 @@
   color: var(--co-text);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
   overflow: hidden;
+  container-type: inline-size;
 }
 
 :where(.co) button {
@@ -260,9 +261,28 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 560px) {
+@container (max-width: 620px) {
+  .co-head {
+    align-items: flex-start;
+    padding: 14px 14px 10px;
+  }
+
+  .co-tools {
+    padding: 0 14px 10px;
+  }
+
+  .co-lines {
+    padding-inline: 4px;
+  }
+
+  .co-module,
   .co-lesson {
-    grid-template-columns: 22px minmax(0, 1fr) 46px;
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  .co-lesson {
+    grid-template-columns: 22px minmax(0, 1fr) max-content;
     margin-left: 34px;
   }
 
@@ -274,6 +294,32 @@
   .co-bar {
     min-width: 0;
     width: 140px;
+  }
+}
+
+@container (max-width: 420px) {
+  .co-head {
+    display: block;
+  }
+
+  .co-progress {
+    display: none;
+  }
+
+  .co-next {
+    display: none;
+  }
+
+  .co-module {
+    grid-template-columns: 14px 24px minmax(0, 1fr);
+  }
+
+  .co-module .co-meta {
+    display: none;
+  }
+
+  .co-lesson {
+    margin-left: 28px;
   }
 }
 
