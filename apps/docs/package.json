@@ -7,8 +7,8 @@
     "build": "node scripts/build-registry.mjs && next build --webpack",
     "start": "next start --port 5192",
     "typecheck": "next typegen && tsc --noEmit",
-    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "pnpm -w build && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:preview": "pnpm -w build && opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "clean": "rm -rf .next .source .turbo",
     "registry": "node scripts/build-registry.mjs"
