@@ -574,7 +574,7 @@ export function CommentThreadDemo({ onLookChange, variant = "full" }: CommentThr
         </div>
       </div>
 
-      <Remold.Connectors className={`cx-stage${hover ? " focus" : ""}`} radius={16} gap={5} onPointerLeave={() => setHover(null)}>
+      <Remold.Connectors className={`cx-stage${hover ? " focus" : ""}`} radius={24} gap={8} onPointerLeave={() => setHover(null)}>
         <Remold.Layout trigger={shape} spring={{ duration: 0.45, bounce: 0.04 }}>
           <div className="cx-top">{look.top}</div>
           <div className="cx-list-head">

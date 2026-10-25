@@ -467,15 +467,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 18px;
-  /* Starts beside the line coming down from the top, not across it. */
-  padding: 14px 0 0 52px;
-  border-top: 1px solid var(--cx-border);
+  gap: 14px;
+  margin-top: 20px;
+  padding: 14px 0;
+  border-block: 1px solid var(--cx-border);
 }
 
 .cx-seg.small button {
-  padding: 2px 8px;
+  min-height: 28px;
+  padding: 3px 10px;
   font-size: 12px;
 }
 
@@ -838,7 +838,7 @@
   }
 }
 
-@container (max-width: 620px) {
+@container (max-width: 480px) {
   .cx-stage {
     padding: 16px 12px 22px;
   }
@@ -927,7 +927,7 @@
   color: var(--cx-text);
 }
 
-@container (max-width: 620px) {
+@container (max-width: 480px) {
   .cx {
     margin: 0;
     border-radius: 12px;
@@ -962,8 +962,8 @@
 
   .cx-replies {
     gap: 12px;
-    /* Keep a small forward lane for the connector without consuming a full avatar column per reply. */
-    margin-left: -16px;
+    /* Preserve a narrow lane for the connector without letting reply content collide. */
+    margin-left: -8px;
   }
 
   .cx-comment {
@@ -995,6 +995,7 @@
   .cx-list-head {
     align-items: flex-start;
     flex-direction: column;
+    gap: 10px;
     padding-left: 0;
   }
 
