@@ -12,6 +12,12 @@ export interface MatchNodesOptions {
   structure?: boolean;
   /** Detect one-to-many and many-to-one changes in text. Default true. */
   splits?: boolean;
+  /**
+   * Maximum score-table size for the optimal matcher. Larger snapshots use a bounded greedy
+   * matcher and skip structural refinement, keeping a transition responsive. Default 160,000.
+   * Set to `Infinity` to always use the optimal matcher.
+   */
+  maxPairComparisons?: number;
 }
 
 export interface NodeMatches {
@@ -30,6 +36,8 @@ export interface NodeMatches {
 /** How many times family context is applied. Each pass can settle ties the previous one exposed. */
 const STRUCTURE_PASSES = 3;
 const LONER_STYLE = 0.7;
+const DEFAULT_MAX_PAIR_COMPARISONS = 160_000;
+const GREEDY_CANDIDATES_PER_NODE = 4;
 
 type PreparedNodes = ReturnType<typeof prepare>;
 
@@ -178,19 +186,73 @@ function samePairs(previousPairs: readonly Assignment[], nextPairs: readonly Ass
   return true;
 }
 
+function assignGreedy({
+  similarity,
+  rows,
+  cols,
+  threshold,
+}: {
+  similarity: Float64Array;
+  rows: number;
+  cols: number;
+  threshold: number;
+}): Assignment[] {
+  const candidates: Assignment[] = [];
+
+  for (let from = 0; from < rows; from++) {
+    const best: Assignment[] = [];
+
+    for (let to = 0; to < cols; to++) {
+      const score = similarity[from * cols + to]!;
+      if (score < threshold) continue;
+
+      const candidate = { from, to, score };
+      const insertAt = best.findIndex((entry) => entry.score < score);
+      if (insertAt === -1) best.push(candidate);
+      else best.splice(insertAt, 0, candidate);
+      if (best.length > GREEDY_CANDIDATES_PER_NODE) best.pop();
+    }
+
+    candidates.push(...best);
+  }
+
+  candidates.sort((left, right) => right.score - left.score || left.from - right.from || left.to - right.to);
+  const usedFrom = new Set<number>();
+  const usedTo = new Set<number>();
+  const pairs: Assignment[] = [];
+
+  for (const candidate of candidates) {
+    if (usedFrom.has(candidate.from) || usedTo.has(candidate.to)) continue;
+    usedFrom.add(candidate.from);
+    usedTo.add(candidate.to);
+    pairs.push(candidate);
+  }
+
+  return pairs;
+}
+
 export function matchNodes(
   from: readonly MatchNode[],
   to: readonly MatchNode[],
-  { threshold = 0.5, structure = true, splits: findSplits = true }: MatchNodesOptions = {},
+  {
+    threshold = 0.5,
+    structure = true,
+    splits: findSplits = true,
+    maxPairComparisons = DEFAULT_MAX_PAIR_COMPARISONS,
+  }: MatchNodesOptions = {},
 ): NodeMatches {
   if (!(threshold >= 0 && threshold <= 1)) {
     throw new RangeError(`matchNodes: threshold must be between 0 and 1, got ${threshold}`);
+  }
+  if (!(maxPairComparisons >= 0)) {
+    throw new RangeError(`matchNodes: maxPairComparisons must be non-negative, got ${maxPairComparisons}`);
   }
 
   const fromNodes = prepare(from);
   const toNodes = prepare(to);
   const fromCount = fromNodes.length;
   const toCount = toNodes.length;
+  const useGreedyMatching = fromCount * toCount > maxPairComparisons;
   const styleScores = new Float64Array(fromCount * toCount);
   const baseScores = new Float64Array(fromCount * toCount);
 
@@ -202,9 +264,11 @@ export function matchNodes(
     }
   }
 
-  let pairs = assignFlat({ similarity: baseScores, rows: fromCount, cols: toCount, threshold });
+  let pairs = useGreedyMatching
+    ? assignGreedy({ similarity: baseScores, rows: fromCount, cols: toCount, threshold })
+    : assignFlat({ similarity: baseScores, rows: fromCount, cols: toCount, threshold });
 
-  if (structure && fromCount > 0 && toCount > 0) {
+  if (structure && !useGreedyMatching && fromCount > 0 && toCount > 0) {
     const context = structureContext(fromNodes, toNodes, styleScores);
     const contextualScores = new Float64Array(fromCount * toCount);
 
@@ -219,10 +283,10 @@ export function matchNodes(
   let splits: Split[] = [];
   let merges: Merge[] = [];
 
-  if (findSplits) ({ pairs, splits, merges } = splitsAndMerges(fromNodes, toNodes, pairs));
+  if (findSplits && !useGreedyMatching) ({ pairs, splits, merges } = splitsAndMerges(fromNodes, toNodes, pairs));
   const refinementOptions = { fromNodes, toNodes, pairs, styleScores, toCount, splits, merges };
-  if (structure) pairs = pairLoners(refinementOptions);
-  if (structure) pairs = pairContainers({ ...refinementOptions, pairs });
+  if (structure && !useGreedyMatching) pairs = pairLoners(refinementOptions);
+  if (structure && !useGreedyMatching) pairs = pairContainers({ ...refinementOptions, pairs });
 
   const usedA = new Set<number>();
   const usedB = new Set<number>();

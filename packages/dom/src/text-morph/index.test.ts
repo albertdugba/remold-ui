@@ -82,4 +82,18 @@ describe("morphText", () => {
     await Promise.all([first, second]);
     expect(el.firstElementChild!.textContent).toBe("Three");
   });
+
+  it("updates long text without creating a span for every grapheme", async () => {
+    const root = mount(`<span>Short label</span>`);
+    const el = root.querySelector("span")!;
+    const text = "A concise sentence ".repeat(20);
+
+    await morphText(el, text, { maxGraphemes: 12 });
+
+    const reader = el.children.item(0)!;
+    const visual = el.children.item(1)!;
+    expect(reader.textContent).toBe(text);
+    expect(visual.textContent).toBe(text);
+    expect(visual.firstElementChild!.querySelectorAll("span")).toHaveLength(0);
+  });
 });

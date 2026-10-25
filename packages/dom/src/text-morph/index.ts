@@ -16,8 +16,16 @@ export interface MorphTextOptions {
   /** Default `springs.snappy`. */
   spring?: SpringConfig;
   reducedMotion?: ReducedMotion;
+  /**
+   * The largest text change to animate character by character. Longer text updates immediately
+   * so a paragraph cannot create hundreds of DOM nodes, layout reads, and animation values.
+   * Default 120.
+   */
+  maxGraphemes?: number;
   loop?: FrameLoop;
 }
+
+const DEFAULT_MAX_GRAPHEMES = 120;
 
 /** Split text into user-perceived characters, keeping emoji and accents intact. */
 export function graphemes(text: string): string[] {
@@ -107,7 +115,7 @@ interface TextMorphState {
 const states = new WeakMap<HTMLElement, TextMorphState>();
 const sharedLoop: FrameLoop = { add: frames };
 
-function createTextMorphState(element: HTMLElement): TextMorphState {
+function createTextMorphState(element: HTMLElement, maxGraphemes: number): TextMorphState {
   const initial = element.textContent ?? "";
   const screenReaderText = document.createElement("span");
   Object.assign(screenReaderText.style, {
@@ -136,7 +144,9 @@ function createTextMorphState(element: HTMLElement): TextMorphState {
     motion: new Map(),
     token: 0,
   };
-  renderLetters(state, graphemes(initial));
+  const initialText = graphemes(initial);
+  if (initialText.length > maxGraphemes) renderPlainText(state, initialText);
+  else renderLetters(state, initialText);
   screenReaderText.textContent = initial;
   states.set(element, state);
   morphedText.set(element, screenReaderText);
@@ -169,6 +179,12 @@ function renderLetters(state: TextMorphState, text: string[]): void {
   state.text = text;
 }
 
+function renderPlainText(state: TextMorphState, text: string[]): void {
+  state.liveLetters.replaceChildren(document.createTextNode(text.join("")));
+  state.letterElements = [];
+  state.text = text;
+}
+
 function getElementPosition(element: Element): { x: number; y: number } {
   const bounds = element.getBoundingClientRect();
   return { x: bounds.left, y: bounds.top };
@@ -198,14 +214,25 @@ function stepMotions(motions: ReadonlyMap<HTMLSpanElement, LetterMotion>, deltaT
  * that are moving keep their speed. Resolves when everything has settled.
  */
 export function morphText(element: HTMLElement, text: string, options: MorphTextOptions = {}): Promise<void> {
-  const state = states.get(element) ?? createTextMorphState(element);
+  const maxGraphemes = Math.max(0, options.maxGraphemes ?? DEFAULT_MAX_GRAPHEMES);
+  const state = states.get(element) ?? createTextMorphState(element, maxGraphemes);
+  const nextText = graphemes(text);
+
+  if (Math.max(state.text.length, nextText.length) > maxGraphemes) {
+    ++state.token;
+    state.screenReaderText.textContent = text;
+    state.exitingLetters.replaceChildren();
+    state.motion = new Map();
+    renderPlainText(state, nextText);
+    return Promise.resolve();
+  }
+
   const spring = options.spring ?? springs.snappy;
   const fadeOut: SpringConfig = { duration: 0.16, bounce: 0 };
   const fadeIn: SpringConfig = { duration: 0.36, bounce: 0 };
   const loop = options.loop ?? sharedLoop;
   const reduced = resolveReducedMotion(options.reducedMotion);
 
-  const nextText = graphemes(text);
   const previousLetters: (LetterSnapshot | null)[] = state.letterElements.map((letterElement) =>
     letterElement
       ? {
