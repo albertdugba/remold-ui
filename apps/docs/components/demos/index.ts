@@ -7,8 +7,6 @@ export { SceneDemo } from "./scene";
 export { StoryDemo } from "./story";
 export { PriceDemo, StatusDemo } from "./text";
 export { SearchResultsDemo } from "./search-results";
-export { UploadFlowDemo } from "./upload-flow";
-export { PricingToggleDemo } from "./pricing-toggle";
 export { TwoFactorDemo } from "./two-factor";
 export { InviteTeamDemo } from "./invite-team";
 export { WorldDemo } from "./world";

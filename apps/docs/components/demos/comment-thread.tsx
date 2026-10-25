@@ -214,6 +214,31 @@ const PRODUCT: Look = {
   here: ["Mira Okafor", "Jonas Weber", "Priya Nair"],
 };
 
+const HOME_THREAD: Comment[] = [
+  c("preview-question", "Jonas Weber", "Does it run true to size? I’m usually between M and L.", 24, 2880, {
+    badge: "Verified buyer",
+    replies: [
+      c("preview-answer", "Halden", "It’s a relaxed fit, so most people size down.", 18, 2700, {
+        badge: "Seller",
+        replies: [
+          c("preview-confirmation", "Priya Nair", "Can confirm. I’m usually an L and the M fits perfectly.", 9, 1440, {
+            badge: "Verified buyer",
+            replies: [c("preview-fit-note", "Jonas Weber", "That’s helpful — I’ll go with the M, then.", 3, 1380, { badge: "Verified buyer" })],
+          }),
+        ],
+      }),
+    ],
+  }),
+  c("preview-rain", "Ada Kim", "Is it waterproof, or just water-resistant?", 11, 600, {
+    replies: [
+      c("preview-rain-answer", "Halden", "Water-resistant. It handles a drizzle, but it isn’t made for a downpour.", 6, 540, {
+        badge: "Seller",
+        replies: [c("preview-rain-note", "Leo Grant", "Mine stayed dry through a twenty-minute walk home in the rain.", 8, 420, { badge: "Verified buyer" })],
+      }),
+    ],
+  }),
+];
+
 const LOOKS = [PRODUCT];
 const SORTS = ["Top", "Newest"] as const;
 type Sort = (typeof SORTS)[number];
@@ -286,15 +311,22 @@ function RichContent({ rich }: { rich: Rich }) {
 
 /** Which look is showing: product Q&A or article comments. */
 export type ThreadLook = Look["key"];
+export type CommentThreadVariant = "full" | "preview";
 
-export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: ThreadLook) => void } = {}) {
+interface CommentThreadDemoProps {
+  onLookChange?: (look: ThreadLook) => void;
+  variant?: CommentThreadVariant;
+}
+
+export function CommentThreadDemo({ onLookChange, variant = "full" }: CommentThreadDemoProps = {}) {
+  const isPreview = variant === "preview";
   const [lookKey, setLookKey] = useState<Look["key"]>("product");
   const look = LOOKS.find((l) => l.key === lookKey)!;
   // Tell the page when the look changes, by hand or by the scene playing itself.
   const lookListener = useRef(onLookChange);
   lookListener.current = onLookChange;
   useEffect(() => lookListener.current?.(lookKey), [lookKey]);
-  const [comments, setComments] = useState(PRODUCT_START);
+  const [comments, setComments] = useState(() => (isPreview ? HOME_THREAD : PRODUCT_START));
   const [sort, setSort] = useState<Sort>("Top");
   const [summary, setSummary] = useState(false);
   const [folded, setFolded] = useState<Set<string>>(() => new Set());
@@ -321,6 +353,12 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
   useEffect(() => {
     if (!live || !visible) return;
     const timer = setInterval(() => {
+      if (isPreview) {
+        const beat = step.current++ % 4;
+        setSummary(beat === 1);
+        setSort(beat === 3 ? "Newest" : "Top");
+        return;
+      }
       const beat = look.scene[step.current % look.scene.length]!;
       step.current++;
       setComments((list) => {
@@ -330,7 +368,7 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
       });
     }, 2100);
     return () => clearInterval(timer);
-  }, [live, visible, look]);
+  }, [isPreview, live, visible, look]);
 
   /** Anything the viewer does takes over from the scene. */
   const takeOver = () => {
@@ -341,7 +379,7 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
     const next = LOOKS.find((l) => l.key === key)!;
     step.current = 0;
     setLookKey(key);
-    setComments(next.start);
+    setComments(isPreview ? HOME_THREAD : next.start);
     setSummary(false);
     setFolded(new Set());
     setReplying(null);
@@ -361,7 +399,7 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
     if (!text) return;
     const key = `you-${Date.now()}`;
     const mine = c(key, "You", text, 0, 0, { sending: true });
-    setComments((list) => edit(list, parent, (x) => ({ ...x, replies: [...x.replies, mine] })));
+    setComments((list) => edit(list, parent, (comment) => ({ ...comment, replies: [...comment.replies, mine] })));
     setFolded((s) => {
       const next = new Set(s);
       next.delete(parent);
@@ -373,7 +411,7 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
     setTimeout(() => setComments((list) => edit(list, key, (x) => ({ ...x, sending: false }))), 900);
   };
 
-  const thread = (list: Comment[], parent: string): ReactNode =>
+  const thread = (list: Comment[], parent: string, depth = 0): ReactNode =>
     list.map((x) => {
       const isFolded = folded.has(x.key);
       const total = count(x.replies);
@@ -383,6 +421,7 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
         <article
           key={x.key}
           className={`cx-comment${x.typing ? " typing" : ""}`}
+          data-depth={depth}
           data-lit={isLit || undefined}
           data-top={parent === "top" || undefined}
           onPointerEnter={() => setHover(x.key)}
@@ -474,7 +513,14 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
                 </form>
               )}
               {total > 0 && isFolded && (
-                <button type="button" className="cx-folded" aria-expanded={false} onClick={() => toggleFold(x.key)}>
+                <button
+                  type="button"
+                  className="cx-folded"
+                  aria-expanded={false}
+                  data-rm-anchor={`folded-${x.key}`}
+                  data-rm-link={x.key}
+                  onClick={() => toggleFold(x.key)}
+                >
                   <span className="cx-faces" aria-hidden="true">
                     {x.replies.slice(0, 3).map((reply) => (
                       <img key={reply.key} src={avatar(reply.author)} alt="" width={18} height={18} />
@@ -485,7 +531,7 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
               )}
             </div>
           )}
-          {!isFolded && x.replies.length > 0 && <div className="cx-replies">{thread(x.replies, x.key)}</div>}
+          {!isFolded && x.replies.length > 0 && <div className="cx-replies">{thread(x.replies, x.key, depth + 1)}</div>}
         </article>
       );
     });
@@ -500,7 +546,7 @@ export function CommentThreadDemo({ onLookChange }: { onLookChange?: (look: Thre
   const topLevel = shown.filter((x) => !x.typing).length;
   const total = count(comments);
   return (
-    <div className="cx not-prose" data-look={look.key} ref={frame} onPointerDown={takeOver} onKeyDown={takeOver}>
+    <div className="cx not-prose" data-look={look.key} data-variant={isPreview ? "preview" : undefined} ref={frame} onPointerDown={takeOver} onKeyDown={takeOver}>
       <div className="cx-bar">
         <div className="cx-tools">
           <span className="cx-here" aria-label={`${look.here.length} people here`}>

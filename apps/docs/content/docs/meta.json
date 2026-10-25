@@ -6,7 +6,6 @@
     "quick-start",
     "registry",
     "---[LayoutGrid]Components---",
-    "components/index",
     "---[Blocks]Building blocks---",
     "...primitives",
     "---[Anchor]Hooks---",

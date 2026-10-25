@@ -5,7 +5,6 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 import type { MDXComponents } from "mdx/types";
 import * as demos from "./demos";
 import { Showcase } from "./showcase";
-import { AllComponents, CatalogueGrid, ComponentGrid } from "./component-grid";
 import { AddCommand, Install } from "./package-tabs";
 import { Dependencies, Source } from "./source";
 import { Customize } from "./customize/customize";
@@ -27,9 +26,6 @@ export function getMDXComponents(components?: MDXComponents) {
     AddCommand,
     Install,
     Dependencies,
-    ComponentGrid,
-    CatalogueGrid,
-    AllComponents,
     Customize,
     Stage,
     CodeVariants,

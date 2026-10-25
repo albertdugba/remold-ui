@@ -16,8 +16,6 @@ const ORB_STATES = ["idle", "listening", "thinking", "speaking"] as const;
 const ParticlesStory = dynamic(() => import("./particles-story/particles-story").then((m) => m.ParticlesStory), { ssr: false });
 const EmblemDemo = dynamic(() => import("../demos/emblem").then((m) => m.EmblemDemo), { ssr: false });
 const SearchResultsDemo = dynamic(() => import("../demos/search-results").then((m) => m.SearchResultsDemo), { ssr: false });
-const UploadFlowDemo = dynamic(() => import("../demos/upload-flow").then((m) => m.UploadFlowDemo), { ssr: false });
-const PricingToggleDemo = dynamic(() => import("../demos/pricing-toggle").then((m) => m.PricingToggleDemo), { ssr: false });
 const TwoFactorDemo = dynamic(() => import("../demos/two-factor").then((m) => m.TwoFactorDemo), { ssr: false });
 const InviteTeamDemo = dynamic(() => import("../demos/invite-team").then((m) => m.InviteTeamDemo), { ssr: false });
 const CommentThread = dynamic(() => import("../demos/comment-thread").then((m) => m.CommentThreadDemo), { ssr: false });
@@ -118,8 +116,8 @@ const LOGO = [
 export function Parts() {
   return (
     <div className="hp">
-      <PartCard kicker="Layout · Connectors" title="Review thread" states={["Q&A"]} wide bleed selfPlaying>
-        {() => <CommentThread />}
+      <PartCard kicker="Layout · Connectors" title="Review thread" states={["Q&A"]} wide bleed selfPlaying minHeight={720}>
+        {() => <CommentThread variant="preview" />}
       </PartCard>
       <PartCard kicker="Canvas · States" title="Voice states" states={["Idle", "Listening", "Thinking", "Speaking"]} every={2200} dark>
         {(i) => <VoiceOrb state={ORB_STATES[i]!} size={240} />}
@@ -132,12 +130,6 @@ export function Parts() {
       </PartCard>
       <PartCard kicker="Layout · Text" title="Search to results" states={["Search"]}>
         {(_, playing) => <SearchResultsDemo framed={false} playing={playing} />}
-      </PartCard>
-      <PartCard kicker="Layout · States" title="Upload an asset" states={["Upload"]}>
-        {(_, playing) => <UploadFlowDemo framed={false} playing={playing} />}
-      </PartCard>
-      <PartCard kicker="Text · Numbers" title="Monthly to yearly" states={["Pricing"]}>
-        {(_, playing) => <PricingToggleDemo framed={false} playing={playing} />}
       </PartCard>
       <PartCard kicker="Layout · Reveal" title="Turn on two-factor" states={["Two-factor"]}>
         {(_, playing) => <TwoFactorDemo framed={false} playing={playing} />}

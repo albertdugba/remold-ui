@@ -53,8 +53,6 @@ const ITEMS = [
     "A grid of episode cards that open into the episode's details: the artwork grows from the tile into the hero and the title lifts off it, matched with no ids.",
   ],
   ["search-results", "Search with recents", "A search field that rises as recent searches open under it, and a word that becomes the one you choose, letter by letter."],
-  ["upload-flow", "Image upload", "One frame from empty to uploaded: a bar fills under the picture, a check arrives and the byte count rolls up."],
-  ["pricing-toggle", "Pricing toggle", "Monthly to yearly: the thumb slides, the price rolls to its new digits and the saving arrives beside it."],
   ["two-factor", "Two-factor setup", "A setting that opens a QR code and code field in place, moving the rows below, and folds to one line once on."],
   ["invite-team", "Invite teammates", "An email becomes a chip, then the person's avatar travels from the invite field into the team's stack."],
   ["accounts", "Accounts", "A bank's accounts page: an account card grows into its page, and money moved between accounts flies from one card to the other."],
