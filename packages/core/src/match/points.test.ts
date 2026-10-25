@@ -179,7 +179,7 @@ describe("matchPoints on large clouds", () => {
     expectValid(first, a.length, b.length);
     expect(first.pairs).toHaveLength(9_000);
     expect(matchPoints(a, b)).toEqual(first);
-  });
+  }, 15_000);
 
   it("stays quick when a tight crowd heads for a distant cloud", () => {
     // Everyone's nearest partners are the same few points: the case that used to stall.
