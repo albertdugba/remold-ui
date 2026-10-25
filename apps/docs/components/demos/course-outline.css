@@ -283,7 +283,7 @@
 
   .co-lesson {
     grid-template-columns: 22px minmax(0, 1fr) max-content;
-    margin-left: 34px;
+    margin-left: 52px;
   }
 
   .co-kind {
@@ -319,7 +319,7 @@
   }
 
   .co-lesson {
-    margin-left: 28px;
+    margin-left: 48px;
   }
 }
 
