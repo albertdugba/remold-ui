@@ -1,6 +1,9 @@
 node_modules
 dist
 .turbo
+.open-next
+.wrangler
+cloudflare-env.d.ts
 coverage
 *.log
 .DS_Store

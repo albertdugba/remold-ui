@@ -5,7 +5,7 @@ import { docsContentRoute, docsRoute } from "@/lib/shared";
 const { rewrite: rewriteDocs } = rewritePath(`${docsRoute}{/*path}`, `${docsContentRoute}{/*path}/content.md`);
 const { rewrite: rewriteSuffix } = rewritePath(`${docsRoute}{/*path}.md`, `${docsContentRoute}{/*path}/content.md`);
 
-export default function proxy(request: NextRequest) {
+export default function middleware(request: NextRequest) {
   const result = rewriteSuffix(request.nextUrl.pathname);
   if (result) {
     return NextResponse.rewrite(new URL(result, request.nextUrl));
@@ -16,7 +16,6 @@ export default function proxy(request: NextRequest) {
 
     if (result) {
       return NextResponse.rewrite(new URL(result, request.nextUrl), {
-        // this URL has two representations, selected by `Accept`
         headers: { Vary: "Accept" },
       });
     }
