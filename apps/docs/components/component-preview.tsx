@@ -40,11 +40,6 @@ const PREVIEWS: Record<string, Preview> = {
     Component: load(() => import("./demos/search-results").then((m) => m.SearchResultsDemo)),
     width: 520,
   },
-  "upload-flow": {
-    Component: load(() => import("./demos/upload-flow").then((m) => m.UploadFlowDemo)),
-    width: 520,
-  },
-  "pricing-toggle": { Component: load(() => import("./demos/pricing-toggle").then((m) => m.PricingToggleDemo)), width: 520 },
   "two-factor": { Component: load(() => import("./demos/two-factor").then((m) => m.TwoFactorDemo)), width: 520 },
   "invite-team": { Component: load(() => import("./demos/invite-team").then((m) => m.InviteTeamDemo)), width: 520 },
   "onboarding-checklist": { Component: load(() => import("./demos/onboarding-checklist").then((m) => m.OnboardingChecklistDemo)) },

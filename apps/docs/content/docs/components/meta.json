@@ -1,7 +1,6 @@
 {
   "title": "Components",
   "pages": [
-    "index",
     "---Interface---",
     "comment-thread",
     "course-outline",
@@ -11,8 +10,6 @@
     "accounts",
     "podcast-player",
     "search-results",
-    "upload-flow",
-    "pricing-toggle",
     "two-factor",
     "invite-team",
     "morph-icons",

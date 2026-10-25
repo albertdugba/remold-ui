@@ -1,0 +1,13 @@
+/docs/components/root /docs/primitives/root 301
+/docs/components/text /docs/primitives/text 301
+/docs/components/icon /docs/primitives/icon 301
+/docs/components/path-group /docs/primitives/path-group 301
+/docs/components/scene /docs/primitives/scene 301
+/docs/components/story /docs/primitives/story 301
+/docs/components/particles /docs/primitives/particles 301
+/docs/components/ignore /docs/primitives/ignore 301
+/docs/examples/diagrams /docs/components/living-diagrams 301
+/docs/examples/beyond-diagrams /docs/components/canvas-gallery 301
+/docs/components/file-tree /docs/components/course-outline 301
+/docs/components/wallet /docs/components/accounts 301
+/docs/examples/* /docs/components/:splat 301
