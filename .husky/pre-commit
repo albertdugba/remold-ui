@@ -1,0 +1,1 @@
+pnpm exec biome lint --staged --no-errors-on-unmatched

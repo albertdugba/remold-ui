@@ -123,7 +123,8 @@ export interface IntegrationsHubProps {
 
 const CATEGORIES = ["All", "Data", "Messaging", "Payments"] as const;
 const ALL_IDS = INTEGRATIONS.map((x) => x.id);
-const tile = (icon: string) => extrude({ radius: 0.28, height: 20, decal: { icon, text: "", size: 42 } });
+const tile = (icon: string) =>
+  extrude({ radius: 0.28, height: 20, decal: { icon, text: "", size: 42 } });
 
 /** The scene for these settings: plain data, rebuilt when a setting changes. */
 function buildHub({
@@ -142,8 +143,14 @@ function buildHub({
     size: tileSize * 0.77,
     extra: { height: 4, opacity: showOthers ? 0.35 : 0 },
   });
-  const layoutFor = (category: Category | "All"): StageScene["layouts"][string] => {
-    const members = ALL_IDS.filter((id) => category === "All" || INTEGRATIONS.find((x) => x.id === id)!.categories.includes(category));
+  const layoutFor = (
+    category: Category | "All",
+  ): StageScene["layouts"][string] => {
+    const members = ALL_IDS.filter(
+      (id) =>
+        category === "All" ||
+        INTEGRATIONS.find((x) => x.id === id)!.categories.includes(category),
+    );
     return {
       camera: { zoom: (category === "All" ? 1.45 : 1.6) * zoom },
       caption:
@@ -155,7 +162,10 @@ function buildHub({
         hub: layout.square(0, 0, hubSize, { height: hubHeight }),
         ...(category === "All"
           ? layout.ring(members, { radius: ringRadius, size: tileSize })
-          : layout.ring(members, { radius: focusRadius, size: tileSize * 1.18 })),
+          : layout.ring(members, {
+              radius: focusRadius,
+              size: tileSize * 1.18,
+            })),
       },
     };
   };
@@ -173,13 +183,20 @@ function buildHub({
         label: "Lumen",
         description: "Your product, in the middle.",
       },
-      ...Object.fromEntries(INTEGRATIONS.map((x) => [x.id, { look: tile(x.icon), label: x.name, description: x.blurb }])),
+      ...Object.fromEntries(
+        INTEGRATIONS.map((x) => [
+          x.id,
+          { look: tile(x.icon), label: x.name, description: x.blurb },
+        ]),
+      ),
     },
     links: INTEGRATIONS.map((x) => ({
       from: "hub",
       to: x.id,
       flow,
-      layouts: CATEGORIES.filter((c) => c === "All" || x.categories.includes(c)),
+      layouts: CATEGORIES.filter(
+        (c) => c === "All" || x.categories.includes(c),
+      ),
     })),
     layouts: Object.fromEntries(CATEGORIES.map((c) => [c, layoutFor(c)])),
   };
@@ -197,20 +214,45 @@ export function IntegrationsHub({
   every = 3200,
   height = 520,
 }: IntegrationsHubProps) {
-  const scene = buildHub({ ringRadius, focusRadius, tileSize, hubSize, hubHeight, flow, showOthers, zoom });
+  const scene = buildHub({
+    ringRadius,
+    focusRadius,
+    tileSize,
+    hubSize,
+    hubHeight,
+    flow,
+    showOthers,
+    zoom,
+  });
   return (
     <CanvasStage
       scene={scene}
-      title="Integrations"
+      title='Integrations'
       every={every}
       height={height}
       describe={(layout, focused) => {
         const x = INTEGRATIONS.find((i) => i.id === focused);
-        if (x) return { title: `${x.name} · ${x.categories.join(" and ")}`, body: x.blurb };
-        if (focused === "hub") return { title: "Lumen", body: "Your product. Every integration talks to it, and nothing talks around it." };
-        const count = layout === "All" ? INTEGRATIONS.length : INTEGRATIONS.filter((i) => i.categories.includes(layout as Category)).length;
+        if (x)
+          return {
+            title: `${x.name} · ${x.categories.join(" and ")}`,
+            body: x.blurb,
+          };
+        if (focused === "hub")
+          return {
+            title: "Lumen",
+            body: "Your product. Every integration talks to it, and nothing talks around it.",
+          };
+        const count =
+          layout === "All"
+            ? INTEGRATIONS.length
+            : INTEGRATIONS.filter((i) =>
+                i.categories.includes(layout as Category),
+              ).length;
         return {
-          title: layout === "All" ? `${count} integrations` : `${count} for ${layout.toLowerCase()}`,
+          title:
+            layout === "All"
+              ? `${count} integrations`
+              : `${count} for ${layout.toLowerCase()}`,
           body: "Tap a tile to see what it does. Drag sideways to turn the scene.",
         };
       }}

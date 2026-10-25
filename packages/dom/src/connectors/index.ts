@@ -353,6 +353,8 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
   let stop: (() => void) | null = null;
   let still = 0;
   let destroyed = false;
+  let targetsDirty = true;
+  let targets = new Map<string, { from: Element; to: Element }>();
 
   /** Inside something the transition ignores (its own exit layer, say), so not part of the content. */
   const ignored = (el: Element) => {
@@ -361,7 +363,7 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
   };
 
   /** Lines that should exist now, by a key that survives the element being rebuilt. */
-  function wanted(): Map<string, { from: Element; to: Element }> {
+  function scanTargets(): Map<string, { from: Element; to: Element }> {
     const anchors = new Map<string, Element>();
     for (const el of root.querySelectorAll(`[${ANCHOR_ATTRIBUTE}]`)) {
       if (!ignored(el)) anchors.set(el.getAttribute(ANCHOR_ATTRIBUTE)!, el);
@@ -376,6 +378,19 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
     });
     return out;
   }
+
+  const connectorAttributes = new Set([
+    ANCHOR_ATTRIBUTE,
+    LINK_ATTRIBUTE,
+    FROM_SIDE_ATTRIBUTE,
+    TO_SIDE_ATTRIBUTE,
+    LINE_ATTRIBUTE,
+    LABEL_ATTRIBUTE,
+    ARROW_ATTRIBUTE,
+    PULSE_ATTRIBUTE,
+    PULSE_DELAY_ATTRIBUTE,
+    IGNORE_ATTRIBUTE,
+  ]);
 
   function show(line: Line) {
     const p = Math.max(0, Math.min(1, line.drawn.current));
@@ -473,7 +488,11 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
       y: (p.y - frame.top) / scale,
     });
     let changed = false;
-    const now = wanted();
+    if (targetsDirty) {
+      targets = scanTargets();
+      targetsDirty = false;
+    }
+    const now = targets;
 
     for (const [key, { from, to }] of now) {
       const a = from.getBoundingClientRect();
@@ -586,7 +605,18 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
   const watch =
     typeof MutationObserver === "function"
       ? new MutationObserver((records) => {
-          if (records.some((r) => !svg.contains(r.target))) wake();
+          const contentChanged = records.filter((record) => !svg.contains(record.target));
+          if (contentChanged.length === 0) return;
+          if (
+            contentChanged.some(
+              (record) =>
+                record.type === "childList" ||
+                (record.type === "attributes" && connectorAttributes.has(record.attributeName ?? "")),
+            )
+          ) {
+            targetsDirty = true;
+          }
+          wake();
         })
       : null;
   watch?.observe(root, { subtree: true, childList: true, attributes: true });

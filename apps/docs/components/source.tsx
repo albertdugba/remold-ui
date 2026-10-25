@@ -4,13 +4,17 @@
  * the real files, what you see is exactly what runs on the page.
  */
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { CodeBlockTab, CodeBlockTabs, CodeBlockTabsList, CodeBlockTabsTrigger } from "fumadocs-ui/components/codeblock";
 import { ServerCodeBlock } from "fumadocs-ui/components/codeblock.rsc";
+import type ts from "typescript";
 import { Install } from "./package-tabs";
 
 const DEMOS = path.join(process.cwd(), "components/demos");
 const EXTENSIONS = [".tsx", ".ts", ".js", ".css"];
+const require = createRequire(import.meta.url);
+const typescript: typeof ts = require("typescript");
 /** Generated data (glyph outlines) is summarised rather than printed in full. */
 const LARGEST = 40_000;
 
@@ -20,6 +24,12 @@ interface SourceFile {
   lang: string;
   /** Packages it imports from npm (not React itself, which every project has). */
   packages: string[];
+}
+
+interface DisplaySourceFile extends SourceFile {
+  javascript: string;
+  javascriptName: string;
+  javascriptLang: string;
 }
 
 const PROVIDED = new Set(["react", "react-dom", "next"]);
@@ -61,6 +71,34 @@ function summarise(file: { name: string; code: string }): string {
   return `${head}\n// … ${size} KB of generated data, left out here. See the comment above for how it's made.\n`;
 }
 
+function toJavaScript(file: SourceFile): Pick<DisplaySourceFile, "javascript" | "javascriptName" | "javascriptLang"> {
+  const extension = path.extname(file.name);
+  const isTypeScript = extension === ".ts" || extension === ".tsx";
+
+  if (!isTypeScript) {
+    return {
+      javascript: file.code,
+      javascriptName: file.name,
+      javascriptLang: file.lang,
+    };
+  }
+
+  const javascript = typescript.transpileModule(file.code, {
+    compilerOptions: {
+      jsx: typescript.JsxEmit.Preserve,
+      module: typescript.ModuleKind.ESNext,
+      target: typescript.ScriptTarget.ES2022,
+    },
+    fileName: file.name,
+  }).outputText;
+
+  return {
+    javascript,
+    javascriptName: file.name.replace(/\.tsx$/, ".jsx").replace(/\.ts$/, ".js"),
+    javascriptLang: extension === ".tsx" ? "jsx" : "js",
+  };
+}
+
 /** The demo first, each file's stylesheet straight after it, then the files it imports. */
 async function collect(entry: string): Promise<SourceFile[]> {
   const files: SourceFile[] = [];
@@ -79,22 +117,55 @@ async function collect(entry: string): Promise<SourceFile[]> {
 }
 
 export async function Source({ demo }: { demo: string }) {
-  const files = await collect(demo);
+  const files: DisplaySourceFile[] = (await collect(demo)).map((file) => ({
+    ...file,
+    ...toJavaScript(file),
+  }));
+
   if (files.length === 0) throw new Error(`<Source demo="${demo}" />: no file components/demos/${demo}.*`);
+
   return (
-    <CodeBlockTabs defaultValue={files[0]!.name}>
+    <CodeBlockTabs defaultValue="typescript">
       <CodeBlockTabsList>
-        {files.map((f) => (
-          <CodeBlockTabsTrigger key={f.name} value={f.name}>
-            {f.name}
-          </CodeBlockTabsTrigger>
-        ))}
+        <CodeBlockTabsTrigger value="typescript">TypeScript</CodeBlockTabsTrigger>
+        <CodeBlockTabsTrigger value="javascript">JavaScript</CodeBlockTabsTrigger>
       </CodeBlockTabsList>
-      {files.map((f) => (
-        <CodeBlockTab key={f.name} value={f.name}>
-          <ServerCodeBlock code={f.code} lang={f.lang} codeblock={{ "data-line-numbers": true }} />
-        </CodeBlockTab>
-      ))}
+      <CodeBlockTab value="typescript">
+        <SourceFiles files={files} />
+      </CodeBlockTab>
+      <CodeBlockTab value="javascript">
+        <SourceFiles files={files} javascript />
+      </CodeBlockTab>
+    </CodeBlockTabs>
+  );
+}
+
+function SourceFiles({ files, javascript = false }: { files: DisplaySourceFile[]; javascript?: boolean }) {
+  const firstFile = javascript ? files[0]!.javascriptName : files[0]!.name;
+
+  return (
+    <CodeBlockTabs defaultValue={firstFile}>
+      <CodeBlockTabsList>
+        {files.map((file) => {
+          const name = javascript ? file.javascriptName : file.name;
+          return (
+            <CodeBlockTabsTrigger key={name} value={name}>
+              {name}
+            </CodeBlockTabsTrigger>
+          );
+        })}
+      </CodeBlockTabsList>
+      {files.map((file) => {
+        const name = javascript ? file.javascriptName : file.name;
+        const code = javascript ? file.javascript : file.code;
+        const lang = javascript ? file.javascriptLang : file.lang;
+
+        return (
+          <CodeBlockTab key={name} value={name}>
+            <ServerCodeBlock code={code} lang={lang} codeblock={{ "data-line-numbers": true }} />
+          </CodeBlockTab>
+        );
+      })}
     </CodeBlockTabs>
   );
 }

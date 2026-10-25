@@ -1,0 +1,32 @@
+---
+title: "Pricing toggle"
+description: "Monthly to yearly: the thumb slides, the price rolls to its new digits, and the saving arrives at the end of the line without moving anything."
+status: "new"
+tags: ["Layout", "Text"]
+---
+
+<Stage name="pricing-toggle" code={<Source demo="pricing-toggle" />}>
+  <PricingToggleDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Switch to Yearly.** The thumb slides across, $24 rolls to $19, the billing line changes and "Save 20%" comes in beside the price.
+- **Switch back halfway.** Every change starts from where things are on screen, so it just turns around.
+
+## Install
+
+<AddCommand name="pricing-toggle" />
+
+## Dependencies
+
+<Dependencies demo="pricing-toggle" />
+
+## How it works
+
+- The switch is a two-column grid, and the thumb sits in the chosen option's cell. Choosing moves it to the other cell, and [Layout](/docs/primitives/layout) carries it there.
+- [Text](/docs/primitives/text) changes the price, so only the digits that differ move.
+- The badge is at the end of the price line, so its arrival shifts nothing. Layout fades it in.
+- Replace `PLAN` with your own prices and notes.

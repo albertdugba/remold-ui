@@ -15,6 +15,11 @@ const VoiceOrb = dynamic(() => import("../demos/voice-orb").then((m) => m.VoiceO
 const ORB_STATES = ["idle", "listening", "thinking", "speaking"] as const;
 const ParticlesStory = dynamic(() => import("./particles-story/particles-story").then((m) => m.ParticlesStory), { ssr: false });
 const EmblemDemo = dynamic(() => import("../demos/emblem").then((m) => m.EmblemDemo), { ssr: false });
+const SearchResultsDemo = dynamic(() => import("../demos/search-results").then((m) => m.SearchResultsDemo), { ssr: false });
+const UploadFlowDemo = dynamic(() => import("../demos/upload-flow").then((m) => m.UploadFlowDemo), { ssr: false });
+const PricingToggleDemo = dynamic(() => import("../demos/pricing-toggle").then((m) => m.PricingToggleDemo), { ssr: false });
+const TwoFactorDemo = dynamic(() => import("../demos/two-factor").then((m) => m.TwoFactorDemo), { ssr: false });
+const InviteTeamDemo = dynamic(() => import("../demos/invite-team").then((m) => m.InviteTeamDemo), { ssr: false });
 const CommentThread = dynamic(() => import("../demos/comment-thread").then((m) => m.CommentThreadDemo), { ssr: false });
 const PodcastPlayer = dynamic(() => import("../demos/podcast-player").then((m) => m.PodcastPlayer), { ssr: false }) as ComponentType<
   import("../demos/podcast-player").PodcastPlayerProps
@@ -124,6 +129,21 @@ export function Parts() {
       </PartCard>
       <PartCard kicker="Text · Icons" title="Download to saved" states={["Idle", "Busy", "Done"]} every={1600}>
         {(i) => <StateButton step={i} />}
+      </PartCard>
+      <PartCard kicker="Layout · Text" title="Search to results" states={["Search"]}>
+        {(_, playing) => <SearchResultsDemo framed={false} playing={playing} />}
+      </PartCard>
+      <PartCard kicker="Layout · States" title="Upload an asset" states={["Upload"]}>
+        {(_, playing) => <UploadFlowDemo framed={false} playing={playing} />}
+      </PartCard>
+      <PartCard kicker="Text · Numbers" title="Monthly to yearly" states={["Pricing"]}>
+        {(_, playing) => <PricingToggleDemo framed={false} playing={playing} />}
+      </PartCard>
+      <PartCard kicker="Layout · Reveal" title="Turn on two-factor" states={["Two-factor"]}>
+        {(_, playing) => <TwoFactorDemo framed={false} playing={playing} />}
+      </PartCard>
+      <PartCard kicker="Layout · Shared" title="Email to teammate" states={["Invite"]}>
+        {(_, playing) => <InviteTeamDemo framed={false} playing={playing} />}
       </PartCard>
       <PartCard kicker="SVG · Shapes" title="Artwork in motion" states={["Listen", "Shop", "Measure", "Talk", "Create"]} every={1800}>
         {(i) => <EmblemDemo framed={false} index={i} />}

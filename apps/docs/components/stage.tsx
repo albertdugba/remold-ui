@@ -12,7 +12,6 @@
  */
 import { Check, Code2, Copy, Eye, RotateCcw } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { FrameworkMenu } from "./framework";
 
 export interface StageProps {
   children: ReactNode;
@@ -81,14 +80,11 @@ export function Stage({ children, code, name, width = 900, minHeight = 360, wide
             </button>
           )}
         </div>
-        {view === "preview" ? (
+        {view === "preview" && (
           <button type="button" onClick={() => setRun((r) => r + 1)} className={iconButton} aria-label="Replay the demo">
             <RotateCcw className="size-3.5" aria-hidden="true" />
             <span className="hidden sm:inline">Replay</span>
           </button>
-        ) : (
-          // The source is React today; the other frameworks are listed as coming.
-          <FrameworkMenu available={["react"]} />
         )}
       </div>
 

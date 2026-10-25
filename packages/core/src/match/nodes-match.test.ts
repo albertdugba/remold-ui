@@ -193,6 +193,21 @@ describe("matchNodes", () => {
     expect(matchNodes([], [node({ kind: "box" })]).added).toEqual([0]);
     expect(() => matchNodes([], [], { threshold: 2 })).toThrow(RangeError);
   });
+
+  it("uses the bounded matcher when a snapshot exceeds its comparison budget", () => {
+    const before = Array.from({ length: 5 }, (_, index) => node({ kind: "text", text: `Item ${index}`, y: index / 10 }));
+    const after = Array.from({ length: 5 }, (_, index) => node({ kind: "text", text: `Item ${index}`, y: index / 10 }));
+
+    const result = matchNodes(before, after, { maxPairComparisons: 0 });
+
+    expect(result.pairs.map((pair) => [pair.from, pair.to])).toEqual([
+      [0, 0],
+      [1, 1],
+      [2, 2],
+      [3, 3],
+      [4, 4],
+    ]);
+  });
 });
 
 describe("containers that carry the same contents", () => {
