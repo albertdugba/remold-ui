@@ -1,0 +1,106 @@
+.vo {
+  --vo-ink: #18181b;
+  --vo-muted: #71717a;
+  --vo-faint: #a1a1aa;
+  --vo-fill: rgb(24 24 27 / 0.05);
+  --vo-ring: rgb(24 24 27 / 0.1);
+  display: grid;
+  justify-items: center;
+  gap: 22px;
+  width: min(100%, 400px);
+  padding: 8px 0;
+  color: var(--vo-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    system-ui, sans-serif;
+}
+
+.dark .vo {
+  --vo-ink: #fafafa;
+  --vo-muted: #a1a1aa;
+  --vo-faint: #71717a;
+  --vo-fill: rgb(255 255 255 / 0.07);
+  --vo-ring: rgb(255 255 255 / 0.12);
+}
+
+.vo-languages {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.vo-languages > span:first-child {
+  text-align: right;
+}
+
+.vo-swap {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+  width: 30px;
+  height: 30px;
+  background: var(--vo-fill);
+}
+.vo-swap svg {
+  width: 14px;
+  height: 14px;
+}
+.vo-swap:hover {
+  background: var(--vo-ring);
+}
+
+.vo-captions {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  min-height: 56px;
+  text-align: center;
+}
+.vo-heard {
+  margin: 0;
+  font-size: 14px;
+  color: var(--vo-muted);
+}
+.vo-said {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.vo-orb {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.vo-orb:active {
+  transform: scale(0.97);
+}
+.vo-orb:focus-visible {
+  outline: 2px solid var(--vo-ring);
+  outline-offset: 4px;
+}
+
+.vo-status {
+  margin: -14px 0 0;
+  font-size: 13px;
+  color: var(--vo-faint);
+}
+
+.vo-note {
+  max-width: 300px;
+  margin: -8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--vo-faint);
+}

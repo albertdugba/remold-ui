@@ -213,3 +213,97 @@ describe("pointCloud with matches made elsewhere", () => {
     expect(() => cloud.to([{ x: 0, y: 0 }], { matches: { pairs: [[0, 3]], leaving: [1], arriving: [] } })).toThrow(/heading/);
   });
 });
+
+describe("pointCloud with scatter", () => {
+  /** Step until `test` holds, or fail after a few seconds of frames. */
+  const until = (cloud: ReturnType<typeof pointCloud>, test: () => boolean) => {
+    for (let n = 0; !test(); n++) {
+      if (n > 600) throw new Error("never happened");
+      cloud.step(1 / 60);
+    }
+  };
+
+  it("spreads out first, then lands exactly on the new shape", () => {
+    const cloud = pointCloud(row(20));
+    cloud.to(row(20, 100), { scatter: { seed: 1 } });
+    expect(cloud.settled).toBe(false);
+    // A little way in, the points are spread around rather than marching in a line.
+    for (let n = 0; n < 15; n++) cloud.step(1 / 60);
+    const ys = read(cloud).map((p) => p.y);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(20);
+    settle(cloud);
+    expect(read(cloud)).toEqual(row(20, 100).map((p) => ({ ...p, size: 1 })));
+  });
+
+  it("glitters while spread: sizes vary, and every point is back to full size at the end", () => {
+    const cloud = pointCloud(row(30));
+    cloud.to(row(30, 60), { scatter: { seed: 2 } });
+    for (let n = 0; n < 20; n++) cloud.step(1 / 60);
+    const sizes = new Set(read(cloud).map((p) => p.size.toFixed(2)));
+    expect(sizes.size).toBeGreaterThan(5);
+    settle(cloud);
+    expect(read(cloud).every((p) => p.size === 1)).toBe(true);
+  });
+
+  it("holds before gathering, and sets points off at different times", () => {
+    const cloud = pointCloud(row(10));
+    cloud.to(row(10, 80), { scatter: { seed: 3, hold: 0.5, stagger: 0.3 } });
+    // Before the hold is up, nothing is heading for the new shape yet.
+    for (let n = 0; n < 24; n++) cloud.step(1 / 60);
+    expect(cloud.settled).toBe(false);
+    settle(cloud);
+    expect(read(cloud).map((p) => p.y)).toEqual(Array(10).fill(80));
+  });
+
+  it("keeps pairing from the shape it's heading for when interrupted mid-scatter", () => {
+    const cloud = pointCloud(row(3));
+    cloud.to(row(3, 50), { scatter: { seed: 4 } });
+    for (let n = 0; n < 10; n++) cloud.step(1 / 60);
+    expect(cloud.heading()).toEqual(row(3, 50));
+    const { pairs } = cloud.to(row(3, 50, 11));
+    expect(pairs).toEqual([
+      [0, 0],
+      [1, 1],
+      [2, 2],
+    ]);
+    settle(cloud);
+    expect(read(cloud)).toEqual(row(3, 50, 11).map((p) => ({ ...p, size: 1 })));
+  });
+
+  it("brings new points in from the cloud and fades spare ones out in it", () => {
+    const cloud = pointCloud(row(2));
+    cloud.to(row(6, 40), { scatter: { seed: 5 } });
+    until(cloud, () => cloud.settled);
+    expect(cloud.length).toBe(6);
+    expect(read(cloud)).toEqual(row(6, 40).map((p) => ({ ...p, size: 1 })));
+
+    cloud.to(row(2, 0), { scatter: { seed: 6 } });
+    settle(cloud);
+    expect(cloud.length).toBe(2);
+  });
+
+  it("spreads the same way for the same seed", () => {
+    const run = () => {
+      const cloud = pointCloud(row(12));
+      cloud.to(row(12, 30), { scatter: { seed: 7 } });
+      for (let n = 0; n < 12; n++) cloud.step(1 / 60);
+      return read(cloud);
+    };
+    expect(run()).toEqual(run());
+  });
+
+  it("jumps straight there when instant, scatter or not", () => {
+    const cloud = pointCloud(row(4));
+    cloud.to(row(4, 20), { instant: true, scatter: true });
+    expect(cloud.settled).toBe(true);
+    expect(read(cloud)).toEqual(row(4, 20).map((p) => ({ ...p, size: 1 })));
+  });
+
+  it("rejects bad scatter settings", () => {
+    const cloud = pointCloud(row(2));
+    expect(() => cloud.to(row(2), { scatter: { spread: 0 } })).toThrow(/spread/);
+    expect(() => cloud.to(row(2), { scatter: { hold: -1 } })).toThrow(/hold/);
+    expect(() => cloud.to(row(2), { scatter: { stagger: Number.NaN } })).toThrow(/stagger/);
+    expect(() => cloud.to(row(2), { scatter: { seed: Number.POSITIVE_INFINITY } })).toThrow(/seed/);
+  });
+});

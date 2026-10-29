@@ -1,4 +1,4 @@
-import type { CloudPoint, PointCloudOptions } from "@remold-ui/core";
+import type { CloudPoint, PointCloudOptions, PointCloudScatter } from "@remold-ui/core";
 import type { CanvasSize } from "../canvas-size";
 import type { FrameLoop, ReducedMotion } from "@remold-ui/dom";
 
@@ -11,7 +11,16 @@ export interface ParticlesToOptions {
   radius?: number;
   /** How dots pair with their destination shape. */
   pairing?: "match" | "index";
+  /**
+   * How the dots get there. `"direct"` (the default) springs each dot straight to its new place.
+   * `"scatter"` dissolves the shape into a loose, glittering cloud first, then gathers it into the
+   * new one; pass `{ type: "scatter", spread, hold, stagger, seed }` to tune it.
+   */
+  transition?: ParticleTransition;
 }
+
+/** How dots move from one shape to the next: straight there, or spreading out and gathering again. */
+export type ParticleTransition = "direct" | "scatter" | ({ type: "scatter" } & PointCloudScatter);
 
 export interface ParticlesOptions extends PointCloudOptions {
   /** The first shape. More shapes follow with `to`. A point's `tone` picks its `palette` colour. */

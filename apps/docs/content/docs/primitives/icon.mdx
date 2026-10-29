@@ -20,9 +20,10 @@ Pass the icon you'd normally render, as a component or an element:
 
 ```tsx
 import { Remold } from "@remold-ui/react";
-import { Menu, X } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Cancel01Icon, Menu01Icon } from "@hugeicons/core-free-icons";
 
-<Remold.Icon icon={open ? X : Menu} className="size-5" />;
+<Remold.Icon icon={<HugeiconsIcon icon={open ? Cancel01Icon : Menu01Icon} />} className="size-5" />;
 ```
 
 </Variant>

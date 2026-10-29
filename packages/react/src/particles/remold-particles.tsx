@@ -63,6 +63,7 @@ function sample(shape: ParticleShape, count: number, palette?: readonly string[]
  * ```tsx
  * <Remold.Particles shape="Just landed" className="h-64 w-full" />
  * <Remold.Particles shape={{ image: "/logo.png", by: "dark" }} count={4000} />
+ * <Remold.Particles shape={next} transition="scatter" />
  * ```
  */
 export const RemoldParticles = forwardRef(function RemoldParticles(
@@ -74,6 +75,7 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
     count = 1200,
     label,
     pairing,
+    transition,
     radius,
     dot,
     color,
@@ -93,7 +95,7 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
   const [element, setElement] = useState<HTMLCanvasElement | null>(null);
   const [instance, setInstance] = useState<Particles | null>(null);
   const key = keyOf(shape, count);
-  const latest = useLatest({ shape, count, label: label ?? labelOf(shape), pairing, radius, palette });
+  const latest = useLatest({ shape, count, label: label ?? labelOf(shape), pairing, transition, radius, palette });
   const mountOptions = useLatest<ParticlesOptions>({
     radius,
     shape: dot,
@@ -125,9 +127,9 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
   useIsoLayoutEffect(() => {
     if (!instance) return;
     let current = true;
-    const { shape, count, label, pairing, radius, palette } = latest.current;
+    const { shape, count, label, pairing, transition, radius, palette } = latest.current;
     const apply = (points: readonly CloudPoint[]) => {
-      if (current) instance.to(points, { label, pairing, radius });
+      if (current) instance.to(points, { label, pairing, transition, radius });
     };
     const fail = (error: unknown) => {
       if (!warned.current) console.warn(error);

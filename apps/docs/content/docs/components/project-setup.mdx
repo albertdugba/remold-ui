@@ -1,0 +1,36 @@
+---
+title: "Project setup"
+description: "A setup checklist beside a picture of the project it sets up. Every piece starts as a ghost; finish a step and its piece drops into place."
+status: "new"
+tags: ["Scene"]
+kind: "canvas"
+---
+
+<Stage name="project-setup" code={<Source demo="project-setup" />}>
+  <ProjectSetupDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Tick a step.** Its piece drops from where it hovered, as a ghost, into its place in the picture, and turns solid.
+- **Tick the ones it connects to.** The line between two pieces appears as soon as both exist: the domain flows into the API, the API reaches the database.
+- **Untick a step.** Its piece lifts back out of the picture and turns into a ghost again.
+- **Finish every step.** The picture is the whole project.
+
+## Install
+
+<AddCommand name="project-setup" />
+
+## Dependencies
+
+<Dependencies demo="project-setup" />
+
+## How it works
+
+- The picture is one [Scene](/docs/primitives/scene). Each piece is an `extrude()` solid with an icon on its top, drawn in the `sketch` palette as ink lines.
+- There's one layout for every set of finished steps, so the steps can be done in any order. Ticking one switches layouts, and the scene springs every piece to its place in the new one.
+- A piece that isn't built yet is a `ghost`: its fill fades and its outline stays, a little above where it'll land. Built, it drops into place on an `arc`.
+- Lines say which layouts they appear in, so each one only shows once both of its ends are built.
+- Setup is pretend. Mark steps done from your own data, and describe your project's pieces in `STEPS` and `PLACES`.

@@ -809,7 +809,10 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
 
   /** Morph an object's outline from wherever it is now to `shape`. */
   function reshape(o: ObjectState, shape: string): void {
-    const from = shapeOf(o) ?? o.look.path;
+    // Mid-morph, start from where the outline is; once a morph has finished, from the shape it
+    // reached, so the outline isn't re-sampled from its own sampled points on every change.
+    const settled = !o.outline.morph || o.outline.t.settled;
+    const from = (settled ? o.outline.target : shapeOf(o)) ?? o.look.path;
     o.outline.target = shape;
     if (!from || !o.look.path) {
       o.outline.morph = null;

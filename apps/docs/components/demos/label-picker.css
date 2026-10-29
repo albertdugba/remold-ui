@@ -1,0 +1,265 @@
+/* A label picker. Styling only: the popover is Base UI; the chips, the highlight and the create
+   row move with Motion. Tokens live on .lp-layer too, for the portalled picker. */
+.lp-layer {
+  --lp-surface: #ffffff;
+  --lp-raised: #ffffff;
+  --lp-field: #f4f4f5;
+  --lp-line: rgb(24 24 27 / 0.08);
+  --lp-ink: #18181b;
+  --lp-muted: #71717a;
+  --lp-quiet: #a1a1aa;
+  --lp-accent: #4f46e5;
+  --lp-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.22), 0 0 0 1px rgb(24 24 27 / 0.06);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .lp-layer {
+  --lp-surface: #1f1f23;
+  --lp-raised: #2a2a2f;
+  --lp-field: #2e2e33;
+  --lp-line: rgb(255 255 255 / 0.08);
+  --lp-ink: #fafafa;
+  --lp-muted: #a1a1aa;
+  --lp-quiet: #71717a;
+  --lp-accent: #818cf8;
+  --lp-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.lp {
+  display: grid;
+  width: min(100%, 400px);
+  padding: 18px;
+  border-radius: 22px;
+  background: var(--lp-surface);
+  color: var(--lp-ink);
+}
+
+.lp-key {
+  color: var(--lp-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.lp-title {
+  margin: 6px 0 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.lp-desc {
+  margin: 6px 0 0;
+  color: var(--lp-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.lp-labels {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--lp-line);
+}
+
+.lp-caption {
+  color: var(--lp-quiet);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.lp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  border-radius: 999px;
+  background: var(--lp-field);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.lp-chip i,
+.lp-list i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.lp-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--lp-quiet);
+  cursor: pointer;
+}
+
+.lp-chip button:hover {
+  background: var(--lp-surface);
+  color: var(--lp-ink);
+}
+
+.lp-chip button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.lp-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 11px 0 8px;
+  border: 1px dashed color-mix(in oklab, var(--lp-ink) 22%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--lp-muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.lp-add:hover,
+.lp-add[data-popup-open] {
+  border-style: solid;
+  color: var(--lp-ink);
+}
+
+.lp-add svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lp-add:focus-visible,
+.lp-chip button:focus-visible {
+  outline: 2px solid var(--lp-accent);
+  outline-offset: 2px;
+}
+
+/* The picker */
+.lp-picker {
+  width: 236px;
+  padding: 5px;
+  border-radius: 14px;
+  background: var(--lp-raised);
+  box-shadow: var(--lp-shadow);
+  color: var(--lp-ink);
+  transform-origin: var(--transform-origin);
+  transition: opacity 0.16s, transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  outline: none;
+}
+
+.lp-picker[data-starting-style],
+.lp-picker[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.94) translateY(-4px);
+}
+
+.lp-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  margin-bottom: 4px;
+  padding: 0 9px;
+  border-bottom: 1px solid var(--lp-line);
+  color: var(--lp-quiet);
+}
+
+.lp-search svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.lp-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--lp-ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.lp-search input::placeholder {
+  color: var(--lp-quiet);
+}
+
+.lp-list {
+  display: grid;
+  max-height: 230px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.lp-list li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 32px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.lp-list li > :not(.lp-hl) {
+  position: relative;
+}
+
+.lp-hl {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--lp-field);
+}
+
+.lp-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lp-create .lp-name {
+  color: var(--lp-muted);
+}
+
+.lp-create b {
+  color: var(--lp-ink);
+  font-weight: 600;
+}
+
+.lp-check {
+  display: grid;
+  color: var(--lp-accent);
+}
+
+.lp-check svg {
+  width: 15px;
+  height: 15px;
+}

@@ -1,4 +1,4 @@
 {
   "title": "Building blocks",
-  "pages": ["index", "layout", "text", "icon", "path-group", "scene", "story", "particles", "connectors", "ignore"]
+  "pages": ["index", "layout", "text", "icon", "path-group", "scene", "story", "particles", "canvas", "connectors", "ignore"]
 }

@@ -6,13 +6,27 @@ import "./scene.css";
 
 type Layouts = Remold.Scene.Props["layouts"];
 type Box = Layouts[string]["objects"][string];
-const B = (x: number, y: number, z: number, width: number, depth: number): Box => ({ x, y, z, width, depth });
+const B = (
+  x: number,
+  y: number,
+  z: number,
+  width: number,
+  depth: number,
+): Box => ({ x, y, z, width, depth });
 
 export const SCENE = {
   label: "A small app: web and mobile clients, an API and a database",
   objects: {
-    db: { look: "cylinder", label: "database", description: "Where the data lives." },
-    api: { look: "glass", label: "api", description: "Reads and writes the data." },
+    db: {
+      look: "cylinder",
+      label: "database",
+      description: "Where the data lives.",
+    },
+    api: {
+      look: "glass",
+      label: "api",
+      description: "Reads and writes the data.",
+    },
     web: { look: "chip", label: "web", description: "The web client." },
     mobile: { look: "chip", label: "mobile", description: "The phone client." },
   },
@@ -45,15 +59,33 @@ export const SCENE = {
   },
 } satisfies Pick<Remold.Scene.Props, "label" | "objects" | "links" | "layouts">;
 
-/** A scene that springs between two layouts. Drag to turn it; tap an object to focus it. */
-export function SceneDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
+export function SceneDemo({
+  framed = true,
+  index,
+}: {
+  framed?: boolean;
+  index?: number;
+}) {
   const [own, setLayout] = useState<keyof typeof SCENE.layouts>("Simple");
-  const layout = index === undefined ? own : (["Simple", "Scaled"] as const)[index % 2]!;
+  const layout =
+    index === undefined ? own : (["Simple", "Scaled"] as const)[index % 2]!;
   const body = (
     <div className="rm-scene">
-      <Remold.Scene {...SCENE} palette="slate" layout={layout} className="rm-scene-canvas" />
+      <Remold.Scene
+        {...SCENE}
+        palette="slate"
+        layout={layout}
+        className="rm-scene-canvas"
+      />
       <div className="rm-scene-foot">
-        {index === undefined && <Segmented label="Layout" value={layout} onChange={setLayout} options={["Simple", "Scaled"] as const} />}
+        {index === undefined && (
+          <Segmented
+            label="Layout"
+            value={layout}
+            onChange={setLayout}
+            options={["Simple", "Scaled"] as const}
+          />
+        )}
         <p>{SCENE.layouts[layout].caption}</p>
       </div>
     </div>

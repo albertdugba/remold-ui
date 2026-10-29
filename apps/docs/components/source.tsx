@@ -13,26 +13,42 @@ interface SourceFile {
   javascriptLang: string;
 }
 
-function getSourceFiles(demo: string): readonly SourceFile[] {
-  const files = demoSources[demo as keyof typeof demoSources] as readonly SourceFile[] | undefined;
-  if (!files) throw new Error(`<Source demo="${demo}" />: no generated source is available.`);
-  return files;
+interface DemoSource {
+  usage: SourceFile;
+  files: readonly SourceFile[];
+}
+
+function getSource(demo: string): DemoSource {
+  const source = demoSources[demo as keyof typeof demoSources] as DemoSource | undefined;
+  if (!source) throw new Error(`<Source demo="${demo}" />: no generated source is available.`);
+  return source;
 }
 
 export function Source({ demo }: { demo: string }) {
-  const files = getSourceFiles(demo);
+  const { usage, files } = getSource(demo);
 
   return (
-    <CodeBlockTabs defaultValue="typescript">
+    <CodeBlockTabs defaultValue="usage">
       <CodeBlockTabsList>
-        <CodeBlockTabsTrigger value="typescript">TypeScript</CodeBlockTabsTrigger>
-        <CodeBlockTabsTrigger value="javascript">JavaScript</CodeBlockTabsTrigger>
+        <CodeBlockTabsTrigger value="usage">Usage</CodeBlockTabsTrigger>
+        <CodeBlockTabsTrigger value="source">Full source</CodeBlockTabsTrigger>
       </CodeBlockTabsList>
-      <CodeBlockTab value="typescript">
-        <SourceFiles files={files} />
+      <CodeBlockTab value="usage">
+        <CodeBlockTabs defaultValue="typescript">
+          <CodeBlockTabsList>
+            <CodeBlockTabsTrigger value="typescript">TypeScript</CodeBlockTabsTrigger>
+            <CodeBlockTabsTrigger value="javascript">JavaScript</CodeBlockTabsTrigger>
+          </CodeBlockTabsList>
+          <CodeBlockTab value="typescript">
+            <ServerCodeBlock code={usage.code} lang={usage.lang} codeblock={{ "data-line-numbers": true }} />
+          </CodeBlockTab>
+          <CodeBlockTab value="javascript">
+            <ServerCodeBlock code={usage.javascript} lang={usage.javascriptLang} codeblock={{ "data-line-numbers": true }} />
+          </CodeBlockTab>
+        </CodeBlockTabs>
       </CodeBlockTab>
-      <CodeBlockTab value="javascript">
-        <SourceFiles files={files} javascript />
+      <CodeBlockTab value="source">
+        <SourceFiles files={files} />
       </CodeBlockTab>
     </CodeBlockTabs>
   );
@@ -69,7 +85,7 @@ function SourceFiles({ files, javascript = false }: { files: readonly SourceFile
 }
 
 export function Dependencies({ demo }: { demo: string }) {
-  const packages = [...new Set(getSourceFiles(demo).flatMap((file) => file.packages))].sort();
+  const packages = [...new Set(getSource(demo).files.flatMap((file) => file.packages))].sort();
   if (packages.length === 0) return <p>Nothing else to install: it only needs React.</p>;
   return <Install packages={packages.join(" ")} />;
 }

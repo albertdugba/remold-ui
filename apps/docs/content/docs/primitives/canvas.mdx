@@ -1,0 +1,114 @@
+---
+title: "Canvas"
+description: "Paint your own canvas and leave the plumbing to Remold: sharp at every size, a frame loop that runs only while something moves and only on screen, numbers that spring to new targets, and reduced motion."
+---
+
+<Stage>
+  <CanvasDemo />
+</Stage>
+
+The orb is one `draw` function. Each state is a set of `values` (size, drift speed, breathing, how tightly the clouds gather), so switching state springs every number from wherever it is, even mid-change.
+
+## Installation
+
+<Install packages="@remold-ui/react" vanilla="@remold-ui/canvas" />
+
+## Usage
+
+Write `draw`. Pass the numbers it reads as `values`; change them and they spring there.
+
+<CodeVariants>
+<Variant framework="react">
+
+```tsx
+import { Remold } from '@remold-ui/react';
+
+<Remold.Canvas
+  values={{ radius: active ? 80 : 40 }}
+  draw={(context, { width, height, values }) => {
+    context.beginPath();
+    context.arc(width / 2, height / 2, values.radius, 0, Math.PI * 2);
+    context.fill();
+  }}
+  className="h-64 w-full"
+/>
+```
+
+</Variant>
+<Variant framework="js">
+
+```ts
+import { painter } from "@remold-ui/canvas";
+
+const dot = painter(canvas, {
+  values: { radius: 40 },
+  draw(context, { width, height, values }) {
+    context.beginPath();
+    context.arc(width / 2, height / 2, values.radius, 0, Math.PI * 2);
+    context.fill();
+  },
+});
+
+dot.to({ radius: 80 });
+```
+
+</Variant>
+</CodeVariants>
+
+What you don't write:
+
+- **Sizing.** The canvas stores enough pixels to be sharp on every screen (capped at 2×), refits when it resizes, and is cleared and scaled before each frame. Draw in CSS pixels from `(0, 0)` to `(width, height)`.
+- **The frame loop.** It runs while a value is springing and stops when they settle. Off screen, it pauses.
+- **Springs.** `values` become springs. A new target starts from the current position and speed, so interrupting is smooth.
+- **Reduced motion.** Values jump instead of springing, `continuous` drawing stops, and `draw` gets `still: true` so you can paint a calm frame.
+
+## Things that move on their own
+
+Set `continuous` for drift, breathing, or anything that follows live input like audio. `draw` then runs every frame, with `time` and `dt` in seconds. Keep per-frame state in a ref.
+
+```tsx
+<Remold.Canvas
+  continuous
+  values={LOOKS[state]}
+  spring={{ duration: 0.7, bounce: 0 }}
+  draw={(context, { width, values, time, dt }) => {
+    drift.current += values.flow * dt;
+    // paint with time, drift.current and values
+  }}
+/>
+```
+
+## Gestures
+
+`actionsRef` gives you `to`, `set`, `values` and `still` for event handlers. Follow a finger with `set`, then hand the flick over with `to` and a `velocity`:
+
+```tsx
+const actions = useRef<Remold.CanvasActions<{ turn: number }>>(null);
+
+<Remold.Canvas
+  actionsRef={actions}
+  values={{ turn: 0 }}
+  spring={{ turn: springs.smooth }}
+  onPointerMove={(e) => actions.current?.set({ turn: start + e.clientX - x })}
+  onPointerUp={() => actions.current?.to({ turn: landing }, { velocity: { turn: speed } })}
+  draw={draw}
+/>
+```
+
+`spring` takes one spring for every value, or one per name.
+
+## API reference
+
+| Prop            | Type                                   | Default   | Description                                                                 |
+| --------------- | -------------------------------------- | --------- | --------------------------------------------------------------------------- |
+| `draw`          | `(context, frame) => void`             |           | Paints a frame. `frame` has `width`, `height`, `pixelRatio`, `values`, `time`, `dt`, `still`. |
+| `values`        | `Record<string, number>`               |           | Numbers `draw` reads. New targets spring.                                   |
+| `spring`        | `SpringConfig \| Record<name, SpringConfig>` | smooth | How values spring.                                                          |
+| `continuous`    | `boolean`                              | `false`   | Draw every frame, not only while springing.                                 |
+| `clear`         | `boolean`                              | `true`    | Clear before each frame. Turn off to paint trails.                          |
+| `label`         | `string`                               |           | Accessible name. Leave it out for a decorative canvas.                      |
+| `reducedMotion` | `"user" \| "always" \| "never"`         | `"user"`  | Follow the system setting, or override it.                                  |
+| `maxPixelRatio` | `number`                               | `2`       | Cap on stored pixels per CSS pixel.                                         |
+| `actionsRef`    | `Ref<CanvasActions>`                   |           | `to`, `set`, `redraw`, `values`, `still`.                                   |
+
+Every other prop goes to the `<canvas>`. Without React, [painter()](/docs/canvas/painter) takes the same options.

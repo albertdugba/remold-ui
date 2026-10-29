@@ -27,11 +27,12 @@ const SORTS: Record<Sort, (a: File, b: File) => number> = {
   modified: (a, b) => a.modified - b.modified,
 };
 
-/** A file list that sorts and filters. The whole list re-renders; Remold moves the rows. */
 export function FilesDemo({ framed = true }: { framed?: boolean }) {
   const [sort, setSort] = useState<Sort>("name");
   const [kind, setKind] = useState<File["kind"] | "All">("All");
-  const shown = FILES.filter((f) => kind === "All" || f.kind === kind).sort(SORTS[sort]);
+  const shown = FILES.filter((f) => kind === "All" || f.kind === kind).sort(
+    SORTS[sort],
+  );
 
   const body = (
     <div className="rm-files">
@@ -60,10 +61,17 @@ export function FilesDemo({ framed = true }: { framed?: boolean }) {
       <Remold.Layout trigger={`${sort}:${kind}`} className="rm-files-list">
         {shown.map((f) => (
           <div key={f.name} className="rm-files-row">
-            <span className={`rm-files-icon ${f.kind.toLowerCase()}`} aria-hidden="true" />
+            <span
+              className={`rm-files-icon ${f.kind.toLowerCase()}`}
+              aria-hidden="true"
+            />
             <span className="rm-files-name">{f.name}</span>
-            <span className="rm-files-meta">{f.size < 1 ? `${Math.round(f.size * 1000)} KB` : `${f.size} MB`}</span>
-            <span className="rm-files-meta rm-files-date">{f.modified === 1 ? "Yesterday" : `${f.modified} days ago`}</span>
+            <span className="rm-files-meta">
+              {f.size < 1 ? `${Math.round(f.size * 1000)} KB` : `${f.size} MB`}
+            </span>
+            <span className="rm-files-meta rm-files-date">
+              {f.modified === 1 ? "Yesterday" : `${f.modified} days ago`}
+            </span>
           </div>
         ))}
       </Remold.Layout>

@@ -1,34 +1,33 @@
 ---
 title: "Voice orb"
-description: "A living voice and agent orb on a canvas. The sphere isn't a circle — its edge undulates with the voice, light swirls inside it, and a soft glow breathes. Drive it with a level prop from your own audio, or let it read the microphone."
+description: "A soft sphere of drifting cloud for voice interfaces: it breathes when idle, swells with your voice, gathers while thinking and flows while speaking. The demo is live translation, and the translated line morphs as it revises itself."
 kind: canvas
 status: "new"
-tags: ["value", "Icon", "canvas", "audio"]
+tags: ["Canvas", "Text", "audio"]
 ---
 
 <Stage name="voice-orb" code={<Source demo="voice-orb" />}>
   <VoiceOrbDemo />
 </Stage>
 
-It cycles through the states on its own; tap a state, or turn on the mic and talk to it.
+It plays a short Spanish ⇄ English exchange on its own. Tap the orb to translate your own voice.
 
 ## Things to try
 
-- **Speak to it.** Press **Use mic** and allow access. The orb's edge ripples to your voice — louder speech pushes the surface out further and brightens the glow, then it eases back. (No audio is recorded; it only reads the level.)
-- **Switch states.** Idle breathes; Listening opens up with soft intake rings; Thinking swirls faster with a comet circling it; Speaking undulates with the voice. Each one springs from wherever it is.
-- **Watch the centre.** The icon is a `Remold.Icon` — three strokes that morph straight into the next state's three strokes.
+- **Tap the orb and speak.** It goes through each state in turn: *listening* (the microphone is open and the orb waits), *hearing you* (it moves like a voice as your words appear), *translating* (the clouds gather while the last words are finished) and *speaking* (the translation is read aloud). Tap again to finish early or stop it talking.
+- **Watch the translation correct itself.** Mid-sentence, "la estación" can read as *season*; once the sentence ends it becomes *train station*. `Remold.Text` changes only the words that changed, so the line settles instead of flickering.
+- **Swap languages** with the arrows between them.
 
-## Two ways to drive it
+Live mode uses [react-speech-recognition](https://www.npmjs.com/package/react-speech-recognition) for captions, the on-device [Translator API](https://developer.chrome.com/docs/ai/translator-api) in recent Chrome, and the browser's speech synthesis. Where translation isn't available it still captions what you said, and says so.
+
+## The orb on its own
 
 ```tsx
-// 1. Prop-driven — feed a 0–1 level from your own audio or agent:
+// Feed a 0–1 level from your own audio or agent:
 <VoiceOrb state="speaking" level={amplitude} />
-
-// 2. Microphone — opt in and it reads the mic itself:
-<VoiceOrb state="listening" mic />
 ```
 
-With neither, it simulates a believable voice while speaking or listening, so it looks alive out of the box. `state` is `idle | listening | thinking | speaking`; `size` sets the square size; `onMicError` fires if permission is refused.
+Without a `level`, it simulates a believable voice while listening or speaking. `state` is `idle | listening | thinking | speaking`; `theme` is `aurora | ember | mono`; `size` sets the square size.
 
 ## Install
 
@@ -40,12 +39,11 @@ With neither, it simulates a believable voice while speaking or listening, so it
 
 ## How it works
 
-- The sphere's outline is a **blob**, not a circle: a ring of points perturbed by a few rotating harmonics and drawn as a smooth closed curve. The voice level scales how far the edge deforms, so it looks like a soft, living membrane.
-- The incoming level — from the mic's analyser, your `level` prop, or the simulation — is smoothed with a **fast attack and slow release**, so the orb leaps to a sound and settles back rather than flickering.
-- Every quantity (radius, glow, swirl speed, wobble, the rings and the comet, and both colours) is a core [`value`](/docs/core/motion) spring, so a state is just a new set of targets and the orb flows between them, mid-change or not.
-- Inside the clipped blob: a base gradient, two or three drifting light blobs that brighten with the voice, and a specular highlight that wanders a little — all on the GPU-cheap path, with the glow drawn as a radial gradient (no per-frame blur).
-- Reduced motion holds it still and calm.
+- The sphere is a clipped circle filled with a sky gradient, a few soft cloud blobs drifting on their own orbits, a deep current along the bottom, a highlight on the top left and a gentle shade at the edge. No outline, no rings.
+- It's a [`Remold.Canvas`](/docs/primitives/canvas). Each state is a set of `values` (size, drift speed, breathing, how tightly the clouds gather), so the orb springs from wherever it is into the next state. The canvas handles sizing, the frame loop and reduced motion; the component is the paint function.
+- The voice level, from your `level` prop or the simulation, rises fast and falls slowly, so the orb leaps to a word and eases back. It also speeds the clouds up.
+- It's `continuous`, so it keeps drifting between state changes. It pauses off screen, and reduced motion holds it still.
 
 <Callout>
-  The microphone is read only for its loudness; nothing is recorded or sent anywhere. The simulated voice is made up.
+  The orb never touches the microphone. Live translation hands your voice to the browser's speech recognition, which in Chrome is processed by Google's servers; translation itself runs on the device. The component sends nothing anywhere itself.
 </Callout>

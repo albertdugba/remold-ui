@@ -1,0 +1,33 @@
+---
+title: "Streak"
+description: "The celebration learning apps show when you finish today's lesson: a grey ember grows into a full flame, sparks burst out, the day count rolls up and today's dot fills in."
+status: "new"
+tags: ["Morph", "Motion"]
+---
+
+<Stage name="streak" code={<Source demo="streak" />} minHeight={560}>
+  <StreakDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Keep the streak.** The grey ember reshapes into a full flame and catches colour.
+- **Watch the burst.** Sparks fly out of the flame as it lands, and the day count rolls up by one.
+- **Look at the week.** Today's dot fills in alongside the days you've already kept.
+
+## Install
+
+<AddCommand name="streak" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="streak" />
+
+## How it works
+
+- **The ember grows into the flame.** The flame is one path reshaped with Remold's `createMorph`, so the ember genuinely becomes the flame rather than one icon swapping for another.
+- The sparks, the colour and the rolling count are Motion.

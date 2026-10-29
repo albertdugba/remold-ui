@@ -1,0 +1,35 @@
+---
+title: "Send a message"
+description: "Sending a chat message: the mic turns into a send arrow as you type, your message rises into the thread, the read receipt slides down to it and their reply takes the typing bubble's place."
+status: "new"
+tags: ["Morph", "Motion"]
+---
+
+<Stage name="send-message" code={<Source demo="send-message" />} minHeight={560}>
+  <SendMessageDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Start typing.** The mic turns into a send arrow.
+- **Send.** Your message rises out of the composer into the thread, pushing the others up.
+- **Wait for a reply.** Their face slides down to your message once they've read it, a typing bubble bounces in, and their reply takes its place.
+
+## Install
+
+<AddCommand name="send-message" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="send-message" />
+
+## How it works
+
+- **Mic to arrow.** The composer's button reshapes between the two icons with Remold's `createMorph`.
+- **The same face, a newer message.** The read receipt is one small avatar moving to the latest message it has seen, which is what Motion's `layoutId` is for.
+
+<Callout>The people are made up. Avatars are illustrations from [DiceBear](https://www.dicebear.com).</Callout>

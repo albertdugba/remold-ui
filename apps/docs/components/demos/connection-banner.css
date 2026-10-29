@@ -1,0 +1,245 @@
+/* A connection banner. Styling only: Remold.Layout animates the banner arriving and folding into the
+   pill; the switch is Base UI. */
+.cn {
+  --cn-surface: #ffffff;
+  --cn-field: #f4f4f5;
+  --cn-line: rgb(24 24 27 / 0.08);
+  --cn-ink: #18181b;
+  --cn-muted: #71717a;
+  --cn-quiet: #a1a1aa;
+  --cn-warn: #b45309;
+  --cn-warn-bg: #fffbeb;
+  --cn-warn-line: #fde68a;
+  --cn-good: #059669;
+  --cn-accent: #4f46e5;
+  display: grid;
+  width: min(100%, 420px);
+  padding: 16px 18px 18px;
+  border-radius: 22px;
+  background: var(--cn-surface);
+  color: var(--cn-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .cn {
+  --cn-surface: #1f1f23;
+  --cn-field: #2e2e33;
+  --cn-line: rgb(255 255 255 / 0.08);
+  --cn-ink: #fafafa;
+  --cn-muted: #a1a1aa;
+  --cn-quiet: #71717a;
+  --cn-warn: #fbbf24;
+  --cn-warn-bg: rgb(251 191 36 / 0.1);
+  --cn-warn-line: rgb(251 191 36 / 0.25);
+  --cn-good: #34d399;
+  --cn-accent: #818cf8;
+}
+
+.cn-stage {
+  display: grid;
+  min-height: 290px;
+  align-content: start;
+}
+
+.cn-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cn-line);
+}
+
+.cn-doc {
+  display: grid;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.cn-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cn-muted);
+  font-size: 12px;
+}
+
+.cn-sync i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cn-good);
+}
+
+.cn-sync[data-phase="offline"] i,
+.cn-sync[data-phase="reconnecting"] i {
+  background: var(--cn-warn);
+}
+
+.cn-sim {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cn-muted);
+  font-size: 12px;
+}
+
+.cn-switch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--cn-ink) 18%, transparent);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cn-switch[data-checked] {
+  background: var(--cn-warn);
+}
+
+.cn-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+  transition: transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.cn-thumb[data-checked] {
+  transform: translateX(14px);
+}
+
+.cn-switch:focus-visible,
+.cn-retry:focus-visible {
+  outline: 2px solid var(--cn-accent);
+  outline-offset: 2px;
+}
+
+.cn-slot {
+  display: grid;
+  justify-items: center;
+}
+
+/* The banner: full width, warm */
+.cn-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px 10px 11px 12px;
+  border-radius: 14px;
+  background: var(--cn-warn-bg);
+  box-shadow: inset 0 0 0 1px var(--cn-warn-line);
+}
+
+.cn-banner-icon {
+  display: grid;
+  flex: none;
+  color: var(--cn-warn);
+}
+
+.cn-banner-icon svg {
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+}
+
+.cn-spin {
+  animation: cn-spin 0.9s linear infinite;
+}
+
+.cn-banner-copy {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.cn-banner-copy span {
+  color: var(--cn-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.cn-retry {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--cn-surface);
+  box-shadow: inset 0 0 0 1px var(--cn-warn-line);
+  color: var(--cn-ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+/* The pill it folds into: small, green, centred */
+.cn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 6px 12px 6px 9px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--cn-good) 13%, var(--cn-surface));
+  color: var(--cn-good);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.cn-pill svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 3;
+}
+
+.cn-body {
+  margin-top: 14px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.cn-body h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.cn-body p {
+  margin: 0 0 8px;
+}
+
+.cn-muted {
+  color: var(--cn-muted);
+}
+
+/* Written while offline: marked until it syncs */
+.cn-new {
+  text-decoration: underline dotted transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.4s, background-color 0.4s;
+}
+
+.cn-new[data-unsynced] {
+  background: color-mix(in oklab, var(--cn-warn) 9%, transparent);
+  text-decoration-color: var(--cn-warn);
+}
+
+@keyframes cn-spin {
+  to {
+    rotate: 360deg;
+  }
+}

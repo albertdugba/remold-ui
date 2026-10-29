@@ -33,7 +33,14 @@ export {
   type PathSampleOptions,
   type SampleOptions,
 } from "./points/sampling";
-export { pointCloud, STRIDE as CLOUD_STRIDE, type CloudPoint, type PointCloud, type PointCloudOptions } from "./points/point-cloud";
+export {
+  pointCloud,
+  STRIDE as CLOUD_STRIDE,
+  type CloudPoint,
+  type PointCloud,
+  type PointCloudOptions,
+  type PointCloudScatter,
+} from "./points/point-cloud";
 
 // Motion
 export {

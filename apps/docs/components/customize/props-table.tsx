@@ -2,17 +2,11 @@
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { formatValue, typeOf, type Customizable } from "./controls";
 import { integrationsHubControls } from "../demos/integrations-hub.controls";
-import { layerStackControls } from "../demos/layer-stack.controls";
 import { logoMorphControls } from "../demos/logo-morph.controls";
-import { edgeDeliveryControls } from "../demos/edge-delivery.controls";
-import { onboardingChecklistControls } from "../demos/onboarding-checklist.controls";
 
 const CONTROLS: Record<string, Customizable> = {
   "integrations-hub": integrationsHubControls,
-  "layer-stack": layerStackControls,
   "logo-morph": logoMorphControls,
-  "edge-delivery": edgeDeliveryControls,
-  "onboarding-checklist": onboardingChecklistControls,
 };
 
 export function ControlsTable({ name }: { name: string }) {

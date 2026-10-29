@@ -20,13 +20,6 @@ export const CATALOGUE: Record<"home", { title: string; items: CatalogueItem[] }
     title: "From the home page",
     items: [
       {
-        id: "home/icons",
-        category: "Icons",
-        title: "Icon toggles",
-        description: "Buttons whose icons morph between states: strokes travel to where the next icon needs them.",
-        href: "/docs/primitives/icon",
-      },
-      {
         id: "home/world",
         category: "Motion",
         title: "World",

@@ -1,9 +1,5 @@
 "use client";
-/**
- * Draws what Remold decided: a line from where each element was to where its partner is,
- * plus a dot for each element that arrived with no partner. Give `onTransition` to a
- * `Remold.Layout` and put `overlay` inside a positioned container around it.
- */
+
 import type { Transition } from "@remold-ui/react";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import "./match-lines.css";
@@ -21,13 +17,8 @@ interface Drawing {
   arrivals: { x: number; y: number }[];
 }
 
-/** Lines shorter than this are elements that barely moved; they'd only add noise. */
 const SHORTEST = 6;
 
-/**
- * `select` limits the lines to elements matching a CSS selector (one line per task title, say).
- * Without it, each moved group gets one line: an element whose parent also has a partner is skipped.
- */
 export function useMatchLines(
   enabled = true,
   { select }: { select?: string } = {},
@@ -43,12 +34,16 @@ export function useMatchLines(
         .then(({ before, after, matches }) => {
           const frame = box.current?.getBoundingClientRect();
           if (!frame) return;
-          const centre = (b: { x: number; y: number; width: number; height: number }) => ({
+          const centre = (b: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+          }) => ({
             x: b.x + b.width / 2 - frame.left,
             y: b.y + b.height / 2 - frame.top,
           });
-          // One line per moved group: skip an element whose parent also has a partner, since the
-          // parent's line already shows where it went. Otherwise a card draws a line per word.
+
           const matchedAfter = new Set(matches.pairs.map((p) => p.to));
           const lines: Line[] = [];
           for (const pair of matches.pairs) {
@@ -69,7 +64,11 @@ export function useMatchLines(
           const arrivals = matches.added.flatMap((i) => {
             if (select && !after.elements[i]?.matches(select)) return [];
             const parent = after.nodes[i]?.parent ?? -1;
-            if (parent >= 0 && (matchedAfter.has(parent) || matches.added.includes(parent))) return [];
+            if (
+              parent >= 0 &&
+              (matchedAfter.has(parent) || matches.added.includes(parent))
+            )
+              return [];
             const b = after.boxes[i];
             return b ? [centre(b)] : [];
           });
@@ -83,7 +82,6 @@ export function useMatchLines(
   const overlay = (
     <svg ref={box} className="ml-overlay" aria-hidden="true">
       {enabled && drawing && (
-        // A new key restarts the CSS animation for every transition.
         <g key={drawing.id} className="ml-drawing">
           {drawing.lines.map((l, i) => (
             <g key={i}>

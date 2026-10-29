@@ -1,0 +1,36 @@
+---
+title: "Filter bar"
+description: "Filtering card transactions, the way banking and spending apps do it: picking a filter adds a segmented token to the bar, and the transactions, the count and the total spent move to match."
+status: "new"
+tags: ["Motion", "Base UI"]
+---
+
+<Stage name="filter-bar" code={<Source demo="filter-bar" />} minHeight={560}>
+  <FilterBarDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Open Filter.** A menu of fields opens, each with its values in a submenu. Picking one adds a segmented token to the bar.
+- **Change a token's value.** Click it and the new value rolls into place.
+- **Remove a token** with its ×. The bar closes the gap.
+- **Watch the list.** The transactions slide into their new places, and both the count and the total spent roll to their new figures.
+
+## Install
+
+<AddCommand name="filter-bar" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="filter-bar" />
+
+## How it works
+
+- The menu and its submenus are Base UI's Menu, so keyboard navigation between fields and values works out of the box.
+- The tokens, the reordering rows and the rolling figures are Motion.
+
+<Callout>The spending is made up. The merchants' marks are from [Simple Icons](https://simpleicons.org).</Callout>

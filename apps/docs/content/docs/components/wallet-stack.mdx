@@ -1,0 +1,36 @@
+---
+title: "Wallet"
+description: "A leather card holder with three cards in it: tap it and the cards slide up and fan out, choose one and it rises to the top while its latest transactions fill in underneath, as Apple Wallet does."
+status: "new"
+tags: ["Motion", "Base UI"]
+---
+
+<Stage name="wallet-stack" code={<Source demo="wallet-stack" />} minHeight={620}>
+  <WalletStackDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Tap the holder.** The cards slide up out of the front pocket, fanned so you can read each one, still tucked in at the bottom. Tap again and they slip back in.
+- **Choose a card.** It rises to the top while the holder sinks out of the way, and its latest transactions arrive row by row in the space between.
+- **Make it your default.** Flip the switch and the Default badge moves over to it.
+
+## Install
+
+<AddCommand name="wallet-stack" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="wallet-stack" />
+
+## How it works
+
+- **Springs, a beat apart.** Every card and the holder are placed by Motion springs, staggered slightly, so each change reads as one movement rather than a jumble.
+- **Drawn leather.** The holder is SVG: a pebbled grain from a noise filter, a burnished edge and close stitching. Nothing is an image.
+- The default-card switch is Base UI's Switch.
+
+<Callout>The cards and transactions are made up.</Callout>

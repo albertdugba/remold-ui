@@ -1,0 +1,30 @@
+---
+title: "useSpringPress"
+description: "A small, interruptible spring response for controls pressed with a pointer."
+---
+
+```tsx
+import { useSpringPress } from "@remold-ui/react";
+
+function PlayButton() {
+  const press = useSpringPress({
+    scale: 0.94,
+    spring: { duration: 0.24, bounce: 0.12 },
+  });
+
+  return <button ref={press.ref}>Play</button>;
+}
+```
+
+The control springs toward `scale` while its primary pointer is down, then returns to `1` when released. It is interruptible: releasing before it settles hands the spring back from its current position.
+
+This is deliberately pointer-only. Keyboard activation stays still, preserving immediate, predictable feedback for high-frequency actions.
+
+## Options
+
+| Option          | Default          | Description                                                             |
+| --------------- | ---------------- | ----------------------------------------------------------------------- |
+| `scale`         | `0.97`           | Scale while pressed. Keep this subtle: `0.94`–`0.98` is usually enough. |
+| `spring`        | `springs.snappy` | The `{ duration, bounce }` spring for press and release.                |
+| `reducedMotion` | `"user"`         | Follows the system setting; reduced motion lands immediately.           |
+| `loop`          | browser          | A custom frame loop, useful in tests or embedded renderers.             |

@@ -4,6 +4,8 @@ import { useIsoLayoutEffect } from "../utils/hooks.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldConnectorsProps, RemoldConnectorsState } from "./types.js";
 
+export const CONNECTOR_UPDATE_EVENT = "remold:connectors-update";
+
 const overlayStyles: CSSProperties = {
   position: "absolute",
   inset: 0,
@@ -38,7 +40,12 @@ export const RemoldConnectors = forwardRef(function RemoldConnectors(
   useIsoLayoutEffect(() => {
     if (!element || !svg.current) return;
     const lines = connectors(element, svg.current, { shape, radius, gap, end, from, arrow, pulse, spring, reducedMotion, loop });
-    return () => lines.destroy();
+    const update = () => lines.update();
+    element.addEventListener(CONNECTOR_UPDATE_EVENT, update);
+    return () => {
+      element.removeEventListener(CONNECTOR_UPDATE_EVENT, update);
+      lines.destroy();
+    };
   }, [
     element,
     shape,

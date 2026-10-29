@@ -1,0 +1,38 @@
+---
+title: "Hold to record"
+description: "One pill that you hold to record. The mic becomes the record dot, the words become the time, and the waveform grows out of the pill: then it all folds back."
+status: "new"
+tags: ["Motion"]
+---
+
+<Stage name="hold-to-record" code={<Source demo="hold-to-record" />}>
+  <HoldToRecordDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Hold it.** The mic morphs into a red record dot, "Hold to record" rewrites itself into the time, and the waveform grows out of the pill as you speak.
+- **Let go.** The dot morphs into play and the waveform settles into the finished clip.
+- **Press ×.** The clip folds back: the bars tuck away, the time rewrites itself into "Hold to record", and play morphs back into the mic.
+- **Just tap.** A tap is too short to record, so it asks you to keep holding.
+- **Use the keyboard.** Focus the pill, hold Space or Enter, and let go to keep it. Escape cancels.
+
+## Install
+
+<AddCommand name="hold-to-record" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="hold-to-record" />
+
+## How it works
+
+- **Nothing is swapped.** The pill has the same four parts in every phase: the icon, the words, the waveform and the ×. Phases only change what they show and how wide they are, so each part reshapes instead of fading out while a new one fades in.
+- Motion lays out the pill and controls across phases; the waveform and clock are ordinary updates.
+- **Holding** uses pointer capture, so the gesture survives a finger drifting off the pill.
+
+The levels are generated so the demo needs no microphone. In an app, read them from an `AnalyserNode` on the `MediaRecorder`'s stream; nothing else changes.

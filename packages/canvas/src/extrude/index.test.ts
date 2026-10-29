@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { iso, projector } from "../camera";
-import { caption, extrude, inkLines, outlineArea, parseColor, shapeRings, walls } from "./index";
+import { caption, extrude, inkLines, outlineArea, parseColor, shapeRings, unitPath, walls } from "./index";
 import { roundedRect } from "../geometry";
 
 const view = projector(iso(), { width: 800, height: 800 });
@@ -23,6 +23,25 @@ describe("shapeRings", () => {
     const { outer, holes } = shapeRings({ path: RING }, { x: 0, y: 0, width: 100, depth: 100 });
     expect(holes).toHaveLength(1);
     expect(Math.abs(outlineArea(outer))).toBeGreaterThan(Math.abs(outlineArea(holes[0]!)));
+  });
+
+  it("handles outlines with more points than a function call can take, as a morph makes", () => {
+    const n = 200_000;
+    const d = `M${Array.from({ length: n }, (_, i) => {
+      const a = (i / n) * Math.PI * 2;
+      return `${(50 + 50 * Math.cos(a)).toFixed(3)} ${(50 + 50 * Math.sin(a)).toFixed(3)}`;
+    }).join("L")}Z`;
+    const { outer } = shapeRings({ path: d }, { x: 0, y: 0, width: 200, depth: 100 });
+    expect(Math.max(...outer.slice(0, 1000).map((p) => p.x))).toBeLessThanOrEqual(200);
+    expect(outer.length).toBe(n);
+  });
+
+  it("keeps an outline the same size when it's sampled again, as a chain of morphs does", () => {
+    const points = (d: string) => (d.match(/[ML]/g) ?? []).length;
+    const once = unitPath({ path: STAR });
+    let again = once;
+    for (let i = 0; i < 5; i++) again = unitPath({ path: again });
+    expect(points(again)).toBe(points(once));
   });
 
   it("explains a path with nothing to extrude", () => {

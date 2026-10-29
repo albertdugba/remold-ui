@@ -718,6 +718,16 @@ describe("Remold.Particles", () => {
     expect(frames.running).toBe(false);
   });
 
+  it("scatters into the next shape with transition scatter, and settles", async () => {
+    const frames = manualLoop();
+    await render(<Remold.Particles shape={{ path: SQUARE }} count={40} loop={frames.loop} transition="scatter" />);
+    await act(async () => frames.run());
+    await render(<Remold.Particles shape={{ path: BAR }} count={40} loop={frames.loop} transition="scatter" />);
+    expect(frames.running).toBe(true);
+    await act(async () => frames.run());
+    expect(frames.running).toBe(false);
+  });
+
   it("doesn't restart when re-rendered with the same shape", async () => {
     const frames = manualLoop();
     const points = [
@@ -728,6 +738,45 @@ describe("Remold.Particles", () => {
     await act(async () => frames.run());
     await render(<Remold.Particles shape={{ points }} loop={frames.loop} />);
     expect(frames.running).toBe(false);
+  });
+});
+
+describe("Remold.Canvas", () => {
+  it("paints with draw, and springs values to new targets when they change", async () => {
+    const frames = manualLoop();
+    const seen: number[] = [];
+    const draw = (_: CanvasRenderingContext2D, { values }: { values: { r: number } }) => void seen.push(values.r);
+    await render(<Remold.Canvas values={{ r: 10 }} draw={draw} loop={frames.loop} label="A dot" className="paint" />);
+    const canvas = container.querySelector("canvas.paint")!;
+    expect(canvas.getAttribute("aria-label")).toBe("A dot");
+    expect(seen.at(-1)).toBe(10);
+    expect(frames.running).toBe(false);
+
+    await render(<Remold.Canvas values={{ r: 50 }} draw={draw} loop={frames.loop} label="A dot" className="paint" />);
+    expect(frames.running).toBe(true);
+    await act(async () => frames.run());
+    expect(frames.running).toBe(false);
+    expect(seen.at(-1)).toBeCloseTo(50, 2);
+    expect(seen.some((r) => r > 10 && r < 50)).toBe(true);
+  });
+
+  it("doesn't restart for an equal values object, and keeps drawing when continuous", async () => {
+    const frames = manualLoop();
+    await render(<Remold.Canvas values={{ r: 1 }} draw={() => {}} loop={frames.loop} />);
+    await render(<Remold.Canvas values={{ r: 1 }} draw={() => {}} loop={frames.loop} />);
+    expect(frames.running).toBe(false);
+    await render(<Remold.Canvas values={{ r: 1 }} draw={() => {}} loop={frames.loop} continuous />);
+    expect(frames.running).toBe(true);
+  });
+
+  it("gives to, set and redraw through actionsRef", async () => {
+    const frames = manualLoop();
+    const actions = createRef<Remold.CanvasActions<{ r: number }>>();
+    await render(<Remold.Canvas values={{ r: 0 }} draw={() => {}} loop={frames.loop} actionsRef={actions} />);
+    act(() => actions.current!.set({ r: 7 }));
+    expect(actions.current!.values.r).toBe(7);
+    act(() => actions.current!.to({ r: 20 }));
+    expect(frames.running).toBe(true);
   });
 });
 

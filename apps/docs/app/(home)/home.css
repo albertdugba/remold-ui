@@ -1,8 +1,8 @@
 /* The home page. Quiet and light: hairlines, one ink colour, no gradients. The work is the decoration. */
 
 .hm {
-  /* The same edges as the navbar: a 1520 px box with 16 px inside it. */
-  --hm-max: 1488px;
+  /* A generous desktop frame leaves the three-column demo gallery room to breathe. */
+  --hm-max: 1760px;
   --hm-pad: 16px;
   --hm-ink: var(--color-fd-foreground);
   --hm-muted: var(--color-fd-muted-foreground);
@@ -1190,7 +1190,12 @@
   display: grid;
   align-content: center;
   padding: 24px 12px 16px;
-  background: radial-gradient(70% 60% at 50% 45%, rgb(56 120 255 / 0.12), transparent 70%), #0b0b10;
+  background: radial-gradient(
+      70% 60% at 50% 45%,
+      rgb(56 120 255 / 0.12),
+      transparent 70%
+    ),
+    #0b0b10;
 }
 
 .hc-hint {
@@ -1251,7 +1256,11 @@
 .hm-dark-scene {
   border: 1px solid var(--hm-line);
   border-radius: 24px;
-  background: radial-gradient(60% 60% at 50% 45%, rgb(249 115 22 / 0.1), transparent 70%);
+  background: radial-gradient(
+    60% 60% at 50% 45%,
+    rgb(249 115 22 / 0.1),
+    transparent 70%
+  );
 }
 
 .hg.dark-band .hg-card {
@@ -1346,7 +1355,11 @@
   padding: clamp(16px, 2.2vw, 30px);
   border: 1px solid var(--hm-line);
   border-radius: 28px;
-  background: radial-gradient(120% 90% at 50% -10%, color-mix(in oklab, #6d5dfc 7%, transparent), transparent 55%),
+  background: radial-gradient(
+      120% 90% at 50% -10%,
+      color-mix(in oklab, #6d5dfc 7%, transparent),
+      transparent 55%
+    ),
     color-mix(in oklab, var(--hm-ink) 3%, var(--color-fd-background));
 }
 
@@ -1356,10 +1369,21 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background-image: linear-gradient(color-mix(in oklab, var(--hm-ink) 4%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklab, var(--hm-ink) 4%, transparent) 1px, transparent 1px);
+  background-image: linear-gradient(
+      color-mix(in oklab, var(--hm-ink) 4%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--hm-ink) 4%, transparent) 1px,
+      transparent 1px
+    );
   background-size: 26px 26px;
-  -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000, transparent 70%);
+  -webkit-mask-image: radial-gradient(
+    120% 90% at 50% 0%,
+    #000,
+    transparent 70%
+  );
   mask-image: radial-gradient(120% 90% at 50% 0%, #000, transparent 70%);
   opacity: 0.45;
   pointer-events: none;
@@ -1504,6 +1528,81 @@
   margin-top: 28px;
 }
 
+/* The sections over the grid: a row of pills with one sliding highlight */
+.hp-tabs {
+  margin-top: 28px;
+}
+
+.hp-tabs .hp {
+  margin-top: 18px;
+}
+
+.hp-tab-list {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  gap: 4px;
+  width: max-content;
+  max-width: 100%;
+  padding: 4px;
+  overflow-x: auto;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--hm-ink) 5%, var(--color-fd-background));
+  scrollbar-width: none;
+}
+
+.hp-tab-list::-webkit-scrollbar {
+  display: none;
+}
+
+.hp-tab {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: color-mix(in oklab, var(--hm-ink) 55%, transparent);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.hp-tab:hover,
+.hp-tab[data-active] {
+  color: var(--hm-ink);
+}
+
+.hp-tab:focus-visible {
+  outline: 2px solid var(--hm-ink);
+  outline-offset: -2px;
+}
+
+.hp-tab-count {
+  color: color-mix(in oklab, var(--hm-ink) 40%, transparent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hp-tab-indicator {
+  position: absolute;
+  top: 4px;
+  left: var(--active-tab-left);
+  z-index: -1;
+  width: var(--active-tab-width);
+  height: 34px;
+  border-radius: 999px;
+  background: var(--color-fd-background);
+  box-shadow: 0 0 0 1px var(--hm-line), 0 2px 6px -2px rgb(0 0 0 / 0.15);
+  transition: left 0.35s cubic-bezier(0.3, 0.9, 0.3, 1), width 0.35s cubic-bezier(0.3, 0.9, 0.3, 1);
+}
+
 .hp-card {
   display: grid;
   grid-template-rows: 1fr auto;
@@ -1512,6 +1611,11 @@
   border: 1px solid var(--hm-line);
   border-radius: 24px;
   background: color-mix(in oklab, var(--hm-ink) 3%, var(--color-fd-background));
+}
+
+/* The regular gallery pieces read as deliberate tiles; feature cards retain their authored spans. */
+.hp-card:not(.wide, .full, .tall) {
+  aspect-ratio: 1;
 }
 
 .hp-card.wide {
@@ -1552,13 +1656,16 @@
   padding: 28px 24px;
 }
 
-/* The parts' own frames go: the card is the frame. (The button keeps its colour: that's the point.) */
-.hp-stage > *:not(.hp-button) {
+/* A part keeps its own fill (a white card stays white on the grey); its outer border and shadow go. */
+.hp-stage > * {
   max-width: 100%;
   margin: 0 !important;
   border: 0 !important;
   box-shadow: none !important;
-  background: transparent !important;
+}
+
+.hp-stage > .otp {
+  background: var(--otp-surface) !important;
 }
 
 .hp-card {
@@ -1580,6 +1687,37 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--hm-muted);
+}
+
+.hp-doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  color: var(--hm-ink);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 160ms ease-out, transform 160ms ease-out;
+}
+
+.hp-doc-link span {
+  transition: transform 160ms ease-out;
+}
+
+.hp-doc-link:hover {
+  color: var(--color-fd-primary);
+}
+
+.hp-doc-link:hover span {
+  transform: translateX(2px);
+}
+
+.hp-doc-link:focus-visible {
+  outline: 2px solid var(--hm-ink);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 /* Play / pause, a round button in the corner whose icon morphs between the two */
@@ -1647,52 +1785,6 @@
   place-items: start center;
 }
 
-/* The button: one element whose colour, icon and label change */
-.hp-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 24px;
-  border-radius: 999px;
-  font-size: 16px;
-  font-weight: 600;
-  transition:
-    background-color 0.35s,
-    color 0.35s;
-}
-
-.hp-button.idle {
-  background: var(--hm-ink);
-  color: var(--color-fd-background);
-}
-
-.hp-button.busy {
-  background: color-mix(in oklab, #6366f1 14%, var(--color-fd-background));
-  color: #4f46e5;
-}
-
-.hp-button.done {
-  background: #16a34a;
-  color: #fff;
-}
-
-.hp-spin {
-  display: inline-grid;
-  animation: hp-spin 0.9s linear infinite;
-}
-
-@keyframes hp-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hp-spin {
-    animation: none;
-  }
-}
-
 @media (max-width: 1000px) {
   .hp {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1702,6 +1794,9 @@
 @media (max-width: 640px) {
   .hp {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .hp-card:not(.wide, .full, .tall) {
+    aspect-ratio: auto;
   }
   .hp-card.wide {
     grid-column: auto;
@@ -1794,6 +1889,13 @@
   box-shadow: none;
 }
 
+/* The post and its comments sit on the card's grey as their own white card, filling its width. */
+.hp-stage > .cx {
+  width: 100%;
+  max-width: 760px;
+  border-radius: 20px;
+}
+
 /* The headline's moving word: one solid accent colour (a gradient clipped to text repaints on every
    letter frame and stutters), and a line that springs as the word changes length. */
 .hm-hero h1 span {
@@ -1832,175 +1934,21 @@
   }
 }
 
-/* ───────────── One person, four components (a card in "Every part, live") ───────────── */
-.hr {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  min-height: 520px;
-  overflow: hidden;
-  border: 1px solid var(--hm-line);
-  border-radius: 28px;
-  background: color-mix(in oklab, var(--hm-ink) 2.5%, var(--color-fd-background));
-}
-
-.hr-bar,
-.hr-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px 14px;
-}
-
-.hr-bar {
-  border-bottom: 1px solid var(--hm-line);
-}
-
-.hr-foot {
-  border-top: 1px solid var(--hm-line);
-  padding: 12px 18px;
-  font-size: 12.5px;
-  color: var(--hm-muted);
-}
-
-.hr-foot > span:first-child {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  color: var(--hm-ink);
-}
-
-.hr-tabs {
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--hm-ink) 6%, transparent);
-}
-
-.hr-tabs button {
-  height: 30px;
-  padding: 0 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--hm-muted);
-  transition:
-    background-color 0.2s,
-    color 0.2s;
-}
-
-.hr-tabs button[aria-selected="true"] {
-  background: var(--color-fd-background);
-  color: var(--hm-ink);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
-}
-
-.hr-tools {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.hr-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--hm-muted);
-  cursor: pointer;
-}
-
-.hr-switch input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.hr-switch span {
-  position: relative;
-  width: 30px;
-  height: 18px;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--hm-ink) 18%, transparent);
-  transition: background-color 0.2s;
-}
-
-.hr-switch span::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #fff;
-  transition: translate 0.2s cubic-bezier(0.3, 1.3, 0.5, 1);
-}
-
-.hr-switch input:checked + span {
-  background: #6d5dfc;
-}
-
-.hr-switch input:checked + span::after {
-  translate: 12px 0;
-}
-
-.hr-switch input:focus-visible + span {
-  outline: 2px solid #6d5dfc;
-  outline-offset: 2px;
-}
-
-.hr-play {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid var(--hm-line);
-  color: var(--hm-ink);
-}
-
-.hr-play svg {
-  width: 13px;
-  height: 13px;
-}
-
-.hr-stage {
-  position: relative;
-  display: grid;
-  min-height: 0;
-}
-
-.hr-root {
-  display: grid;
-  place-items: center;
-  padding: 28px;
-  color: var(--hm-ink);
-}
-
-.hr .ml-drawing line,
-.hr .ml-from {
-  stroke: #6d5dfc;
-}
-
-.hr .ml-to {
-  fill: #6d5dfc;
-}
-
-@media (max-width: 560px) {
-  .hr {
-    min-height: 480px;
-    border-radius: 22px;
-  }
-  .hr-root {
-    padding: 18px;
-  }
-  .hr-count {
-    display: none;
-  }
-}
-
 /* The person piece inside its card: the card is the frame, so it keeps only its own bars. */
 .hp-stage > .hr {
   min-height: 540px;
+}
+
+/* The issue card opens a menu downwards, so it sits near the top of its stage to leave it room. */
+.hp-card:has(.is) .hp-stage {
+  place-items: start center;
+  padding-top: 56px;
+}
+
+/* Visual pieces (an orb, artwork, a logo) sit straight on the card: no frame or box of their own. */
+.hp-card.bare .hp-stage > *,
+.hp-card.bare .hp-stage > * > * {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }

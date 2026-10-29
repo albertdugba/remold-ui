@@ -8,7 +8,7 @@
  */
 import { parsePath, pointAt, toCubics, type Subpath } from "@remold-ui/core";
 import type { Matrix, Projector } from "../camera";
-import { ellipse, projectOutline, roundedRect, type Box3, type Outline, type ScreenPoint } from "../geometry";
+import { ellipse, extent, projectOutline, roundedRect, type Box3, type Outline, type ScreenPoint } from "../geometry";
 import { halo } from "../glow";
 import type { DrawContext, DrawState, Look, Palette } from "../object-looks";
 
@@ -117,9 +117,32 @@ function inside(point: { x: number; y: number }, outline: Outline): boolean {
 }
 
 /** Points along a subpath, a few per curve. */
+/** How far a control point may sit off its segment's chord, in path units, for it to count as straight. */
+const STRAIGHT = 1e-3;
+
+/** Whether a cubic is a straight line: both control points on the chord from start to end. */
+function straight(c: Subpath["segments"][number]): boolean {
+  const dx = c.p3.x - c.p0.x;
+  const dy = c.p3.y - c.p0.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const off = (p: { x: number; y: number }) => Math.abs((p.x - c.p0.x) * dy - (p.y - c.p0.y) * dx) / length;
+  return off(c.p1) <= STRAIGHT && off(c.p2) <= STRAIGHT;
+}
+
+/**
+ * Points along an outline: `perSegment` along each curve, and just the start of each straight
+ * segment. Lines need no more, and an outline that's already points (a morph part way through)
+ * stays the same size instead of growing every time it's sampled again.
+ */
 function sample(subpath: Subpath, perSegment: number): Outline {
   const points: Outline = [];
-  for (const c of subpath.segments) for (let k = 0; k < perSegment; k++) points.push(pointAt(c, k / perSegment));
+  for (const c of subpath.segments) {
+    if (straight(c)) {
+      points.push(c.p0);
+      continue;
+    }
+    for (let k = 0; k < perSegment; k++) points.push(pointAt(c, k / perSegment));
+  }
   return points;
 }
 
@@ -136,12 +159,9 @@ function unitRings(d: string): Rings {
     .map((s) => sample(s, 6))
     .filter((p) => p.length >= 3);
   if (outlines.length === 0) throw new Error(`extrude: the path has no closed shape to extrude: "${d.slice(0, 40)}"`);
-  const xs = outlines.flat().map((p) => p.x);
-  const ys = outlines.flat().map((p) => p.y);
-  const minX = Math.min(...xs);
-  const minY = Math.min(...ys);
-  const w = Math.max(...xs) - minX || 1;
-  const h = Math.max(...ys) - minY || 1;
+  const { minX, minY, maxX, maxY } = extent(outlines.flat());
+  const w = maxX - minX || 1;
+  const h = maxY - minY || 1;
   const unit = outlines.map((o) => o.map((p) => ({ x: (p.x - minX) / w, y: (p.y - minY) / h })));
   // The biggest outline is the body; outlines inside it are holes, the rest are ignored.
   unit.sort((a, b) => Math.abs(outlineArea(b)) - Math.abs(outlineArea(a)));
@@ -395,9 +415,7 @@ function paintWalls({ context, walls: wallList, palette, style, seed }: PaintWal
 /** Bright streaks across all the walls together, like light caught in brushed metal or glass. */
 function paintSheen(ctx: CanvasRenderingContext2D, list: Wall[], seed: string): void {
   if (list.length === 0) return;
-  const xs = list.flatMap((w) => w.quad.map((p) => p.x));
-  const left = Math.min(...xs);
-  const right = Math.max(...xs);
+  const { minX: left, maxX: right, minY: top } = extent(list.flatMap((w) => w.quad));
   if (right - left < 1) return;
   const random = seeded(seed);
   const gradient = ctx.createLinearGradient(left, 0, right, 0);
@@ -417,7 +435,7 @@ function paintSheen(ctx: CanvasRenderingContext2D, list: Wall[], seed: string): 
   ctx.clip();
   ctx.globalCompositeOperation = "lighter";
   ctx.fillStyle = gradient;
-  ctx.fillRect(left, Math.min(...list.flatMap((w) => w.quad.map((p) => p.y))) - 2, right - left, 4000);
+  ctx.fillRect(left, top - 2, right - left, 4000);
   ctx.restore();
 }
 

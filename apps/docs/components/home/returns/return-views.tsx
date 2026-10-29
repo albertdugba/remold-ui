@@ -1,4 +1,5 @@
-import { ArrowRight, Check, CheckCircle2, CreditCard, Package, RotateCcw, Truck } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowRight01Icon, CheckmarkCircle02Icon, CreditCardIcon, PackageIcon, RotateLeft01Icon, Tick01Icon, TruckIcon } from "@hugeicons/core-free-icons";
 import { ProductSummary } from "./product-summary";
 import { RETURN_REASONS, type RefundMethod, type ReturnReason } from "./return-data";
 
@@ -25,20 +26,20 @@ export function OrderView({ onStartReturn }: { onStartReturn: () => void }) {
         <div className="hret-order-actions">
           <span>Eligible for return until 14 November</span>
           <button type="button" className="hret-primary-button" onClick={onStartReturn}>
-            Return item <ArrowRight size={17} />
+            Return item <HugeiconsIcon icon={ArrowRight01Icon} size={17} />
           </button>
         </div>
       </div>
 
       <div className="hret-delivery-note">
         <span className="hret-delivery-icon">
-          <Truck size={19} strokeWidth={1.8} />
+          <HugeiconsIcon icon={TruckIcon} size={19} strokeWidth={1.8} />
         </span>
         <div>
           <strong>Delivered to your door</strong>
           <span>15 October at 13:42 · London, UK</span>
         </div>
-        <CheckCircle2 size={18} className="hret-delivery-check" />
+        <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className="hret-delivery-check" />
       </div>
     </section>
   );
@@ -84,7 +85,7 @@ export function ReturnForm({ reason, refundMethod, onReasonChange, onRefundMetho
                 onChange={() => onReasonChange(option.label)}
               />
               <span className="hret-radio-mark">
-                <Check size={13} strokeWidth={2.5} />
+                <HugeiconsIcon icon={Tick01Icon} size={13} strokeWidth={2.5} />
               </span>
               <span>
                 <strong>{option.label}</strong>
@@ -106,7 +107,7 @@ export function ReturnForm({ reason, refundMethod, onReasonChange, onRefundMetho
               checked={refundMethod === "Original payment"}
               onChange={() => onRefundMethodChange("Original payment")}
             />
-            <CreditCard size={18} />{" "}
+            <HugeiconsIcon icon={CreditCardIcon} size={18} />{" "}
             <span>
               <strong>Original payment</strong>
               <small>Visa ending 4829</small>
@@ -121,7 +122,7 @@ export function ReturnForm({ reason, refundMethod, onReasonChange, onRefundMetho
               checked={refundMethod === "Store credit"}
               onChange={() => onRefundMethodChange("Store credit")}
             />
-            <RotateCcw size={18} />{" "}
+            <HugeiconsIcon icon={RotateLeft01Icon} size={18} />{" "}
             <span>
               <strong>Store credit</strong>
               <small>Ready as soon as we receive it</small>
@@ -136,7 +137,7 @@ export function ReturnForm({ reason, refundMethod, onReasonChange, onRefundMetho
           Back to order
         </button>
         <button type="button" className="hret-primary-button" onClick={onSubmit} disabled={!reason}>
-          Request return <ArrowRight size={17} />
+          Request return <HugeiconsIcon icon={ArrowRight01Icon} size={17} />
         </button>
       </div>
     </section>
@@ -159,7 +160,7 @@ export function SubmittedView({ refundMethod }: { refundMethod: RefundMethod }) 
 
       <div className="hret-success-card">
         <div className="hret-success-icon">
-          <Check size={27} strokeWidth={2.2} />
+          <HugeiconsIcon icon={Tick01Icon} size={27} strokeWidth={2.2} />
         </div>
         <span className="hret-overline">REQUEST RECEIVED</span>
         <h3>Your return is underway.</h3>
@@ -171,15 +172,15 @@ export function SubmittedView({ refundMethod }: { refundMethod: RefundMethod }) 
 
       <div className="hret-next-steps">
         <span className="hret-step-line done">
-          <Check size={13} /> Request sent
+          <HugeiconsIcon icon={Tick01Icon} size={13} /> Request sent
         </span>
         <span className="hret-step-connector" />
         <span className="hret-step-line">
-          <Package size={15} /> Pack &amp; post
+          <HugeiconsIcon icon={PackageIcon} size={15} /> Pack &amp; post
         </span>
         <span className="hret-step-connector" />
         <span className="hret-step-line">
-          <CreditCard size={15} /> {refundMethod === "Store credit" ? "Credit issued" : "Refund issued"}
+          <HugeiconsIcon icon={CreditCardIcon} size={15} /> {refundMethod === "Store credit" ? "Credit issued" : "Refund issued"}
         </span>
       </div>
       <p className="hret-refund-copy">

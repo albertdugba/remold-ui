@@ -147,3 +147,21 @@ export function paintOrder<T extends Paintable>(items: readonly T[], view: Proje
   const depth = (t: T) => view.depth(t.x + t.width / 2, t.y + t.depth / 2);
   return [...items].sort((a, b) => a.z - b.z || (a.layer ?? 0) - (b.layer ?? 0) || depth(a) - depth(b));
 }
+
+/**
+ * The smallest and largest x and y of some points, in one pass. Use it instead of
+ * `Math.min(...points)`: an outline being morphed can have more points than a call takes.
+ */
+export function extent(points: Iterable<{ x: number; y: number }>): { minX: number; minY: number; maxX: number; maxY: number } {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const p of points) {
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  }
+  return { minX, minY, maxX, maxY };
+}

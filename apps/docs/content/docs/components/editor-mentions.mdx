@@ -1,0 +1,36 @@
+---
+title: "Mentions"
+description: "Mentioning people in a comment, the way collaborative editors do it: type @ and a picker opens at the caret, and the person you pick flies out of the list into the sentence as a chip."
+status: "new"
+tags: ["Motion", "Base UI"]
+---
+
+<Stage name="editor-mentions" code={<Source demo="editor-mentions" />} minHeight={600}>
+  <EditorMentionsDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Type @.** A picker springs open right at the caret, not under the box.
+- **Keep typing.** The list narrows to the people who still match, and the highlight glides between them as you point or use the arrow keys.
+- **Pick someone.** Their face flies out of the list into the sentence as a chip, and they join the row of people who'll be notified.
+- **Send.** The comment rises into the thread above.
+
+## Install
+
+<AddCommand name="editor-mentions" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="editor-mentions" />
+
+## How it works
+
+- **One face, a new place.** The avatar in the picker and the avatar in the chip are the same element moving, which is what Motion's `layoutId` is for, so the face travels from the list into the text instead of appearing there.
+- The picker is Base UI's Popover, so focus, dismissal and positioning at the caret are handled for you; the Send button's shortcut hint is Base UI's Tooltip.
+
+<Callout>The people are made up. Avatars are illustrations from [DiceBear](https://www.dicebear.com).</Callout>

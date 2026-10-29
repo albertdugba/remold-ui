@@ -1,4 +1,3 @@
-/* Status demo */
 .rm-status {
   display: grid;
   justify-items: center;
@@ -11,7 +10,6 @@
   letter-spacing: -0.02em;
 }
 
-/* Price demo */
 .rm-price {
   display: grid;
   justify-items: center;

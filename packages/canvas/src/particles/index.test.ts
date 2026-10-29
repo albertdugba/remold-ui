@@ -96,6 +96,25 @@ describe("particles", () => {
     expect(drawing.frame.arcs.map((a) => a.y)).toEqual([50, 50, 50]);
   });
 
+  it("scatters into a cloud first with transition scatter, then lands on the new shape", () => {
+    const dots = particles(canvas, { points: row(12), loop: frames.loop, fit: "none" });
+    dots.to(row(12, 80), { transition: { type: "scatter", seed: 3 } });
+    for (let n = 0; n < 15; n++) frames.step();
+    // Spread out around both shapes, not sliding down in a line.
+    const ys = drawing.frame.arcs.map((a) => a.y);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(20);
+    frames.run();
+    expect(frames.running).toBe(false);
+    expect(drawing.frame.arcs.map((a) => a.y)).toEqual(Array(12).fill(80));
+  });
+
+  it("goes straight there with reduced motion, even with transition scatter", () => {
+    const dots = particles(canvas, { points: row(4), loop: frames.loop, fit: "none", reducedMotion: "always" });
+    dots.to(row(4, 30), { transition: "scatter" });
+    expect(frames.running).toBe(false);
+    expect(drawing.frame.arcs.map((a) => a.y)).toEqual([30, 30, 30, 30]);
+  });
+
   it("jumps with reduced motion", () => {
     const dots = particles(canvas, { points: row(5), loop: frames.loop, fit: "none", reducedMotion: "always" });
     dots.to(row(2, 30));
@@ -234,5 +253,7 @@ describe("particles", () => {
   it("rejects bad options", () => {
     expect(() => particles(canvas, { radius: 0 })).toThrow(/radius/);
     expect(() => particles(canvas, { fit: "cover" as "contain" })).toThrow(/fit/);
+    const dots = particles(canvas, { points: row(2), loop: frames.loop });
+    expect(() => dots.to(row(2), { transition: "explode" as "scatter" })).toThrow(/transition/);
   });
 });

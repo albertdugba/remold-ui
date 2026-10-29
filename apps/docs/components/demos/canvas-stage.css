@@ -1,11 +1,11 @@
-/* A light stage for canvas scenes: white, hairlines, one ink colour. Fixed colours, like a product shot. */
 .cs {
   margin: 1.5rem 0;
   border: 1px solid #e7e7ea;
   border-radius: 16px;
   background: #fafafa;
   color: #18181b;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    system-ui, sans-serif;
   overflow: hidden;
 }
 

@@ -1,12 +1,8 @@
 "use client";
-/**
- * A light stage for a canvas scene: tabs for its layouts, a play button that walks through them
- * while the stage is on screen, and a line underneath that says what you're looking at. Tap a
- * piece to focus it (the rest dim, and so do their lines); tap it again, or the empty floor, to let
- * go. Drag sideways to turn the scene. Any tap or tab stops the autoplay.
- */
+
 import { Remold } from "@remold-ui/react";
-import { Pause, Play } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import "./canvas-stage.css";
 
@@ -28,13 +24,16 @@ export function CanvasStage({
   palette = "paper",
 }: {
   scene: StageScene;
-  /** Shown at the top left: the name of the thing on stage. */
+
   title: ReactNode;
-  /** The line under the stage, for the layout on screen or the piece in focus. */
-  describe: (layout: string, focused: string | null) => { title: string; body: string };
+
+  describe: (
+    layout: string,
+    focused: string | null,
+  ) => { title: string; body: string };
   every?: number;
   height?: number;
-  /** The scene's colours. Default "paper"; "sketch" for line art. */
+
   palette?: SceneProps["palette"];
 }) {
   const layouts = Object.keys(scene.layouts);
@@ -48,14 +47,21 @@ export function CanvasStage({
   useEffect(() => {
     const el = frame.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => setVisible(e?.isIntersecting ?? false), { threshold: 0.3 });
+    const io = new IntersectionObserver(
+      ([e]) => setVisible(e?.isIntersecting ?? false),
+      { threshold: 0.3 },
+    );
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
   useEffect(() => {
     if (!playing || !visible || focused) return;
-    const timer = setInterval(() => setLayout((l) => layouts[(layouts.indexOf(l) + 1) % layouts.length]!), every);
+    const timer = setInterval(
+      () =>
+        setLayout((l) => layouts[(layouts.indexOf(l) + 1) % layouts.length]!),
+      every,
+    );
     return () => clearInterval(timer);
   }, [playing, visible, focused, every, layouts.join()]);
 
@@ -87,7 +93,11 @@ export function CanvasStage({
             aria-pressed={playing}
             onClick={() => setPlaying((p) => !p)}
           >
-            <Remold.Icon icon={playing ? Pause : Play} strokeWidth={1.75} aria-hidden="true" />
+            <Remold.Icon
+              icon={<HugeiconsIcon icon={playing ? PauseIcon : PlayIcon} />}
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
           </button>
         </div>
       </div>

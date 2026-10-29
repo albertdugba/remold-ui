@@ -20,17 +20,10 @@
     "components/course-outline",
     "components/logo-morph",
     "components/letters",
-    "components/onboarding-checklist",
-    "components/accounts",
     "components/podcast-player",
     "components/morph-icons",
     "---[Shapes]Canvas components---",
-    "components/edge-delivery",
-    "components/layer-stack",
     "components/integrations-hub",
-    "components/product-anatomy",
-    "components/living-diagrams",
-    "components/build-anything",
-    "components/canvas-gallery"
+    "components/product-anatomy"
   ]
 }

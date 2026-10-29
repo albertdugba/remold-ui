@@ -1,7 +1,7 @@
 ---
 title: "Course outline"
 description: "Modules and lessons joined by lines that stay attached while modules open, lessons get ticked off and finished work drops away."
-tags: ["Connectors", "Layout", "Text", "Icon"]
+tags: ["Connectors", "Motion", "Icon"]
 ---
 
 <Stage name="course-outline" code={<Source demo="course-outline" />}>
@@ -29,19 +29,26 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-Each module's number carries `data-rm-anchor` with the module's id, and each lesson's tick carries `data-rm-link` with its module's id. [Connectors](/docs/primitives/connectors) draws a line from every anchor to everything that links to it. [Layout](/docs/primitives/layout) moves the rows when the visible list changes.
+Each module's number carries `data-rm-anchor` with the module's id, and each lesson's tick carries `data-rm-link` with its module's id. [Connectors](/docs/primitives/connectors) draws a line from every anchor to everything that links to it. Motion owns the rows' layout animation, while `useConnectorMotion` keeps those lines attached during the transition.
 
 ```tsx
-<Remold.Connectors radius={10}>
-  <Remold.Layout trigger={rows.map((r) => r.id).join("|")}>
+const connectorRef = useRef<HTMLDivElement>(null);
+const connectorMotion = useConnectorMotion(connectorRef);
+
+<Remold.Connectors ref={connectorRef} radius={10}>
+  <motion.div layout {...connectorMotion}>
     {rows.map((row) =>
       row.module ? (
-        <Module key={row.id} number={<span data-rm-anchor={row.id}>{row.n}</span>} />
+        <motion.button layout {...connectorMotion} key={row.id}>
+          <Module number={<span data-rm-anchor={row.id}>{row.n}</span>} />
+        </motion.button>
       ) : (
-        <Lesson key={row.id} tick={<button data-rm-anchor={row.id} data-rm-link={row.parent} />} />
+        <motion.div layout {...connectorMotion} key={row.id}>
+          <Lesson tick={<button data-rm-anchor={row.id} data-rm-link={row.parent} />} />
+        </motion.div>
       ),
     )}
-  </Remold.Layout>
+  </motion.div>
 </Remold.Connectors>
 ```
 

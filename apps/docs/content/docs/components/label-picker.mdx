@@ -1,0 +1,36 @@
+---
+title: "Label picker"
+description: "Labelling an issue: picking a label drops it onto the issue as a chip while the others make room, and typing a name that doesn't exist yet offers to create it."
+status: "new"
+tags: ["Motion", "Base UI"]
+---
+
+<Stage name="label-picker" code={<Source demo="label-picker" />} minHeight={560}>
+  <LabelPickerDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Add a label.** "Add label" opens a picker with a search box, and a highlight glides to what you point at.
+- **Pick one.** It drops onto the issue as a chip while the others make room.
+- **Type a new name.** The list offers to create it, with a colour that pops in.
+- **Take a chip off** with its ×.
+
+## Install
+
+<AddCommand name="label-picker" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="label-picker" />
+
+## How it works
+
+- The picker is Base UI's Popover, so focus moves into the search box and back to the button when it closes.
+- The gliding highlight and the chips making room are Motion.
+
+<Callout>The issue is made up.</Callout>

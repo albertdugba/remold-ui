@@ -70,6 +70,17 @@ dots.to(myPoints);
 
 `count` sets how many dots (default 1200). Keep it the same for every shape and no dots need to arrive or leave: each one just travels. `pairing="index"` sends the first point to the first point, and so on, for shapes from the same generator (equaliser bars, a waveform).
 
+### Scatter between shapes
+
+By default each dot springs straight to its new place. `transition="scatter"` gives the change a middle instead: the shape dissolves into a loose, glittering cloud, holds there a moment, then gathers into the next one, each dot setting off at a slightly different time. Try **Scatter** and **Direct** in the demo above.
+
+```tsx
+<Remold.Particles shape={next} transition="scatter" />
+<Remold.Particles shape={next} transition={{ type: "scatter", spread: 1.6, hold: 0.5, stagger: 0.4 }} />
+```
+
+`spread` is how wide the cloud gets, `hold` how long it stays spread, and `stagger` how unevenly the dots set off again. See [particles()](/docs/canvas/particles#scatter) for each one. With reduced motion the dots go straight to the new shape.
+
 Image `details` use normalized source-image coordinates from `0` to `1` and count toward `count`. A `tone` of `1` uses the last color in the palette, useful for eye reflections or other tiny highlights.
 
 <Callout>Shapes are sampled in the browser. On the server the canvas renders empty and fills in on load.</Callout>
@@ -80,4 +91,4 @@ Image `details` use normalized source-image coordinates from `0` to `1` and coun
 
 ## API reference
 
-See [particles()](/docs/canvas/particles) for every option. The React part takes the same ones as props, plus `shape`, `count` and `label`.
+See [particles()](/docs/canvas/particles) for every option. The React part takes the same ones as props, plus `shape`, `count`, `label`, `pairing` and `transition`.

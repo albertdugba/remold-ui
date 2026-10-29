@@ -1,486 +1,433 @@
 "use client";
-/**
- * VoiceOrb — a living voice/agent orb on a canvas. The sphere isn't a circle: its silhouette is a
- * blob whose edge undulates with the voice, with light swirling inside it, a moving specular
- * highlight and a soft glow that breathes. Every state (idle, listening, thinking, speaking) is a
- * set of spring targets, so it flows between them.
- *
- * Drive it two ways: pass a `level` (0–1) from your own audio or agent, or set `mic` to read the
- * microphone. With neither, it simulates a believable voice while speaking or listening. The
- * incoming sound is split into three bands — bass swells the body, the mids drive the undulation,
- * the treble sharpens the surface — so it reacts like something alive, not a pulsing circle.
- */
-import { value, type AnimatedValue } from "@remold-ui/core";
-import { frames, prefersReducedMotion } from "@remold-ui/dom";
-import { springs, Remold, useAutoplay } from "@remold-ui/react";
+
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeftRightIcon } from "@hugeicons/core-free-icons";
+import type { PainterFrame } from "@remold-ui/canvas";
+import { Remold, useAutoplay } from "@remold-ui/react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Mic, MicOff } from "lucide-react";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
+import "./voice-orb.css";
 
 export type OrbState = "idle" | "listening" | "thinking" | "speaking";
 export type OrbTheme = "aurora" | "ember" | "mono";
 
-/** Each icon is exactly three strokes, so each stroke morphs straight to its partner. */
-const ICONS: Record<OrbState, string> = {
-  idle: "M12 4a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V7a3 3 0 0 1 3-3ZM6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3",
-  listening: "M12 4a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V7a3 3 0 0 1 3-3ZM6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3",
-  thinking: "M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6ZM18.5 15v4M16.5 17h4",
-  speaking: "M7 9.5v5M12 6v12M17 9.5v5",
-};
+type Look = { scale: number; flow: number; breath: number; gather: number };
 
-interface Look {
-  radius: number;
-  glow: number;
-  swirl: number;
-  wobble: number;
-  rings: number;
-  arc: number;
-}
 const LOOKS: Record<OrbState, Look> = {
-  idle: { radius: 0.3, glow: 0.3, swirl: 0.3, wobble: 0.022, rings: 0, arc: 0 },
-  listening: { radius: 0.32, glow: 0.52, swirl: 0.55, wobble: 0.03, rings: 1, arc: 0 },
-  thinking: { radius: 0.285, glow: 0.5, swirl: 1.9, wobble: 0.028, rings: 0, arc: 1 },
-  speaking: { radius: 0.33, glow: 0.72, swirl: 1.0, wobble: 0.05, rings: 0, arc: 0 },
+  idle: { scale: 0.92, flow: 0.18, breath: 0.018, gather: 0 },
+  listening: { scale: 1, flow: 0.35, breath: 0.01, gather: 0 },
+  thinking: { scale: 0.86, flow: 0.12, breath: 0.03, gather: 1 },
+  speaking: { scale: 1, flow: 0.7, breath: 0.006, gather: 0 },
 };
 
-/** Colour identities: a light and a deep colour per state. */
-const THEMES: Record<OrbTheme, Record<OrbState, [string, string]>> = {
-  aurora: {
-    idle: ["#9db4ff", "#3b4fd6"],
-    listening: ["#7fe3ff", "#2f6bf0"],
-    thinking: ["#c9b3ff", "#6d28d9"],
-    speaking: ["#aab6ff", "#4f46e5"],
-  },
-  ember: {
-    idle: ["#ffd79a", "#d9480f"],
-    listening: ["#ffcf87", "#e8590c"],
-    thinking: ["#ffb4a2", "#c92a2a"],
-    speaking: ["#ffc078", "#e8590c"],
-  },
-  mono: {
-    idle: ["#e5e7eb", "#6b7280"],
-    listening: ["#f3f4f6", "#4b5563"],
-    thinking: ["#e5e7eb", "#374151"],
-    speaking: ["#f9fafb", "#4b5563"],
-  },
+const PALETTES: Record<
+  OrbTheme,
+  { sky: string; mid: string; deep: string; cloud: string }
+> = {
+  aurora: { sky: "#e3f1ff", mid: "#8cc8ff", deep: "#2563eb", cloud: "#ffffff" },
+  ember: { sky: "#fff3e3", mid: "#ffc58a", deep: "#ea580c", cloud: "#fffaf3" },
+  mono: { sky: "#f5f5f5", mid: "#c4c4c4", deep: "#3f3f46", cloud: "#ffffff" },
 };
 
-const POINTS = 96;
-const SHAPE = { duration: 0.75, bounce: 0.28 };
-const SOFT = { duration: 0.6, bounce: 0 };
-const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const CLOUDS = [
+  { orbit: 0.42, size: 0.62, speed: 0.9, phase: 0.2, alpha: 0.85 },
+  { orbit: 0.3, size: 0.55, speed: -0.65, phase: 2.1, alpha: 0.7 },
+  { orbit: 0.55, size: 0.48, speed: 0.5, phase: 4.0, alpha: 0.75 },
+  { orbit: 0.2, size: 0.4, speed: -1.1, phase: 1.1, alpha: 0.6 },
+  { orbit: 0.6, size: 0.35, speed: 1.3, phase: 3.3, alpha: 0.55 },
+] as const;
+
+const SOFT = { duration: 0.7, bounce: 0 };
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+const rgb = (hex: string) =>
+  [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ");
 
 export interface VoiceOrbProps {
   state?: OrbState;
-  /** 0–1 audio amplitude. Leave undefined to simulate a voice while speaking/listening. */
+
   level?: number;
-  /** Read the real microphone. Overrides `level`. Asks permission the first time. */
-  mic?: boolean;
-  /** Colour identity. */
+
   theme?: OrbTheme;
-  /** CSS size in px (square). */
+
   size?: number;
-  showIcon?: boolean;
   className?: string;
   style?: CSSProperties;
-  onMicError?: (error: unknown) => void;
 }
 
 export function VoiceOrb({
   state = "idle",
   level,
-  mic = false,
   theme = "aurora",
   size = 260,
-  showIcon = true,
   className,
   style,
-  onMicError,
 }: VoiceOrbProps) {
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const engine = useRef<((s: OrbState) => void) | null>(null);
-  const levelProp = useRef<number | undefined>(level);
-  levelProp.current = level;
-  const micOn = useRef(mic);
-  micOn.current = mic;
-  const themeRef = useRef(theme);
-  themeRef.current = theme;
-  const analyser = useRef<AnalyserNode | null>(null);
-  const micError = useRef(onMicError);
-  micError.current = onMicError;
+  const voice = useRef({ loud: 0, drift: 0 });
 
-  // Microphone, opt-in. Overrides `level` while it's on.
-  useEffect(() => {
-    if (!mic) return;
-    let ctx: AudioContext | null = null;
-    let stream: MediaStream | null = null;
-    let cancelled = false;
-    navigator.mediaDevices
-      ?.getUserMedia({ audio: true })
-      .then((s) => {
-        if (cancelled) {
-          s.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        stream = s;
-        ctx = new AudioContext();
-        const src = ctx.createMediaStreamSource(s);
-        const node = ctx.createAnalyser();
-        node.fftSize = 256;
-        node.smoothingTimeConstant = 0.78;
-        src.connect(node);
-        analyser.current = node;
-      })
-      .catch((e) => micError.current?.(e));
-    return () => {
-      cancelled = true;
-      analyser.current = null;
-      stream?.getTracks().forEach((t) => t.stop());
-      void ctx?.close();
-    };
-  }, [mic]);
+  const loudness = (time: number) => {
+    if (level != null) return clamp01(level);
+    if (state === "speaking")
+      return (
+        0.3 +
+        0.5 *
+          Math.abs(Math.sin(time * 6.3)) *
+          (0.6 + 0.4 * Math.sin(time * 1.7))
+      );
+    if (state === "listening")
+      return (
+        0.1 +
+        0.2 *
+          Math.abs(Math.sin(time * 2.9)) *
+          (0.5 + 0.5 * Math.sin(time * 0.9))
+      );
+    return 0;
+  };
 
-  useEffect(() => {
-    const element = canvas.current!;
-    const ctx = element.getContext("2d")!;
-    const still = prefersReducedMotion();
-
-    let look = LOOKS[state];
-    let time = 0;
-    let swirlAngle = 0;
-    let bassS = 0;
-    let midS = 0;
-    let trebleS = 0;
-    const radius = value(look.radius, { spring: SHAPE, precision: 0.0005 });
-    const glow = value(look.glow, { spring: SOFT, precision: 0.002 });
-    const swirl = value(look.swirl, { spring: SOFT, precision: 0.001 });
-    const wobble = value(look.wobble, { spring: SOFT, precision: 0.001 });
-    const rings = value(look.rings, { spring: SOFT, precision: 0.002 });
-    const arc = value(look.arc, { spring: SOFT, precision: 0.002 });
-    const [li0, de0] = THEMES[themeRef.current][state];
-    const colour = [...rgb(li0), ...rgb(de0)].map((c) => value(c, { spring: SOFT, precision: 0.5 }));
-    const all: AnimatedValue[] = [radius, glow, swirl, wobble, rings, arc, ...colour];
-    const bins = new Uint8Array(128);
-    const avg = (a: number, b: number) => {
-      let s = 0;
-      for (let i = a; i < b; i++) s += bins[i]!;
-      return s / (b - a) / 255;
+  const draw = (
+    ctx: CanvasRenderingContext2D,
+    { width, values: v, time, dt, still }: PainterFrame<Look>,
+  ) => {
+    const target = still ? 0 : loudness(time);
+    voice.current.loud +=
+      (target - voice.current.loud) *
+      (target > voice.current.loud ? 0.3 : 0.07);
+    voice.current.drift += (v.flow + 0.6 * voice.current.loud) * dt;
+    const { loud, drift } = voice.current;
+    const p = PALETTES[theme];
+    const c = width / 2;
+    const R =
+      width *
+      0.42 *
+      v.scale *
+      (1 + v.breath * Math.sin(time * 1.6) + 0.07 * loud);
+    const fill = (style: CanvasGradient) => {
+      ctx.fillStyle = style;
+      ctx.fillRect(c - R, c - R, R * 2, R * 2);
     };
 
-    const stateOf = (l: Look): OrbState => (Object.keys(LOOKS) as OrbState[]).find((s) => LOOKS[s] === l) ?? "idle";
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(c, c, R, 0, Math.PI * 2);
+    ctx.clip();
 
-    // The target per band: mic → analyser, else the prop, else a voice-like simulation.
-    const targetBands = (s: OrbState): [number, number, number] => {
-      if (micOn.current && analyser.current) {
-        analyser.current.getByteFrequencyData(bins);
-        return [clamp01(avg(1, 6) * 1.6), clamp01(avg(6, 20) * 1.9), clamp01(avg(20, 48) * 2.4)];
-      }
-      if (levelProp.current != null) {
-        const l = clamp01(levelProp.current);
-        return [l, l, l * (0.5 + 0.5 * Math.abs(Math.sin(time * 17)))];
-      }
-      if (s === "speaking") {
-        const l = 0.25 + 0.55 * Math.abs(Math.sin(time * 7.1)) * (0.5 + 0.5 * Math.sin(time * 2.0)) + 0.2 * Math.abs(Math.sin(time * 15 + 1));
-        return [l * 0.9, l, clamp01(l * (0.4 + 0.6 * Math.abs(Math.sin(time * 21))))];
-      }
-      if (s === "listening") {
-        const l = 0.08 + 0.22 * Math.abs(Math.sin(time * 3.3)) * (0.5 + 0.5 * Math.sin(time * 1.1));
-        return [l, l, l * 0.6];
-      }
-      return [0, 0, 0];
-    };
+    const sky = ctx.createLinearGradient(0, c - R, 0, c + R);
+    sky.addColorStop(0, p.sky);
+    sky.addColorStop(0.55, p.mid);
+    sky.addColorStop(1, p.deep);
+    fill(sky);
 
-    let size0 = 0;
-    let ratio = 1;
-    const resize = () => {
-      size0 = element.clientWidth;
-      ratio = Math.min(2, devicePixelRatio || 1);
-      element.width = Math.round(size0 * ratio);
-      element.height = Math.round(size0 * ratio);
-    };
+    for (const cloud of CLOUDS) {
+      const a = drift * cloud.speed + cloud.phase;
+      const orbit = cloud.orbit * (1 - 0.55 * v.gather) * R;
+      const x = c + Math.cos(a) * orbit;
+      const y = c + Math.sin(a * 0.8) * orbit * 0.85 - R * 0.08;
+      const r =
+        R *
+        cloud.size *
+        (1 + 0.18 * loud + 0.05 * Math.sin(time * 1.3 + cloud.phase));
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, `rgba(${rgb(p.cloud)}, ${cloud.alpha})`);
+      g.addColorStop(0.55, `rgba(${rgb(p.cloud)}, ${cloud.alpha * 0.35})`);
+      g.addColorStop(1, `rgba(${rgb(p.cloud)}, 0)`);
+      fill(g);
+    }
 
-    // A smooth closed blob: low harmonics give the slow heave, high ones the crisp detail.
-    const blob = (cx: number, cy: number, R: number, lowAmp: number, highAmp: number) => {
-      const px: number[] = [];
-      const py: number[] = [];
-      for (let i = 0; i < POINTS; i++) {
-        const t = (i / POINTS) * Math.PI * 2;
-        const low = 0.52 * Math.sin(t * 2 + time * 0.9) + 0.3 * Math.sin(t * 3 - time * 0.7 + 1.3);
-        const high = 0.18 * Math.sin(t * 5 + time * 1.25) + 0.12 * Math.sin(t * 7 - time * 1.6);
-        const r = R * (1 + lowAmp * low + highAmp * high);
-        px.push(cx + Math.cos(t) * r);
-        py.push(cy + Math.sin(t) * r);
-      }
-      ctx.beginPath();
-      const mx = (px[POINTS - 1]! + px[0]!) / 2;
-      const my = (py[POINTS - 1]! + py[0]!) / 2;
-      ctx.moveTo(mx, my);
-      for (let i = 0; i < POINTS; i++) {
-        const nx = (px[i]! + px[(i + 1) % POINTS]!) / 2;
-        const ny = (py[i]! + py[(i + 1) % POINTS]!) / 2;
-        ctx.quadraticCurveTo(px[i]!, py[i]!, nx, ny);
-      }
-      ctx.closePath();
-    };
+    const dx = c + Math.cos(drift * 0.4) * R * 0.3;
+    const depth = ctx.createRadialGradient(
+      dx,
+      c + R * 0.75,
+      0,
+      dx,
+      c + R * 0.75,
+      R * 0.9,
+    );
+    depth.addColorStop(0, `rgba(${rgb(p.deep)}, 0.55)`);
+    depth.addColorStop(1, `rgba(${rgb(p.deep)}, 0)`);
+    fill(depth);
 
-    const draw = () => {
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      ctx.clearRect(0, 0, size0, size0);
-      const c = size0 / 2;
-      const bass = still ? 0 : bassS;
-      const mid = still ? 0 : midS;
-      const treble = still ? 0 : trebleS;
-      const [r1, g1, b1, r2, g2, b2] = colour.map((v) => Math.round(Math.max(0, Math.min(255, v.current))));
-      const light = `${r1}, ${g1}, ${b1}`;
-      const deep = `${r2}, ${g2}, ${b2}`;
-      const R = radius.current * size0 * (1 + 0.06 * bass + 0.035 * mid);
-      const lowAmp = wobble.current + 0.09 * mid;
-      const highAmp = wobble.current * 0.5 + 0.11 * treble;
-      const glowI = glow.current + 0.4 * mid + 0.15 * bass;
-
-      // Volumetric glow, kept inside the canvas so it never shows an edge.
-      const halo = ctx.createRadialGradient(c, c, R * 0.55, c, c, Math.min(R * 2.2, c - 1));
-      halo.addColorStop(0, `rgba(${light}, ${0.42 * glowI})`);
-      halo.addColorStop(0.6, `rgba(${light}, ${0.12 * glowI})`);
-      halo.addColorStop(1, `rgba(${light}, 0)`);
-      ctx.fillStyle = halo;
-      ctx.fillRect(0, 0, size0, size0);
-
-      // Listening: faint intake rings.
-      if (rings.current > 0.01) {
-        for (let k = 0; k < 3; k++) {
-          const t = (time * 0.4 + k / 3) % 1;
-          ctx.strokeStyle = `rgba(${light}, ${(1 - t) * 0.4 * rings.current})`;
-          ctx.lineWidth = 1.4;
-          ctx.beginPath();
-          ctx.arc(c, c, R * (1.04 + 0.55 * t), 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      }
-
-      // The orb body.
-      ctx.save();
-      blob(c, c, R, lowAmp, highAmp);
-      ctx.clip();
-      const base = ctx.createLinearGradient(c - R, c - R * 1.1, c + R, c + R);
-      base.addColorStop(0, `rgb(${light})`);
-      base.addColorStop(1, `rgb(${deep})`);
-      ctx.fillStyle = base;
-      ctx.fillRect(c - R * 1.6, c - R * 1.6, R * 3.2, R * 3.2);
-      const lightBlobs: [number, number, string][] = [
-        [0, 0.6 + 0.35 * mid, "255, 255, 255"],
-        [Math.PI * 0.7, 0.5, deep],
-        [Math.PI * 1.4, 0.4 + 0.3 * mid, light],
-      ];
-      for (const [offset, alpha, tint] of lightBlobs) {
-        const a = swirlAngle + offset;
-        const x = c + Math.cos(a) * R * 0.42;
-        const y = c + Math.sin(a * 1.25) * R * 0.38;
-        const g = ctx.createRadialGradient(x, y, 0, x, y, R * (0.85 + 0.15 * mid));
-        g.addColorStop(0, `rgba(${tint}, ${alpha})`);
-        g.addColorStop(1, `rgba(${tint}, 0)`);
-        ctx.fillStyle = g;
-        ctx.fillRect(c - R * 1.6, c - R * 1.6, R * 3.2, R * 3.2);
-      }
-      const hx = c - R * 0.33 + Math.cos(time * 0.6) * R * 0.05;
-      const hy = c - R * 0.42 + Math.sin(time * 0.5) * R * 0.04;
-      const shine = ctx.createRadialGradient(hx, hy, 0, hx, hy, R * 0.75);
-      shine.addColorStop(0, `rgba(255, 255, 255, ${0.6 + 0.3 * treble})`);
-      shine.addColorStop(1, "rgba(255, 255, 255, 0)");
-      ctx.fillStyle = shine;
-      ctx.fillRect(c - R * 1.6, c - R * 1.6, R * 3.2, R * 3.2);
-      ctx.restore();
-
-      // A soft rim light picks out the deforming edge; treble sharpens it.
-      ctx.save();
-      blob(c, c, R, lowAmp, highAmp);
-      ctx.lineWidth = Math.max(1, size0 * 0.006);
-      ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + 0.28 * treble + 0.12 * mid})`;
-      ctx.stroke();
-      ctx.restore();
-
-      // Thinking: a bright comet circling the orb.
-      if (arc.current > 0.01) {
-        const ringR = R + size0 * 0.05;
-        const head = time * 4.2;
-        const sweep = ctx.createConicGradient(head - 1.4, c, c);
-        sweep.addColorStop(0, `rgba(${light}, 0)`);
-        sweep.addColorStop(0.22, `rgba(255, 255, 255, ${0.95 * arc.current})`);
-        sweep.addColorStop(0.2201, `rgba(${light}, 0)`);
-        ctx.strokeStyle = sweep;
-        ctx.lineCap = "round";
-        ctx.lineWidth = size0 * 0.016;
-        ctx.beginPath();
-        ctx.arc(c, c, ringR, head - 1.4, head);
-        ctx.stroke();
-      }
-    };
-
-    let visible = true;
-    let stop: (() => void) | null = null;
-    const start = () => {
-      if (stop || still || !visible) return;
-      stop = frames((dt) => {
-        time += dt;
-        for (const v of all) v.step(dt);
-        swirlAngle += (swirl.current + 1.6 * midS) * dt;
-        const [tb, tm, tt] = targetBands(stateOf(look));
-        // Fast attack, slow release, so it leaps to the voice and eases back.
-        const follow = (cur: number, tgt: number) => cur + (tgt - cur) * (tgt > cur ? 0.35 : 0.08);
-        bassS = follow(bassS, tb);
-        midS = follow(midS, tm);
-        trebleS = follow(trebleS, tt);
-        if (look === LOOKS.idle && radius.settled) radius.set(look.radius * (1 + 0.02 * Math.sin(time * 1.5)));
-        draw();
-        if (!visible) stop = null;
-        return visible;
-      });
-    };
-
-    engine.current = (next) => {
-      look = LOOKS[next];
-      const [li, de] = THEMES[themeRef.current][next];
-      const targets: [AnimatedValue, number][] = [
-        [radius, look.radius],
-        [glow, look.glow],
-        [swirl, look.swirl],
-        [wobble, look.wobble],
-        [rings, look.rings],
-        [arc, look.arc],
-        ...[...rgb(li), ...rgb(de)].map((t, i): [AnimatedValue, number] => [colour[i]!, t]),
-      ];
-      for (const [v, t] of targets) (still ? v.set(t) : v.to(t));
-      if (still) draw();
-      start();
-    };
-
-    const resizer = new ResizeObserver(() => {
-      resize();
-      draw();
-    });
-    resizer.observe(element);
-    const watcher = new IntersectionObserver(([e]) => {
-      visible = e?.isIntersecting ?? true;
-      start();
-    });
-    watcher.observe(element);
-    resize();
-    draw();
-    start();
-    return () => {
-      stop?.();
-      resizer.disconnect();
-      watcher.disconnect();
-      engine.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => engine.current?.(state), [state, theme]);
+    const shine = ctx.createRadialGradient(
+      c - R * 0.35,
+      c - R * 0.45,
+      0,
+      c - R * 0.35,
+      c - R * 0.45,
+      R * 0.8,
+    );
+    shine.addColorStop(0, "rgba(255, 255, 255, 0.55)");
+    shine.addColorStop(1, "rgba(255, 255, 255, 0)");
+    fill(shine);
+    const shade = ctx.createRadialGradient(c, c, R * 0.7, c, c, R);
+    shade.addColorStop(0, `rgba(${rgb(p.deep)}, 0)`);
+    shade.addColorStop(1, `rgba(${rgb(p.deep)}, 0.22)`);
+    fill(shade);
+    ctx.restore();
+  };
 
   return (
-    <div className={`relative grid place-items-center ${className ?? ""}`} style={{ width: size, height: size, ...style }}>
-      <canvas ref={canvas} className="absolute inset-0 h-full w-full" role="img" aria-label={`Voice orb: ${state}`} />
-      {showIcon && (
-        <Remold.Icon
-          className="relative text-white"
-          style={{ width: size * 0.17, height: size * 0.17 }}
-          d={ICONS[state]}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.7}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          spring={springs.snappy}
-          aria-hidden
-        />
-      )}
-    </div>
+    <Remold.Canvas
+      values={LOOKS[state]}
+      spring={SOFT}
+      continuous
+      draw={draw}
+      label={`Voice orb: ${state}`}
+      className={className}
+      style={{ display: "block", width: size, height: size, ...style }}
+    />
   );
 }
 
-const DEMO_STATES: OrbState[] = ["idle", "listening", "thinking", "speaking"];
-const LABELS: Record<OrbState, string> = {
-  idle: "Ready when you are",
-  listening: "Listening…",
-  thinking: "Thinking…",
+const LANGUAGES = [
+  { code: "es", locale: "es-ES", name: "Spanish" },
+  { code: "en", locale: "en-US", name: "English" },
+] as const;
+
+type Translator = { translate(text: string): Promise<string> };
+type TranslatorApi = {
+  create(options: {
+    sourceLanguage: string;
+    targetLanguage: string;
+  }): Promise<Translator>;
+};
+
+type Phase = "idle" | "listening" | "hearing" | "translating" | "speaking";
+
+const ORB: Record<Phase, OrbState> = {
+  idle: "idle",
+  listening: "listening",
+  hearing: "listening",
+  translating: "thinking",
+  speaking: "speaking",
+};
+const STATUS: Record<Phase, string> = {
+  idle: "Tap to speak",
+  listening: "Listening",
+  hearing: "Hearing you",
+  translating: "Translating",
   speaking: "Speaking",
 };
-const DEMO_THEMES: OrbTheme[] = ["aurora", "ember", "mono"];
 
-export function VoiceOrbDemo({ index }: { index?: number }) {
-  const auto = useAutoplay(DEMO_STATES.length, { every: 2600 });
-  const step = index != null ? index % DEMO_STATES.length : auto.step;
-  const state = DEMO_STATES[step]!;
-  const [mic, setMic] = useState(false);
-  const [micFailed, setMicFailed] = useState(false);
-  const [theme, setTheme] = useState<OrbTheme>("aurora");
+interface Line {
+  phase: Phase;
+
+  from: 0 | 1;
+  heard: string;
+  said: string;
+}
+
+const SCENE: readonly (Line & { ms: number })[] = [
+  { phase: "idle", from: 0, heard: "", said: "", ms: 1600 },
+  { phase: "listening", from: 0, heard: "", said: "", ms: 900 },
+  {
+    phase: "hearing",
+    from: 0,
+    heard: "¿Dónde está",
+    said: "Where is",
+    ms: 900,
+  },
+  {
+    phase: "hearing",
+    from: 0,
+    heard: "¿Dónde está la estación",
+    said: "Where is the season",
+    ms: 1000,
+  },
+  {
+    phase: "translating",
+    from: 0,
+    heard: "¿Dónde está la estación de tren?",
+    said: "Where is the season",
+    ms: 700,
+  },
+  {
+    phase: "speaking",
+    from: 0,
+    heard: "¿Dónde está la estación de tren?",
+    said: "Where is the train station?",
+    ms: 2400,
+  },
+  { phase: "idle", from: 1, heard: "", said: "", ms: 1200 },
+  { phase: "listening", from: 1, heard: "", said: "", ms: 800 },
+  { phase: "hearing", from: 1, heard: "How long", said: "Cuánto", ms: 800 },
+  {
+    phase: "hearing",
+    from: 1,
+    heard: "How long does it take to walk?",
+    said: "¿Cuánto tarda",
+    ms: 900,
+  },
+  {
+    phase: "translating",
+    from: 1,
+    heard: "How long does it take to walk?",
+    said: "¿Cuánto tarda",
+    ms: 700,
+  },
+  {
+    phase: "speaking",
+    from: 1,
+    heard: "How long does it take to walk?",
+    said: "¿Cuánto se tarda a pie?",
+    ms: 2400,
+  },
+];
+
+type Turn = {
+  from: 0 | 1;
+  said: string;
+  phase: "idle" | "translating" | "speaking";
+};
+
+export function VoiceOrbDemo({ index }: { index?: number } = {}) {
+  const auto = useAutoplay(SCENE.length, { every: (i) => SCENE[i]!.ms });
+  const scripted = SCENE[index != null ? index % SCENE.length : auto.step]!;
+  const speech = useSpeechRecognition();
+  const [turn, setTurn] = useState<Turn | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const translator = useRef<Translator | null>(null);
+  const translation = useRef<Promise<string>>(Promise.resolve(""));
+
+  const line: Line = turn
+    ? {
+        from: turn.from,
+        phase: speech.listening
+          ? speech.transcript
+            ? "hearing"
+            : "listening"
+          : turn.phase,
+        heard: speech.transcript,
+        said: turn.said,
+      }
+    : scripted;
+  const [source, target] =
+    line.from === 0 ? LANGUAGES : ([LANGUAGES[1], LANGUAGES[0]] as const);
+  const update = (patch: Partial<Turn>) =>
+    setTurn((t) => t && { ...t, ...patch });
+
+  useEffect(() => {
+    if (!turn || !speech.transcript || !translator.current) return;
+    let current = true;
+    translation.current = translator.current.translate(speech.transcript);
+    translation.current.then(
+      (said) => current && update({ said }),
+      () => {},
+    );
+    return () => {
+      current = false;
+    };
+  }, [speech.transcript]);
+
+  const wasListening = useRef(false);
+  useEffect(() => {
+    const stopped = wasListening.current && !speech.listening;
+    wasListening.current = speech.listening;
+    if (!stopped || !turn) return;
+    if (!speech.isMicrophoneAvailable)
+      setNote(
+        "Microphone access was refused. Allow it for this site and tap the orb again.",
+      );
+    if (!speech.transcript) return update({ phase: "idle" });
+    update({ phase: "translating" });
+    void translation.current
+      .catch(() => "")
+      .then((said) => {
+        if (!said) return update({ phase: "idle" });
+        const voice = new SpeechSynthesisUtterance(said);
+        voice.lang = target.locale;
+        voice.onend = voice.onerror = () => update({ phase: "idle" });
+        update({ phase: "speaking", said });
+        speechSynthesis.speak(voice);
+      });
+  }, [speech.listening]);
+
+  useEffect(() => () => void SpeechRecognition.abortListening(), []);
+
+  const swap = () => {
+    auto.setPlaying(false);
+    speech.resetTranscript();
+    setTurn({ from: line.from === 0 ? 1 : 0, said: "", phase: "idle" });
+  };
+
+  const tap = async () => {
+    auto.setPlaying(false);
+    if (speech.listening) return SpeechRecognition.stopListening();
+    if (line.phase === "speaking") {
+      speechSynthesis.cancel();
+      return update({ phase: "idle" });
+    }
+    if (line.phase === "translating") return;
+    if (!speech.browserSupportsSpeechRecognition) {
+      setTurn(null);
+      auto.setStep(0);
+      auto.setPlaying(true);
+      return setNote(
+        "Live listening needs speech recognition, which this browser doesn't have. Try Chrome.",
+      );
+    }
+    setTurn({ from: line.from, said: "", phase: "idle" });
+    void SpeechRecognition.startListening({
+      language: source.locale,
+      interimResults: true,
+    });
+    const api = (globalThis as { Translator?: TranslatorApi }).Translator;
+    translator.current =
+      (await api
+        ?.create({ sourceLanguage: source.code, targetLanguage: target.code })
+        .catch(() => null)) ?? null;
+    setNote(
+      translator.current
+        ? null
+        : "Translation runs on Chrome's built-in translator, which isn't available here. You'll see what you said.",
+    );
+  };
 
   return (
-    <div
-      ref={auto.ref}
-      className="flex min-h-[440px] w-full flex-col items-center justify-center gap-5 overflow-hidden rounded-3xl bg-gradient-to-b from-[#0c1020] to-[#05060d] py-8 font-sans select-none"
-    >
-      <VoiceOrb
-        state={state}
-        mic={mic}
-        theme={theme}
-        size={240}
-        onMicError={() => {
-          setMic(false);
-          setMicFailed(true);
-        }}
-      />
-
-      <Remold.Text className="text-[15px] font-medium text-white/80">{LABELS[state]}</Remold.Text>
-
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
-        {DEMO_STATES.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => auto.setStep(DEMO_STATES.indexOf(s))}
-            aria-pressed={s === state}
-            className={`rounded-full border px-3 py-1 text-[13px] font-medium capitalize transition ${
-              s === state ? "border-white bg-white text-zinc-900" : "border-white/20 text-white/70 hover:border-white/45 hover:text-white"
-            }`}
-          >
-            {s}
-          </button>
-        ))}
+    <div ref={auto.ref} className="vo not-prose">
+      <div className="vo-languages">
+        <span>{source.name}</span>
         <button
           type="button"
-          onClick={() => {
-            setMicFailed(false);
-            setMic((m) => !m);
-          }}
-          aria-pressed={mic}
-          className={`ml-1 flex items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-medium transition ${
-            mic ? "border-emerald-400 bg-emerald-400/15 text-emerald-300" : "border-white/20 text-white/70 hover:border-white/45 hover:text-white"
-          }`}
+          className="vo-swap"
+          onClick={swap}
+          aria-label={`Translate from ${target.name} to ${source.name} instead`}
         >
-          {mic ? <Mic className="size-4" /> : <MicOff className="size-4" />}
-          {mic ? "Mic on" : "Use mic"}
+          <HugeiconsIcon icon={ArrowLeftRightIcon} aria-hidden="true" />
         </button>
+        <span>{target.name}</span>
       </div>
 
-      <div className="flex items-center gap-1">
-        {DEMO_THEMES.map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTheme(t)}
-            aria-pressed={t === theme}
-            className={`rounded-md px-2.5 py-1 text-[12px] font-medium capitalize transition ${
-              t === theme ? "bg-white/15 text-white" : "text-white/45 hover:text-white/75"
-            }`}
-          >
-            {t}
-          </button>
-        ))}
+      <button
+        type="button"
+        className="vo-orb"
+        onClick={tap}
+        aria-label={
+          speech.listening
+            ? "Stop listening"
+            : line.phase === "speaking"
+            ? "Stop speaking"
+            : `Speak ${source.name}`
+        }
+      >
+        <VoiceOrb
+          state={ORB[line.phase]}
+          level={line.phase === "listening" ? 0.04 : undefined}
+          size={220}
+        />
+      </button>
+      <p className="vo-status" aria-live="polite">
+        {STATUS[line.phase]}
+      </p>
+
+      <div className="vo-captions">
+        <p className="vo-heard" lang={source.code}>
+          {line.heard || " "}
+        </p>
+        <Remold.Text className="vo-said" lang={target.code}>
+          {line.said || " "}
+        </Remold.Text>
       </div>
-      {micFailed && <p className="text-[12px] text-white/40">No microphone access — showing a simulated voice.</p>}
+      {note && <p className="vo-note">{note}</p>}
     </div>
   );
 }

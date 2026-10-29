@@ -1,4 +1,3 @@
-/* Comment thread: a light, quiet panel. Fixed colours, so it looks the same on any site. */
 .cx {
   --cx-bg: #ffffff;
   --cx-subtle: #f6f6f7;
@@ -13,7 +12,8 @@
   border-radius: 14px;
   background: var(--cx-bg);
   color: var(--cx-text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    system-ui, sans-serif;
   container-type: inline-size;
   overflow: hidden;
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
@@ -46,67 +46,10 @@
   outline-offset: 2px;
 }
 
-/* Top bar */
-.cx-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px 16px;
-  padding: 13px 18px;
-  border-bottom: 1px solid var(--cx-border);
-  background: linear-gradient(180deg, color-mix(in oklab, var(--cx-subtle) 55%, #fff), #fff);
-}
-
-.dark .cx-bar {
-  background: linear-gradient(180deg, #27272a, #18181b);
-}
-
-.cx-title {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.cx-title strong {
-  font-size: 14px;
-  font-weight: 600;
-}
-
 .cx-count {
   font-size: 13px;
   color: var(--cx-muted);
   font-variant-numeric: tabular-nums;
-}
-
-.cx-tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-left: auto;
-  gap: 8px;
-}
-
-.cx-here {
-  display: inline-flex;
-  align-items: center;
-  margin-right: 6px;
-}
-
-.cx-here img {
-  width: 22px;
-  height: 22px;
-  margin-right: -6px;
-  border: 2px solid var(--cx-bg);
-  border-radius: 50%;
-  background: var(--cx-subtle);
-}
-
-.cx-here em {
-  margin-left: 12px;
-  font-size: 12.5px;
-  font-style: normal;
-  color: var(--cx-muted);
 }
 
 .cx-seg {
@@ -142,33 +85,6 @@
     0 0 0 0.5px rgb(0 0 0 / 0.05);
 }
 
-.cx-summarise {
-  padding: 6px 14px;
-  border: 1px solid var(--cx-border);
-  border-radius: 9px;
-  background: #fff;
-  font-size: 12.5px;
-  font-weight: 500;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.cx-summarise:hover {
-  border-color: color-mix(in oklab, var(--cx-ink) 25%, var(--cx-border));
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.07);
-}
-
-.cx-summarise[aria-pressed="true"] {
-  border-color: var(--cx-ink);
-  background: var(--cx-ink);
-  color: #fff;
-  box-shadow: 0 4px 12px -4px rgb(0 0 0 / 0.4);
-}
-
 .cx-live {
   display: grid;
   width: 36px;
@@ -196,9 +112,7 @@
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.07);
 }
 
-/* The panel and its lines */
 .cx-stage {
-  /* A fixed-height panel that scrolls inside, like a real comments pane: the page never jumps. */
   height: 640px;
   padding: 20px 20px 28px;
   overflow-y: auto;
@@ -218,20 +132,23 @@
   transition: stroke 0.2s;
 }
 
-/* The lines leading to the reply under the pointer. */
 .cx-stage .rm-connector[data-line="lit"] {
   stroke: var(--cx-ink);
 }
 
+/* As a preview, the thread is capped, and whatever runs past the cap fades out rather than being cut. */
 .cx[data-variant="preview"] .cx-stage {
   height: auto;
-  min-height: 760px;
+  max-height: 600px;
   overflow: clip;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 72px),
+    transparent
+  );
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
 }
 
-.cx[data-variant="preview"] .cx-replies.top {
-  margin: 0;
-}
 
 .cx-comment {
   display: grid;
@@ -331,7 +248,6 @@
   line-height: 1.55;
 }
 
-/* Typing: three dots in a small bubble, which grows into the comment. */
 .cx-dots {
   display: inline-flex;
   grid-auto-flow: column;
@@ -357,129 +273,26 @@
   animation-delay: 0.3s;
 }
 
-/* What's being discussed: a product, or an article */
 .cx-top {
   transition: opacity 0.2s;
-}
-
-.cx-product {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.cx-product-art {
-  display: grid;
-  place-items: center;
-  width: 62px;
-  height: 62px;
-  border-radius: 15px;
-  background: linear-gradient(150deg, #f4faee, #e4f1d7);
-  box-shadow:
-    inset 0 0 0 1px rgb(63 98 18 / 0.08),
-    inset 0 1px 0 rgb(255 255 255 / 0.7),
-    0 6px 16px -6px rgb(101 163 13 / 0.35);
-  color: #3f6212;
-}
-
-.dark .cx-product-art {
-  background: linear-gradient(150deg, #25301a, #1d2715);
-  box-shadow: inset 0 0 0 1px rgb(190 242 100 / 0.16);
-}
-
-.cx-product-art svg,
-.cx-photo svg {
-  width: 38px;
-  height: 38px;
-  fill: #65a30d;
-  stroke: #3f6212;
-  stroke-width: 1.5;
-  stroke-linejoin: round;
-}
-
-.cx-product-art svg path + path {
-  fill: none;
-}
-
-.cx-product-info {
-  display: grid;
-  gap: 1px;
-  font-size: 13px;
-  color: var(--cx-muted);
-}
-
-.cx-product-info strong {
-  font-size: 15px;
-  color: var(--cx-text);
-}
-
-.cx-stars {
-  color: #ca8a04;
-  letter-spacing: 1px;
-}
-
-.cx-stars .part {
-  color: #e4e4e7;
-}
-
-.cx-stars em {
-  margin-left: 4px;
-  font-style: normal;
-  letter-spacing: 0;
-  color: var(--cx-muted);
-}
-
-.cx-article {
-  display: grid;
-  gap: 6px;
-  max-width: 520px;
-}
-
-.cx-article-pub {
-  margin: 0;
-  font-size: 12px;
-  color: var(--cx-muted);
-}
-
-.cx-article strong {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 21px;
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-}
-
-.cx-byline {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  color: var(--cx-muted);
-}
-
-.cx-byline img {
-  border-radius: 50%;
-  background: var(--cx-subtle);
-  box-shadow: 0 0 0 1px var(--cx-border);
 }
 
 .cx-list-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 18px;
-  /* Starts beside the line coming down from the top, not across it. */
-  padding: 14px 0 0 52px;
-  border-top: 1px solid var(--cx-border);
+  gap: 14px;
+  margin-top: 20px;
+  padding: 14px 0;
+  border-block: 1px solid var(--cx-border);
 }
 
 .cx-seg.small button {
-  padding: 2px 8px;
+  min-height: 28px;
+  padding: 3px 10px;
   font-size: 12px;
 }
 
-/* Who's speaking for the shop, or wrote the article */
 .cx-badge {
   padding: 1px 6px;
   border-radius: 4px;
@@ -504,56 +317,6 @@
   box-shadow: inset 0 0 0 1px var(--cx-border);
 }
 
-/* Rich content */
-.cx-sizes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: 12.5px;
-  font-variant-numeric: tabular-nums;
-}
-
-.cx-sizes li {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 4px 10px;
-  border: 1px solid var(--cx-border);
-  border-radius: 999px;
-  background: var(--cx-bg);
-  color: var(--cx-muted);
-}
-
-.cx-sizes b {
-  font-weight: 600;
-  color: var(--cx-text);
-}
-
-.cx-photo {
-  display: grid;
-  place-items: center;
-  gap: 4px;
-  width: 112px;
-  height: 112px;
-  margin-top: 6px;
-  border-radius: 10px;
-  background: #ecebe6;
-}
-
-.cx-photo svg {
-  width: 56px;
-  height: 56px;
-}
-
-.cx-photo em {
-  font-size: 10.5px;
-  font-style: normal;
-  color: var(--cx-muted);
-}
-
 .cx-vote {
   display: inline-flex;
   align-items: center;
@@ -574,16 +337,8 @@
 .cx-vote[aria-pressed="true"] {
   border-color: var(--cx-ink);
   color: var(--cx-text);
-  animation: cx-pop 0.4s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 
-.cx-summary-foot {
-  margin: 10px 0 0;
-  font-size: 12px;
-  color: var(--cx-faint);
-}
-
-/* Under each bubble: reactions and actions */
 .cx-under {
   display: flex;
   flex-wrap: wrap;
@@ -602,7 +357,6 @@
   color: var(--cx-text);
 }
 
-/* Reply box: your avatar, then a field that grows with what you type and a quiet bar underneath. */
 .cx-compose {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -765,54 +519,6 @@
   margin-right: 0;
 }
 
-/* Summary: the thread condensed into one card */
-.cx-summary {
-  margin: 16px 0 0;
-  padding: 16px 18px;
-  border: 1px solid var(--cx-border);
-  border-radius: 12px;
-  background: var(--cx-bg);
-}
-
-.cx-summary-head {
-  margin: 0 0 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--cx-muted);
-}
-
-.cx-summary ul {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.cx-summary li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 0;
-  border-top: 1px solid var(--cx-border);
-}
-
-.cx-summary li p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.cx-summary b {
-  font-weight: 600;
-}
-
-.cx-chips {
-  display: inline-flex;
-  flex: none;
-  gap: 3px;
-}
-
 @keyframes cx-dot {
   0%,
   60%,
@@ -826,34 +532,13 @@
   }
 }
 
-@keyframes cx-pop {
-  0% {
-    transform: scale(0.85);
-  }
-  60% {
-    transform: scale(1.12);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@container (max-width: 620px) {
+@container (max-width: 480px) {
   .cx-stage {
     padding: 16px 12px 22px;
   }
 
   .cx-replies.top {
     margin-left: 18px;
-  }
-
-  .cx-summary {
-    margin-left: 0;
-  }
-
-  .cx-summary li {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 
@@ -864,9 +549,7 @@
   }
 }
 
-/* Product Q&A reads like a shop's Q&A, not a chat: no bubbles, just people and what they said.
-   Questions are a touch stronger than answers; the seller is marked by the badge alone. */
-.cx[data-look="product"] .cx-bubble {
+.cx[data-look="post"] .cx-bubble {
   gap: 2px;
   padding: 0;
   border-radius: 0;
@@ -874,80 +557,61 @@
   box-shadow: none;
 }
 
-.cx[data-look="product"] .cx-bubble.cx-dots {
+.cx[data-look="post"] .cx-bubble.cx-dots {
   padding: 12px 0;
 }
 
-.cx[data-look="product"] .cx-meta {
+.cx[data-look="post"] .cx-meta {
   min-height: 20px;
   align-items: center;
 }
 
-.cx[data-look="product"] .cx-comment[data-top] > .cx-main > .cx-bubble > .cx-text {
+.cx[data-look="post"] .cx-comment[data-top] > .cx-main > .cx-bubble > .cx-text {
   font-size: 15px;
   font-weight: 500;
   letter-spacing: -0.005em;
 }
 
-.cx[data-look="product"] .cx-text {
+.cx[data-look="post"] .cx-text {
   font-size: 14.5px;
   line-height: 1.6;
   color: #27272a;
 }
 
-.dark .cx[data-look="product"] .cx-text {
+.dark .cx[data-look="post"] .cx-text {
   color: var(--cx-text);
 }
 
-
-
-.cx[data-look="product"] .cx-under {
+.cx[data-look="post"] .cx-under {
   margin-top: 8px;
 }
 
-/* Each question and its answers is one block, with a hairline between questions. */
-.cx[data-look="product"] .cx-comment[data-top] + .cx-comment[data-top] {
+.cx[data-look="post"] .cx-comment[data-top] + .cx-comment[data-top] {
   padding-top: 18px;
   border-top: 1px solid var(--cx-border);
 }
 
-/* The questions line up with the product above them. */
-.cx[data-look="product"] .cx-replies.top {
-  margin-left: 0;
+/* Breathing room between the divider under "comments" and the first comment */
+.cx[data-look="post"] .cx-replies.top {
+  margin: 18px 0 0;
 }
 
-.cx[data-look="product"] .cx-list-head {
+.cx[data-look="post"] .cx-list-head {
   padding-left: 0;
   margin-left: 0;
 }
 
-.dark .cx-seg button[aria-pressed="true"],
-.dark .cx-summarise {
+.dark .cx-seg button[aria-pressed="true"] {
   background: #3f3f46;
   color: var(--cx-text);
 }
 
-@container (max-width: 620px) {
+@container (max-width: 480px) {
   .cx {
     margin: 0;
     border-radius: 12px;
   }
 
-  .cx-bar {
-    align-items: flex-start;
-    padding: 12px;
-  }
-
-  .cx-tools {
-    width: 100%;
-    gap: 6px;
-  }
-
-  .cx-here {
-    margin-right: auto;
-  }
-
-  .cx-summarise,
   .cx-live {
     min-height: 36px;
   }
@@ -962,8 +626,8 @@
 
   .cx-replies {
     gap: 12px;
-    /* Keep a small forward lane for the connector without consuming a full avatar column per reply. */
-    margin-left: -16px;
+
+    margin-left: -8px;
   }
 
   .cx-comment {
@@ -995,9 +659,9 @@
   .cx-list-head {
     align-items: flex-start;
     flex-direction: column;
+    gap: 10px;
     padding-left: 0;
   }
-
 
   .cx-compose {
     max-width: none;
@@ -1006,4 +670,113 @@
   .cx-compose-hint {
     display: none;
   }
+}
+
+/* Autoplay control, floating at the top right of the frame */
+.cx {
+  position: relative;
+}
+
+.cx-live {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+}
+
+/* The post everyone is replying to */
+.cx-post {
+  display: grid;
+  gap: 12px;
+}
+
+.cx-post-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cx-post-head .cx-avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.cx-post-who {
+  display: grid;
+  line-height: 1.3;
+}
+
+.cx-post-who strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cx-post-who span {
+  color: var(--cx-muted);
+  font-size: 12.5px;
+}
+
+.cx-post-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+/* Like, comments, reposts, save */
+.cx-post-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: var(--cx-muted);
+}
+
+.cx-post-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+button.cx-post-action {
+  cursor: pointer;
+}
+
+.cx-post-action svg {
+  width: 17px;
+  height: 17px;
+}
+
+.cx-post-action.save {
+  margin-left: auto;
+}
+
+.cx-post-action[aria-pressed="true"] {
+  color: #e11d48;
+}
+
+.cx-post-action[aria-pressed="true"] svg {
+  fill: currentColor;
+}
+
+.cx-post-action:focus-visible {
+  outline: 2px solid var(--cx-text);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* A comment's like: a small heart and its count */
+.cx-vote svg {
+  width: 13px;
+  height: 13px;
+}
+
+.cx-vote[aria-pressed="true"] svg {
+  fill: currentColor;
 }

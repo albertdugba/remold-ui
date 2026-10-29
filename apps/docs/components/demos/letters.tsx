@@ -1,23 +1,20 @@
 "use client";
-/**
- * Letters as geometry. A word is laid out from real glyph outlines (Barlow Condensed, extracted
- * at build time), so its letters are shapes like any other:
- *
- * - on the left the outlines bend around the pointer (push, magnify or melt), the font untouched;
- * - on the right the word morphs into a logo with core's `createMorph`, and you can compare the
- *   matched pairing with plain drawing order.
- *
- * The real text stays in the page for search and screen readers; the drawings are decoration.
- */
-import { createMorph, parsePath, subdivide, toCubics, value, type Morph, type Subpath } from "@remold-ui/core";
+
+import {
+  createMorph,
+  parsePath,
+  subdivide,
+  toCubics,
+  value,
+  type Morph,
+  type Subpath,
+} from "@remold-ui/core";
 import { frames, prefersReducedMotion } from "@remold-ui/dom";
 import { springs } from "@remold-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Segmented } from "./frame";
 import { GLYPHS } from "./glyphs-data";
 import "./letters.css";
-
-/* Laying out text from glyph outlines */
 
 interface Laid {
   subpaths: Subpath[];
@@ -39,7 +36,6 @@ const outline = (ch: string) => {
   return cached;
 };
 
-/** `text` at `size`, baseline at y = 0, starting at x = 0. */
 function layout(text: string, size: number): Laid {
   const k = size / GLYPHS.upm;
   const subpaths: Subpath[] = [];
@@ -48,24 +44,47 @@ function layout(text: string, size: number): Laid {
     const ch = glyphs[text[i]!] ? text[i]! : "?";
     const dx = x;
     for (const sp of outline(ch)) {
-      const at = (p: { x: number; y: number }) => ({ x: p.x * k + dx, y: p.y * k });
-      subpaths.push({ closed: sp.closed, segments: sp.segments.map((c) => ({ p0: at(c.p0), p1: at(c.p1), p2: at(c.p2), p3: at(c.p3) })) });
+      const at = (p: { x: number; y: number }) => ({
+        x: p.x * k + dx,
+        y: p.y * k,
+      });
+      subpaths.push({
+        closed: sp.closed,
+        segments: sp.segments.map((c) => ({
+          p0: at(c.p0),
+          p1: at(c.p1),
+          p2: at(c.p2),
+          p3: at(c.p3),
+        })),
+      });
     }
     x += glyphs[ch]!.adv * k;
     if (i < text.length - 1) x += (kerning[ch + text[i + 1]] ?? 0) * k;
   }
-  return { subpaths, width: x, ascent: GLYPHS.asc * k, descent: -GLYPHS.desc * k };
+  return {
+    subpaths,
+    width: x,
+    ascent: GLYPHS.asc * k,
+    descent: -GLYPHS.desc * k,
+  };
 }
 
-/** Cut every outline into short pieces, so it can bend smoothly instead of kinking. */
 function densify(subpaths: Subpath[], step: number): Float32Array[] {
   return subpaths.map((sp) => {
-    const length = sp.segments.reduce((sum, c) => sum + Math.hypot(c.p3.x - c.p0.x, c.p3.y - c.p0.y), 0);
-    const fine = subdivide(sp, Math.max(sp.segments.length, Math.round(length / step)));
+    const length = sp.segments.reduce(
+      (sum, c) => sum + Math.hypot(c.p3.x - c.p0.x, c.p3.y - c.p0.y),
+      0,
+    );
+    const fine = subdivide(
+      sp,
+      Math.max(sp.segments.length, Math.round(length / step)),
+    );
     const buf = new Float32Array(2 + fine.segments.length * 6);
     buf[0] = fine.segments[0]!.p0.x;
     buf[1] = fine.segments[0]!.p0.y;
-    fine.segments.forEach((c, i) => buf.set([c.p1.x, c.p1.y, c.p2.x, c.p2.y, c.p3.x, c.p3.y], 2 + i * 6));
+    fine.segments.forEach((c, i) =>
+      buf.set([c.p1.x, c.p1.y, c.p2.x, c.p2.y, c.p3.x, c.p3.y], 2 + i * 6),
+    );
     return buf;
   });
 }
@@ -75,21 +94,30 @@ const toD = (bufs: Float32Array[]) => {
   for (const b of bufs) {
     d += `M${b[0]!.toFixed(1)} ${b[1]!.toFixed(1)}`;
     for (let i = 2; i < b.length; i += 6) {
-      d += `C${b[i]!.toFixed(1)} ${b[i + 1]!.toFixed(1)} ${b[i + 2]!.toFixed(1)} ${b[i + 3]!.toFixed(1)} ${b[i + 4]!.toFixed(1)} ${b[
-        i + 5
-      ]!.toFixed(1)}`;
+      d += `C${b[i]!.toFixed(1)} ${b[i + 1]!.toFixed(1)} ${b[i + 2]!.toFixed(
+        1,
+      )} ${b[i + 3]!.toFixed(1)} ${b[i + 4]!.toFixed(1)} ${b[i + 5]!.toFixed(
+        1,
+      )}`;
     }
     d += "Z";
   }
   return d;
 };
 
-/* Bending around the pointer */
-
 type Field = "Push" | "Magnify" | "Melt";
 const SIZE = 200;
 
-function deform(base: Float32Array[], out: Float32Array[], cx: number, cy: number, r: number, amount: number, field: Field, time: number) {
+function deform(
+  base: Float32Array[],
+  out: Float32Array[],
+  cx: number,
+  cy: number,
+  r: number,
+  amount: number,
+  field: Field,
+  time: number,
+) {
   const r2 = r * r;
   for (let p = 0; p < base.length; p++) {
     const b = base[p]!;
@@ -99,7 +127,7 @@ function deform(base: Float32Array[], out: Float32Array[], cx: number, cy: numbe
       const y = b[i + 1]!;
       const dx = x - cx;
       const dy = y - cy;
-      // A soft bump of influence round the pointer.
+
       const f = Math.exp(-(dx * dx + dy * dy) / r2) * amount;
       if (field === "Push") {
         const d = Math.hypot(dx, dy) + 1e-3;
@@ -127,24 +155,45 @@ function BendPanel({ text, field }: { text: string; field: Field }) {
     const base = densify(shape.subpaths, 6);
     const out = base.map((b) => new Float32Array(b));
     const still = prefersReducedMotion();
-    const px = value(shape.width / 2, { spring: springs.smooth, precision: 0.2 });
-    const py = value(-shape.ascent / 2, { spring: springs.smooth, precision: 0.2 });
-    const amount = value(0, { spring: { duration: 0.5, bounce: 0.2 }, precision: 0.002 });
+    const px = value(shape.width / 2, {
+      spring: springs.smooth,
+      precision: 0.2,
+    });
+    const py = value(-shape.ascent / 2, {
+      spring: springs.smooth,
+      precision: 0.2,
+    });
+    const amount = value(0, {
+      spring: { duration: 0.5, bounce: 0.2 },
+      precision: 0.002,
+    });
     let time = 0;
     let stop: (() => void) | null = null;
 
     const draw = () => {
-      deform(base, out, px.current, py.current, SIZE * 0.42, Math.max(0, amount.current), fieldRef.current, time);
+      deform(
+        base,
+        out,
+        px.current,
+        py.current,
+        SIZE * 0.42,
+        Math.max(0, amount.current),
+        fieldRef.current,
+        time,
+      );
       path.current?.setAttribute("d", toD(out));
     };
     const start = () => {
       if (stop || still) return;
       stop = frames((dt) => {
         time += dt;
-        const moving = [px.step(dt), py.step(dt), amount.step(dt)].some(Boolean);
+        const moving = [px.step(dt), py.step(dt), amount.step(dt)].some(
+          Boolean,
+        );
         draw();
-        // Melt keeps rippling while the pointer is over it.
-        const go = moving || (fieldRef.current === "Melt" && amount.current > 0.01);
+
+        const go =
+          moving || (fieldRef.current === "Melt" && amount.current > 0.01);
         if (!go) stop = null;
         return go;
       });
@@ -191,7 +240,9 @@ function BendPanel({ text, field }: { text: string; field: Field }) {
     <svg
       ref={svg}
       className="lx-svg bend"
-      viewBox={`${-pad} ${-shape.ascent - pad} ${shape.width + pad * 2} ${shape.ascent + shape.descent + pad * 2}`}
+      viewBox={`${-pad} ${-shape.ascent - pad} ${shape.width + pad * 2} ${
+        shape.ascent + shape.descent + pad * 2
+      }`}
       aria-hidden="true"
     >
       <path ref={path} />
@@ -199,9 +250,6 @@ function BendPanel({ text, field }: { text: string; field: Field }) {
   );
 }
 
-/* Word into logo */
-
-/** Three rings on a wavy thread, drawn in the word's own box so the morph stays in place. */
 function logo(shape: Laid): string {
   const cx = shape.width / 2;
   const cy = -shape.ascent * 0.42;
@@ -209,11 +257,13 @@ function logo(shape: Laid): string {
   const r = R * 0.62;
   const gap = R * 3;
   const ring = (x: number) =>
-    `M${x - R} ${cy}A${R} ${R} 0 1 1 ${x + R} ${cy}A${R} ${R} 0 1 1 ${x - R} ${cy}Z` +
-    // The hole runs the other way round, so it's cut out.
-    `M${x - r} ${cy}A${r} ${r} 0 1 0 ${x + r} ${cy}A${r} ${r} 0 1 0 ${x - r} ${cy}Z`;
-  // The thread swoops between the rings, joining each one on its rim, and never crosses a hole:
-  // a tail on each end and one swoop between each pair, alternating under and over.
+    `M${x - R} ${cy}A${R} ${R} 0 1 1 ${x + R} ${cy}A${R} ${R} 0 1 1 ${
+      x - R
+    } ${cy}Z` +
+    `M${x - r} ${cy}A${r} ${r} 0 1 0 ${x + r} ${cy}A${r} ${r} 0 1 0 ${
+      x - r
+    } ${cy}Z`;
+
   const thickness = R * 0.24;
   const sag = R * 0.85;
   const band = (x0: number, x1: number, y: (u: number) => number) => {
@@ -230,10 +280,24 @@ function logo(shape: Laid): string {
   const rim = R * 0.82;
   const centres = [cx - gap, cx, cx + gap];
   const tails =
-    band(centres[0]! - rim - R * 1.4, centres[0]! - rim, (u) => cy + sag * Math.cos((u * Math.PI) / 2)) +
-    band(centres[2]! + rim, centres[2]! + rim + R * 1.4, (u) => cy + sag * Math.sin((u * Math.PI) / 2));
+    band(
+      centres[0]! - rim - R * 1.4,
+      centres[0]! - rim,
+      (u) => cy + sag * Math.cos((u * Math.PI) / 2),
+    ) +
+    band(
+      centres[2]! + rim,
+      centres[2]! + rim + R * 1.4,
+      (u) => cy + sag * Math.sin((u * Math.PI) / 2),
+    );
   const swoops = [0, 1]
-    .map((i) => band(centres[i]! + rim, centres[i + 1]! - rim, (u) => cy + (i % 2 ? -1 : 1) * sag * 0.7 * Math.sin(u * Math.PI)))
+    .map((i) =>
+      band(
+        centres[i]! + rim,
+        centres[i + 1]! - rim,
+        (u) => cy + (i % 2 ? -1 : 1) * sag * 0.7 * Math.sin(u * Math.PI),
+      ),
+    )
     .join("");
   return centres.map(ring).join("") + swoops + tails;
 }
@@ -244,13 +308,18 @@ function MorphPanel({ text, pairing }: { text: string; pairing: Pairing }) {
   const path = useRef<SVGPathElement>(null);
   const shape = useMemo(() => layout(text, SIZE), [text]);
   const morph = useMemo<Morph>(
-    () => createMorph(shape.subpaths, logo(shape), { pairing: pairing === "Matched pairing" ? "auto" : "order" }),
+    () =>
+      createMorph(shape.subpaths, logo(shape), {
+        pairing: pairing === "Matched pairing" ? "auto" : "order",
+      }),
     [shape, pairing],
   );
   const [toLogo, setToLogo] = useState(true);
   const [driving, setDriving] = useState(false);
   const [scrub, setScrub] = useState(1);
-  const engine = useRef<{ to(t: number): void; set(t: number): void } | null>(null);
+  const engine = useRef<{ to(t: number): void; set(t: number): void } | null>(
+    null,
+  );
 
   useEffect(() => {
     const still = prefersReducedMotion();
@@ -290,7 +359,6 @@ function MorphPanel({ text, pairing }: { text: string; pairing: Pairing }) {
 
   useEffect(() => engine.current?.to(toLogo ? 1 : 0), [toLogo, morph]);
 
-  // Goes back and forth by itself until someone takes over.
   useEffect(() => {
     if (driving) return;
     const timer = setInterval(() => setToLogo((v) => !v), 2600);
@@ -302,7 +370,9 @@ function MorphPanel({ text, pairing }: { text: string; pairing: Pairing }) {
     <>
       <svg
         className="lx-svg"
-        viewBox={`${-pad} ${-shape.ascent - pad} ${shape.width + pad * 2} ${shape.ascent + shape.descent + pad * 2}`}
+        viewBox={`${-pad} ${-shape.ascent - pad} ${shape.width + pad * 2} ${
+          shape.ascent + shape.descent + pad * 2
+        }`}
         aria-hidden="true"
       >
         <path ref={path} />
@@ -348,17 +418,36 @@ export function LettersDemo() {
       <span className="lx-reader">{shown}</span>
       <div className="lx-panel">
         <div className="lx-bar">
-          <Segmented label="Field" value={field} onChange={setField} options={["Push", "Magnify", "Melt"] as const} />
-          <input className="lx-input" value={text} maxLength={12} onChange={(e) => setText(e.target.value)} aria-label="Text to bend" />
+          <Segmented
+            label="Field"
+            value={field}
+            onChange={setField}
+            options={["Push", "Magnify", "Melt"] as const}
+          />
+          <input
+            className="lx-input"
+            value={text}
+            maxLength={12}
+            onChange={(e) => setText(e.target.value)}
+            aria-label="Text to bend"
+          />
         </div>
         <div className="lx-stage">
           <BendPanel text={shown} field={field} />
         </div>
-        <p className="lx-caption">Move the pointer (or drag a finger) over the letters. The outlines bend; the font file never changes.</p>
+        <p className="lx-caption">
+          Move the pointer (or drag a finger) over the letters. The outlines
+          bend; the font file never changes.
+        </p>
       </div>
       <div className="lx-panel">
         <div className="lx-bar">
-          <Segmented label="Pairing" value={pairing} onChange={setPairing} options={["Matched pairing", "Drawing order"] as const} />
+          <Segmented
+            label="Pairing"
+            value={pairing}
+            onChange={setPairing}
+            options={["Matched pairing", "Drawing order"] as const}
+          />
         </div>
         <div className="lx-stage">
           <MorphPanel text={shown} pairing={pairing} />

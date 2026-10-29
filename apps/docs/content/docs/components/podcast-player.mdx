@@ -1,22 +1,22 @@
 ---
 title: "Podcast"
-description: "A grid of episode cards that open into the episode's details, with an inline player: tap a card and the artwork grows from the tile into the hero while the title lifts off it into place — two different layouts matched with no ids."
+description: "A mini now-playing bar that opens into the full player: the artwork grows from a thumbnail into the cover, and the title, show and play button settle into place, matched with no ids."
 status: "new"
-tags: ["Layout", "Icon", "Real audio"]
+tags: ["Motion", "Icon", "Real audio"]
 ---
 
-<Stage name="podcast-player" code={<Source demo="podcast-player" />} wide>
-  <PodcastPlayerDemo source="/api/podcasts" credit="Episodes from Apple Podcasts." />
+<Stage name="podcast-player" code={<Source demo="podcast-player" />}>
+  <PodcastPlayerDemo source="/api/podcasts" credit="Episode from Apple Podcasts." />
 </Stage>
 
-Tap any episode to open its details; the back arrow returns to the grid.
+Press play, or tap the bar, to open the player; the chevron folds it back.
 
 ## Things to try
 
-- **Open an episode.** The small tile's artwork grows into the big hero, and the title — which sat on top of the artwork in the grid — lifts off and settles next to it. The two views share no ids; the engine matches the episode and its title by what they show.
-- **Press play.** The details view has an inline player — scrubber, skip back 15, forward 30, speed — and on this page it plays the real episode.
-- **Go back.** The hero shrinks back into exactly the tile it came from, in reverse.
-- **Open another halfway through.** Every change starts from where things are on screen, so switching mid-flight just turns toward the new episode.
+- **Open the player.** The thumbnail grows into the cover, the title and show lift into place under it, and the play button settles into the middle of the controls.
+- **Press play.** The player has a scrubber, skip back 15 and forward 30, and on this page it plays the real episode.
+- **Fold it back** with the chevron. The cover shrinks back into exactly the thumbnail it came from.
+- **Open it halfway through closing.** Every change starts from where things are on screen, so it just turns around.
 
 ## Install
 
@@ -28,11 +28,11 @@ Tap any episode to open its details; the back arrow returns to the grid.
 
 ## How it works
 
-- The grid and the details page are two different pieces of markup. One [Layout](/docs/primitives/layout) wraps them with `trigger={[view, currentId]}` and matches what they share — the artwork and the title — by content, then springs each from its old box to its new one. No `layoutId`s to wire up.
-- The artwork is the same image in both places, so it flies from the tile to the hero and resizes as it goes; the title moves from its overlay on the artwork to its spot beside it, changing colour on the way. The play/pause button is one [Icon](/docs/primitives/icon) that morphs between the two symbols.
-- `episodes` takes `{ id, show, title, artwork, colors, audio, seconds, date, summary }`. With `audio` the player plays the file; without it, play just runs the clock.
+- The mini bar and full player are different markup. A Motion `LayoutGroup` gives the artwork, title, show and play control matching `layoutId`s, so the compact player genuinely expands rather than being swapped.
+- The play button is the same dark disc in both shapes, only bigger, so it reads as one control. Play and pause are one [Icon](/docs/primitives/icon) that morphs between the two symbols.
+- `episodes` takes `{ id, show, title, artwork, colors, audio, seconds }`, and the first one plays. With `audio` the player plays the file; without it, play just runs the clock.
 
 <Callout>
-  On this page the episodes are the newest design podcasts from Apple Podcasts, through a small cached server route; the shows and artwork
-  belong to their creators. Installed, the component shows made-up shows with drawn artwork.
+  On this page the episode is the newest design podcast from Apple Podcasts, through a small cached server route; the show and artwork
+  belong to their creators. Installed, the component shows a made-up show with drawn artwork.
 </Callout>
