@@ -226,7 +226,7 @@ function PartCard({
   dark?: boolean;
   /** The part runs itself (its own autoplay and controls): no card play button or stepping. */
   selfPlaying?: boolean;
-  /** A fixed minimum height for a feature that needs a larger canvas. */
+  /** A fixed minimum height for a spanning feature card that needs a larger canvas. */
   minHeight?: number;
   children: (step: number, playing: boolean) => ReactNode;
 }) {
@@ -244,7 +244,9 @@ function PartCard({
       ref={autoplay.ref}
       id={slugOf(title)}
       className={cls}
-      style={minHeight ? { minHeight } : undefined}
+      style={
+        minHeight && (wide || full || tall) ? { minHeight } : undefined
+      }
       aria-label={selfPlaying ? title : `${title}: ${states[autoplay.step]}`}
     >
       {!selfPlaying && (
@@ -625,9 +627,7 @@ function allCards() {
         bare
         docs="/docs/components/particles-story"
         states={["Journey"]}
-        wide
         bleed
-        minHeight={720}
       >
         {(_, playing) => <ParticlesStory playing={playing} />}
       </PartCard>

@@ -124,7 +124,10 @@ export function painter<V extends PainterValues = PainterValues>(canvas: HTMLCan
   };
 
   const tick = (dt: number): boolean => {
-    if (destroyed || !visible) return (stop = null), false;
+    if (destroyed || !visible) {
+      stop = null;
+      return false;
+    }
     let moving = false;
     for (const spring of springs.values()) if (spring.step(dt)) moving = true;
     time += dt;

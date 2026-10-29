@@ -851,9 +851,6 @@ html > body[data-scroll-locked] {
   .rm-browser-grid { grid-template-columns: 1fr; }
 }
 
-@container (min-width: 621px) and (max-width: 860px) {
-  .rm-browser-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 
 .rm-grid-text {
   display: grid;

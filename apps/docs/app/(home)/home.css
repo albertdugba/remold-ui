@@ -1,8 +1,8 @@
 /* The home page. Quiet and light: hairlines, one ink colour, no gradients. The work is the decoration. */
 
 .hm {
-  /* The same edges as the navbar: a 1520 px box with 16 px inside it. */
-  --hm-max: 1488px;
+  /* A generous desktop frame leaves the three-column demo gallery room to breathe. */
+  --hm-max: 1760px;
   --hm-pad: 16px;
   --hm-ink: var(--color-fd-foreground);
   --hm-muted: var(--color-fd-muted-foreground);
@@ -1523,7 +1523,7 @@
 /* ───────────── Every part, live: plain cards, the part on a stage, chips for its states ───────────── */
 .hp {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-top: 28px;
 }
@@ -1611,6 +1611,11 @@
   border: 1px solid var(--hm-line);
   border-radius: 24px;
   background: color-mix(in oklab, var(--hm-ink) 3%, var(--color-fd-background));
+}
+
+/* The regular gallery pieces read as deliberate tiles; feature cards retain their authored spans. */
+.hp-card:not(.wide, .full, .tall) {
+  aspect-ratio: 1;
 }
 
 .hp-card.wide {
@@ -1789,6 +1794,9 @@
 @media (max-width: 640px) {
   .hp {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .hp-card:not(.wide, .full, .tall) {
+    aspect-ratio: auto;
   }
   .hp-card.wide {
     grid-column: auto;
