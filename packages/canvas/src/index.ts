@@ -66,6 +66,7 @@ export {
   sampleTextPoints,
   type ImageSampleOptions,
   type ParticleFill,
+  type ParticleTransition,
   type Particles,
   type ParticlesOptions,
   type ParticlesToOptions,
@@ -85,3 +86,4 @@ export {
   type SceneOptions,
 } from "./scene";
 export { layout } from "./layout";
+export { painter, type Painter, type PainterFrame, type PainterOptions, type PainterSpring, type PainterToOptions, type PainterValues } from "./painter";

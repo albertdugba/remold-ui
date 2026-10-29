@@ -12,7 +12,13 @@ const CHAPTERS: Remold.Story.Chapter[] = [
     title: "Requests start in the clients",
     description: "Web and mobile both talk to the same API.",
   },
-  { id: "api", layout: "Simple", focused: "api", title: "One API owns the data", description: "Nothing else reads the database directly." },
+  {
+    id: "api",
+    layout: "Simple",
+    focused: "api",
+    title: "One API owns the data",
+    description: "Nothing else reads the database directly.",
+  },
   {
     id: "scale",
     layout: "Scaled",
@@ -22,7 +28,6 @@ const CHAPTERS: Remold.Story.Chapter[] = [
   },
 ];
 
-/** A scene told as chapters, with Back and Next. */
 export function StoryDemo() {
   const [chapter, setChapter] = useState(CHAPTERS[0]!.id);
   const index = CHAPTERS.findIndex((c) => c.id === chapter);
@@ -38,7 +43,12 @@ export function StoryDemo() {
           canvasClassName="rm-scene-canvas"
         />
         <div className="rm-scene-foot">
-          <button type="button" className="rm-button" disabled={index === 0} onClick={() => setChapter(CHAPTERS[index - 1]!.id)}>
+          <button
+            type="button"
+            className="rm-button"
+            disabled={index === 0}
+            onClick={() => setChapter(CHAPTERS[index - 1]!.id)}
+          >
             Back
           </button>
           <p>

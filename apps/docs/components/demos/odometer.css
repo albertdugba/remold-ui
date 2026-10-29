@@ -1,0 +1,38 @@
+/* A rolling counter. Each digit is a one-character window onto a strip of 0–9. */
+.odo {
+  display: inline-flex;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.odo-col {
+  display: inline-block;
+}
+
+.odo-window {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.odo-sizer {
+  visibility: hidden;
+}
+
+.odo-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.odo-strip span {
+  display: block;
+  height: 1em;
+  line-height: 1;
+  text-align: center;
+}

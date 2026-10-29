@@ -37,6 +37,41 @@ Each dot pairs with a nearby spot in the next shape and springs there; spare dot
   }}
 />
 
+## Changing shape
+
+`to(points, options)` flows the dots into the next shape.
+
+<TypeTable
+  type={{
+    label: { type: "string", description: "The canvas’s new accessible name." },
+    radius: { type: "number", description: "Spring every dot to this radius." },
+    pairing: { type: '"match" | "index"', default: '"match"', description: "Pair each dot with its nearest spot, or by position in the list." },
+    transition: {
+      type: '"direct" | "scatter" | { type: "scatter", spread, hold, stagger, seed }',
+      default: '"direct"',
+      description: "Spring straight to the new shape, or dissolve into a glittering cloud first and gather from it.",
+    },
+  }}
+/>
+
+### Scatter
+
+```ts
+dots.to(nextShape, { transition: "scatter" });
+dots.to(nextShape, { transition: { type: "scatter", spread: 1.6, hold: 0.5 } });
+```
+
+<TypeTable
+  type={{
+    spread: { type: "number", default: "1.35", description: "How wide the cloud gets, as a multiple of the area both shapes cover." },
+    hold: { type: "number", default: "0.35", description: "Seconds the dots stay spread before they start to gather." },
+    stagger: { type: "number", default: "0.35", description: "Up to how many seconds later some dots set off than others, so the shape closes in like a breath." },
+    seed: { type: "number", description: "Spread the same way every time. By default each change spreads differently." },
+  }}
+/>
+
+With reduced motion the dots go straight to the new shape, scatter or not. In core, `pointCloud().to(points, { scatter })` takes the same settings.
+
 ## Sampling shapes
 
 | Function                            | Gives points for                                                                                                                                                                |

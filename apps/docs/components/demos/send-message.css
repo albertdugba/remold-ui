@@ -1,0 +1,181 @@
+/* Sending a message. Styling only: the rise, the read receipt and the icon move with Motion. */
+.ch {
+  --ch-surface: #ffffff;
+  --ch-them: #f1f1f3;
+  --ch-me: #18181b;
+  --ch-on-me: #fafafa;
+  --ch-line: rgb(24 24 27 / 0.08);
+  --ch-ink: #18181b;
+  --ch-muted: #71717a;
+  --ch-field: #f4f4f5;
+  --ch-accent: #2563eb;
+  display: grid;
+  width: min(100%, 360px);
+  padding: 14px 14px 14px;
+  border-radius: 26px;
+  background: var(--ch-surface);
+  color: var(--ch-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .ch {
+  --ch-surface: #232327;
+  --ch-them: #34343a;
+  --ch-me: #fafafa;
+  --ch-on-me: #18181b;
+  --ch-line: rgb(255 255 255 / 0.08);
+  --ch-ink: #fafafa;
+  --ch-muted: #a1a1aa;
+  --ch-field: #2e2e33;
+  --ch-accent: #60a5fa;
+}
+
+.ch-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 2px 12px;
+  border-bottom: 1px solid var(--ch-line);
+}
+
+.ch-head img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fef3c7;
+}
+
+.ch-head span {
+  display: grid;
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+
+.ch-head small {
+  color: var(--ch-muted);
+  font-size: 11.5px;
+}
+
+/* The thread is anchored to the bottom: new messages push the old ones up and out of view */
+.ch-thread {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  height: 268px;
+  margin: 0;
+  padding: 12px 2px 10px;
+  overflow: hidden;
+  list-style: none;
+  mask-image: linear-gradient(to bottom, transparent, #000 40px);
+}
+
+.ch-row {
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+  transform-origin: 0% 100%;
+}
+
+.ch-row[data-from="me"] {
+  justify-items: end;
+  transform-origin: 100% 100%;
+}
+
+.ch-bubble {
+  max-width: 78%;
+  padding: 8px 13px;
+  border-radius: 19px 19px 19px 6px;
+  background: var(--ch-them);
+  font-size: 14px;
+  line-height: 1.38;
+}
+
+.ch-row[data-from="me"] .ch-bubble {
+  border-radius: 19px 19px 6px 19px;
+  background: var(--ch-me);
+  color: var(--ch-on-me);
+}
+
+.ch-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 14px;
+}
+
+.ch-typing i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ch-muted);
+}
+
+.ch-seen {
+  width: 16px;
+  height: 16px;
+  margin-right: 2px;
+  border-radius: 50%;
+  background: #fef3c7;
+}
+
+.ch-status {
+  margin-right: 4px;
+  color: var(--ch-muted);
+  font-size: 11px;
+}
+
+.ch-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 5px 5px 14px;
+  border-radius: 999px;
+  background: var(--ch-field);
+}
+
+.ch-composer input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: var(--ch-ink);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.ch-composer input::placeholder {
+  color: var(--ch-muted);
+}
+
+.ch-send {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ch-muted);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.ch-send[data-ready] {
+  background: var(--ch-accent);
+  color: #ffffff;
+}
+
+.ch-send svg {
+  width: 19px;
+  height: 19px;
+}
+
+.ch-send:focus-visible {
+  outline: 2px solid var(--ch-accent);
+  outline-offset: 2px;
+}

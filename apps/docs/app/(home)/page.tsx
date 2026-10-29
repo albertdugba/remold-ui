@@ -46,8 +46,8 @@ export default async function HomePage() {
       <div className="hm-frame">
         <section className="hm-hero top">
           <div className="hm-hero-main">
-            <Link href="/docs/components/logo-morph" className="hm-new">
-              <span>New</span> See a word become a mark <span aria-hidden="true">→</span>
+            <Link href="/docs/components/otp-input" className="hm-new">
+              <span>New</span> Watch a code verify itself <span aria-hidden="true">→</span>
             </Link>
             <h1 aria-label="Interfaces that remold themselves.">
               <span aria-hidden="true">Interfaces that</span>

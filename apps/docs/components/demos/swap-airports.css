@@ -1,0 +1,98 @@
+.sw {
+  --sw-surface: #ffffff;
+  --sw-line: rgb(24 24 27 / 0.08);
+  --sw-ink: #18181b;
+  --sw-muted: #71717a;
+  --sw-faint: #a1a1aa;
+  --sw-fill: #f1f1f3;
+  position: relative;
+  display: grid;
+  border-radius: 18px;
+  background: var(--sw-surface);
+  color: var(--sw-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    system-ui, sans-serif;
+}
+
+.dark .sw {
+  --sw-surface: #232327;
+  --sw-line: rgb(255 255 255 / 0.08);
+  --sw-ink: #fafafa;
+  --sw-muted: #a1a1aa;
+  --sw-faint: #71717a;
+  --sw-fill: #2e2e33;
+}
+
+.sw-field {
+  display: grid;
+  grid-template-columns: 40px auto 1fr;
+  align-items: baseline;
+  gap: 10px;
+  padding: 13px 60px 13px 16px;
+}
+
+.sw-field + .sw-field {
+  box-shadow: 0 -1px 0 var(--sw-line);
+}
+
+.sw-label {
+  color: var(--sw-faint);
+  font-size: 12.5px;
+}
+
+.sw-code {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sw-city {
+  overflow: hidden;
+  color: var(--sw-muted);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sw-swap {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--sw-fill);
+  color: var(--sw-ink);
+  cursor: pointer;
+  transition: rotate 0.45s cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.sw-swap[data-flipped] {
+  rotate: 180deg;
+}
+
+.sw-swap svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sw-swap:focus-visible {
+  outline: 2px solid var(--sw-ink);
+  outline-offset: 2px;
+}
+
+.sw-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 340px);
+}
+
+.sw-demo > div {
+  width: 100%;
+}

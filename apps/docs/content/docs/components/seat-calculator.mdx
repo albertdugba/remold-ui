@@ -1,0 +1,36 @@
+---
+title: "Seat calculator"
+description: "Pricing by team size, the calculator on a SaaS pricing page: drag the slider and faces join your team, the price rolls, the plan steps up at each tier, and yearly billing shows what you save."
+status: "new"
+tags: ["Motion", "Base UI"]
+---
+
+<Stage name="seat-calculator" code={<Source demo="seat-calculator" />} minHeight={720}>
+  <SeatCalculatorDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Drag the slider, or type a number.** Faces join and leave your team and the price rolls like a counter.
+- **Cross a tier.** The plan steps up and brings its extra features with it.
+- **Switch to yearly.** The monthly price is struck through and the saving is shown.
+- **Go past the last tier.** The price gives way to a conversation.
+
+## Install
+
+<AddCommand name="seat-calculator" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="seat-calculator" />
+
+## How it works
+
+- **One number drives everything.** The slider and the number field are Base UI's Slider and Number Field bound to the same seat count, and every other part is derived from it.
+- The faces, features and plan changes are Motion; the price rolls with a small odometer. Billing period is Base UI's Toggle Group.
+
+<Callout>The prices are made up.</Callout>

@@ -1,0 +1,35 @@
+---
+title: "Adopt your signature"
+description: "Draw your signature or type your name: switching between them flows the ink you drew into a script and back, stroke by stroke."
+status: "new"
+tags: ["Icon"]
+---
+
+<Stage name="signature" code={<Source demo="signature" />}>
+  <SignatureDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Draw your signature** with a mouse, pen or finger. The ink is thicker where you slow down and thinner where you speed up, and it tapers where the pen lifts.
+- **Switch to Type.** The ink you drew flows into your name, set in a script.
+- **Change your name.** The typed signature follows each letter.
+- **Switch back to Draw.** The script flows back into your own handwriting.
+
+## Install
+
+<AddCommand name="signature" />
+
+## Dependencies
+
+<Dependencies demo="signature" />
+
+## How it works
+
+- Both styles are filled outlines. A drawn stroke is turned into ink: both edges of the line, its width following the pen's speed. The typed name is the real outline of each letter, read from the font ahead of time, so no font loads in the browser.
+- One [Icon](/docs/primitives/icon) shows the ink as path data. When the style changes, it pairs the strokes of one with the letters of the other and morphs between them. Strokes with no partner grow out of the nearest ink.
+- While you draw, the stroke under the pen is drawn plainly and joins the ink when the pen lifts, so drawing never animates.
+- The script is Great Vibes, under the SIL Open Font License. Set your own with `scripts/extract-signature-glyphs.mjs`.
+- Adopting is pretend. Save the path data in the Adopt button's handler: it's the signature, ready to place on a document.

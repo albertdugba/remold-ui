@@ -1,7 +1,8 @@
 "use client";
 
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowUpRight01Icon, HelpCircleIcon, PackageIcon, PauseIcon, PlayIcon, RotateLeft01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { Remold, useAutoplay } from "@remold-ui/react";
-import { ArrowUpRight, Check, CircleHelp, PackageCheck, Pause, Play, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { AUTO_RETURN_STATES, INITIAL_RETURN, type RefundMethod, type ReturnReason, type ReturnState } from "./return-data";
 import { OrderView, ReturnForm, SubmittedView } from "./return-views";
@@ -21,7 +22,7 @@ function ReturnHeader({ playing, onReset, onPlayback }: { playing: boolean; onRe
       <div className="hret-header-right">
         <span className="hret-demo-label">INTERACTIVE DEMO</span>
         <button type="button" className="hret-icon-button" onClick={onReset} aria-label="Reset return demo" title="Reset demo">
-          <RotateCcw size={16} />
+          <HugeiconsIcon icon={RotateLeft01Icon} size={16} />
         </button>
         <button
           type="button"
@@ -31,7 +32,7 @@ function ReturnHeader({ playing, onReset, onPlayback }: { playing: boolean; onRe
           aria-label={playing ? "Pause return demo" : "Play return demo"}
           title={playing ? "Pause demo" : "Play demo"}
         >
-          {playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+          {playing ? <HugeiconsIcon icon={PauseIcon} size={16} fill="currentColor" /> : <HugeiconsIcon icon={PlayIcon} size={16} fill="currentColor" />}
         </button>
         <span className="hret-header-avatar" aria-hidden="true">
           M
@@ -70,7 +71,7 @@ function ReturnAside({ phase }: { phase: ReturnState["phase"] }) {
       </div>
 
       <div className="hret-aside-help">
-        <div className="hret-aside-help-icon">{phase === "submitted" ? <PackageCheck size={20} /> : <CircleHelp size={20} />}</div>
+        <div className="hret-aside-help-icon">{phase === "submitted" ? <HugeiconsIcon icon={PackageIcon} size={20} /> : <HugeiconsIcon icon={HelpCircleIcon} size={20} />}</div>
         <strong>{phase === "submitted" ? "What happens next?" : "Returns, made simple."}</strong>
         <p>
           {phase === "submitted"
@@ -78,12 +79,12 @@ function ReturnAside({ phase }: { phase: ReturnState["phase"] }) {
             : "Start your return by 14 November. We'll provide a prepaid label and keep you updated along the way."}
         </p>
         <span className="hret-help-link">
-          {phase === "submitted" ? "Prepaid label on its way" : "30-day returns"} <ArrowUpRight size={14} />
+          {phase === "submitted" ? "Prepaid label on its way" : "30-day returns"} <HugeiconsIcon icon={ArrowUpRight01Icon} size={14} />
         </span>
       </div>
 
       <div className="hret-aside-foot">
-        <Check size={15} /> Secure, local demo · no real return is created
+        <HugeiconsIcon icon={Tick01Icon} size={15} /> Secure, local demo · no real return is created
       </div>
     </aside>
   );

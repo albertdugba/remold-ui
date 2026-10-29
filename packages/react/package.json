@@ -3,8 +3,13 @@
   "version": "0.0.0",
   "description": "React bindings for Remold: keyless transitions, text morph and canvas scenes.",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/albertdugba/remold-ui.git" },
-  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/albertdugba/remold-ui.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [
@@ -35,7 +40,9 @@
   "dependencies": {
     "@remold-ui/canvas": "workspace:*",
     "@remold-ui/core": "workspace:*",
-    "@remold-ui/dom": "workspace:*"
+    "@remold-ui/dom": "workspace:*",
+    "@remold-ui/morph": "workspace:*",
+    "motion": "^14.7.1"
   },
   "peerDependencies": {
     "react": ">=18",

@@ -8,7 +8,7 @@
 import type { Matrix, Projector } from "../camera";
 import { caption } from "../extrude";
 import { halo } from "../glow";
-import { ellipse, projectOutline, roundedRect, silhouette, type Box3, type Outline, type ScreenPoint } from "../geometry";
+import { ellipse, extent, projectOutline, roundedRect, silhouette, type Box3, type Outline, type ScreenPoint } from "../geometry";
 
 export interface Palette {
   /** The top face. */
@@ -122,8 +122,8 @@ function prism(context: DrawContext, state: DrawState, outline: Outline, labelSi
 
   if (box.height > 0.5 && view.sinPitch > 0.02) {
     const sides = silhouette({ outline, z0: box.z, z1: box.z + box.height, view });
-    const xs = sides.map((p) => p.x);
-    const gradient = ctx.createLinearGradient(Math.min(...xs), 0, Math.max(...xs), 0);
+    const { minX, maxX } = extent(sides);
+    const gradient = ctx.createLinearGradient(minX, 0, maxX, 0);
     gradient.addColorStop(0, palette.sides[0]);
     gradient.addColorStop(0.55, palette.sides[1]);
     gradient.addColorStop(1, palette.sides[2]);

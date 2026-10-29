@@ -1,4 +1,3 @@
-/* Match lines: drawn over a demo, then faded, every time Remold pairs elements. */
 .ml-overlay {
   position: absolute;
   inset: 0;
@@ -55,7 +54,6 @@
   }
 }
 
-/* Reduced motion: the lines still show what went where, without drawing themselves. */
 @media (prefers-reduced-motion: reduce) {
   .ml-drawing line {
     animation: none;

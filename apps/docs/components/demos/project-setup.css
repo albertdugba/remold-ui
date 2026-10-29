@@ -1,0 +1,170 @@
+.ps {
+  --ps-surface: #ffffff;
+  --ps-fill: #f4f4f4;
+  --ps-line: rgb(0 0 0 / 0.08);
+  --ps-ink: #111111;
+  --ps-muted: #737373;
+  --ps-faint: #a3a3a3;
+  display: grid;
+  width: min(100%, 680px);
+  color: var(--ps-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.dark .ps {
+  --ps-surface: #171717;
+  --ps-fill: #222222;
+  --ps-line: rgb(255 255 255 / 0.1);
+  --ps-ink: #f5f5f5;
+  --ps-muted: #a3a3a3;
+  --ps-faint: #6b6b6b;
+}
+
+.ps-card {
+  display: grid;
+  grid-template-columns: minmax(0, 250px) minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--ps-surface);
+}
+
+.ps-steps {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 22px 20px;
+  box-shadow: 1px 0 0 var(--ps-line);
+}
+
+.ps-head {
+  display: grid;
+  gap: 2px;
+}
+
+.ps-head strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ps-head span {
+  color: var(--ps-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ps-meter {
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ps-fill);
+}
+
+.ps-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ps-ink);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ps-list {
+  display: grid;
+  gap: 2px;
+  margin: 4px -8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ps-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ps-step:hover {
+  background: var(--ps-fill);
+}
+
+.ps-check {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--ps-faint);
+  color: var(--ps-surface);
+  transition:
+    background-color 0.25s,
+    box-shadow 0.25s;
+}
+
+.ps-step[data-checked] .ps-check {
+  background: var(--ps-ink);
+  box-shadow: none;
+}
+
+.ps-check svg {
+  width: 11px;
+  height: 11px;
+}
+
+.ps-copy {
+  display: grid;
+  gap: 1px;
+}
+
+.ps-copy strong {
+  font-weight: 500;
+  transition: color 0.25s;
+}
+
+.ps-copy span {
+  color: var(--ps-muted);
+  font-size: 12px;
+}
+
+.ps-step[data-checked] .ps-copy strong {
+  color: var(--ps-muted);
+}
+
+.ps-scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+}
+
+.ps-step:focus-visible {
+  outline: 2px solid var(--ps-ink);
+  outline-offset: -2px;
+}
+
+.rm-stage .ps-card {
+  box-shadow: inset 0 0 0 1px var(--ps-line);
+}
+
+@media (max-width: 560px) {
+  .ps-card {
+    grid-template-columns: 1fr;
+  }
+
+  .ps-steps {
+    box-shadow: 0 1px 0 var(--ps-line);
+  }
+
+  .ps-scene {
+    min-height: 260px;
+  }
+}

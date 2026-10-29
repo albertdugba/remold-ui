@@ -13,14 +13,14 @@ const TARGET = "components/remold";
 const EXTENSIONS = [".tsx", ".ts", ".js", ".css"];
 const LARGEST_SOURCE_FILE = 40_000;
 
-/** The items people can install: the demo file each one starts from, and how it's described. */
+/** The items people can install: the demo file each one starts from, how it's described and, if it
+ * doesn't live in components/demos, the folder under components it does live in. */
 const ITEMS = [
   [
     "course-outline",
     "Course outline",
     "Modules and lessons joined by lines that stay attached as modules open and lessons are ticked off.",
   ],
-  ["onboarding-checklist", "Onboarding checklist", "A setup checklist that ticks off, skips, docks into a pill and collapses when done."],
   [
     "integrations-hub",
     "Integrations hub",
@@ -32,53 +32,204 @@ const ITEMS = [
     "Your product drawn as its layers: assembled, exploded with notes, or laid out in the order a request travels.",
   ],
   [
-    "layer-stack",
-    "Layer stack",
-    "A toolchain or product as stacked line-art layers; one at a time takes the focus while the layers above turn to ghosts, with HTML labels that follow the scene.",
-  ],
-  [
-    "edge-delivery",
-    "Edge delivery",
-    "A file’s trip from your app to a cloud bucket, through a resize function, out to edge servers and on to people nearby, as a line-art scene in five steps. Named for AWS, Google Cloud, Cloudflare or your own stack.",
-  ],
-  [
     "comment-thread",
     "Comment thread",
-    "Product Q&A or article comments, with live typing, lit reply paths and a summary the discussion condenses into.",
+    "A post and the conversation under it, with live typing, lit reply paths and replies that fold away.",
   ],
-  ["morph-icons", "Morph icons", "44 outline icons that morph into each other, any to any."],
+  [
+    "hold-to-record",
+    "Hold to record",
+    "One pill you hold to record: the mic morphs into the record dot, the words into the time, and the waveform grows out of the pill, then it all folds back.",
+  ],
+  [
+    "flight-booking",
+    "Flight booking",
+    "A delayed flight becomes two alternatives, an updated boarding pass and an optional compact seat picker.",
+  ],
+  [
+    "swap-airports",
+    "Swap airports",
+    "A From and To where ⇄ sends each airport, code and city, into the other's place.",
+  ],
+  [
+    "otp-input",
+    "One-time code",
+    "A sign-in card asking for an emailed code: the six cells fold into a Verifying pill, which turns green as its spinner becomes a check and the word becomes Verified.",
+  ],
+  [
+    "live-room",
+    "Live room",
+    "A live audio room: the speakers' stacked faces fan out onto the stage when it opens, and a listener who raises their hand moves up to speak.",
+  ],
+  [
+    "morph-icons",
+    "Morph icons",
+    "44 outline icons that morph into each other, any to any.",
+  ],
   [
     "podcast-player",
     "Podcast",
-    "A grid of episode cards that open into the episode's details: the artwork grows from the tile into the hero and the title lifts off it, matched with no ids.",
+    "A mini now-playing bar that opens into the full player: the artwork grows from a thumbnail into the cover and the title, show and play button settle into place, matched with no ids.",
   ],
-  ["search-results", "Search with recents", "A search field that rises as recent searches open under it, and a word that becomes the one you choose, letter by letter."],
-  ["two-factor", "Two-factor setup", "A setting that opens a QR code and code field in place, moving the rows below, and folds to one line once on."],
-  ["invite-team", "Invite teammates", "An email becomes a chip, then the person's avatar travels from the invite field into the team's stack."],
-  ["accounts", "Accounts", "A bank's accounts page: an account card grows into its page, and money moved between accounts flies from one card to the other."],
+  [
+    "two-factor",
+    "Two-factor setup",
+    "A setting that opens a QR code and code field in place, moving the rows below, and folds to one line once on.",
+  ],
+  [
+    "invite-team",
+    "Invite teammates",
+    "A team's members panel: an email becomes a chip, a pending invite, then a member in their place by name.",
+  ],
+  [
+    "signature",
+    "Adopt your signature",
+    "A signature pad where drawn ink flows into your name set in a script and back: strokes become ink outlines and morph into real glyph outlines.",
+  ],
+  [
+    "project-setup",
+    "Project setup",
+    "A setup checklist beside an isometric picture of the project: each finished step lowers its piece into place, and the lines between pieces appear once both ends exist.",
+  ],
+  [
+    "task-list",
+    "Task list",
+    "Issues grouped by status, with Done folded: a completed issue's ID travels into the folded row, and opening Done spreads them back out into rows.",
+  ],
   [
     "logo-morph",
     "Logo morph",
     "Text whose glyph outlines flow into the next word or mark: product names by default, or any SVG path data you pass in.",
   ],
-  ["letters", "Letters as geometry", "Bend a word around the pointer and morph it into a logo."],
+  [
+    "letters",
+    "Letters as geometry",
+    "Bend a word around the pointer and morph it into a logo.",
+  ],
   [
     "voice-orb",
     "Voice orb",
-    "A living voice/agent orb whose silhouette undulates with the voice, with swirling inner light and a soft glow. Driven by a level prop or the real microphone; idle, listening, thinking, speaking.",
+    "A soft cloud-filled voice orb that breathes, listens, thinks and speaks, with a live translation demo whose translated line morphs as it revises itself.",
   ],
-  ["build-anything", "Build anything", "Any SVG shape as a solid: sheen, glowing rims, trays, decals and callouts."],
-  ["scenes-gallery", "Living diagrams", "Isometric architecture, integration, database and edge diagrams that rearrange."],
-  ["gallery", "Canvas gallery", "A globe with routes, voxels and layers on one canvas."],
-  ["files", "Sortable list", "A file list that sorts and filters with every row moving to its place."],
-  ["layout", "Grid and list", "People as cards or rows: different markup, matched without keys."],
-  ["text", "Text morph", "A status label and a price that change only the letters that differ."],
+  [
+    "editor-mentions",
+    "Mentions",
+    "Mentioning people in a comment: type @ and a picker opens at the caret, and the person you pick flies out of the list into the sentence as a chip.",
+  ],
+  [
+    "wallet-stack",
+    "Wallet",
+    "A leather card holder whose cards slide up and fan out; choose one and it rises to the top while its latest transactions fill in.",
+  ],
+  [
+    "revenue-card",
+    "Revenue",
+    "A dashboard revenue card whose chart line reshapes between ranges while the MRR and change badge roll.",
+  ],
+  [
+    "streak",
+    "Streak",
+    "A daily streak celebration: the ember grows into a flame, sparks burst, the count rolls up and today's dot fills in.",
+  ],
+  [
+    "send-message",
+    "Send a message",
+    "A chat composer whose mic becomes a send arrow; the message rises into the thread and the read receipt moves down to it.",
+  ],
+  [
+    "issue-status",
+    "Issue status",
+    "An issue status menu whose icon fills its ring as work moves along, with a check and cross that reshape into each other.",
+  ],
+  [
+    "send-money",
+    "Send money",
+    "A keypad for sending money: digits roll in, an amount over your balance is refused with a shake, and Send becomes a spinner then a check.",
+  ],
+  [
+    "api-keys",
+    "API keys",
+    "Creating an API key: the secret decodes once in a panel that folds into the newest row, scrambling into its masked form.",
+  ],
+  [
+    "seat-calculator",
+    "Seat calculator",
+    "Pricing by team size: faces join your team, the price rolls, and the plan steps up at each tier.",
+  ],
+  [
+    "usage-meter",
+    "Usage meter",
+    "A plan's usage bars that fill, warn and go over through the month, and spring back down on upgrade.",
+  ],
+  [
+    "waitlist",
+    "Waitlist",
+    "A waitlist form whose button slides across into the confirmation's check while the field reshapes into the panel around it.",
+  ],
+  [
+    "onboarding-checklist",
+    "Onboarding checklist",
+    "A getting-started checklist that opens each next step in place and folds into an \"All set\" pill when you're done.",
+  ],
+  [
+    "bulk-select",
+    "Bulk selection",
+    "Rows you select by range, joined into bands, with an action bar whose count rolls and rows that fold away on delete.",
+  ],
+  [
+    "connection-banner",
+    "Back online",
+    "An offline banner that keeps your changes on this device and folds into a \"Back online\" pill when the connection returns.",
+  ],
+  [
+    "filter-bar",
+    "Filter bar",
+    "Filtering transactions with segmented tokens, while the list, the count and the total spent move to match.",
+  ],
+  [
+    "label-picker",
+    "Label picker",
+    "A searchable label picker that drops chips onto an issue and offers to create labels that don't exist yet.",
+  ],
+  [
+    "particles-story",
+    "Particles story",
+    "A photo that breaks into dots and flows through a music note, a parcel and a delivered check.",
+    "home/particles-story",
+  ],
+  [
+    "files",
+    "Sortable list",
+    "A file list that sorts and filters with every row moving to its place.",
+  ],
+  [
+    "layout",
+    "Grid and list",
+    "People as cards or rows: different markup, matched without keys.",
+  ],
+  [
+    "text",
+    "Text morph",
+    "A status label and a price that change only the letters that differ.",
+  ],
   ["icons", "Icon toggles", "Toggle buttons whose icons morph between states."],
-  ["feedback-face", "Feedback face", "A rating whose face morphs part by part: brows, eyes, mouth and cheeks."],
+  [
+    "feedback-face",
+    "Feedback face",
+    "A rating whose face morphs part by part: brows, eyes, mouth and cheeks.",
+  ],
   ["scene", "Scene", "An isometric canvas scene with layouts and focus."],
   ["story", "Story", "A scene that steps through a story with Back and Next."],
-  ["particles", "Particles", "Text and shapes as dots that flow from one to the next."],
-  ["match-lines", "Match lines", "Draw what Remold paired: a line from each element to its partner."],
+  [
+    "particles",
+    "Particles",
+    "Text and shapes as dots that flow from one to the next.",
+  ],
+  [
+    "match-lines",
+    "Match lines",
+    "Draw what Remold paired: a line from each element to its partner.",
+  ],
 ];
 
 /** Theme colours the demos use, with fallbacks for projects that don't define them. */
@@ -97,10 +248,18 @@ const FALLBACKS = {
   ring: "#2563eb",
 };
 
-async function resolve(name) {
-  for (const candidate of path.extname(name) ? [name] : EXTENSIONS.map((ext) => name + ext)) {
+async function resolve(name, dir) {
+  const hasSupportedExtension = EXTENSIONS.some((extension) =>
+    name.endsWith(extension),
+  );
+  for (const candidate of hasSupportedExtension
+    ? [name]
+    : EXTENSIONS.map((extension) => name + extension)) {
     try {
-      return { name: candidate, code: await readFile(path.join(demos, candidate), "utf8") };
+      return {
+        name: candidate,
+        code: await readFile(path.join(dir, candidate), "utf8"),
+      };
     } catch {
       // Try the next extension.
     }
@@ -108,15 +267,19 @@ async function resolve(name) {
   return null;
 }
 
-const localImports = (code) => [...code.matchAll(/(?:from|import)\s+'\.\/([^']+)'/g)].map((m) => m[1]);
+// Either quote style: the demos use double quotes, generated files may not.
+const localImports = (code) =>
+  [...code.matchAll(/(?:from|import)\s+(["'])\.\/([^"']+)\1/g)].map(
+    (m) => m[2],
+  );
 /** Packages the project already has, so they aren't listed as dependencies. */
 const PROVIDED = new Set(["react", "react-dom", "next"]);
 /** Every bare import, as a package name (`@scope/name` or `name`): engine packages, icons and the rest. */
 const packageImports = (code) =>
-  [...code.matchAll(/(?:from|import)\s+'([^.'][^']*)'/g)]
+  [...code.matchAll(/(?:from|import)\s+(["'])([^."'][^"']*)\1/g)]
     .map((m) => {
-      const parts = m[1].split("/");
-      return m[1].startsWith("@") ? parts.slice(0, 2).join("/") : parts[0];
+      const parts = m[2].split("/");
+      return m[2].startsWith("@") ? parts.slice(0, 2).join("/") : parts[0];
     })
     .filter((name) => !PROVIDED.has(name));
 
@@ -130,7 +293,11 @@ function summariseSource(file) {
 function toJavaScript(file) {
   const extension = path.extname(file.name);
   if (extension !== ".ts" && extension !== ".tsx") {
-    return { javascript: file.code, javascriptName: file.name, javascriptLang: extension.slice(1) };
+    return {
+      javascript: file.code,
+      javascriptName: file.name,
+      javascriptLang: extension.slice(1),
+    };
   }
 
   return {
@@ -147,19 +314,43 @@ function toJavaScript(file) {
   };
 }
 
+/** A small first-use example for the docs. The full component source stays in its own tab below. */
+function usageExample(entry, file) {
+  const exported = [...file.code.matchAll(/export\s+(?:function|const|class)\s+([A-Z]\w*)/g)]
+    .map((match) => match[1])
+    .find(Boolean);
+  const hook = [...file.code.matchAll(/export\s+(?:function|const)\s+(use[A-Z]\w*)/g)]
+    .map((match) => match[1])
+    .find(Boolean);
+  const stem = path.basename(entry).replace(/\.[^.]+$/, "");
+  const props = /\bplaying\??:\s*boolean/.test(file.code) ? " playing={false}" : "";
+  const usage = {
+    name: "usage.tsx",
+    code: exported
+      ? `import { ${exported} } from "./${stem}";\n\nexport function Example() {\n  return <${exported}${props} />;\n}\n`
+      : `import { ${hook ?? "useComponent"} } from "./${stem}";\n\nexport function Example() {\n  const { overlay } = ${hook ?? "useComponent"}();\n\n  return <div>{overlay}</div>;\n}\n`,
+  };
+  return {
+    ...usage,
+    lang: "tsx",
+    packages: [],
+    ...toJavaScript(usage),
+  };
+}
+
 function withFallbacks(css) {
   return css.replace(/var\(--color-fd-([a-z-]+)\)/g, (whole, name) =>
     FALLBACKS[name] ? `var(--color-fd-${name}, ${FALLBACKS[name]})` : whole,
   );
 }
 
-async function collect(entry) {
+async function collect(entry, dir = demos) {
   const files = [];
   const sourceFiles = [];
   const dependencies = new Set();
   const seen = new Set();
   const visit = async (name) => {
-    const file = await resolve(name);
+    const file = await resolve(name, dir);
     if (!file || seen.has(file.name)) return;
     seen.add(file.name);
     for (const dep of packageImports(file.code)) dependencies.add(dep);
@@ -180,17 +371,26 @@ async function collect(entry) {
     for (const dep of localImports(file.code)) await visit(dep);
   };
   await visit(entry);
-  if (files.length === 0) throw new Error(`build-registry: no demo file for "${entry}"`);
-  return { files, dependencies: [...dependencies].sort(), sourceFiles };
+  if (files.length === 0)
+    throw new Error(`build-registry: no demo file for "${entry}"`);
+  return {
+    files,
+    dependencies: [...dependencies].sort(),
+    sourceFiles,
+    usage: usageExample(entry, sourceFiles[0]),
+  };
 }
 
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 const index = [];
 const demoSources = {};
-for (const [name, title, description] of ITEMS) {
-  const { files, dependencies, sourceFiles } = await collect(name);
-  demoSources[name] = sourceFiles;
+for (const [name, title, description, folder] of ITEMS) {
+  const { files, dependencies, sourceFiles, usage } = await collect(
+    name,
+    folder ? path.join(app, "components", folder) : demos,
+  );
+  demoSources[name] = { usage, files: sourceFiles };
   const item = {
     $schema: "https://ui.shadcn.com/schema/registry-item.json",
     name,
@@ -200,27 +400,41 @@ for (const [name, title, description] of ITEMS) {
     dependencies,
     files,
   };
-  await writeFile(path.join(out, `${name}.json`), `${JSON.stringify(item, null, 2)}\n`);
+  await writeFile(
+    path.join(out, `${name}.json`),
+    `${JSON.stringify(item, null, 2)}\n`,
+  );
   index.push({
     name,
     type: item.type,
     title,
     description,
     dependencies,
-    files: files.map(({ path: p, type, target }) => ({ path: p, type, target })),
+    files: files.map(({ path: p, type, target }) => ({
+      path: p,
+      type,
+      target,
+    })),
   });
 }
 
 await mkdir(path.dirname(sourceModule), { recursive: true });
 await writeFile(
   sourceModule,
-  `// Generated by scripts/build-registry.mjs. Do not edit.\nexport const demoSources = ${JSON.stringify(demoSources)} as const;\n`,
+  `// Generated by scripts/build-registry.mjs. Do not edit.\nexport const demoSources = ${JSON.stringify(
+    demoSources,
+  )} as const;\n`,
 );
 
 await writeFile(
   path.join(out, "registry.json"),
   `${JSON.stringify(
-    { $schema: "https://ui.shadcn.com/schema/registry.json", name: "remold", homepage: "/", items: index },
+    {
+      $schema: "https://ui.shadcn.com/schema/registry.json",
+      name: "remold",
+      homepage: "/",
+      items: index,
+    },
     null,
     2,
   )}\n`,

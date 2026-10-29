@@ -1,8 +1,8 @@
 ---
 title: "Invite teammates"
-description: "One person in four forms: an email, a chip, a pending invite and an avatar in the team's stack. Each travels into the next, matched with no ids."
+description: "A team's members panel, where one person takes four forms: an email, a chip, a pending invite and a member. Each travels into the next, matched with no ids."
 status: "new"
-tags: ["Layout"]
+tags: ["Motion"]
 ---
 
 <Stage name="invite-team" code={<Source demo="invite-team" />}>
@@ -13,11 +13,10 @@ It plays a short scene while it's on screen. Touch it and it's yours.
 
 ## Things to try
 
-- **Type an email and press Enter, Space or a comma.** It becomes a chip with the person's initials and their name, when the address has one in it (`maya.ortiz@…` reads as Maya Ortiz).
+- **Type an email and press Enter, Space or a comma.** It becomes a chip with the person's initials.
 - **Paste several at once.** A list separated by commas, spaces or new lines becomes a chip each. Backspace in an empty field takes the last one back.
-- **Press Invite.** Each chip moves down into the pending list, and they accept one at a time: each avatar travels from its row up into the stack, and the rows below close up.
-- **Cancel one while it's pending.** It leaves the list and never joins.
-- **Point at the stack.** It opens out so every face can be told apart. Past five people it counts the rest.
+- **Press Invite.** Each chip moves down into the list as an invite. They accept one at a time, and each invite travels on into its place among the team, by name.
+- **Revoke one while it's pending.** It leaves the list and never joins.
 - **Try a bad address, or someone already invited.** The status line says what's wrong.
 
 ## Install
@@ -30,7 +29,8 @@ It plays a short scene while it's on screen. Touch it and it's yours.
 
 ## How it works
 
-- The chip, the pending row and the stack's avatar are three different elements in three different parts of the card. One [Layout](/docs/primitives/layout) wraps the card, and it matches them by what they show: the name and the initials. So the person moves from one to the next instead of disappearing and reappearing.
-- Layout runs when the people change: a chip added, an invite sent, someone joining, the stack opening. Typing in the field doesn't animate anything.
-- The stack opening on hover is a layout change too: the avatars' overlap becomes a gap, and Layout moves them there.
+- The chip, pending row and member row use Motion layout and a shared identity, so a person stays legible while moving between each state.
+- The team is listed by name, so someone who joins moves to their place, and the rows around them make room.
+- **Invite lives inside the field**, at the end of its last line. However many lines the emails wrap onto, the button stays level with the typing instead of hanging off the first line.
+- Motion runs when people change: a chip added, an invite sent, someone joining or revoked. Typing in the field doesn't animate anything.
 - The invites are pretend. Send your real ones in `send` and call `join` when someone accepts.

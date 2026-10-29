@@ -1,8 +1,5 @@
-/**
- * The landing page's galleries: real components, live and usable, in cards of mixed sizes. Each
- * one is shown whole, scaled to fit its card, and its title links to its page.
- */
-import { ArrowUpRight } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { ComponentPreview } from "../component-preview";
 
@@ -26,7 +23,7 @@ export function Gallery({ items, small = false }: { items: GalleryItem[]; small?
               <strong>{item.title}</strong>
               <span>{item.body}</span>
             </span>
-            <ArrowUpRight className="hg-arrow" aria-hidden="true" />
+            <HugeiconsIcon icon={ArrowUpRight01Icon} className="hg-arrow" aria-hidden="true" />
           </Link>
         </article>
       ))}

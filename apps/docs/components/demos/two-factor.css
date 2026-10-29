@@ -1,5 +1,3 @@
-/* Two-factor settings. Styling only: every movement comes from Remold.Layout.
-   Fixed colours with a dark set, like the comment thread. */
 .tf {
   --tf-surface: #ffffff;
   --tf-fill: #f4f4f5;
@@ -11,9 +9,10 @@
   --tf-on: #18181b;
   --tf-good: #15803d;
   display: grid;
-  width: min(100%, 320px);
+  width: min(100%, 360px);
   color: var(--tf-ink);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    system-ui, sans-serif;
 }
 
 .dark .tf {
@@ -35,7 +34,6 @@
   background: var(--tf-surface);
 }
 
-/* Rows, split by a hairline rather than boxed */
 .tf-row {
   display: flex;
   align-items: center;
@@ -78,7 +76,6 @@
   height: 13px;
 }
 
-/* The switch: the knob sits at the start of the track, or the end when it's on */
 .tf-switch {
   display: flex;
   flex: none;
@@ -91,13 +88,12 @@
   background: var(--tf-track);
 }
 
-.tf-switch:focus-visible,
-.tf-code:focus-within {
+.tf-switch:focus-visible {
   outline: 2px solid var(--tf-ink);
   outline-offset: 2px;
 }
 
-.tf-switch[aria-checked="true"] {
+.tf-switch[data-checked] {
   justify-content: flex-end;
   background: var(--tf-on);
 }
@@ -109,24 +105,29 @@
   background: #fff;
 }
 
-.dark .tf-switch[aria-checked="true"] .tf-knob {
+.dark .tf-switch[data-checked] .tf-knob {
   background: #18181b;
 }
 
-/* The setup that opens between the rows */
+/* The setup: scan the code, then type what the app shows into the same field as the sign-in card */
 .tf-setup {
+  display: grid;
+  gap: 14px;
+  padding: 2px 0 18px;
+}
+
+.tf-scan {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 2px 0 16px;
 }
 
 .tf-qr-frame {
   display: grid;
   flex: none;
   place-items: center;
-  width: 84px;
-  height: 84px;
+  width: 76px;
+  height: 76px;
   border-radius: 12px;
   background: var(--tf-fill);
 }
@@ -136,67 +137,24 @@
 }
 
 .tf-qr {
-  width: 70px;
-  height: 70px;
+  width: 62px;
+  height: 62px;
   color: #18181b;
-}
-
-.tf-steps {
-  display: grid;
-  flex: 1;
-  gap: 10px;
-  min-width: 0;
 }
 
 .tf-hint {
   color: var(--tf-muted);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.45;
   text-wrap: pretty;
 }
 
 .tf-code {
-  position: relative;
-  display: grid;
-  border-radius: 8px;
-  cursor: text;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 4px;
-  max-width: 168px;
+  --cf-cell: var(--tf-fill);
+  --cf-ink: var(--tf-ink);
+  justify-self: center;
 }
 
-/* The real input covers the boxes, invisible, so clicks, typing and paste all reach it */
-.tf-input {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: transparent;
-  caret-color: transparent;
-  font-size: 16px;
-  outline: 0;
-}
-
-.tf-digit {
-  display: grid;
-  place-items: center;
-  height: 30px;
-  border-radius: 7px;
-  background: var(--tf-fill);
-  font-size: 14px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Where the next digit lands: a soft ring, not a border */
-.tf-digit[data-next] {
-  box-shadow: inset 0 0 0 1.5px var(--tf-faint);
-}
-
-/* On a docs page the stage is as light as the surfaces, so they get a hairline edge there. The home
-   page's tinted cards don't need one. */
 .rm-stage .tf-panel {
   box-shadow: inset 0 0 0 1px rgb(24 24 27 / 0.08);
 }

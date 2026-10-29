@@ -1,0 +1,53 @@
+---
+title: "painter()"
+description: "A canvas you paint yourself, with sizing, the frame loop, springs and reduced motion handled."
+---
+
+## Usage
+
+```ts
+import { painter } from "@remold-ui/canvas";
+
+const orb = painter(canvas, {
+  values: { radius: 40, glow: 0 },
+  spring: { duration: 0.6, bounce: 0 },
+  draw(context, { width, height, values }) {
+    context.beginPath();
+    context.arc(width / 2, height / 2, values.radius, 0, Math.PI * 2);
+    context.fill();
+  },
+});
+
+orb.to({ radius: 80, glow: 1 }); // springs, drawing every frame until it settles
+orb.destroy();
+```
+
+## Options
+
+| Option          | Default  | Description                                                                                  |
+| --------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `draw`          |          | `(context, frame) => void`. The canvas is cleared and scaled; draw in CSS pixels.            |
+| `values`        | `{}`     | Starting numbers. `frame.values` has each one where it is now.                               |
+| `spring`        | smooth   | One `SpringConfig`, or one per value name.                                                   |
+| `precision`     | `0.001`  | How close counts as arrived.                                                                 |
+| `continuous`    | `false`  | Draw every frame (drift, breathing, live audio), not only while springing.                   |
+| `clear`         | `true`   | Clear before each frame.                                                                     |
+| `reducedMotion` | `"user"` | `"always"` or `"never"` override the system setting.                                         |
+| `maxPixelRatio` | `2`      | Cap on stored pixels per CSS pixel.                                                          |
+| `label`         |          | Accessible name; sets `role="img"`.                                                          |
+| `loop`          | browser  | A frame loop to run on, for tests.                                                           |
+
+`frame` has `width`, `height`, `pixelRatio`, `values`, `time` (seconds of motion), `dt` (0 for a frame drawn outside the loop) and `still` (motion is reduced).
+
+## Returns
+
+| Member                     | Description                                                                 |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `to(targets, { spring, velocity })` | Spring to new targets. `velocity` hands over a flick, per name.   |
+| `set(values)`              | Jump and stop. Use it to follow a finger.                                   |
+| `redraw()`                 | Draw again for a change `draw` reads that isn't a value.                    |
+| `label(text)`              | Change the accessible name.                                                 |
+| `values`, `still`          | Every value now; whether motion is reduced.                                 |
+| `destroy()`                | Stop and let go of the canvas.                                              |
+
+It pauses while the canvas is off screen. `Remold.Canvas` is the React part.

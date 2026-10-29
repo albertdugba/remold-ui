@@ -1,0 +1,38 @@
+---
+title: "One-time code"
+description: "A sign-in card where code cells fold into verifying, error and verified states."
+status: "new"
+tags: ["Motion"]
+---
+
+<Stage name="otp-input" code={<Source demo="otp-input" />}>
+  <OtpInputDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Type six digits.** The last one lands, and the cells fold into a dark "Verifying" pill with a spinner.
+- **See an error.** Enter `482910`. The field shakes once, then reshapes into a red “Try again” pill. Choose another code to return to the cells.
+- **Watch it pass.** The pill turns green, the spinner becomes a check and "Verifying" becomes "Verified". The envelope at the top gains a tick. Nothing is swapped: it's the same pill and the same envelope the whole way.
+- **Paste a code**, or let your phone fill it in. One real input sits under the cells, so typing, pasting and one-time-code autofill all work.
+- **Use another code** (it was "Resend code" a moment ago) to start again.
+
+## Install
+
+<AddCommand name="otp-input" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="otp-input" />
+
+## How it works
+
+- Motion lays out the field as it contracts into a status pill, and gives the state word a short enter/exit transition.
+- The icons and copy are ordinary React elements; the colour transition and error shake are plain CSS.
+- **The colour** is plain CSS: the pill's background eases from ink to red or green. The error shake uses only `translate`, runs once, and is removed for reduced motion.
+
+In an app the result would come from your server; here `482915` passes and other six-digit codes fail. The address is made up.

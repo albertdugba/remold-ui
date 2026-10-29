@@ -1,0 +1,161 @@
+/* A landing-page hero: copy on the left, the live scene on the right. Styling only. */
+.dh {
+  --dh-ink: #0b0b0f;
+  --dh-muted: #6b6b76;
+  --dh-line: rgb(0 0 0 / 0.08);
+  --dh-chip: #ffffff;
+  --dh-accent: #7c5cff;
+  --dh-good: #22c55e;
+  --dh-busy: #f5a524;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 960px);
+  color: var(--dh-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, system-ui, sans-serif;
+}
+
+.dark .dh {
+  --dh-ink: #f4f3ff;
+  --dh-muted: #9b9aa8;
+  --dh-line: rgb(255 255 255 / 0.1);
+  --dh-chip: #17161d;
+}
+
+.dh-copy {
+  display: grid;
+  gap: 14px;
+  align-content: center;
+  padding: 24px 8px 24px 28px;
+}
+
+.dh-eyebrow {
+  color: var(--dh-accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dh-title {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+}
+
+.dh-title span {
+  color: var(--dh-muted);
+}
+
+.dh-lede {
+  max-width: 34ch;
+  margin: 0;
+  color: var(--dh-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.dh-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.dh-cta {
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--dh-ink);
+  color: var(--dh-chip);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.dh-cta:active {
+  transform: scale(0.97);
+}
+
+.dh-cta:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.dh-cta:focus-visible {
+  outline: 2px solid var(--dh-accent);
+  outline-offset: 2px;
+}
+
+/* The deploy's status, as a chip */
+.dh-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--dh-chip);
+  box-shadow: 0 0 0 1px var(--dh-line), 0 6px 16px -10px rgb(0 0 0 / 0.3);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.dh-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dh-muted);
+  transition: background-color 0.3s;
+}
+
+.dh-status[data-dot="busy"] i {
+  background: var(--dh-busy);
+  animation: dh-pulse 1s ease-in-out infinite;
+}
+
+.dh-status[data-dot="good"] i {
+  background: var(--dh-good);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--dh-good) 25%, transparent);
+}
+
+.dh-status span {
+  color: var(--dh-muted);
+}
+
+.dh-scene {
+  display: block;
+  width: 100%;
+  height: 440px;
+}
+
+@container (max-width: 640px) {
+  .dh {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .dh {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dh-copy {
+    padding: 20px 16px 0;
+  }
+
+  .dh-scene {
+    height: 360px;
+  }
+}
+
+@keyframes dh-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}

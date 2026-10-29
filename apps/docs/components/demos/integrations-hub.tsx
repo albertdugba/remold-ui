@@ -1,15 +1,20 @@
 "use client";
-/**
- * An integrations hub: your product in the middle, the tools it connects to around it, with data
- * flowing along the lines. Pick a category and the tiles rearrange: the ones in it step forward
- * into a ring around the hub, the rest step back and sink. A tile in two categories (Webhooks,
- * Keyring) stays lit and only moves. Tap a tile to light its line and read what it does.
- *
- * Built with `Remold.Scene` and canvas `extrude()`: plain data, no drawing code. "Lumen" and
- * every integration here are made up; use your own product mark and your partners' icons.
- */
+
 import { extrude, layout } from "@remold-ui/canvas";
 import { CanvasStage, type StageScene } from "./canvas-stage";
+import {
+  BELL_GLYPH,
+  CHART_GLYPH,
+  CHAT_GLYPH,
+  CODE_GLYPH,
+  CREDIT_CARD_GLYPH,
+  DATASTORE_GLYPH,
+  LOCK_GLYPH,
+  MAIL_GLYPH,
+  RECEIPT_GLYPH,
+  SPREADSHEET_GLYPH,
+  SUN_GLYPH,
+} from "./demo-glyphs";
 
 type Category = "Data" | "Messaging" | "Payments";
 
@@ -21,103 +26,100 @@ interface Integration {
   blurb: string;
 }
 
-/** 24 × 24 outline icons, drawn for this demo. */
 const INTEGRATIONS: Integration[] = [
   {
     id: "ledgerly",
     name: "Ledgerly",
     categories: ["Payments"],
     blurb: "Invoices and refunds sync both ways.",
-    icon: "M3.5 7.5h17v10h-17ZM3.5 10.5h17M7 14.5h3",
+    icon: CREDIT_CARD_GLYPH,
   },
   {
     id: "tillpoint",
     name: "Tillpoint",
     categories: ["Payments"],
     blurb: "Takes card payments at the counter.",
-    icon: "M6 3.5h12v17l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5ZM9 8h6M9 11.5h6M9 15h3",
+    icon: RECEIPT_GLYPH,
   },
   {
     id: "keyring",
     name: "Keyring",
     categories: ["Payments", "Data"],
     blurb: "Signs people in and keeps their keys safe.",
-    icon: "M7.5 11V8a4.5 4.5 0 0 1 9 0v3M5.5 11h13v9h-13ZM12 14.5v2",
+    icon: LOCK_GLYPH,
   },
   {
     id: "postbox",
     name: "Postbox",
     categories: ["Messaging"],
     blurb: "Sends receipts and digests by email.",
-    icon: "M3.5 6.5h17v11h-17ZM3.5 7l8.5 6 8.5-6",
+    icon: MAIL_GLYPH,
   },
   {
     id: "chatter",
     name: "Chatter",
     categories: ["Messaging"],
     blurb: "Posts updates into your team chat.",
-    icon: "M4 5.5h16v10H10l-4.5 3.5v-3.5H4Z",
+    icon: CHAT_GLYPH,
   },
   {
     id: "pager",
     name: "Pager",
     categories: ["Messaging"],
     blurb: "Wakes the right person when something breaks.",
-    icon: "M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 1.5H5ZM10 20.5h4",
+    icon: BELL_GLYPH,
   },
   {
     id: "webhooks",
     name: "Webhooks",
     categories: ["Messaging", "Data"],
     blurb: "Tells any system you run what just happened.",
-    icon: "M9 7.5 4.5 12 9 16.5M15 7.5l4.5 4.5-4.5 4.5M13.5 5l-3 14",
+    icon: CODE_GLYPH,
   },
   {
     id: "stackbase",
     name: "Stackbase",
     categories: ["Data"],
     blurb: "Copies every record into your warehouse hourly.",
-    icon: "M5 6.5c0-1.5 3-2.5 7-2.5s7 1 7 2.5-3 2.5-7 2.5-7-1-7-2.5ZM5 6.5v11c0 1.5 3 2.5 7 2.5s7-1 7-2.5v-11M5 12c0 1.5 3 2.5 7 2.5s7-1 7-2.5",
+    icon: DATASTORE_GLYPH,
   },
   {
     id: "sheetly",
     name: "Sheetly",
     categories: ["Data"],
     blurb: "Keeps a live spreadsheet of your orders.",
-    icon: "M4 4.5h16v15H4ZM4 9.5h16M4 14.5h16M10 4.5v15",
+    icon: SPREADSHEET_GLYPH,
   },
   {
     id: "graphwell",
     name: "Graphwell",
     categories: ["Data"],
     blurb: "Turns events into dashboards.",
-    icon: "M4.5 19.5h15M7 16v-4M11 16V8M15 16v-6M19 16V5",
+    icon: CHART_GLYPH,
   },
 ];
 
-const SUN =
-  "M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8M12 8a4 4 0 1 1 0 8a4 4 0 1 1 0-8Z";
+const SUN = SUN_GLYPH;
 
 export interface IntegrationsHubProps {
-  /** How far tiles sit from the hub in the All view, in floor units. Default 285. */
   ringRadius?: number;
-  /** How far a category's tiles sit from the hub. Default 215. */
+
   focusRadius?: number;
-  /** Tile size in the All view; a category's tiles are a fifth bigger. Default 78. */
+
   tileSize?: number;
-  /** The hub's size. Default 150. */
+
   hubSize?: number;
-  /** How tall the hub stands. Default 44. */
+
   hubHeight?: number;
-  /** Dots flow along the lines. Default true. */
+
   flow?: boolean;
-  /** Keep tiles outside the category on an outer ring, faint, instead of hiding them. Default true. */
+
   showOthers?: boolean;
-  /** How close the camera is. Default 1. */
+
   zoom?: number;
-  /** Milliseconds per category while playing. Default 3200. */
+
   every?: number;
-  /** The stage's height in pixels. Default 520. */
+
   height?: number;
 }
 
@@ -126,7 +128,6 @@ const ALL_IDS = INTEGRATIONS.map((x) => x.id);
 const tile = (icon: string) =>
   extrude({ radius: 0.28, height: 20, decal: { icon, text: "", size: 42 } });
 
-/** The scene for these settings: plain data, rebuilt when a setting changes. */
 function buildHub({
   ringRadius,
   focusRadius,
@@ -137,7 +138,6 @@ function buildHub({
   showOthers,
   zoom,
 }: Required<Omit<IntegrationsHubProps, "every" | "height">>): StageScene {
-  // Where tiles out of the category wait: an outer ring, flat and faint (or gone).
   const outer = layout.ring(ALL_IDS, {
     radius: ringRadius * 1.26,
     size: tileSize * 0.77,
@@ -227,7 +227,7 @@ export function IntegrationsHub({
   return (
     <CanvasStage
       scene={scene}
-      title='Integrations'
+      title="Integrations"
       every={every}
       height={height}
       describe={(layout, focused) => {
@@ -260,5 +260,4 @@ export function IntegrationsHub({
   );
 }
 
-/** The docs page's name for it. */
 export const IntegrationsHubDemo = IntegrationsHub;

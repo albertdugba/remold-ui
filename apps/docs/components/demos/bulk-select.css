@@ -1,0 +1,383 @@
+/* Bulk selection. Styling only: Base UI draws the checkboxes and tooltips; Motion moves the rows,
+   the bar and the count. Tokens live on .bk-layer too, for the portalled tooltips. */
+.bk-layer {
+  --bk-surface: #ffffff;
+  --bk-ink: #18181b;
+  --bk-muted: #71717a;
+  --bk-quiet: #a1a1aa;
+  --bk-line: rgb(24 24 27 / 0.07);
+  --bk-hover: rgb(24 24 27 / 0.035);
+  --bk-accent: #4f46e5;
+  --bk-band: rgb(79 70 229 / 0.07);
+  --bk-box: rgb(24 24 27 / 0.22);
+  --bk-bar: #18181b;
+  --bk-bar-ink: #fafafa;
+  --bk-bar-muted: #a1a1aa;
+  --bk-bar-hover: rgb(255 255 255 / 0.09);
+  --bk-danger: #f87171;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .bk-layer {
+  --bk-surface: #1f1f23;
+  --bk-ink: #fafafa;
+  --bk-muted: #a1a1aa;
+  --bk-quiet: #71717a;
+  --bk-line: rgb(255 255 255 / 0.07);
+  --bk-hover: rgb(255 255 255 / 0.04);
+  --bk-accent: #818cf8;
+  --bk-band: rgb(129 140 248 / 0.12);
+  --bk-box: rgb(255 255 255 / 0.25);
+  --bk-bar: #fafafa;
+  --bk-bar-ink: #18181b;
+  --bk-bar-muted: #71717a;
+  --bk-bar-hover: rgb(0 0 0 / 0.06);
+  --bk-danger: #dc2626;
+}
+
+.bk {
+  display: grid;
+  width: min(100%, 440px);
+  padding: 10px 10px 12px;
+  border-radius: 20px;
+  background: var(--bk-surface);
+  box-shadow: 0 0 0 1px var(--bk-line), 0 12px 32px -18px rgb(0 0 0 / 0.25);
+  color: var(--bk-ink);
+}
+
+/* Header: select-all, the title and count, the columns */
+.bk-head,
+.bk-row-inner {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 62px 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px;
+}
+
+.bk-head {
+  height: 36px;
+  margin-bottom: 2px;
+  color: var(--bk-quiet);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.bk-title {
+  color: var(--bk-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bk-title span {
+  margin-left: 4px;
+  color: var(--bk-quiet);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.bk-col-size,
+.bk-col-date {
+  text-align: right;
+}
+
+/* Rows: hairlines between, and one soft band across whatever is selected */
+.bk-rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bk-row {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  transition: background-color 0.18s, border-radius 0.18s;
+}
+
+.bk-row + .bk-row::before {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  left: 38px;
+  height: 1px;
+  background: var(--bk-line);
+  content: "";
+  transition: opacity 0.18s;
+}
+
+.bk-row:hover {
+  background: var(--bk-hover);
+}
+
+.bk-row[data-selected] {
+  background: var(--bk-band);
+}
+
+.bk-row[data-joins-up] {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.bk-row[data-joins-down] {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* No hairline inside the band, nor at its edges */
+.bk-row[data-selected]::before,
+.bk-row[data-selected] + .bk-row::before {
+  opacity: 0;
+}
+
+.bk-row-inner {
+  height: 44px;
+  cursor: pointer;
+}
+
+.bk-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 13.5px;
+}
+
+.bk-file {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The file type on a soft tile of its own colour */
+.bk-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: color-mix(in oklab, var(--tint) 13%, transparent);
+  color: var(--tint);
+}
+
+.bk-icon svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+.bk-size,
+.bk-date {
+  color: var(--bk-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Checkboxes: quiet outlines until ticked */
+.bk-check {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--bk-box);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.bk-row-inner:hover .bk-check:not([data-checked]):not([data-indeterminate]) {
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--bk-ink) 45%, transparent);
+}
+
+.bk-check[data-checked],
+.bk-check[data-indeterminate] {
+  background: var(--bk-accent);
+  box-shadow: none;
+}
+
+.bk-check:focus-visible {
+  outline: 2px solid var(--bk-accent);
+  outline-offset: 2px;
+}
+
+.bk-tick {
+  display: grid;
+  place-items: center;
+  transition: transform 0.18s cubic-bezier(0.3, 1.5, 0.5, 1), opacity 0.12s;
+}
+
+.bk-tick[data-starting-style],
+.bk-tick[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.bk-tick svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 3.2;
+}
+
+/* The foot: the hint, or the action bar in its place */
+.bk-dock {
+  position: relative;
+  display: grid;
+  height: 48px;
+  margin-top: 8px;
+}
+
+.bk-dock > * {
+  grid-area: 1 / 1;
+}
+
+.bk-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 10px;
+  color: var(--bk-quiet);
+  font-size: 12px;
+}
+
+.bk-hint kbd {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px var(--bk-line), 0 1px 0 var(--bk-line);
+  font: inherit;
+  font-size: 11px;
+}
+
+.bk-bar {
+  display: grid;
+  align-items: center;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--bk-bar);
+  box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.45);
+  color: var(--bk-bar-ink);
+}
+
+.bk-bar-row {
+  display: flex;
+  grid-area: 1 / 1;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+  padding: 0 6px;
+}
+
+.bk-bar-gap {
+  flex: 1;
+}
+
+.bk-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px 0 2px;
+  color: var(--bk-bar-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.bk-roll {
+  display: inline-grid;
+  overflow: hidden;
+  color: var(--bk-bar-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.bk-clear,
+.bk-action,
+.bk-delete,
+.bk-undo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--bk-bar-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.bk-clear,
+.bk-action {
+  width: 34px;
+  color: var(--bk-bar-muted);
+}
+
+.bk-clear:hover,
+.bk-action:hover,
+.bk-undo:hover {
+  background: var(--bk-bar-hover);
+  color: var(--bk-bar-ink);
+}
+
+.bk-delete {
+  margin-left: 4px;
+  padding: 0 12px 0 10px;
+  color: var(--bk-danger);
+}
+
+.bk-delete:hover {
+  background: color-mix(in oklab, var(--bk-danger) 16%, transparent);
+}
+
+.bk-undo {
+  padding: 0 12px;
+  font-weight: 600;
+}
+
+.bk-clear svg,
+.bk-action svg,
+.bk-delete svg {
+  width: 16px;
+  height: 16px;
+}
+
+.bk-clear:focus-visible,
+.bk-action:focus-visible,
+.bk-delete:focus-visible,
+.bk-undo:focus-visible {
+  outline: 2px solid var(--bk-accent);
+  outline-offset: 1px;
+}
+
+.bk-tip {
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: var(--bk-ink);
+  color: var(--bk-surface);
+  font-size: 12px;
+  transition: opacity 0.12s, transform 0.12s;
+}
+
+.bk-tip[data-starting-style],
+.bk-tip[data-ending-style] {
+  opacity: 0;
+  transform: translateY(3px);
+}

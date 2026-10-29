@@ -1,282 +1,92 @@
 "use client";
-/**
- * A live discussion, in two looks: questions and answers on a product page, and comments under
- * an article. Replies hang from their parent's avatar by curved lines that stay attached while
- * everything moves (`Remold.Connectors`), and every change is a `Remold.Layout` transition:
- *
- * - "Halden is typing…" is a small bubble that grows into the answer when it's sent.
- * - Hovering a reply lights the lines back up to the top and quiets the rest.
- * - The summary ("What buyers say", "Readers are saying") condenses the discussion into a card,
- *   and each person's avatar flies into the point they made.
- * - Helpful votes and likes tick over (`Remold.Text`), and branches fold into a pill.
- *
- * While it's on screen and untouched, it plays a short scene by itself. Touch it and it stops.
- * The shop, the product, the publication and the people are made up.
- */
-import { Remold } from "@remold-ui/react";
-import { Pause, Play } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Bookmark01Icon, FavouriteIcon, MessageCircleIcon, PauseIcon, PlayIcon, RepeatOne02Icon } from "@hugeicons/core-free-icons";
+import { Remold, useConnectorMotion } from "@remold-ui/react";
+import { motion } from "motion/react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { ArrowUpIcon } from "./demo-icons";
+import {
+  addTypingComment,
+  addVotes,
+  commentTrail,
+  countComments,
+  makeComment,
+  postThread,
+  previewThread,
+  sendTypingComment,
+  sortComments,
+  updateComment,
+  type Comment,
+} from "./comment-thread.model";
 import "./comment-thread.css";
 
-type Rich = { kind: "sizes"; rows: [string, string, string][] } | { kind: "photo"; caption: string };
-
-interface Comment {
-  /** The client's own id: it stays the same when the server's answer arrives. */
-  key: string;
-  author: string;
-  badge?: string;
-  text: string;
-  rich?: Rich;
-  votes: number;
-  voted: boolean;
-  /** Minutes ago. */
-  age: number;
-  typing?: boolean;
-  sending?: boolean;
-  replies: Comment[];
-}
-
-interface Point {
-  text: ReactNode;
-  who: string[];
-}
-
-interface Look {
-  key: "product" | "article";
-  label: string;
-  /** What a vote is called: "Helpful" or a heart. */
-  vote: string;
-  noun: [string, string];
-  /** The thing being discussed, shown above the comments. */
-  top: ReactNode;
-  start: Comment[];
-  scene: ((list: Comment[]) => { list: Comment[]; summary?: boolean })[];
-  summary: { heading: string; points: Point[]; foot: string };
-  here: string[];
-}
-
 /** Illustrated avatars from DiceBear's public API: drawn, so no real person's face. Same name, same face. */
-const avatar = (name: string) => `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=f1f1f3`;
+const avatar = (name: string) =>
+  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(
+    name,
+  )}&backgroundColor=f1f1f3`;
 
-const c = (key: string, author: string, text: string, votes: number, age: number, extra: Partial<Comment> = {}): Comment => ({
-  key,
-  author,
-  text,
-  votes,
-  voted: false,
-  age,
-  replies: [],
-  ...extra,
-});
+const AUTHOR = { name: "Ama Mensah", handle: "@amamensah" };
+const POST_LIKES = 248;
+const REPOSTS = 31;
 
-/** The scene's building blocks: someone starts typing under `parent`, then sends. */
-const typing = (parent: string | null, key: string, author: string, badge?: string) => (l: Comment[]) => {
-  const bubble = c(key, author, "", 0, 0, { typing: true, ...(badge ? { badge } : {}) });
-  return { list: parent === null ? [...l, bubble] : edit(l, parent, (x) => ({ ...x, replies: [...x.replies, bubble] })) };
-};
-const sends =
-  (key: string, text: string, votes = 0) =>
-  (l: Comment[]) => ({ list: edit(l, key, (x) => ({ ...x, typing: false, text, votes })) });
-const votesOn =
-  (...keys: string[]) =>
-  (l: Comment[]) => ({ list: keys.reduce((acc, k) => edit(acc, k, (x) => ({ ...x, votes: x.votes + 1 })), l) });
-
-/* 1. Questions and answers on a product page. */
-
-const PRODUCT_START: Comment[] = [
-  c("q-size", "Jonas Weber", "Does it run true to size? I’m usually between M and L.", 24, 2880, {
-    badge: "Verified buyer",
-    replies: [
-      c("a-size", "Halden", "It’s a relaxed fit, so most people size down. In cm:", 18, 2700, {
-        badge: "Seller",
-        rich: {
-          kind: "sizes",
-          rows: [
-            ["S", "104", "70"],
-            ["M", "112", "72"],
-            ["L", "120", "74"],
-          ],
-        },
-        replies: [
-          c("r-priya", "Priya Nair", "Can confirm. I’m usually an L and the M fits perfectly.", 9, 1440, {
-            badge: "Verified buyer",
-            replies: [
-              c("r-jonas", "Jonas Weber", "Thanks! How tall are you, if you don’t mind me asking?", 3, 1380, {
-                badge: "Verified buyer",
-                replies: [
-                  c("r-priya-2", "Priya Nair", "178 cm. The M still covers my hips with a jumper underneath.", 5, 1320, {
-                    badge: "Verified buyer",
-                    replies: [
-                      c("r-halden-fit", "Halden", "Good shout. We’re adding a fit guide by height to the size chart.", 4, 1200, {
-                        badge: "Seller",
-                      }),
-                    ],
-                  }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      }),
-      c("r-sam", "Sam Ortiz", "Bought the M. Sleeves are a touch long, which I like with gloves.", 7, 900, {
-        badge: "Verified buyer",
-        rich: { kind: "photo", caption: "Sam’s photo" },
-        replies: [
-          c("r-ada-cuff", "Ada Kim", "Do the cuffs adjust, or are they elasticated?", 2, 840, {
-            replies: [c("r-halden-cuff", "Halden", "A snap tab on each cuff, two positions.", 3, 800, { badge: "Seller" })],
-          }),
-        ],
-      }),
-    ],
-  }),
-  c("q-rain", "Ada Kim", "Is it waterproof, or just water-resistant?", 11, 600, {
-    replies: [
-      c("a-rain", "Halden", "Water-resistant. It handles drizzle and light rain, but it isn’t taped for downpours.", 6, 540, {
-        badge: "Seller",
-        replies: [
-          c("r-leo", "Leo Grant", "Wore it through a proper shower on the walk home. Dry for about twenty minutes.", 8, 420, {
-            badge: "Verified buyer",
-            replies: [c("r-ada-thanks", "Ada Kim", "That’s exactly what I needed to know, thank you.", 1, 380)],
-          }),
-        ],
-      }),
-    ],
-  }),
+/** The scene: a reader asks something, the author answers, a couple of likes land, then it starts over. */
+const SCENE: ((list: Comment[]) => Comment[])[] = [
+  addTypingComment(null, "c-release", "Abena Osei"),
+  sendTypingComment(
+    "c-release",
+    "Did you automate releases from day one, or do them by hand at first?",
+    2,
+  ),
+  addTypingComment("c-release", "r-release", AUTHOR.name, "Author"),
+  sendTypingComment(
+    "r-release",
+    "Automated from the first release. Doing one by hand was enough.",
+    1,
+  ),
+  addVotes("r-release", "r-esi"),
 ];
 
-function JacketCard() {
-  return (
-    <div className="cx-product">
-      <span className="cx-product-art" role="img" aria-label="The Field Jacket">
-        <svg viewBox="0 0 64 64" aria-hidden="true">
-          <path d="M24 10l8 5 8-5 10 5 6 16-7 3v20H15V34l-7-3 6-16Z" />
-          <path d="M32 15v39M26 30h-4M42 30h-4" />
-        </svg>
-      </span>
-      <span className="cx-product-info">
-        <strong>Field Jacket</strong>
-        <span>Halden · £189</span>
-        <span className="cx-stars" aria-label="Rated 4.6 out of 5 from 218 reviews">
-          ★★★★<span className="part">★</span> <em>4.6 · 218 reviews</em>
-        </span>
-      </span>
-    </div>
-  );
-}
-
-const PRODUCT: Look = {
-  key: "product",
-  label: "Product Q&A",
-  vote: "Helpful",
-  noun: ["question", "questions"],
-  top: <JacketCard />,
-  start: PRODUCT_START,
-  scene: [
-    typing(null, "q-wash", "Mira Okafor"),
-    sends("q-wash", "Does the green fade after a few washes?", 2),
-    typing("q-wash", "a-wash", "Halden", "Seller"),
-    sends("a-wash", "Not in our tests: 40 washes at 30°C. Turn it inside out to be safe.", 1),
-    votesOn("a-wash", "r-priya"),
-    (l) => ({ list: l, summary: true }),
-    (l) => ({ list: l, summary: false }),
-    () => ({ list: PRODUCT_START }),
-  ],
-  summary: {
-    heading: "What buyers say",
-    points: [
-      {
-        text: (
-          <>
-            Runs large: <b>most buyers size down</b>.
-          </>
-        ),
-        who: ["Jonas Weber", "Priya Nair", "Halden"],
-      },
-      {
-        text: (
-          <>
-            <b>Water-resistant</b>, not waterproof. Fine for light rain.
-          </>
-        ),
-        who: ["Ada Kim", "Halden"],
-      },
-      {
-        text: (
-          <>
-            Sleeves run <b>a little long</b>.
-          </>
-        ),
-        who: ["Sam Ortiz"],
-      },
-    ],
-    foot: "From questions, answers and 218 reviews",
-  },
-  here: ["Mira Okafor", "Jonas Weber", "Priya Nair"],
-};
-
-const HOME_THREAD: Comment[] = [
-  c("preview-question", "Jonas Weber", "Does it run true to size? I’m usually between M and L.", 24, 2880, {
-    badge: "Verified buyer",
-    replies: [
-      c("preview-answer", "Halden", "It’s a relaxed fit, so most people size down.", 18, 2700, {
-        badge: "Seller",
-        replies: [
-          c("preview-confirmation", "Priya Nair", "Can confirm. I’m usually an L and the M fits perfectly.", 9, 1440, {
-            badge: "Verified buyer",
-            replies: [c("preview-fit-note", "Jonas Weber", "That’s helpful — I’ll go with the M, then.", 3, 1380, { badge: "Verified buyer" })],
-          }),
-        ],
-      }),
-    ],
-  }),
-  c("preview-rain", "Ada Kim", "Is it waterproof, or just water-resistant?", 11, 600, {
-    replies: [
-      c("preview-rain-answer", "Halden", "Water-resistant. It handles a drizzle, but it isn’t made for a downpour.", 6, 540, {
-        badge: "Seller",
-        replies: [c("preview-rain-note", "Leo Grant", "Mine stayed dry through a twenty-minute walk home in the rain.", 8, 420, { badge: "Verified buyer" })],
-      }),
-    ],
-  }),
-];
-
-const LOOKS = [PRODUCT];
 const SORTS = ["Top", "Newest"] as const;
 type Sort = (typeof SORTS)[number];
 
-const ago = (m: number) => (m < 1 ? "now" : m < 60 ? `${m}m` : m < 1440 ? `${Math.round(m / 60)}h` : `${Math.round(m / 1440)}d`);
-const count = (list: Comment[]): number => list.reduce((n, x) => n + (x.typing ? 0 : 1) + count(x.replies), 0);
+const ago = (m: number) =>
+  m < 1
+    ? "now"
+    : m < 60
+    ? `${m}m`
+    : m < 1440
+    ? `${Math.round(m / 60)}h`
+    : `${Math.round(m / 1440)}d`;
 
-/** The discussion with `update` applied to the comment with `key`. */
-function edit(list: Comment[], key: string, update: (c: Comment) => Comment): Comment[] {
-  return list.map((x) => (x.key === key ? update(x) : { ...x, replies: edit(x.replies, key, update) }));
-}
-
-function arrange(list: Comment[], sort: Sort): Comment[] {
-  const order = sort === "Top" ? (a: Comment, b: Comment) => b.votes - a.votes : (a: Comment, b: Comment) => a.age - b.age;
-  // Someone typing stays at the end, where their message will land.
-  return [...list]
-    .sort((a, b) => Number(!!a.typing) - Number(!!b.typing) || order(a, b))
-    .map((x) => ({ ...x, replies: arrange(x.replies, sort) }));
-}
-
-/** The keys from the top down to `key`. */
-function trail(list: Comment[], key: string, path: string[] = []): string[] | null {
-  for (const x of list) {
-    if (x.key === key) return [...path, x.key];
-    const found = trail(x.replies, key, [...path, x.key]);
-    if (found) return found;
-  }
-  return null;
-}
-
-function Avatar({ name, anchor, link, lit, small }: { name: string; anchor?: string; link?: string; lit?: boolean; small?: boolean }) {
+function Avatar({
+  name,
+  anchor,
+  link,
+  lit,
+  size = 36,
+}: {
+  name: string;
+  anchor?: string;
+  link?: string;
+  lit?: boolean;
+  size?: number;
+}) {
   return (
     <img
-      className={`cx-avatar${small ? " small" : ""}`}
+      className="cx-avatar"
       src={avatar(name)}
       alt=""
-      width={small ? 22 : 36}
-      height={small ? 22 : 36}
+      width={size}
+      height={size}
       {...(anchor ? { "data-rm-anchor": anchor } : {})}
       {...(link ? { "data-rm-link": link } : {})}
       {...(lit ? { "data-rm-line": "lit" } : {})}
@@ -284,103 +94,133 @@ function Avatar({ name, anchor, link, lit, small }: { name: string; anchor?: str
   );
 }
 
-function RichContent({ rich }: { rich: Rich }) {
-  if (rich.kind === "sizes") {
-    return (
-      <ul className="cx-sizes" aria-label="Size chart in cm">
-        {rich.rows.map(([size, chest, length]) => (
-          <li key={size}>
-            <b>{size}</b>
-            <span>
-              chest {chest} · length {length}
-            </span>
-          </li>
-        ))}
-      </ul>
-    );
-  }
+/** The post everyone is replying to: who wrote it, what they said, the link they shared. */
+function Post({
+  liked,
+  onLike,
+  comments,
+}: {
+  liked: boolean;
+  onLike: () => void;
+  comments: number;
+}) {
   return (
-    <span className="cx-photo" role="img" aria-label={rich.caption}>
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M24 10l8 5 8-5 10 5 6 16-7 3v20H15V34l-7-3 6-16Z" />
-      </svg>
-      <em>{rich.caption}</em>
-    </span>
+    <article className="cx-post" aria-label={`Post by ${AUTHOR.name}`}>
+      <header className="cx-post-head">
+        <Avatar name={AUTHOR.name} size={40} />
+        <span className="cx-post-who">
+          <strong>{AUTHOR.name}</strong>
+          <span>{`${AUTHOR.handle} · 4h`}</span>
+        </span>
+      </header>
+      <p className="cx-post-text">
+        I shipped my first open-source library last week. Ten weeks of evenings,
+        one launch post and a lot of lessons. Here’s what I’d do again, and what
+        I wouldn’t.
+      </p>
+      <div className="cx-post-bar">
+        <button
+          type="button"
+          className="cx-post-action"
+          aria-pressed={liked}
+          aria-label={`Like, ${POST_LIKES + (liked ? 1 : 0)}`}
+          onClick={onLike}
+        >
+          <HugeiconsIcon icon={FavouriteIcon} aria-hidden="true" />
+          <span>{POST_LIKES + (liked ? 1 : 0)}</span>
+        </button>
+        <span className="cx-post-action" aria-label={`${comments} comments`}>
+          <HugeiconsIcon icon={MessageCircleIcon} aria-hidden="true" />
+          <span>{comments}</span>
+        </span>
+        <span className="cx-post-action" aria-label={`${REPOSTS} reposts`}>
+          <HugeiconsIcon icon={RepeatOne02Icon} aria-hidden="true" />
+          <span>{REPOSTS}</span>
+        </span>
+        <button type="button" className="cx-post-action save" aria-label="Save">
+          <HugeiconsIcon icon={Bookmark01Icon} aria-hidden="true" />
+        </button>
+      </div>
+    </article>
   );
 }
 
-/** Which look is showing: product Q&A or article comments. */
-export type ThreadLook = Look["key"];
 export type CommentThreadVariant = "full" | "preview";
 
 interface CommentThreadDemoProps {
-  onLookChange?: (look: ThreadLook) => void;
   variant?: CommentThreadVariant;
+  /** Plays and pauses the scene from outside, as the home page's card does. Leave it out to play until touched. */
+  playing?: boolean;
 }
 
-export function CommentThreadDemo({ onLookChange, variant = "full" }: CommentThreadDemoProps = {}) {
+export function CommentThreadDemo({
+  variant = "full",
+  playing,
+}: CommentThreadDemoProps = {}) {
   const isPreview = variant === "preview";
-  const [lookKey, setLookKey] = useState<Look["key"]>("product");
-  const look = LOOKS.find((l) => l.key === lookKey)!;
-  // Tell the page when the look changes, by hand or by the scene playing itself.
-  const lookListener = useRef(onLookChange);
-  lookListener.current = onLookChange;
-  useEffect(() => lookListener.current?.(lookKey), [lookKey]);
-  const [comments, setComments] = useState(() => (isPreview ? HOME_THREAD : PRODUCT_START));
+  const start = isPreview ? previewThread : postThread;
+  const [comments, setComments] = useState(start);
   const [sort, setSort] = useState<Sort>("Top");
-  const [summary, setSummary] = useState(false);
+  const [liked, setLiked] = useState(false);
   const [folded, setFolded] = useState<Set<string>>(() => new Set());
   const [hover, setHover] = useState<string | null>(null);
   const [replying, setReplying] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [live, setLive] = useState(true);
+  const [live, setLive] = useState(playing ?? true);
   const [visible, setVisible] = useState(false);
   const step = useRef(0);
   const frame = useRef<HTMLDivElement>(null);
+  const connectorRoot = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
-  const shown = useMemo(() => arrange(comments, sort), [comments, sort]);
-  const lit = useMemo(() => new Set(hover ? trail(shown, hover) ?? [] : []), [hover, shown]);
+  const connectorMotion = useConnectorMotion(connectorRoot);
+  const shown = useMemo(() => sortComments(comments, sort), [comments, sort]);
+  const lit = useMemo(
+    () => new Set(hover ? commentTrail(shown, hover) ?? [] : []),
+    [hover, shown],
+  );
 
   useEffect(() => {
     const el = frame.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => setVisible(e?.isIntersecting ?? false), { threshold: 0.3 });
+    const io = new IntersectionObserver(
+      ([e]) => setVisible(e?.isIntersecting ?? false),
+      { threshold: 0.3 },
+    );
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
-  // The scene, one beat every couple of seconds, while it's live and on screen.
+  // The scene, one beat every couple of seconds, while it's live and on screen. After the last beat
+  // the thread goes back to how it started.
   useEffect(() => {
     if (!live || !visible) return;
     const timer = setInterval(() => {
-      if (isPreview) {
-        const beat = step.current++ % 4;
-        setSummary(beat === 1);
-        setSort(beat === 3 ? "Newest" : "Top");
-        return;
-      }
-      const beat = look.scene[step.current % look.scene.length]!;
+      const beat = step.current % (SCENE.length + 1);
       step.current++;
-      setComments((list) => {
-        const next = beat(list);
-        if (next.summary !== undefined) setSummary(next.summary);
-        return next.list;
-      });
+      if (beat === SCENE.length) {
+        setComments(start());
+        setLiked(false);
+      } else {
+        setComments((list) => SCENE[beat]!(list));
+        if (beat === SCENE.length - 1) setLiked(true);
+      }
     }, 2100);
     return () => clearInterval(timer);
-  }, [isPreview, live, visible, look]);
+  }, [live, visible, start]);
 
-  /** Anything the viewer does takes over from the scene. */
+  // Played from outside, the scene follows that control; on its own, the first touch stops it.
+  useEffect(() => {
+    if (playing !== undefined) setLive(playing);
+  }, [playing]);
+
   const takeOver = () => {
-    if (live) setLive(false);
+    if (playing === undefined && live) setLive(false);
   };
 
-  const switchTo = (key: Look["key"]) => {
-    const next = LOOKS.find((l) => l.key === key)!;
+  const restart = () => {
     step.current = 0;
-    setLookKey(key);
-    setComments(isPreview ? HOME_THREAD : next.start);
-    setSummary(false);
+    setComments(start());
+    setLiked(false);
     setFolded(new Set());
     setReplying(null);
   };
@@ -398,8 +238,13 @@ export function CommentThreadDemo({ onLookChange, variant = "full" }: CommentThr
     const text = draft.trim();
     if (!text) return;
     const key = `you-${Date.now()}`;
-    const mine = c(key, "You", text, 0, 0, { sending: true });
-    setComments((list) => edit(list, parent, (comment) => ({ ...comment, replies: [...comment.replies, mine] })));
+    const mine = makeComment(key, "You", text, 0, 0, { sending: true });
+    setComments((list) =>
+      updateComment(list, parent, (comment) => ({
+        ...comment,
+        replies: [...comment.replies, mine],
+      })),
+    );
     setFolded((s) => {
       const next = new Set(s);
       next.delete(parent);
@@ -407,57 +252,88 @@ export function CommentThreadDemo({ onLookChange, variant = "full" }: CommentThr
     });
     setDraft("");
     setReplying(null);
+
     // The server confirms it. The client key stays, so the reply and its line stay put.
-    setTimeout(() => setComments((list) => edit(list, key, (x) => ({ ...x, sending: false }))), 900);
+    setTimeout(
+      () =>
+        setComments((list) =>
+          updateComment(list, key, (x) => ({ ...x, sending: false })),
+        ),
+      900,
+    );
   };
 
   const thread = (list: Comment[], parent: string, depth = 0): ReactNode =>
     list.map((x) => {
       const isFolded = folded.has(x.key);
-      const total = count(x.replies);
+      const total = countComments(x.replies);
       const isLit = lit.has(x.key);
-      const official = x.badge === "Seller" || x.badge === "Author";
+      const author = x.badge === "Author";
       return (
-        <article
+        <motion.article
+          layout="position"
+          {...connectorMotion}
           key={x.key}
           className={`cx-comment${x.typing ? " typing" : ""}`}
           data-depth={depth}
           data-lit={isLit || undefined}
           data-top={parent === "top" || undefined}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", duration: 0.32, bounce: 0.12 }}
           onPointerEnter={() => setHover(x.key)}
           onPointerLeave={() => setHover(parent === "top" ? null : parent)}
         >
-          {/* Lines join a reply to the comment it answers. Top-level comments stand on their own. */}
-          <Avatar name={x.author} anchor={x.key} link={parent === "top" ? undefined : parent} lit={isLit} />
+          <Avatar
+            name={x.author}
+            anchor={x.key}
+            link={parent === "top" ? undefined : parent}
+            lit={isLit}
+          />
           {x.typing ? (
-            <div className="cx-bubble cx-dots" role="status" aria-label={`${x.author} is typing`}>
+            <div
+              className="cx-bubble cx-dots"
+              role="status"
+              aria-label={`${x.author} is typing`}
+            >
               <i />
               <i />
               <i />
             </div>
           ) : (
             <div className="cx-main">
-              <div className={`cx-bubble${official ? " official" : ""}`}>
+              <div className={`cx-bubble${author ? " official" : ""}`}>
                 <p className="cx-meta">
                   <strong>{x.author}</strong>
-                  {x.badge && <span className={`cx-badge${official ? " official" : ""}`}>{x.badge}</span>}
-                  <Remold.Text className="cx-age">{x.sending ? "Sending…" : ago(x.age)}</Remold.Text>
+                  {x.badge && (
+                    <span className={`cx-badge${author ? " official" : ""}`}>
+                      {x.badge}
+                    </span>
+                  )}
+                  <span className="cx-age">
+                    {x.sending ? "Sending…" : ago(x.age)}
+                  </span>
                 </p>
                 <p className="cx-text">{x.text}</p>
-                {x.rich && <RichContent rich={x.rich} />}
               </div>
               <div className="cx-under">
                 <button
                   type="button"
                   className="cx-vote"
                   aria-pressed={x.voted}
-                  aria-label={`${look.vote === "♥" ? "Like" : "Helpful"}, ${x.votes}`}
+                  aria-label={`Like, ${x.votes}`}
                   onClick={() =>
-                    setComments((l) => edit(l, x.key, (y) => ({ ...y, voted: !y.voted, votes: y.votes + (y.voted ? -1 : 1) })))
+                    setComments((l) =>
+                      updateComment(l, x.key, (y) => ({
+                        ...y,
+                        voted: !y.voted,
+                        votes: y.votes + (y.voted ? -1 : 1),
+                      })),
+                    )
                   }
                 >
-                  <span aria-hidden="true">{look.vote}</span>
-                  <Remold.Text>{String(x.votes)}</Remold.Text>
+                  <HugeiconsIcon icon={FavouriteIcon} aria-hidden="true" />
+                  <span>{String(x.votes)}</span>
                 </button>
                 <button
                   type="button"
@@ -467,17 +343,28 @@ export function CommentThreadDemo({ onLookChange, variant = "full" }: CommentThr
                     requestAnimationFrame(() => input.current?.focus());
                   }}
                 >
-                  {look.key === "product" && parent === "top" ? "Answer" : "Reply"}
+                  Reply
                 </button>
                 {total > 0 && !isFolded && (
-                  <button type="button" className="cx-text-button" aria-expanded onClick={() => toggleFold(x.key)}>
+                  <button
+                    type="button"
+                    className="cx-text-button"
+                    aria-expanded
+                    onClick={() => toggleFold(x.key)}
+                  >
                     Hide replies
                   </button>
                 )}
               </div>
               {replying === x.key && (
                 <form className="cx-compose" onSubmit={(e) => send(e, x.key)}>
-                  <img className="cx-compose-face" src={avatar("You")} alt="" width={28} height={28} />
+                  <img
+                    className="cx-compose-face"
+                    src={avatar("You")}
+                    alt=""
+                    width={28}
+                    height={28}
+                  />
                   <div className="cx-compose-box">
                     <textarea
                       ref={input}
@@ -499,13 +386,20 @@ export function CommentThreadDemo({ onLookChange, variant = "full" }: CommentThr
                         <kbd>Enter</kbd> to send · <kbd>Esc</kbd> to cancel
                       </span>
                       <span className="cx-compose-actions">
-                        <button type="button" className="cx-compose-cancel" onClick={() => setReplying(null)}>
+                        <button
+                          type="button"
+                          className="cx-compose-cancel"
+                          onClick={() => setReplying(null)}
+                        >
                           Cancel
                         </button>
-                        <button type="submit" className="cx-compose-send" disabled={!draft.trim()} aria-label="Send reply">
-                          <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M12 19V5M6 11l6-6 6 6" />
-                          </svg>
+                        <button
+                          type="submit"
+                          className="cx-compose-send"
+                          disabled={!draft.trim()}
+                          aria-label="Send reply"
+                        >
+                          <ArrowUpIcon />
                         </button>
                       </span>
                     </div>
@@ -523,7 +417,13 @@ export function CommentThreadDemo({ onLookChange, variant = "full" }: CommentThr
                 >
                   <span className="cx-faces" aria-hidden="true">
                     {x.replies.slice(0, 3).map((reply) => (
-                      <img key={reply.key} src={avatar(reply.author)} alt="" width={18} height={18} />
+                      <img
+                        key={reply.key}
+                        src={avatar(reply.author)}
+                        alt=""
+                        width={18}
+                        height={18}
+                      />
                     ))}
                   </span>
                   {total} {total === 1 ? "reply" : "replies"}
@@ -531,87 +431,78 @@ export function CommentThreadDemo({ onLookChange, variant = "full" }: CommentThr
               )}
             </div>
           )}
-          {!isFolded && x.replies.length > 0 && <div className="cx-replies">{thread(x.replies, x.key, depth + 1)}</div>}
-        </article>
+          {!isFolded && x.replies.length > 0 && (
+            <motion.div layout="position" {...connectorMotion} className="cx-replies">
+              {thread(x.replies, x.key, depth + 1)}
+            </motion.div>
+          )}
+        </motion.article>
       );
     });
 
-  // Only what changes the layout starts a transition: not hovering, not typing in the reply box.
-  const shape = summary
-    ? `${look.key}:summary`
-    : look.key +
-      JSON.stringify(shown, (k, v) => (["text", "author", "rich", "age", "badge"].includes(k) ? undefined : v)) +
-      [...folded].join() +
-      replying;
-  const topLevel = shown.filter((x) => !x.typing).length;
-  const total = count(comments);
+  const total = countComments(comments);
   return (
-    <div className="cx not-prose" data-look={look.key} data-variant={isPreview ? "preview" : undefined} ref={frame} onPointerDown={takeOver} onKeyDown={takeOver}>
-      <div className="cx-bar">
-        <div className="cx-tools">
-          <span className="cx-here" aria-label={`${look.here.length} people here`}>
-            {look.here.map((name) => (
-              <img key={name} src={avatar(name)} alt="" width={22} height={22} />
-            ))}
-            <em>{look.here.length} here</em>
-          </span>
-          <button type="button" className="cx-summarise" aria-pressed={summary} onClick={() => setSummary((v) => !v)}>
-            <Remold.Text>{summary ? "Show all" : "Summarize"}</Remold.Text>
-          </button>
-          <button
-            type="button"
-            className={`cx-live${live ? " on" : ""}`}
-            aria-pressed={live}
-            aria-label={live ? "Pause autoplay" : "Start autoplay"}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => {
-              if (!live) switchTo(look.key);
-              setLive((v) => !v);
-            }}
-          >
-            <Remold.Icon icon={live ? Pause : Play} strokeWidth={1.5} aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-
-      <Remold.Connectors className={`cx-stage${hover ? " focus" : ""}`} radius={24} gap={8} onPointerLeave={() => setHover(null)}>
-        <Remold.Layout trigger={shape} spring={{ duration: 0.45, bounce: 0.04 }}>
-          <div className="cx-top">{look.top}</div>
-          <div className="cx-list-head">
-            <Remold.Text className="cx-count">{`${topLevel} ${
-              topLevel === 1 ? look.noun[0] : look.noun[1]
-            } · ${total} in all`}</Remold.Text>
-            {!summary && (
-              <div className="cx-seg small" role="group" aria-label="Sort">
-                {SORTS.map((s) => (
-                  <button key={s} type="button" aria-pressed={sort === s} onClick={() => setSort(s)}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {summary ? (
-            <section className="cx-summary" aria-label={look.summary.heading}>
-              <p className="cx-summary-head">{look.summary.heading}</p>
-              <ul>
-                {look.summary.points.map((p, i) => (
-                  <li key={i}>
-                    <p>{p.text}</p>
-                    <span className="cx-chips">
-                      {p.who.map((name) => (
-                        <Avatar key={name} name={name} small />
-                      ))}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <p className="cx-summary-foot">{look.summary.foot}</p>
-            </section>
+    <div
+      className="cx not-prose"
+      data-look="post"
+      data-variant={isPreview ? "preview" : undefined}
+      ref={frame}
+      onPointerDown={takeOver}
+      onKeyDown={takeOver}
+    >
+      {/* A preview plays on its own; a playback control would make it read as a video. */}
+      {!isPreview && (
+        <button
+          type="button"
+          className={`cx-live${live ? " on" : ""}`}
+          aria-pressed={live}
+          aria-label={live ? "Pause autoplay" : "Start autoplay"}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => {
+            if (!live) restart();
+            setLive((v) => !v);
+          }}
+        >
+          {live ? (
+            <HugeiconsIcon icon={PauseIcon} strokeWidth={1.5} aria-hidden="true" />
           ) : (
-            <div className="cx-replies top">{thread(shown, "top")}</div>
+            <HugeiconsIcon icon={PlayIcon} strokeWidth={1.5} aria-hidden="true" />
           )}
-        </Remold.Layout>
+        </button>
+      )}
+
+      <Remold.Connectors
+        ref={connectorRoot}
+        className={`cx-stage${hover ? " focus" : ""}`}
+        radius={24}
+        gap={8}
+        onPointerLeave={() => setHover(null)}
+      >
+          <motion.div layout="position" {...connectorMotion} className="cx-top">
+            <Post
+              liked={liked}
+              onLike={() => setLiked((v) => !v)}
+              comments={total}
+            />
+          </motion.div>
+          <motion.div layout="position" {...connectorMotion} className="cx-list-head">
+            <span className="cx-count">{`${total} ${
+              total === 1 ? "comment" : "comments"
+            }`}</span>
+            <div className="cx-seg small" role="group" aria-label="Sort">
+              {SORTS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  aria-pressed={sort === s}
+                  onClick={() => setSort(s)}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+          <motion.div layout="position" {...connectorMotion} className="cx-replies top">{thread(shown, "top")}</motion.div>
       </Remold.Connectors>
     </div>
   );

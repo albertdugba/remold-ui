@@ -11,6 +11,7 @@ import { Customize } from "./customize/customize";
 import { Stage } from "./stage";
 import { CodeVariants, Variant } from "./code-variants";
 import { ControlsTable } from "./customize/props-table";
+import { AllComponents } from "./component-grid";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -31,6 +32,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CodeVariants,
     Variant,
     ControlsTable,
+    AllComponents,
     ...components,
   } satisfies MDXComponents;
 }

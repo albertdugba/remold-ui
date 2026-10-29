@@ -1,11 +1,15 @@
 import type { Customizable } from "../customize/controls";
 
-/** The logo morph's settings, for its docs page. */
 export const logoMorphControls: Customizable = {
   importName: "LogoMorph",
   importFrom: "@/components/remold/logo-morph",
   controls: {
-    color: { type: "color", label: "Colour", default: "#18181b", description: "The colour of the shapes." },
+    color: {
+      type: "color",
+      label: "Colour",
+      default: "#18181b",
+      description: "The colour of the shapes.",
+    },
     every: {
       type: "number",
       label: "Hold",
@@ -15,7 +19,15 @@ export const logoMorphControls: Customizable = {
       default: 1800,
       description: "Milliseconds each shape is held while playing.",
     },
-    bounce: { type: "number", label: "Bounce", min: 0, max: 0.4, step: 0.01, default: 0.12, description: "How much the morph overshoots." },
+    bounce: {
+      type: "number",
+      label: "Bounce",
+      min: 0,
+      max: 0.4,
+      step: 0.01,
+      default: 0.12,
+      description: "How much the morph overshoots.",
+    },
     height: {
       type: "number",
       label: "Height",
@@ -29,7 +41,8 @@ export const logoMorphControls: Customizable = {
       type: "toggle",
       label: "Autoplay",
       default: true,
-      description: "Play name → logo → name through the brands while on screen, until someone takes over.",
+      description:
+        "Play name → logo → name through the brands while on screen, until someone takes over.",
     },
   },
 };

@@ -1,4 +1,3 @@
-/* Particles */
 .rm-particles {
   display: grid;
   justify-items: center;
@@ -74,4 +73,12 @@
   .rm-particles-canvas {
     transition: none;
   }
+}
+
+/* Shape and transition, side by side, wrapping on narrow screens */
+.rm-particles-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }

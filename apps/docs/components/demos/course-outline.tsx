@@ -1,24 +1,12 @@
 "use client";
-/**
- * A course outline whose lines stay attached. Open and close modules, tick lessons off, and show
- * only what's left: `Remold.Layout` moves every lesson to its new place,
- * `Remold.Connectors` keeps each module's line joined to its lessons the whole way, and
- * `Remold.Text` and `Remold.Icon` update progress and ticks in place.
- *
- * The course and its lessons are made up.
- */
-import { Remold } from "@remold-ui/react";
-import {
-  BookOpen,
-  ChevronDown,
-  ChevronRight,
-  Circle,
-  CircleCheck,
-  CircleHelp,
-  Video,
-  type LucideIcon,
-} from "lucide-react";
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { ArrowRight01Icon, BookOpen01Icon, CheckmarkCircle01Icon, CircleIcon, HelpCircleIcon, Video01Icon } from "@hugeicons/core-free-icons";
+import { Remold, useConnectorMotion } from "@remold-ui/react";
+import { Toggle } from "@base-ui/react/toggle";
+import { ToggleGroup } from "@base-ui/react/toggle-group";
+import { motion } from "motion/react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import "./course-outline.css";
 
 type Kind = "video" | "reading" | "quiz";
@@ -87,10 +75,10 @@ const COURSE: Module[] = [
 const SHOW = ["All", "Remaining"] as const;
 type Show = (typeof SHOW)[number];
 
-const KIND_ICONS: Record<Kind, LucideIcon> = {
-  video: Video,
-  reading: BookOpen,
-  quiz: CircleHelp,
+const KIND_ICONS: Record<Kind, IconSvgElement> = {
+  video: Video01Icon,
+  reading: BookOpen01Icon,
+  quiz: HelpCircleIcon,
 };
 
 interface Row {
@@ -100,7 +88,6 @@ interface Row {
   lesson?: Lesson;
 }
 
-/** Moments a page can step the outline through: open, two more lessons ticked, only what's left, all closed. */
 const SCENES: { open: string[]; done: string[]; show: Show }[] = [
   {
     open: ["research", "interface"],
@@ -124,11 +111,11 @@ const SCENES: { open: string[]; done: string[]; show: Show }[] = [
   },
 ];
 
-/**
- * `scene` steps the outline from outside (0 to 3, see `SCENES`); each new value sets which modules
- * are open, what's done and what's shown. Leave it out and the outline is only driven by its own controls.
- */
+const LAYOUT_SPRING = { type: "spring" as const, duration: 0.32, bounce: 0.08 };
+
 export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
+  const connectorRoot = useRef<HTMLDivElement>(null);
+  const connectorMotion = useConnectorMotion(connectorRoot);
   const [open, setOpen] = useState<Set<string>>(
     () => new Set(["research", "interface"]),
   );
@@ -151,7 +138,7 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
     const out: Row[] = [];
     for (const module of COURSE) {
       const left = module.lessons.filter((l) => !done.has(l.id));
-      // Showing what's left hides finished modules entirely.
+
       if (show === "Remaining" && left.length === 0) continue;
       out.push({ id: module.id, parent: null, module });
       if (!open.has(module.id)) continue;
@@ -172,15 +159,15 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
       return nextSet;
     });
 
-  // Arrow keys move through the rows; right and left open and close modules.
   const onKey = (e: KeyboardEvent, row: Row) => {
     const i = rows.findIndex((r) => r.id === row.id);
     const move = (id: string) => {
       setFocus(id);
-      requestAnimationFrame(() =>
-        document
-          .querySelector<HTMLElement>(`[data-co-row="${CSS.escape(id)}"]`)
-          ?.focus(),
+      requestAnimationFrame(
+        () =>
+          document
+            .querySelector<HTMLElement>(`[data-co-row="${CSS.escape(id)}"]`)
+            ?.focus(),
       );
     };
     if (e.key === "ArrowDown" && rows[i + 1]) move(rows[i + 1]!.id);
@@ -196,48 +183,56 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
 
   const finished = lessons.filter((l) => done.has(l.id)).length;
   return (
-    <div className='co not-prose'>
-      <div className='co-head'>
+    <div className="co not-prose">
+      <div className="co-head">
         <div>
-          <p className='co-eyebrow'>Course</p>
+          <p className="co-eyebrow">Course</p>
           <h4>Product Design Foundations</h4>
         </div>
         <div
-          className='co-progress'
+          className="co-progress"
           aria-label={`${finished} of ${lessons.length} lessons done`}
         >
-          <Remold.Text className='co-progress-count'>{`${finished} of ${lessons.length} lessons`}</Remold.Text>
-          <span className='co-bar' aria-hidden='true'>
+          <span className="co-progress-count">{`${finished} of ${lessons.length} lessons`}</span>
+          <span className="co-bar" aria-hidden="true">
             <span style={{ width: `${(finished / lessons.length) * 100}%` }} />
           </span>
         </div>
       </div>
-      <div className='co-tools'>
-        <div className='co-seg' role='group' aria-label='Show'>
+      <div className="co-tools">
+        <ToggleGroup
+          className="co-seg"
+          aria-label="Show"
+          value={[show]}
+          onValueChange={(values) => {
+            const next = values[0] as Show | undefined;
+            if (next) setShow(next);
+          }}
+        >
           {SHOW.map((s) => (
-            <button
+            <Toggle
               key={s}
-              type='button'
-              aria-pressed={show === s}
-              onClick={() => setShow(s)}
+              value={s}
             >
               {s}
-            </button>
+            </Toggle>
           ))}
-        </div>
+        </ToggleGroup>
         {next && (
-          <span className='co-next'>
-            Up next: <Remold.Text>{next.title}</Remold.Text>
+          <span className="co-next">
+            Up next: <span>{next.title}</span>
           </span>
         )}
       </div>
 
-      <Remold.Connectors className='co-lines' radius={10} gap={3}>
-        <Remold.Layout
-          trigger={`${rows.map((r) => r.id).join("|")}`}
-          role='tree'
-          aria-label='Course outline'
-          className='co-tree'
+      <Remold.Connectors ref={connectorRoot} className="co-lines" radius={10} gap={3}>
+        <motion.div
+          layout
+          {...connectorMotion}
+          transition={LAYOUT_SPRING}
+          role="tree"
+          aria-label="Course outline"
+          className="co-tree"
         >
           {rows.map((row) => {
             if (row.module) {
@@ -246,54 +241,56 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
               const isOpen = open.has(m.id);
               const minutes = m.lessons.reduce((n, l) => n + l.minutes, 0);
               return (
-                <button
+                <motion.button
+                  layout
+                  {...connectorMotion}
+                  transition={LAYOUT_SPRING}
                   key={m.id}
-                  type='button'
-                  role='treeitem'
+                  type="button"
+                  role="treeitem"
                   aria-level={1}
                   aria-expanded={isOpen}
                   data-co-row={m.id}
                   tabIndex={focus === m.id ? 0 : -1}
-                  className='co-module'
+                  className="co-module"
                   onClick={() => {
                     setFocus(m.id);
                     toggle(setOpen, m.id);
                   }}
                   onKeyDown={(e) => onKey(e, row)}
                 >
-                  <span className='co-chevron' aria-hidden='true'>
-                    <Remold.Icon
-                      icon={isOpen ? ChevronDown : ChevronRight}
-                      strokeWidth={2}
-                      aria-hidden='true'
-                    />
+                  <span className="co-chevron" aria-hidden="true">
+                    <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} aria-hidden="true" data-open={isOpen ? "" : undefined} />
                   </span>
                   <span
-                    className='co-number'
+                    className="co-number"
                     data-rm-anchor={m.id}
                     data-complete={count === m.lessons.length || undefined}
                   >
                     {COURSE.indexOf(m) + 1}
                   </span>
-                  <span className='co-title'>{m.title}</span>
-                  <Remold.Text className='co-meta'>{`${count}/${m.lessons.length} · ${minutes} min`}</Remold.Text>
-                </button>
+                  <span className="co-title">{m.title}</span>
+                  <span className="co-meta">{`${count}/${m.lessons.length} · ${minutes} min`}</span>
+                </motion.button>
               );
             }
             const l = row.lesson!;
             const isDone = done.has(l.id);
             const KindIcon = KIND_ICONS[l.kind];
             return (
-              <div
+              <motion.div
+                layout
+                {...connectorMotion}
+                transition={LAYOUT_SPRING}
                 key={l.id}
-                role='treeitem'
+                role="treeitem"
                 aria-level={2}
                 aria-selected={focus === l.id}
                 className={`co-lesson${next?.id === l.id ? " next" : ""}`}
               >
                 <button
-                  type='button'
-                  className='co-tick'
+                  type="button"
+                  className="co-tick"
                   data-co-row={l.id}
                   tabIndex={focus === l.id ? 0 : -1}
                   aria-label={
@@ -311,20 +308,20 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
                   onKeyDown={(e) => onKey(e, row)}
                 >
                   <Remold.Icon
-                    icon={isDone ? CircleCheck : Circle}
+                    icon={<HugeiconsIcon icon={isDone ? CheckmarkCircle01Icon : CircleIcon} />}
                     strokeWidth={1.8}
-                    aria-hidden='true'
+                    aria-hidden="true"
                   />
                 </button>
-                <span className='co-lesson-title'>{l.title}</span>
-                <span className='co-kind' aria-label={l.kind}>
-                  <KindIcon aria-hidden='true' />
+                <span className="co-lesson-title">{l.title}</span>
+                <span className="co-kind" aria-label={l.kind}>
+                  <HugeiconsIcon icon={KindIcon} aria-hidden="true" />
                 </span>
-                <span className='co-minutes'>{l.minutes} min</span>
-              </div>
+                <span className="co-minutes">{l.minutes} min</span>
+              </motion.div>
             );
           })}
-        </Remold.Layout>
+        </motion.div>
       </Remold.Connectors>
     </div>
   );

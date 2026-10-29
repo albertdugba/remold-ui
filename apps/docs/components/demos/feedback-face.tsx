@@ -1,31 +1,34 @@
 "use client";
-/**
- * A feedback rating whose face is one illustration in five parts: the face, brows, eyes, mouth and
- * a little extra (a tear, or blushing cheeks). `Remold.PathGroup` morphs each part on its own:
- * angry brows lift, a frown becomes a smile and opens into a laugh, and round eyes turn into
- * hearts. Colours follow with CSS transitions; the label and the follow-up question change with
- * `Remold.Text`.
- */
+
 import { Remold } from "@remold-ui/react";
+import { Toggle } from "@base-ui/react/toggle";
+import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { useState } from "react";
 import { Frame } from "./frame";
 import "./feedback-face.css";
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 
-/** An ellipse as path data, so it can morph into any other shape. */
 const ellipse = (cx: number, cy: number, rx: number, ry = rx) =>
-  `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${rx * 2} 0a${rx} ${ry} 0 1 0 ${-rx * 2} 0Z`;
+  `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${rx * 2} 0a${rx} ${ry} 0 1 0 ${
+    -rx * 2
+  } 0Z`;
 
-/** A heart centred on (cx, cy), about 2s wide. */
 const heart = (cx: number, cy: number, s: number) =>
-  `M${cx} ${r1(cy + s * 0.95)}C${r1(cx - s * 1.35)} ${r1(cy + s * 0.05)} ${r1(cx - s * 0.95)} ${r1(cy - s * 1.05)} ${cx} ${r1(cy - s * 0.4)}` +
-  `C${r1(cx + s * 0.95)} ${r1(cy - s * 1.05)} ${r1(cx + s * 1.35)} ${r1(cy + s * 0.05)} ${cx} ${r1(cy + s * 0.95)}Z`;
+  `M${cx} ${r1(cy + s * 0.95)}C${r1(cx - s * 1.35)} ${r1(cy + s * 0.05)} ${r1(
+    cx - s * 0.95,
+  )} ${r1(cy - s * 1.05)} ${cx} ${r1(cy - s * 0.4)}` +
+  `C${r1(cx + s * 0.95)} ${r1(cy - s * 1.05)} ${r1(cx + s * 1.35)} ${r1(
+    cy + s * 0.05,
+  )} ${cx} ${r1(cy + s * 0.95)}Z`;
 
-/** A closed, smiling eye: a thick arch. */
-const arch = (cx: number, cy: number) => `M${cx - 13} ${cy + 5}Q${cx} ${cy - 14} ${cx + 13} ${cy + 5}Q${cx} ${cy - 3} ${cx - 13} ${cy + 5}Z`;
+const arch = (cx: number, cy: number) =>
+  `M${cx - 13} ${cy + 5}Q${cx} ${cy - 14} ${cx + 13} ${cy + 5}Q${cx} ${
+    cy - 3
+  } ${cx - 13} ${cy + 5}Z`;
 
-const pair = (make: (cx: number, cy: number) => string) => make(72, 96) + make(128, 96);
+const pair = (make: (cx: number, cy: number) => string) =>
+  make(72, 96) + make(128, 96);
 
 const FACE = ellipse(100, 104, 80);
 
@@ -72,13 +75,18 @@ const RATINGS = [
   },
 ] as const;
 
-/**
- * `index` drives the rating from outside (0 = Terrible … 4 = Love it!); leave it out and the
- * buttons do.
- */
-export function FeedbackFaceDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
+export function FeedbackFaceDemo({
+  framed = true,
+  index,
+}: {
+  framed?: boolean;
+  index?: number;
+}) {
   const [own, setOwn] = useState(4);
-  const rating = index === undefined ? own : ((index % RATINGS.length) + RATINGS.length) % RATINGS.length;
+  const rating =
+    index === undefined
+      ? own
+      : ((index % RATINGS.length) + RATINGS.length) % RATINGS.length;
   const r = RATINGS[rating]!;
   const body = (
     <div className="ff" data-rating={rating + 1}>
@@ -86,44 +94,50 @@ export function FeedbackFaceDemo({ framed = true, index }: { framed?: boolean; i
         className="ff-art"
         viewBox="0 0 200 200"
         role="img"
-        aria-label={`A face that looks ${r.label.toLowerCase().replace("!", "")}`}
+        aria-label={`A face that looks ${r.label
+          .toLowerCase()
+          .replace("!", "")}`}
         spring={{ duration: 0.55, bounce: 0.25 }}
         paths={[
           { id: "face", d: FACE, className: "ff-face" },
           { id: "extra", d: r.extra, className: "ff-extra" },
-          { id: "brows", d: r.brows, className: "ff-brows", fill: "none", strokeWidth: 7, strokeLinecap: "round" },
+          {
+            id: "brows",
+            d: r.brows,
+            className: "ff-brows",
+            fill: "none",
+            strokeWidth: 7,
+            strokeLinecap: "round",
+          },
           { id: "eyes", d: r.eyes, className: "ff-eyes" },
           { id: "mouth", d: r.mouth, className: "ff-mouth" },
         ]}
       />
       <div className="ff-copy">
         <p className="ff-question">How was your delivery?</p>
-        <Remold.Text className="ff-label">{r.label}</Remold.Text>
+        <span className="ff-label">{r.label}</span>
       </div>
-      <div className="ff-scale" role="radiogroup" aria-label="Rating">
+      <ToggleGroup
+        className="ff-scale"
+        aria-label="Rating"
+        value={[String(rating)]}
+        onValueChange={(values) => {
+          const next = values[0];
+          if (next) setOwn(Number(next));
+        }}
+      >
         {RATINGS.map((item, i) => (
-          <button
+          <Toggle
             key={item.label}
-            type="button"
-            role="radio"
-            aria-checked={i === rating}
+            value={String(i)}
             aria-label={item.label}
-            onClick={() => setOwn(i)}
-            tabIndex={index === undefined ? (i === rating ? 0 : -1) : -1}
-            onKeyDown={(e) => {
-              const step = e.key === "ArrowRight" || e.key === "ArrowUp" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowDown" ? -1 : 0;
-              if (!step) return;
-              e.preventDefault();
-              const next = Math.min(RATINGS.length - 1, Math.max(0, rating + step));
-              setOwn(next);
-              (e.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus();
-            }}
+            disabled={index !== undefined}
           >
             {i + 1}
-          </button>
+          </Toggle>
         ))}
-      </div>
-      <Remold.Text className="ff-ask">{r.ask}</Remold.Text>
+      </ToggleGroup>
+      <span className="ff-ask">{r.ask}</span>
     </div>
   );
   return framed ? <Frame>{body}</Frame> : body;

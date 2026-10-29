@@ -1,0 +1,36 @@
+---
+title: "Bulk selection"
+description: "Selecting many rows at once: shift-click selects a range, neighbouring picks join into one band, and the hint at the foot gives way to an action bar whose count rolls as the selection grows."
+status: "new"
+tags: ["Motion", "Base UI"]
+---
+
+<Stage name="bulk-select" code={<Source demo="bulk-select" />} minHeight={600}>
+  <BulkSelectDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Tick a row, then shift-click another.** Everything between is selected, and neighbouring picks join into one band.
+- **Watch the header box.** It shows when some or all of the rows are selected.
+- **Look at the foot.** The hint gives way to an action bar whose count rolls as the selection grows.
+- **Delete.** The chosen rows fold away one after another, and the bar offers Undo.
+
+## Install
+
+<AddCommand name="bulk-select" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="bulk-select" />
+
+## How it works
+
+- The checkboxes, including the header's mixed state, are Base UI's Checkbox; the action bar's buttons have Base UI tooltips.
+- The joined bands, the rolling count and the rows folding away are Motion.
+
+<Callout>The files are made up.</Callout>

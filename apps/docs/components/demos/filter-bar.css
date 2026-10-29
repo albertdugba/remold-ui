@@ -1,0 +1,338 @@
+/* A filter bar. Styling only: the menus are Base UI; the tokens, values, count and rows move with
+   Motion. Tokens live on .flt-layer too, for the portalled menus. */
+.flt-layer {
+  --flt-surface: #ffffff;
+  --flt-raised: #ffffff;
+  --flt-field: #f4f4f5;
+  --flt-line: rgb(24 24 27 / 0.08);
+  --flt-ink: #18181b;
+  --flt-muted: #71717a;
+  --flt-quiet: #a1a1aa;
+  --flt-accent: #4f46e5;
+  --flt-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.22), 0 0 0 1px rgb(24 24 27 / 0.06);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .flt-layer {
+  --flt-surface: #1f1f23;
+  --flt-raised: #2a2a2f;
+  --flt-field: #2e2e33;
+  --flt-line: rgb(255 255 255 / 0.08);
+  --flt-ink: #fafafa;
+  --flt-muted: #a1a1aa;
+  --flt-quiet: #71717a;
+  --flt-accent: #818cf8;
+  --flt-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.flt {
+  display: grid;
+  width: min(100%, 460px);
+  padding: 14px;
+  border-radius: 20px;
+  background: var(--flt-surface);
+  color: var(--flt-ink);
+}
+
+.flt-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.flt-tokens {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A token: field, operator, value and remove, joined into one segmented pill */
+.flt-token {
+  display: inline-flex;
+  flex: none;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--flt-line);
+  background: var(--flt-surface);
+}
+
+.flt-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 100%;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--flt-ink);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.flt-seg + .flt-seg {
+  box-shadow: inset 1px 0 0 var(--flt-line);
+}
+
+.flt-field {
+  color: var(--flt-muted);
+}
+
+.flt-field svg {
+  width: 13px;
+  height: 13px;
+}
+
+.flt-value {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.flt-value:hover,
+.flt-value[data-popup-open],
+.flt-remove:hover {
+  background: var(--flt-field);
+}
+
+.flt-roll {
+  display: inline-grid;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.flt-remove {
+  padding: 0 6px;
+  color: var(--flt-quiet);
+  cursor: pointer;
+}
+
+.flt-remove svg {
+  width: 13px;
+  height: 13px;
+}
+
+.flt-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--flt-field);
+  color: var(--flt-muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.flt-add:hover,
+.flt-add[data-popup-open] {
+  color: var(--flt-ink);
+}
+
+.flt-add svg {
+  width: 14px;
+  height: 14px;
+}
+
+.flt-clear {
+  flex: none;
+  height: 24px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--flt-muted);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.flt-clear:hover {
+  color: var(--flt-ink);
+}
+
+.flt-value:focus-visible,
+.flt-remove:focus-visible,
+.flt-add:focus-visible,
+.flt-clear:focus-visible {
+  outline: 2px solid var(--flt-accent);
+  outline-offset: -2px;
+}
+
+/* The count, with Clear at the far end of the same line */
+.flt-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  margin: 12px 0 0;
+  padding: 0 4px 8px;
+  border-bottom: 1px solid var(--flt-line);
+}
+
+.flt-count p {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+  color: var(--flt-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.flt-count .odo {
+  color: var(--flt-ink);
+  font-weight: 650;
+}
+
+.flt-sep {
+  color: var(--flt-quiet);
+}
+
+/* The total spent rolls with the count */
+.flt-count .flt-total {
+  font-variant-numeric: tabular-nums;
+}
+
+.flt-count svg {
+  width: 12px;
+  height: 12px;
+  align-self: center;
+}
+
+.flt-list {
+  display: grid;
+  min-height: 276px;
+  margin: 4px 0 0;
+  padding: 0;
+  align-content: start;
+  list-style: none;
+}
+
+.flt-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 46px;
+  padding: 0 4px;
+}
+
+/* The merchant's own mark, white on its own colour */
+.flt-logo {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.flt-logo svg {
+  width: 15px;
+  height: 15px;
+  fill: #ffffff;
+}
+
+.flt-row-copy {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.flt-row-title {
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flt-row-meta {
+  overflow: hidden;
+  color: var(--flt-quiet);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flt-amount {
+  flex: none;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.flt-empty {
+  padding: 30px 0;
+  color: var(--flt-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Menus */
+.flt-menu {
+  min-width: 156px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--flt-raised);
+  box-shadow: var(--flt-shadow);
+  color: var(--flt-ink);
+  transform-origin: var(--transform-origin);
+  transition: opacity 0.14s, transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  outline: none;
+}
+
+.flt-menu[data-starting-style],
+.flt-menu[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.flt-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: default;
+  outline: none;
+  user-select: none;
+}
+
+.flt-item svg {
+  width: 14px;
+  height: 14px;
+  color: var(--flt-muted);
+}
+
+.flt-item[data-highlighted],
+.flt-item[data-popup-open] {
+  background: var(--flt-field);
+}
+
+.flt-more {
+  margin-left: auto;
+}
+
+.flt-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.flt-tick {
+  margin-left: auto;
+  color: var(--flt-accent);
+  font-size: 12px;
+}

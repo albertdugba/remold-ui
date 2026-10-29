@@ -1,0 +1,110 @@
+{
+  "postThread": [
+    {
+      "key": "c-docs",
+      "author": "Yaw Darko",
+      "text": "The part about writing the README before the code changed how I work. Did you keep that up after launch?",
+      "votes": 24,
+      "age": 180,
+      "replies": [
+        {
+          "key": "r-ama-docs",
+          "author": "Ama Mensah",
+          "badge": "Author",
+          "text": "Mostly! The README is still the first file I touch. If I can’t explain it there, the API isn’t ready.",
+          "votes": 18,
+          "age": 160,
+          "replies": [
+            {
+              "key": "r-esi",
+              "author": "Esi Ofori",
+              "text": "Stealing this. We do it backwards at work and it shows.",
+              "votes": 9,
+              "age": 120,
+              "replies": [
+                {
+                  "key": "r-yaw",
+                  "author": "Yaw Darko",
+                  "text": "Same here. Writing the README first would have saved us a rewrite.",
+                  "votes": 3,
+                  "age": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r-kofi",
+          "author": "Kofi Agyeman",
+          "text": "How long was it from the first commit to the launch?",
+          "votes": 7,
+          "age": 90,
+          "replies": [
+            {
+              "key": "r-ama-time",
+              "author": "Ama Mensah",
+              "badge": "Author",
+              "text": "About ten weeks of evenings. The last two were all docs and examples.",
+              "votes": 5,
+              "age": 80
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "c-launch",
+      "author": "Efua Addo",
+      "text": "What actually brought people in? Hacker News, X, or something else?",
+      "votes": 11,
+      "age": 60,
+      "replies": [
+        {
+          "key": "r-ama-launch",
+          "author": "Ama Mensah",
+          "badge": "Author",
+          "text": "One honest launch post, then answering every issue within a day. That did more than any launch.",
+          "votes": 6,
+          "age": 50,
+          "replies": [
+            {
+              "key": "r-kwame",
+              "author": "Kwame Owusu",
+              "text": "Quick replies are underrated. It’s why I stuck with the last library I tried.",
+              "votes": 8,
+              "age": 40
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "homePreview": [
+    {
+      "key": "c-docs",
+      "author": "Yaw Darko",
+      "text": "The part about writing the README before the code changed how I work. Did you keep that up?",
+      "votes": 24,
+      "age": 180,
+      "replies": [
+        {
+          "key": "r-ama-docs",
+          "author": "Ama Mensah",
+          "badge": "Author",
+          "text": "Mostly! If I can’t explain it in the README, the API isn’t ready.",
+          "votes": 18,
+          "age": 160,
+          "replies": [
+            {
+              "key": "r-esi",
+              "author": "Esi Ofori",
+              "text": "Stealing this. We do it backwards at work and it shows.",
+              "votes": 9,
+              "age": 120
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

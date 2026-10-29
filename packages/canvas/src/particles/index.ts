@@ -12,10 +12,10 @@ import { fitCanvas, type CanvasSize } from "../canvas-size";
 import { matchByIndex, matchOffThread, OFF_THREAD_MATCH_CELLS } from "./matching";
 import { createPointerController } from "./pointer";
 import { createParticleRenderer } from "./renderer";
-import type { Particles, ParticlesOptions, ParticlesToOptions } from "./types";
+import type { Particles, ParticlesOptions, ParticlesToOptions, ParticleTransition } from "./types";
 
 export { sampleImagePoints, sampleTextPoints, type ImageSampleOptions, type TextSampleOptions } from "./sampling";
-export type { ParticleFill, Particles, ParticlesOptions, ParticlesToOptions } from "./types";
+export type { ParticleFill, ParticleTransition, Particles, ParticlesOptions, ParticlesToOptions } from "./types";
 
 export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions = {}): Particles {
   const configuration = createConfiguration(options);
@@ -99,6 +99,7 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
   function transitionTo(points: readonly CloudPoint[], transitionOptions: ParticlesToOptions = {}): void {
     if (destroyed) return;
     validatePairing(transitionOptions.pairing);
+    const scatter = scatterOf(transitionOptions.transition);
     updateRadius({ radius: transitionOptions.radius, animatedRadius: radius, reducedMotion });
     shownPoints = points;
     fittedSize = dimensions(size);
@@ -106,7 +107,7 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
     const show = (matches?: PointMatches) => {
       if (destroyed || ticket !== pendingTransition) return;
       const targetPoints = fitPointsToCanvas({ points, fit: configuration.fit, padding: configuration.padding, size });
-      cloud.to(targetPoints, { instant: reducedMotion(), ...(matches ? { matches } : {}) });
+      cloud.to(targetPoints, { instant: reducedMotion(), ...(matches ? { matches } : {}), ...(scatter ? { scatter } : {}) });
       setCanvasLabel(canvas, transitionOptions.label);
       renderer.render();
       if (!cloud.settled || !radius.settled) wake();
@@ -204,7 +205,10 @@ function createResizeObserver({
     const previousSize = getFittedSize();
     if (refit && (size.width !== previousSize.width || size.height !== previousSize.height)) {
       setFittedSize(dimensions(size));
-      cloud.to(getFittedPoints(), { instant: true, matches: matchByIndex(cloud.live) });
+      // A change that's still being paired off the main thread fits itself to the new size when it
+      // lands; until then the cloud still holds the previous shape, which these points don't fit.
+      const fitted = getFittedPoints();
+      if (fitted.length === cloud.live) cloud.to(fitted, { instant: true, matches: matchByIndex(cloud.live) });
     }
     render();
   });
@@ -252,6 +256,17 @@ function updateRadius({
 function validatePairing(pairing: ParticlesToOptions["pairing"]): void {
   if (pairing !== undefined && pairing !== "match" && pairing !== "index")
     throw new RangeError(`particles: pairing must be "match" or "index", got ${pairing}`);
+}
+
+/** The point cloud's scatter settings for a transition, or nothing for a direct one. */
+function scatterOf(transition: ParticleTransition | undefined) {
+  if (transition === undefined || transition === "direct") return undefined;
+  if (transition === "scatter") return true;
+  if (typeof transition === "object" && transition !== null && transition.type === "scatter") {
+    const { type: _, ...settings } = transition;
+    return settings;
+  }
+  throw new RangeError(`particles: transition must be "direct", "scatter" or { type: "scatter", … }, got ${String(transition)}`);
 }
 
 function setCanvasLabel(canvas: HTMLCanvasElement, label: string | undefined): void {

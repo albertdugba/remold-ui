@@ -1,0 +1,27 @@
+/* Data import: the summary chip. The stage, scene and footer are night-stage.css. */
+.di-chip {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.di-table {
+  display: grid;
+  gap: 1px;
+  padding: 8px 14px;
+}
+
+.di-table + .di-table {
+  box-shadow: inset 1px 0 0 rgb(255 255 255 / 0.08);
+}
+
+.di-table span {
+  color: #8f8ca3;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+}
+
+.di-table b {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}

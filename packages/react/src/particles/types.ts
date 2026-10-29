@@ -32,6 +32,12 @@ export interface RemoldParticlesProps
   label?: string;
   /** How dots find their place in the next shape. See `particles().to`. Default `"match"`. */
   pairing?: ParticlesToOptions["pairing"];
+  /**
+   * How dots get to the next shape. `"direct"` (the default) springs each one straight there.
+   * `"scatter"` dissolves the shape into a loose, glittering cloud, then gathers it into the next;
+   * pass `{ type: "scatter", spread, hold, stagger, seed }` to tune it. Reduced motion skips it.
+   */
+  transition?: ParticlesToOptions["transition"];
   /** Dot radius in CSS pixels. Changing it springs the dots to the new size. Default 2.5. */
   radius?: number;
   /** Dot shape. Default `"circle"`; squares are cheaper for very large clouds. Read once. */

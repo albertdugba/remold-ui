@@ -1,0 +1,37 @@
+---
+title: "API keys"
+description: "Creating an API key, where you see the secret once: it decodes a character at a time in a dark panel, then the panel folds down into the newest row and the secret scrambles into its masked form."
+status: "new"
+tags: ["Motion", "Base UI"]
+---
+
+<Stage name="api-keys" code={<Source demo="api-keys" />} minHeight={600}>
+  <ApiKeysDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Create a key.** "Create key" unfolds a row where you name it.
+- **Reveal the secret.** Create opens a dark panel where the secret decodes a character at a time.
+- **Copy it.** The copy icon turns into a check.
+- **Press Done.** The panel folds down into the newest row of the list, and the secret scrambles itself into its masked form as it lands.
+
+## Install
+
+<AddCommand name="api-keys" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="api-keys" />
+
+## How it works
+
+- **The panel becomes the row.** The secret panel and the new list row are a shared layout in Motion, so the panel folds into its place in the list instead of closing.
+- **Decode and mask.** Revealing and hiding the secret use the same scramble hook, run in opposite directions.
+- **Copy to check.** The icon reshapes with Remold's `createMorph`. The filter above the list is Base UI's Toggle Group.
+
+<Callout>The keys are made up.</Callout>

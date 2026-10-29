@@ -10,3 +10,5 @@ export { RemoldConnectors as Connectors } from "./connectors/remold-connectors.j
 export { RemoldAnchor as Anchor } from "./anchor/remold-anchor.js";
 export { RemoldParticles as Particles } from "./particles/remold-particles.js";
 export type { ParticleShape } from "./particles/types.js";
+export { RemoldCanvas as Canvas } from "./canvas/remold-canvas.js";
+export type { RemoldCanvasActions as CanvasActions } from "./canvas/types.js";

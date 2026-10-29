@@ -1,10 +1,6 @@
 "use client";
-/**
- * `<Customize name="integrations-hub" />`: the live component with a panel of its settings under it.
- * Every change shows at once; Reset puts the defaults back; Copy code gives the JSX for exactly
- * these settings. The settings come from the component's `<name>.controls.ts`.
- */
-import { Check, Copy, RotateCcw } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Copy01Icon, RotateLeft01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { useState, type ComponentType, type ReactNode } from "react";
 import { Stage } from "../stage";
 import { codeFor, defaultsOf, formatValue, type Control, type Customizable, type Values } from "./controls";
@@ -147,7 +143,7 @@ export function Customize({ name, code, width, wide }: { name: string; code?: Re
             onClick={() => setValues(defaults)}
             className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-3 py-1.5 text-[13px] text-fd-muted-foreground enabled:hover:text-fd-foreground disabled:opacity-40"
           >
-            <RotateCcw className="size-3.5" aria-hidden="true" />
+            <HugeiconsIcon icon={RotateLeft01Icon} className="size-3.5" aria-hidden="true" />
             Reset
           </button>
           <button
@@ -159,7 +155,7 @@ export function Customize({ name, code, width, wide }: { name: string; code?: Re
             }}
             className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-3 py-1.5 text-[13px] hover:bg-fd-accent"
           >
-            {copied ? <Check className="size-3.5" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
+            {copied ? <HugeiconsIcon icon={Tick01Icon} className="size-3.5" aria-hidden="true" /> : <HugeiconsIcon icon={Copy01Icon} className="size-3.5" aria-hidden="true" />}
             {copied ? "Copied" : "Copy code"}
           </button>
         </span>

@@ -1,0 +1,36 @@
+---
+title: "Usage meter"
+description: "A plan's usage on a billing page: bars fill as the month goes on, turn amber when you're running low and red once you're over, and upgrading makes every bar spring back down."
+status: "new"
+tags: ["Motion", "Base UI"]
+---
+
+<Stage name="usage-meter" code={<Source demo="usage-meter" />} minHeight={680}>
+  <UsageMeterDemo />
+</Stage>
+
+It plays a month while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Watch the month go by.** The bars fill, turn amber when you're running low and red once you're over.
+- **Look at the bill.** The overage slides into the projected bill.
+- **Upgrade.** The new limits make every bar spring back down while the warnings fold away.
+- **Point at the ⓘ beside a meter** to see what it counts and what going over costs.
+
+## Install
+
+<AddCommand name="usage-meter" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="usage-meter" />
+
+## How it works
+
+- Each bar is Base UI's Meter, so it carries the right role and values for assistive tech; the details are Base UI's Tooltip.
+- The fills, colours and folding warnings are Motion, and the numbers roll with a small odometer.
+
+<Callout>The plans and prices are made up.</Callout>

@@ -1,11 +1,6 @@
 "use client";
-/**
- * Which framework the code and install commands are shown for. The choice is shared by every
- * block on the page and remembered for next time, like the package manager. Each block says which
- * frameworks it has; the rest appear in the menu marked "Soon", and a block shows its first
- * available framework when the chosen one isn't ready for it.
- */
-import { Check, ChevronDown } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowDown01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 export const FRAMEWORKS = [
@@ -85,7 +80,7 @@ export function FrameworkMenu({ available }: { available: readonly Framework[] }
         className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12.5px] text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-foreground focus-visible:outline-2 focus-visible:outline-fd-ring"
       >
         {label}
-        <ChevronDown className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+        <HugeiconsIcon icon={ArrowDown01Icon} className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
       </button>
       {open && (
         <ul
@@ -112,7 +107,7 @@ export function FrameworkMenu({ available }: { available: readonly Framework[] }
                       Soon
                     </span>
                   )}
-                  {f.id === current && <Check className="size-3.5" aria-hidden="true" />}
+                  {f.id === current && <HugeiconsIcon icon={Tick01Icon} className="size-3.5" aria-hidden="true" />}
                 </button>
               </li>
             );

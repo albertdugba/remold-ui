@@ -18,9 +18,10 @@ Or morph any icon yourself with [Icon](/docs/primitives/icon). Pass the icon com
 
 ```tsx
 import { Remold } from "@remold-ui/react";
-import { Volume2, VolumeX } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { VolumeHighIcon, VolumeMuteIcon } from "@hugeicons/core-free-icons";
 
-<Remold.Icon icon={muted ? VolumeX : Volume2} className="size-5" />;
+<Remold.Icon icon={<HugeiconsIcon icon={muted ? VolumeMuteIcon : VolumeHighIcon} />} className="size-5" />;
 ```
 
 It works with any icon set, or your own SVG components: Remold reads each icon's paths, circles, rectangles and lines, and takes its stroke and fill from the icon.
@@ -39,4 +40,4 @@ Any icon can become any other, but some pairs look better than others:
 - **Similar numbers of strokes.** When one icon has more strokes than the other, the extra ones grow out of the nearest stroke instead of appearing from nowhere, but a 2-stroke icon becoming a 12-stroke one is busy.
 - **No transforms.** An icon whose SVG uses `transform` is shown as it is, without morphing, and a warning says which element to flatten.
 
-<Callout>The icons are from [Lucide](https://lucide.dev), an open-source icon set (ISC licence).</Callout>
+<Callout>The examples use [Hugeicons](https://hugeicons.com), with the free Stroke Rounded icon set.</Callout>

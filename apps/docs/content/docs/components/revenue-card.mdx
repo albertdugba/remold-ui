@@ -1,0 +1,35 @@
+---
+title: "Revenue"
+description: "The revenue card at the top of every SaaS dashboard: switch the range and the chart line reshapes instead of redrawing, while the MRR and the change badge roll to their new figures."
+status: "new"
+tags: ["Morph", "Base UI"]
+---
+
+<Stage name="revenue-card" code={<Source demo="revenue-card" />} minHeight={600}>
+  <RevenueCardDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Switch between 7, 30 and 90 days.** The chart line doesn't redraw: it reshapes into the new range.
+- **Watch the numbers.** The MRR rolls like a counter, and the change badge rolls too, its arrow turning between up and down.
+- **Scrub along the chart.** A dot rides the line and the headline shows that day's figure.
+
+## Install
+
+<AddCommand name="revenue-card" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="revenue-card" />
+
+## How it works
+
+- **One line, reshaped.** The chart line and the badge's arrow are paths morphed with Remold's [`createMorph`](/docs/core/shapes), so a new range is the same line moving into new points, and up and down are the same arrow turning.
+- The range switch is Base UI's Toggle Group; the figures roll with a small odometer built on Motion.
+
+<Callout>The numbers are made up.</Callout>
