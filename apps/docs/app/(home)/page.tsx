@@ -2,10 +2,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { RemoldMark } from "@/components/brand/remold-mark";
 import { CopyCommand } from "@/components/copy-command";
-import { Compare } from "@/components/home/compare";
 import { Faq } from "@/components/home/faq";
 import { Flavors } from "@/components/home/flavors";
 import { Parts } from "@/components/home/parts";
+import { Points } from "@/components/home/points";
 import { HeroWord } from "@/components/home/hero-word";
 import { FLAVOR_NAMES, FLAVORS, type Flavor } from "@/components/home/flavors-code";
 import { highlight } from "fumadocs-core/highlight";
@@ -97,8 +97,7 @@ export default async function HomePage() {
             <div className="hm-head">
               <h2>Use the engine at the level you need.</h2>
               <p>
-                Start with a React primitive, animate a DOM change without a framework, or build a canvas scene. The matching and spring
-                logic underneath is available on its own, too.
+                Start with a React component, call it from plain JavaScript on any element, or build a canvas scene. The matching and spring logic underneath is available on its own, too.
               </p>
               <Link className="hm-link" href="/docs/installation">
                 Installation <span aria-hidden="true">→</span>
@@ -108,15 +107,12 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        <Section kicker="The difference">
+        <Section kicker="Why Remold">
           <header className="hm-head">
-            <h2>It follows the content, not a label.</h2>
-            <p>
-              Shared-element transitions often need matching names in both views. Remold compares what is rendered—text, images, geometry
-              and context—to work out what persists, even when a different component or server response produces the next view.
-            </p>
+            <h2>Made for interfaces that change.</h2>
+            <p>Wrap what changes and keep building. The rest is handled for you.</p>
           </header>
-          <Compare />
+          <Points />
         </Section>
 
         <Section kicker="Questions">

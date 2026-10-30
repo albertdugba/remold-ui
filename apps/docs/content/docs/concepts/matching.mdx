@@ -32,10 +32,16 @@ Pass `match` to [Layout](/docs/primitives/layout), `useRemold` or `transition()`
 
 Wrap anything that shouldn't move, such as a video or a live chart, in [Ignore](/docs/primitives/ignore), or add a `data-rm-ignore` attribute. It and everything inside it is skipped.
 
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Ignore>
   <VideoPlayer />
 </Remold.Ignore>
+```
+
+```html tab="JavaScript"
+<div data-rm-ignore>
+  <video src="/launch.mp4"></video>
+</div>
 ```
 
 <Callout>To see what was paired, add a style for `[data-rm-matched]`, `[data-rm-entering]` and `[data-rm-exiting]`.</Callout>

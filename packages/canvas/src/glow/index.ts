@@ -26,6 +26,7 @@ export interface HaloOptions {
  */
 export function halo({ context, color, alpha, radius, core = 0, steps = STEPS }: HaloOptions): void {
   if (alpha <= 0.002 || radius <= 0.1) return;
+
   context.save();
   context.lineJoin = "round";
   context.lineCap = "round";

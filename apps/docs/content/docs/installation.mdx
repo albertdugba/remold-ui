@@ -1,6 +1,6 @@
 ---
 title: "Installation"
-description: "Install the package for your framework. The packages it builds on come with it."
+description: "Install the React package, or use Remold from plain JavaScript. The packages they build on come with them."
 ---
 
 ## React
@@ -9,17 +9,25 @@ description: "Install the package for your framework. The packages it builds on 
 
 React 18 or later. The package ships ES modules, CommonJS and TypeScript types.
 
-## Without a framework
+## JavaScript
 
-<Install packages="@remold-ui/dom" js />
+Not using React? `@remold-ui/dom` works on any element, with any framework or none: Vue, Svelte, Astro, server-rendered pages, or a plain `<script type="module">`.
 
-```ts
+<Install packages="@remold-ui/dom" />
+
+```js
 import { transition } from "@remold-ui/dom";
 
-transition(list, () => {
-  list.innerHTML = render(sortedItems);
+const list = document.querySelector("#inbox");
+
+sortButton.addEventListener("click", () => {
+  transition(list, () => {
+    list.replaceChildren(...sortByDate(messages).map(renderMessage));
+  });
 });
 ```
+
+`transition` reads the page, runs your update, and animates what changed. The [quick start](/docs/quick-start) shows each step in both.
 
 ## Canvas and core
 

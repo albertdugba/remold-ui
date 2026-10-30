@@ -6,24 +6,16 @@
     "quick-start",
     "registry",
     "---[LayoutGrid]Components---",
+    "[Browse all](/docs/components)",
+    "...components",
     "---[Blocks]Building blocks---",
     "...primitives",
     "---[Anchor]Hooks---",
     "...hooks",
     "---[BookOpen]Guides---",
     "...concepts",
-    "---[Code]JavaScript API---",
+    "---[Code]Low-level APIs---",
     "...canvas",
-    "...core",
-    "---[PanelsTopLeft]Interface components---",
-    "components/comment-thread",
-    "components/course-outline",
-    "components/logo-morph",
-    "components/letters",
-    "components/podcast-player",
-    "components/morph-icons",
-    "---[Shapes]Canvas components---",
-    "components/integrations-hub",
-    "components/product-anatomy"
+    "...core"
   ]
 }

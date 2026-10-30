@@ -1,7 +1,7 @@
 "use client";
 import { Remold } from "@remold-ui/react";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { Add01Icon, Cancel01Icon, Menu01Icon, PauseIcon, PlayIcon, Tick01Icon, VolumeHighIcon, VolumeMuteIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Cancel01Icon, Menu01Icon, PauseIcon, PlayIcon, CheckIcon, VolumeHighIcon, VolumeMuteIcon } from "@hugeicons/core-free-icons";
 import { useState } from "react";
 import { Frame } from "./frame";
 import "./icons.css";
@@ -14,9 +14,17 @@ interface IconPair {
 const PAIRS: readonly IconPair[] = [
   { label: ["Play", "Pause"], icons: [PlayIcon, PauseIcon] },
   { label: ["Open menu", "Close menu"], icons: [Menu01Icon, Cancel01Icon] },
-  { label: ["Add", "Added"], icons: [Add01Icon, Tick01Icon] },
+  { label: ["Add", "Added"], icons: [Add01Icon, CheckIcon] },
   { label: ["Sound on", "Sound off"], icons: [VolumeHighIcon, VolumeMuteIcon] },
 ];
+
+function isPairOn(step: number, pairIndex: number) {
+  if (step <= pairIndex) return false;
+
+  const toggles = Math.floor((step - 1 - pairIndex) / PAIRS.length) + 1;
+
+  return toggles % 2 === 1;
+}
 
 export function IconsDemo({
   framed = true,
@@ -25,22 +33,16 @@ export function IconsDemo({
   framed?: boolean;
   index?: number;
 }) {
-  const [own, setOn] = useState<boolean[]>(PAIRS.map(() => false));
+  const [own, setOn] = useState<boolean[]>(() => PAIRS.map(() => false));
 
-  const on =
-    index === undefined
-      ? own
-      : PAIRS.map(
-          (_, i) =>
-            (index > i ? Math.floor((index - 1 - i) / PAIRS.length) + 1 : 0) %
-              2 ===
-            1,
-        );
+  const on = index === undefined ? own : PAIRS.map((_, pairIndex) => isPairOn(index, pairIndex));
+
   const body = (
     <div className="rm-icons">
-      {PAIRS.map((pair, i) => {
+      {PAIRS.map((pair, pairIndex) => {
         const Tag = index === undefined ? "button" : "span";
-        const Icon = pair.icons[on[i] ? 1 : 0];
+        const active = on[pairIndex] ?? false;
+        const Icon = pair.icons[active ? 1 : 0];
 
         return (
           <Tag
@@ -48,9 +50,11 @@ export function IconsDemo({
             {...(index === undefined
               ? {
                   type: "button" as const,
-                  "aria-label": pair.label[on[i] ? 1 : 0],
+                  "aria-label": pair.label[active ? 1 : 0],
                   onClick: () =>
-                    setOn((s) => s.map((v, k) => (k === i ? !v : v))),
+                    setOn((current) =>
+                      current.map((isOn, indexInList) => (indexInList === pairIndex ? !isOn : isOn)),
+                    ),
                 }
               : { "aria-hidden": true })}
             className="rm-icon-button"
@@ -61,18 +65,20 @@ export function IconsDemo({
       })}
     </div>
   );
+
   return framed ? <Frame>{body}</Frame> : body;
 }
 
 export function PlayPauseDemo() {
   const [playing, setPlaying] = useState(false);
+
   return (
     <Frame>
       <button
         type="button"
         className="rm-icon-button large"
         aria-label={playing ? "Pause" : "Play"}
-        onClick={() => setPlaying((p) => !p)}
+        onClick={() => setPlaying((current) => !current)}
       >
         <Remold.Icon
           icon={<HugeiconsIcon icon={playing ? PauseIcon : PlayIcon} />}

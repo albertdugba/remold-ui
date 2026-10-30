@@ -1,8 +1,8 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CancelCircleIcon, Loading03Icon, MailOpen01Icon, MailValidation01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
-import { useAutoplay } from "@remold-ui/react";
+import { CancelCircleIcon, Loading03Icon, MailOpen01Icon, MailRemove01Icon, MailValidation01Icon, CheckIcon } from "@hugeicons/core-free-icons";
+import { Remold, useAutoplay } from "@remold-ui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { CodeField } from "./code-field";
@@ -104,7 +104,13 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
       aria-label="Verify your email"
     >
       <span className="otp-badge" aria-hidden="true">
-        {verified ? <HugeiconsIcon icon={MailValidation01Icon} /> : <HugeiconsIcon icon={MailOpen01Icon} />}
+        <Remold.Icon
+          icon={<HugeiconsIcon icon={verified ? MailValidation01Icon : failed ? MailRemove01Icon : MailOpen01Icon} />}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.75}
+          spring={{ duration: 0.45, bounce: 0.16 }}
+        />
       </span>
 
       <p className="otp-copy" id="otp-copy">
@@ -132,7 +138,7 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
           />
           {/* Centred in the field even while hidden, so it fades in where it lands instead of travelling. */}
           <motion.span layout className="otp-result" role="status" aria-live="polite" transition={SPRING}>
-            {verified ? <HugeiconsIcon icon={Tick01Icon} className="otp-icon" aria-hidden="true" /> : failed ? <HugeiconsIcon icon={CancelCircleIcon} className="otp-icon" aria-hidden="true" /> : <HugeiconsIcon icon={Loading03Icon} className="otp-icon" aria-hidden="true" />}
+            {verified ? <HugeiconsIcon icon={CheckIcon} className="otp-icon" aria-hidden="true" /> : failed ? <HugeiconsIcon icon={CancelCircleIcon} className="otp-icon" aria-hidden="true" /> : <HugeiconsIcon icon={Loading03Icon} className="otp-icon" aria-hidden="true" />}
             {/* No word while typing, so nothing has to leave (and close its gap) as the pill forms. */}
             <AnimatePresence mode="popLayout" initial={false}>
               {!entering && (

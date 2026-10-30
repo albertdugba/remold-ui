@@ -16,7 +16,10 @@ export const deceleration = {
  * it was let go. Use it to pick a snap point: `nearest(current + project(velocity))`.
  */
 export function project(velocity: number, rate: number = deceleration.normal): number {
-  if (!(rate > 0 && rate < 1)) throw new RangeError(`project: rate must be between 0 and 1, got ${rate}`);
+  if (!(rate > 0 && rate < 1)) {
+    throw new RangeError(`project: rate must be between 0 and 1, got ${rate}`);
+  }
+
   return ((velocity / 1000) * rate) / (1 - rate);
 }
 
@@ -27,6 +30,7 @@ export function project(velocity: number, rate: number = deceleration.normal): n
  */
 export function rubberband(overshoot: number, dimension: number, constant = 0.55): number {
   if (dimension <= 0) return 0;
+
   return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
 }
 
@@ -52,15 +56,19 @@ export function velocityTracker({ window = 100, idle = 50 }: { window?: number; 
   return {
     add(time, position) {
       samples.push({ time, position });
+
       // Drop samples older than the window, but keep two so there is always a span to measure.
       while (samples.length > 2 && time - samples[0]!.time > window) samples.shift();
     },
     velocity(now) {
       const first = samples[0];
       const last = samples[samples.length - 1];
+
       if (!first || !last || first === last) return 0;
       if (now !== undefined && now - last.time > idle) return 0;
+
       const span = last.time - first.time;
+
       return span > 0 ? ((last.position - first.position) / span) * 1000 : 0;
     },
     reset() {

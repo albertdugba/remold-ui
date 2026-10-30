@@ -25,15 +25,20 @@ export function kindSimilarity(a: NodeKind, b: NodeKind): number {
 export function contentSimilarity(a: PreparedNode, b: PreparedNode): number {
   const ma = a.node.media;
   const mb = b.node.media;
+
   if (ma || mb) {
     if (ma && mb) return ma === mb ? 1 : 0.15;
+
     return 0;
   }
   if (a.text && b.text) return compareText(a.features, b.features);
+
   if (a.text || b.text) return 0.08;
   // Two containers: compare what they hold.
   if (a.subtree.length === 0 && b.subtree.length === 0) return 0.3;
+
   const { dice, containment } = overlap(a.subtreeSet, b.subtreeSet);
+
   return Math.max(dice, 0.85 * containment);
 }
 
@@ -45,13 +50,16 @@ export function geometrySimilarity(a: PreparedNode, b: PreparedNode): number {
   const position = Math.exp(-distance / 0.25);
   const ratio = Math.abs(Math.log((p.width + 1e-3) / (q.width + 1e-3))) + Math.abs(Math.log((p.height + 1e-3) / (q.height + 1e-3)));
   const size = Math.exp(-ratio / 1.5);
+
   return 0.6 * position + 0.4 * size;
 }
 
 /** 1 for the same colour, falling to 0. Transparent colours mostly agree with each other. */
 export function colorSimilarity(p: Rgba | undefined, q: Rgba | undefined): number {
   if (!p || !q) return p === q ? 1 : 0.5;
+
   const d = Math.hypot((p[0] - q[0]) * p[3], (p[1] - q[1]) * p[3], (p[2] - q[2]) * p[3], (p[3] - q[3]) * 255);
+
   return 1 - Math.min(1, d / 220);
 }
 
@@ -83,5 +91,6 @@ export function baseSimilarity(a: PreparedNode, b: PreparedNode, style = styleSi
   let score = WEIGHTS.kind * kind + WEIGHTS.content * content + looks;
   // Weights sum to 1, so no normalising needed. Implausible kinds are halved on top.
   if (kind < 0.2) score *= 0.5;
+
   return score;
 }

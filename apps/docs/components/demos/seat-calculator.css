@@ -236,22 +236,29 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  min-width: 0;
   margin-top: 16px;
 }
 
 .sc-faces {
   display: flex;
   align-items: center;
+  min-width: 0;
   min-height: 32px;
 }
 
 .sc-faces img {
   position: relative;
+  flex: none;
   width: 28px;
   height: 28px;
-  margin-right: -8px;
+  margin-right: -10px;
   border-radius: 50%;
   box-shadow: 0 0 0 2px var(--sc-surface);
+}
+
+.sc-faces img:last-of-type {
+  margin-right: 0;
 }
 
 .sc-more {

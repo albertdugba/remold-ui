@@ -23,12 +23,15 @@ const SHAPES = new Set(["path", "circle", "ellipse", "rect", "line", "polyline",
 /** Short, exact-enough numbers: 3 decimals at most, no trailing zeros. */
 function n(value: number): string {
   const rounded = Math.round(value * 1000) / 1000;
+
   return Object.is(rounded, -0) ? "0" : String(rounded);
 }
 
 function number(tag: string, attributes: ShapeAttributes, name: string): number {
   const raw = attributes[name];
+
   if (raw === undefined || raw === "") return 0;
+
   if (typeof raw === "number") {
     if (Number.isFinite(raw)) return raw;
   } else if (/^\s*[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?(px)?\s*$/i.test(raw)) {

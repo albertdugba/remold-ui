@@ -62,6 +62,7 @@ const MEDIA = new Set(["IMG", "SVG", "CANVAS", "VIDEO", "PICTURE", "IFRAME"]);
 /** A short, stable fingerprint of a string (FNV-1a), used as a media identity. */
 export function fingerprint(value: string): string {
   let h = 2166136261;
+
   for (let i = 0; i < value.length; i++) {
     h ^= value.charCodeAt(i);
     h = Math.imul(h, 16777619);
@@ -73,13 +74,18 @@ const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
 
 function mediaIdentity(el: Element, style: CSSStyleDeclaration): string {
   const tag = el.tagName.toUpperCase();
+
   if (tag === "IMG") {
     const img = el as HTMLImageElement;
+
     return fingerprint(img.currentSrc || img.src);
   }
   if (tag === "SVG") return fingerprint(collapse(el.innerHTML));
+
   if (tag === "VIDEO") return fingerprint((el as HTMLVideoElement).currentSrc || (el as HTMLVideoElement).poster);
+
   if (style.backgroundImage.includes("url(")) return fingerprint(style.backgroundImage);
+
   return fingerprint(tag);
 }
 
@@ -92,22 +98,28 @@ function isPainted(style: CSSStyleDeclaration): boolean {
     (Number.parseFloat(style.borderLeftWidth) || 0);
   const border = borderWidth > 0 && parseColor(style.borderTopColor)[3] + parseColor(style.borderLeftColor)[3] > 0.05;
   const shadow = Boolean(style.boxShadow) && style.boxShadow !== "none";
+
   return background[3] > 0.04 || border || shadow;
 }
 
 /** The element's own visible text, and whether that text already covers all its children. */
 function ownText(el: Element): { text: string; coversChildren: boolean } {
   const reader = morphedText.get(el);
+
   if (reader) return { text: collapse(reader.textContent ?? ""), coversChildren: true };
+
   const tag = el.tagName.toUpperCase();
+
   if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
     const field = el as HTMLInputElement;
+
     return {
       text: collapse(field.value || field.placeholder || ""),
       coversChildren: true,
     };
   }
   let direct = "";
+
   for (const n of el.childNodes) if (n.nodeType === 3) direct += n.textContent ?? "";
   // "Total: <b>€154</b>" reads as one piece of text, so inline children with no paint of their
   // own are folded into the parent.
@@ -120,6 +132,7 @@ function ownText(el: Element): { text: string; coversChildren: boolean } {
       return !isPainted(s) && (s.display === "" || s.display.startsWith("inline"));
     });
   if (inlineOnly && collapse(direct)) return { text: collapse(el.textContent ?? ""), coversChildren: true };
+
   return { text: collapse(direct), coversChildren: false };
 }
 
@@ -136,6 +149,7 @@ export function readNodes(root: Element): PageSnapshot {
 
   const visit = (el: Element, parent: number) => {
     if (el.hasAttribute(IGNORE_ATTRIBUTE)) return;
+
     const style = getComputedStyle(el);
     // parseFloat, not Number: an empty value must not read as fully transparent.
     if (style.display === "none" || style.visibility === "hidden" || Number.parseFloat(style.opacity) === 0) return;
@@ -151,12 +165,14 @@ export function readNodes(root: Element): PageSnapshot {
     const keep = visible && (text !== "" || isMedia || isControl || isPainted(style));
 
     let self = parent;
+
     if (keep) {
       const heading = /^H[1-6]$/.test(tag) || role === "heading";
       // A label names a control or an image. On a container (a section called "Now playing") it's a
       // landmark for screen readers, not content: the container stays a box, so it can be matched as one.
       const shown = text || (isControl || isMedia ? label : "");
       const kind: NodeKind = isMedia ? "media" : heading ? "heading" : isControl ? "control" : shown ? "text" : "box";
+
       self = nodes.length;
       nodes.push({
         kind,
@@ -183,10 +199,12 @@ export function readNodes(root: Element): PageSnapshot {
     }
     // Media and folded text are leaves: what's inside them is already accounted for.
     if (isMedia || coversChildren) return;
+
     for (const child of el.children) visit(child, self);
   };
 
   for (const child of root.children) visit(child, -1);
+
   return { nodes, elements, boxes };
 }
 
@@ -200,6 +218,8 @@ function drawnRadius(el: HTMLElement, style: CSSStyleDeclaration, rectWidth: num
   // offsetWidth ignores transforms (a box caught mid-flight); the measured box is the fallback.
   const width = el.offsetWidth || rectWidth;
   const height = el.offsetHeight || rectHeight;
+
   if (!radius || !width || !height) return radius;
+
   return Math.min(radius, width / 2, height / 2);
 }

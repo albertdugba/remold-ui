@@ -56,8 +56,10 @@ export function iconToPath(source: Element): IconPath | null {
   const svg = source.localName === "svg" ? source : source.querySelector("svg");
   const root = svg ?? source;
   const nodes: ShapeNode[] = [];
+
   for (const shape of root.querySelectorAll(SHAPES)) {
     if (shape.closest(NOT_DRAWN)) continue;
+
     for (let el: Element | null = shape; el && el !== root.parentElement; el = el.parentElement) {
       if (el.hasAttribute("transform")) {
         throw new RangeError(`iconToPath: <${el.localName}> has a transform, which can't be flattened here. Flatten it in your SVG first.`);

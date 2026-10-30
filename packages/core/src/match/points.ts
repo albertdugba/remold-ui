@@ -60,14 +60,17 @@ const squaredDistance = (from: Point3, to: Point3) => (from.x - to.x) ** 2 + (fr
 
 export function matchPoints(from: readonly Point3[], to: readonly Point3[], options: MatchPointsOptions = {}): PointMatches {
   const { by, maxDistance } = validateOptions(options);
+
   checkPoints(from, "a");
   checkPoints(to, "b");
   const pairs = filterDistantPairs(findPairs(from, to, by, maxDistance), from, to, maxDistance);
+
   return toMatchResult(pairs, from.length, to.length);
 }
 
 function validateOptions(options: MatchPointsOptions): Required<MatchPointsOptions> {
   const { by = "nearest", maxDistance = Infinity } = options;
+
   if (!(maxDistance > 0)) throw new RangeError(`matchPoints: maxDistance must be positive, got ${maxDistance}`);
   if (by !== "nearest" && by !== "order") throw new RangeError(`matchPoints: by must be "nearest" or "order", got ${by}`);
   return { by, maxDistance };

@@ -1,5 +1,3 @@
-/* A live audio room. Styling only: the stack opening into the room and you moving to the stage come
-   from Remold.Layout; the speaking ring is a CSS animation. Fixed colours with a dark set. */
 .lr {
   --lr-surface: #ffffff;
   --lr-fill: #f4f4f5;
@@ -29,13 +27,15 @@
   --lr-hand-bg: rgb(251 191 36 / 0.16);
 }
 
-/* One height for both shapes, so the page around it never jumps */
+/* Tall enough for the on-stage room, when a fourth person wraps onto a second row.
+   One height for every state, so the card around it does not jump. */
 .lr-stage {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
   width: 100%;
-  height: 440px;
+  min-height: 580px;
 }
 
 .lr ul {
@@ -78,7 +78,6 @@
   content: "";
 }
 
-/* A face, with an optional ring for whoever is speaking and a small badge */
 .lr-face {
   position: relative;
   display: inline-grid;
@@ -125,10 +124,10 @@
   color: var(--lr-hand);
 }
 
-/* Collapsed: a pill with the speakers stacked */
 .lr-pill {
   position: relative;
   display: flex;
+  grid-area: 1 / 1;
   align-items: center;
   gap: 12px;
   width: 100%;
@@ -182,10 +181,10 @@
   font-weight: 600;
 }
 
-/* Open: the room */
 .lr-room {
+  position: relative;
   display: grid;
-  gap: 0;
+  grid-area: 1 / 1;
   width: 100%;
   padding: 16px 20px 18px;
   border-radius: 26px;

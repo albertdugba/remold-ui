@@ -1,0 +1,405 @@
+.sk {
+  --sk-surface: #ffffff;
+  --sk-soft: #f4f4f5;
+  --sk-ink: #0b0b0f;
+  --sk-muted: #71717a;
+  --sk-quiet: #a1a1aa;
+  --sk-locked: #f1f1f3;
+  --sk-locked-ink: #b4b4bb;
+  --sk-accent: #ff5a1f;
+  --sk-accent-ink: #ffffff;
+  --sk-accent-soft: #fff0e9;
+  --sk-track: #e4e4e7;
+  --sk-gold: #f5b70a;
+  --sk-gold-ink: #1a1405;
+  --sk-gold-soft: #fff7d6;
+  --sk-pulse: #ffc93c;
+  display: grid;
+  gap: 20px;
+  width: min(100%, 380px);
+  padding: 22px 20px 18px;
+  border-radius: 28px;
+  background: var(--sk-surface);
+  color: var(--sk-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .sk {
+  --sk-surface: #111113;
+  --sk-soft: #1c1c20;
+  --sk-ink: #fafafa;
+  --sk-muted: #a1a1aa;
+  --sk-quiet: #6b6b73;
+  --sk-locked: #1c1c20;
+  --sk-locked-ink: #4d4d55;
+  --sk-accent: #ff6a2b;
+  --sk-accent-ink: #140802;
+  --sk-accent-soft: #2e1408;
+  --sk-track: #2a2a2f;
+  --sk-gold: #facc15;
+  --sk-gold-ink: #1a1405;
+  --sk-gold-soft: #2b2306;
+  --sk-pulse: #ffd23f;
+}
+
+.sk-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 16px;
+  align-items: center;
+}
+
+.sk-plan {
+  display: grid;
+  gap: 2px;
+}
+
+.sk-plan b {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.sk-plan span {
+  color: var(--sk-accent);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sk-stats {
+  display: flex;
+  gap: 14px;
+}
+
+.sk-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sk-stat svg {
+  align-self: center;
+  width: 17px;
+  height: 17px;
+  color: var(--sk-accent);
+}
+
+.sk-stat > span:last-child:not(.odo) {
+  color: var(--sk-muted);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.sk-progress {
+  display: block;
+  grid-column: 1 / -1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--sk-soft);
+}
+
+.sk-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sk-accent);
+  transform-origin: 0 50%;
+}
+
+.sk-lines {
+  display: grid;
+  gap: 42px;
+  padding: 6px 0 4px;
+}
+
+.sk-lines .rm-connector {
+  stroke: var(--sk-track);
+  stroke-width: 4;
+  transition:
+    stroke 0.35s,
+    opacity 0.35s;
+}
+
+.sk-lines .rm-connector[data-line="locked"]:not([data-rm-drawing]) {
+  stroke-dasharray: 0.035 0.045;
+}
+
+.sk-lines .rm-connector[data-line="open"] {
+  stroke: var(--sk-accent);
+}
+
+.sk-lines .rm-connector[data-line="skipped"] {
+  opacity: 0.35;
+}
+
+.sk-lines .rm-connector-pulse {
+  color: var(--sk-pulse);
+  stroke-width: 5;
+  filter: drop-shadow(0 0 4px var(--sk-pulse));
+}
+
+.sk-row {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.sk-node,
+.sk-medal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sk-badge,
+.sk-cup {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sk-badge:disabled,
+.sk-cup:disabled {
+  cursor: default;
+}
+
+.sk-badge:focus-visible,
+.sk-cup:focus-visible {
+  outline: 2px solid var(--sk-ink);
+  outline-offset: 3px;
+}
+
+.sk-port {
+  position: absolute;
+  top: 1px;
+  width: 20%;
+  height: 40%;
+  pointer-events: none;
+}
+
+.sk-port[data-side="left"] {
+  left: 26%;
+}
+
+.sk-port[data-side="right"] {
+  right: 26%;
+}
+
+.sk-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--sk-accent);
+}
+
+.sk-halo.gold {
+  background: var(--sk-gold);
+}
+
+.sk-ring {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  transform: rotate(-90deg);
+}
+
+.sk-ring-track,
+.sk-ring-fill {
+  fill: none;
+  stroke-width: 3;
+}
+
+.sk-ring-track {
+  stroke: transparent;
+}
+
+.sk-node[data-status="active"] .sk-ring-track {
+  stroke: var(--sk-track);
+}
+
+.sk-ring-fill {
+  stroke: var(--sk-accent);
+  stroke-linecap: round;
+}
+
+.sk-node[data-status="done"] .sk-ring-fill {
+  stroke: transparent;
+}
+
+.sk-face,
+.sk-cup-face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--sk-locked);
+  color: var(--sk-locked-ink);
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    box-shadow 0.3s;
+}
+
+.sk-node[data-status="open"] .sk-face,
+.sk-node[data-status="active"] .sk-face {
+  background: var(--sk-surface);
+  box-shadow: inset 0 0 0 3px var(--sk-accent);
+  color: var(--sk-accent);
+}
+
+.sk-node[data-status="done"] .sk-face {
+  background: var(--sk-accent);
+  color: var(--sk-accent-ink);
+}
+
+.sk-node[data-status="skipped"] {
+  opacity: 0.4;
+}
+
+.sk-glyph {
+  display: grid;
+  place-items: center;
+}
+
+.sk-glyph svg {
+  width: 22px;
+  height: 22px;
+}
+
+.sk-text {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sk-title {
+  font-size: 14px;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+}
+
+.sk-node[data-status="locked"] .sk-title,
+.sk-node[data-status="skipped"] .sk-title,
+.sk-medal[data-status="locked"] .sk-title {
+  color: var(--sk-quiet);
+}
+
+.sk-meta {
+  display: grid;
+  color: var(--sk-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sk-meta > * {
+  grid-area: 1 / 1;
+  justify-self: start;
+}
+
+.sk-node[data-status="done"] .sk-meta {
+  color: var(--sk-accent);
+}
+
+.sk-node[data-status="locked"] .sk-meta,
+.sk-node[data-status="skipped"] .sk-meta,
+.sk-medal[data-status="locked"] .sk-meta {
+  color: var(--sk-quiet);
+}
+
+.sk-cta {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--sk-accent);
+  color: var(--sk-accent-ink);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.sk-cta.gold {
+  background: var(--sk-gold);
+  color: var(--sk-gold-ink);
+}
+
+.sk-float {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  color: var(--sk-accent);
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.sk-cup {
+  width: 60px;
+  height: 60px;
+}
+
+.sk-medal[data-status="ready"] .sk-cup-face {
+  background: var(--sk-gold-soft);
+  box-shadow: inset 0 0 0 3px var(--sk-gold);
+  color: var(--sk-gold);
+}
+
+.sk-medal[data-status="claimed"] .sk-cup-face {
+  background: var(--sk-gold);
+  color: var(--sk-gold-ink);
+}
+
+.sk-medal[data-status="claimed"] .sk-meta {
+  color: var(--sk-gold);
+}
+
+.sk-cup-face svg {
+  width: 28px;
+  height: 28px;
+}
+
+.sk-sparks {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.sk-sparks i {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.sk-hint {
+  margin: 0;
+  color: var(--sk-quiet);
+  font-size: 12.5px;
+  font-weight: 550;
+  text-align: center;
+}

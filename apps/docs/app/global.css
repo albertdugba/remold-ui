@@ -132,25 +132,6 @@ body {
   margin-top: 0;
 }
 
-/* A page's status from its frontmatter ("new"), next to its name. */
-.rm-badge {
-  margin-left: auto;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: color-mix(in oklab, #6366f1 12%, transparent);
-  color: #4f46e5;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  line-height: 16px;
-}
-
-.dark .rm-badge {
-  color: #a5b4fc;
-  background: color-mix(in oklab, #6366f1 22%, transparent);
-}
-
 /* The page: a large, tight title and comfortable reading text */
 #nd-page {
   gap: 14px;

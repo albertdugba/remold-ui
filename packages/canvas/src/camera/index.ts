@@ -83,6 +83,7 @@ export function projector(camera: Camera, viewport: Viewport): Projector {
     project(x, y, z = 0) {
       const dx = x - cx;
       const dy = y - cy;
+
       return {
         x: ox + scale * (cosYaw * dx - sinYaw * dy),
         y: oy + scale * (cosPitch * (sinYaw * dx + cosYaw * dy) - sinPitch * z),
@@ -117,6 +118,7 @@ export interface FloorBox {
  */
 export function fitCamera(boxes: readonly FloorBox[], viewport: Viewport, padding = 0.1): Camera {
   if (boxes.length === 0) return flat();
+
   const x0 = Math.min(...boxes.map((b) => b.x));
   const y0 = Math.min(...boxes.map((b) => b.y));
   const x1 = Math.max(...boxes.map((b) => b.x + b.width));
@@ -126,5 +128,6 @@ export function fitCamera(boxes: readonly FloorBox[], viewport: Viewport, paddin
   const zoom = Math.min((viewport.width * room) / Math.max(1, x1 - x0), (viewport.height * room) / Math.max(1, y1 - y0)) / base;
   // The origin sits below the middle (ORIGIN_Y), so shift the centre to keep the fit balanced.
   const shift = ((ORIGIN_Y - 0.5) * viewport.height) / (base * zoom);
+
   return flat({ zoom, centerX: (x0 + x1) / 2, centerY: (y0 + y1) / 2 + shift });
 }

@@ -39,6 +39,7 @@ export function roundedRect({
   segments?: number;
 }): Outline {
   const r = Math.max(0, Math.min(radius, width / 2, depth / 2));
+
   if (r === 0)
     return [
       { x, y },
@@ -53,9 +54,11 @@ export function roundedRect({
     [x + r, y + r, Math.PI],
   ];
   const points: Outline = [];
+
   for (const [cx, cy, start] of corners) {
     for (let k = 0; k <= segments; k++) {
       const a = start + (k / segments) * (Math.PI / 2);
+
       points.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
     }
   }
@@ -77,8 +80,10 @@ export function ellipse({
   segments?: number;
 }): Outline {
   const points: Outline = [];
+
   for (let k = 0; k < segments; k++) {
     const a = (k / segments) * Math.PI * 2;
+
     points.push({ x: x + width / 2 + (width / 2) * Math.cos(a), y: y + depth / 2 + (depth / 2) * Math.sin(a) });
   }
   return points;
@@ -92,16 +97,21 @@ export function projectOutline(outline: Outline, z: number, view: Projector): Sc
 /** The smallest convex shape around `points` (Andrew's monotone chain), anticlockwise. */
 export function convexHull(points: readonly ScreenPoint[]): ScreenPoint[] {
   const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
+
   if (sorted.length <= 2) return sorted;
+
   const cross = (o: ScreenPoint, a: ScreenPoint, b: ScreenPoint) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
   const lower: ScreenPoint[] = [];
+
   for (const p of sorted) {
     while (lower.length >= 2 && cross(lower[lower.length - 2]!, lower[lower.length - 1]!, p) <= 0) lower.pop();
     lower.push(p);
   }
   const upper: ScreenPoint[] = [];
+
   for (let i = sorted.length - 1; i >= 0; i--) {
     const p = sorted[i]!;
+
     while (upper.length >= 2 && cross(upper[upper.length - 2]!, upper[upper.length - 1]!, p) <= 0) upper.pop();
     upper.push(p);
   }
@@ -119,9 +129,11 @@ export function silhouette({ outline, z0, z1, view }: { outline: Outline; z0: nu
 /** Whether a point is inside a polygon (even–odd rule). */
 export function pointInPolygon(point: ScreenPoint, polygon: readonly ScreenPoint[]): boolean {
   let inside = false;
+
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
     const a = polygon[i]!;
     const b = polygon[j]!;
+
     if (a.y > point.y !== b.y > point.y && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
   }
   return inside;
@@ -145,6 +157,7 @@ export interface Paintable {
  */
 export function paintOrder<T extends Paintable>(items: readonly T[], view: Projector): T[] {
   const depth = (t: T) => view.depth(t.x + t.width / 2, t.y + t.depth / 2);
+
   return [...items].sort((a, b) => a.z - b.z || (a.layer ?? 0) - (b.layer ?? 0) || depth(a) - depth(b));
 }
 
@@ -157,6 +170,7 @@ export function extent(points: Iterable<{ x: number; y: number }>): { minX: numb
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
+
   for (const p of points) {
     if (p.x < minX) minX = p.x;
     if (p.x > maxX) maxX = p.x;

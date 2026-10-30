@@ -30,23 +30,26 @@ const NOTE =
   "M36 24L83 12V22L36 34Z";
 
 function bars(): Point[] {
-  const n = 12;
+  const count = 12;
   const raw = Array.from(
-    { length: n },
-    (_, i) =>
-      0.2 +
-      0.8 * Math.abs(Math.sin(i * 1.7 + Math.random() * 3)) * Math.random(),
+    { length: count },
+    (_, index) =>
+      0.2 + 0.8 * Math.abs(Math.sin(index * 1.7 + Math.random() * 3)) * Math.random(),
   );
   const top = Math.max(...raw);
   const points: Point[] = [];
-  raw.forEach((h, i) => {
-    const half = (h / top) * 40;
-    const x = 4.6 + i * 7.8;
+
+  raw.forEach((height, index) => {
+    const half = (height / top) * 40;
+    const x = 4.6 + index * 7.8;
+
     for (let row = 0; row < 50; row++) {
       const y = 50 - half + (2 * half * row) / 49;
-      for (const dx of [0.8, 2.5, 4.2]) points.push({ x: x + dx, y });
+
+      for (const offset of [0.8, 2.5, 4.2]) points.push({ x: x + offset, y });
     }
   });
+
   return points;
 }
 
@@ -67,27 +70,30 @@ function snowflake(): string {
         along * sin +
         across * cos
       ).toFixed(2)}`;
-    return `M${at(0, -half)}L${at(length, -half)}L${at(length, half)}L${at(
-      0,
-      half,
-    )}Z`;
+    return `M${at(0, -half)}L${at(length, -half)}L${at(length, half)}L${at(0, half)}Z`;
   };
-  let d = "";
-  for (let k = 0; k < 6; k++) {
-    const a = (k * Math.PI) / 3;
-    d += bar(0, 0, a, 47, 3);
+
+  let path = "";
+
+  for (let arm = 0; arm < 6; arm++) {
+    const angle = (arm * Math.PI) / 3;
+
+    path += bar(0, 0, angle, 47, 3);
+
     for (const [distance, length] of [
       [24, 15],
       [36, 9],
     ] as const) {
-      const x = Math.cos(a) * distance;
-      const y = Math.sin(a) * distance;
-      d +=
-        bar(x, y, a + Math.PI / 4, length, 2.4) +
-        bar(x, y, a - Math.PI / 4, length, 2.4);
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+
+      path +=
+        bar(x, y, angle + Math.PI / 4, length, 2.4) +
+        bar(x, y, angle - Math.PI / 4, length, 2.4);
     }
   }
-  return d;
+
+  return path;
 }
 
 const COUNT = 1800;
@@ -168,42 +174,54 @@ export function ParticlesDemo({
   });
   const [stageWidth, setStageWidth] = useState(0);
 
-  const driven =
-    index === undefined ? null : ALL_FRAMES[index % ALL_FRAMES.length]!;
+  const driven = index === undefined ? null : ALL_FRAMES[index % ALL_FRAMES.length]!;
 
   useEffect(() => {
     const container = containerRef.current;
+
     if (!container) return;
-    const updateWidth = () =>
-      setStageWidth(Math.round(container.clientWidth / 64) * 64);
+
+    const updateWidth = () => setStageWidth(Math.round(container.clientWidth / 64) * 64);
+
     updateWidth();
+
     if (typeof ResizeObserver === "undefined") return;
+
     const observer = new ResizeObserver(updateWidth);
+
     observer.observe(container);
+
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    const show = (name: string, beat = false) =>
+    const show = (name: string, beat = false) => {
       setFrame({ name, shape: FRAMES[name]!.shape(), beat });
+    };
+
     if (driven) {
       show(driven);
       return;
     }
+
     const frames = CHOICES[choice];
+
     show(frames[0]!);
+
     const timers = frames
       .slice(1)
-      .map((name, i) => setTimeout(() => show(name), BEAT * (i + 1)));
+      .map((name, step) => setTimeout(() => show(name), BEAT * (step + 1)));
 
     let bounce: ReturnType<typeof setInterval> | undefined;
-    if (choice === "Song")
+
+    if (choice === "Song") {
       timers.push(
-        setTimeout(
-          () => (bounce = setInterval(() => show("Bars", true), BOUNCE)),
-          BEAT,
-        ),
+        setTimeout(() => {
+          bounce = setInterval(() => show("Bars", true), BOUNCE);
+        }, BEAT),
       );
+    }
+
     return () => {
       timers.forEach(clearTimeout);
       clearInterval(bounce);

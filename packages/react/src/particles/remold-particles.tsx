@@ -14,7 +14,9 @@ function keyOf(shape: ParticleShape, count: number): string {
   if ("text" in shape) return `text:${count}:${shape.font ?? ""}:${shape.text}`;
   if ("path" in shape) return `path:${count}:${shape.fillRule ?? ""}:${shape.mode ?? ""}:${shape.path}`;
   if ("image" in shape) return `image:${count}:${JSON.stringify(shape)}`;
+
   if (!pointIds.has(shape.points)) pointIds.set(shape.points, nextPointId++);
+
   return `points:${pointIds.get(shape.points)}`;
 }
 
@@ -26,16 +28,24 @@ function labelOf(shape: ParticleShape): string | undefined {
 /** The longest side images are sampled at: plenty of detail for a few thousand dots, and quick. */
 const IMAGE_SIZE = 480;
 
-function sample(shape: ParticleShape, count: number, palette?: readonly string[]): readonly CloudPoint[] | Promise<readonly CloudPoint[]> {
+function sample(
+  shape: ParticleShape,
+  count: number,
+  palette?: readonly string[],
+): readonly CloudPoint[] | Promise<readonly CloudPoint[]> {
   if (typeof shape === "string") return sampleTextPoints(shape, { count });
   if ("text" in shape) return sampleTextPoints(shape.text, { count, font: shape.font });
   if ("path" in shape) return samplePath(shape.path, { count, fillRule: shape.fillRule, mode: shape.mode });
   if ("points" in shape) return shape.points;
+
   return new Promise((resolve, reject) => {
     const image = new Image();
+
     image.crossOrigin = "anonymous";
+
     image.onload = () => {
       const k = Math.min(1, IMAGE_SIZE / Math.max(image.naturalWidth, image.naturalHeight));
+
       resolve(
         sampleImagePoints(image, {
           count,
@@ -114,8 +124,11 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
   // One particles instance per canvas, made once the canvas exists.
   useIsoLayoutEffect(() => {
     if (!element) return;
+
     const created = createParticles(element, mountOptions.current);
+
     setInstance(created);
+
     return () => {
       created.destroy();
       setInstance(null);
@@ -126,28 +139,35 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
   const warned = useRef(false);
   useIsoLayoutEffect(() => {
     if (!instance) return;
+
     let current = true;
     const { shape, count, label, pairing, transition, radius, palette } = latest.current;
+
     const apply = (points: readonly CloudPoint[]) => {
       if (current) instance.to(points, { label, pairing, transition, radius });
     };
+
     const fail = (error: unknown) => {
       if (!warned.current) console.warn(error);
       warned.current = true;
     };
+
     try {
       const result = sample(shape, count, palette);
+
       if (result instanceof Promise) result.then(apply, fail);
       else apply(result);
     } catch (error) {
       fail(error);
     }
+
     return () => {
       current = false;
     };
   }, [instance, key]);
 
   const state = useMemo<RemoldParticles.State>(() => ({}), []);
+
   return useRenderElement(
     "canvas",
     { render, className },

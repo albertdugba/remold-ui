@@ -35,15 +35,19 @@ export function kdTree({
 
   const build = (start: number, end: number): void => {
     if (end - start <= LEAF) return;
+
     const middle = (start + end) >> 1;
     let axis = 0;
     let widest = -1;
+
     for (let axisIndex = 0; axisIndex < 3; axisIndex++) {
       const coordinates = coords[axisIndex]!;
       let min = Infinity;
       let max = -Infinity;
+
       for (let pointIndex = start; pointIndex < end; pointIndex++) {
         const coordinate = coordinates[order[pointIndex]!]!;
+
         if (coordinate < min) min = coordinate;
         if (coordinate > max) max = coordinate;
       }
@@ -72,9 +76,13 @@ export function kdTree({
         const deltaY = ys[pointId]! - y;
         const deltaZ = zs[pointId]! - z;
         const distanceSquared = deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;
+
         if (distanceSquared > maxD2) return;
+
         if (count === k && !(distanceSquared < d2[k - 1]! || (distanceSquared === d2[k - 1]! && pointId < ids[k - 1]!))) return;
+
         let insertionIndex = count < k ? count++ : k - 1;
+
         while (
           insertionIndex > 0 &&
           (d2[insertionIndex - 1]! > distanceSquared || (d2[insertionIndex - 1] === distanceSquared && ids[insertionIndex - 1]! > pointId))
@@ -90,23 +98,29 @@ export function kdTree({
       const search = (start: number, end: number): void => {
         if (end - start <= LEAF) {
           for (let pointIndex = start; pointIndex < end; pointIndex++) consider(order[pointIndex]!);
+
           return;
         }
         const middle = (start + end) >> 1;
         const boxOffset = middle * 6;
         let boxDistanceSquared = 0;
+
         for (let axisIndex = 0; axisIndex < 3; axisIndex++) {
           const coordinate = query[axisIndex]!;
           const distanceBelow = boxes[boxOffset + axisIndex]! - coordinate;
           const distanceAbove = coordinate - boxes[boxOffset + 3 + axisIndex]!;
           const distanceToBox = distanceBelow > 0 ? distanceBelow : Math.max(distanceAbove, 0);
+
           boxDistanceSquared += distanceToBox * distanceToBox;
         }
         if (boxDistanceSquared > maximumCandidateDistance()) return;
+
         const pointId = order[middle]!;
         const axis = axes[middle]!;
+
         consider(pointId);
         const distanceFromPlane = query[axis]! - coords[axis]![pointId]!;
+
         if (distanceFromPlane < 0) {
           search(start, middle);
           if (distanceFromPlane * distanceFromPlane <= maximumCandidateDistance()) search(middle + 1, end);
@@ -117,6 +131,7 @@ export function kdTree({
       };
 
       if (k > 0 && order.length > 0) search(0, order.length);
+
       return count;
     },
   };
@@ -155,11 +170,13 @@ export function select({
         : Math.max(middleValue, lastValue);
     let left = start;
     let right = end;
+
     while (left <= right) {
       while (coordinates[order[left]!]! < pivot) left++;
       while (coordinates[order[right]!]! > pivot) right--;
       if (left <= right) {
         const pointId = order[left]!;
+
         order[left] = order[right]!;
         order[right] = pointId;
         left++;

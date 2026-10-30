@@ -65,6 +65,7 @@ export function createFrameLoop({ scheduler, maxDelta = 1 / 30 }: FrameLoopOptio
   const tick = (time: number) => {
     frame = null;
     const dt = elapsedSeconds({ time, previousTime: last, maxDelta });
+
     last = time;
     advanceCallbacks({ callbacks, delta: dt });
     if (callbacks.size > 0) frame = platform!.request(tick);
@@ -106,5 +107,6 @@ let shared: FrameLoop | undefined;
  */
 export function frames(callback: FrameCallback): () => void {
   shared ??= createFrameLoop();
+
   return shared.add(callback);
 }

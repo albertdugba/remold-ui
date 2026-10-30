@@ -7,9 +7,16 @@ description: "Every part renders plain elements you can style, and exposes its s
 
 `className` takes a string, or a function of the part's state.
 
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Layout trigger={view} className={(state) => (state.animating ? 'list busy' : 'list')}>
 ```
+
+```js tab="JavaScript"
+list.classList.add("busy");
+transition(list, update).finished.finally(() => list.classList.remove("busy"));
+```
+
+In plain JavaScript you style the element yourself. The transition's `finished` promise tells you when it has settled.
 
 ## Data attributes
 
@@ -21,6 +28,8 @@ description: "Every part renders plain elements you can style, and exposes its s
 | `data-rm-entering`  | New elements fading in.                                  |
 | `data-rm-exiting`   | Copies of removed elements fading out.                   |
 
+`data-rm-matched`, `data-rm-changed`, `data-rm-entering` and `data-rm-exiting` are set by `transition()` itself, so the same selectors work without React. `data-rm-animating` is set by the React parts.
+
 ## Rendering your own element
 
 `render` replaces the default element and keeps Remold's props and ref. Pass an element, or a function of the props and state.
@@ -28,3 +37,5 @@ description: "Every part renders plain elements you can style, and exposes its s
 ```tsx
 <Remold.Layout trigger={view} render={<ul className="grid" />}>
 ```
+
+In plain JavaScript there is nothing to replace: `transition()` animates whichever element you pass it.

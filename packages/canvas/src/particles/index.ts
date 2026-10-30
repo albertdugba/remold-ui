@@ -35,6 +35,7 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
 
   const wake = () => {
     if (destroyed || running) return;
+
     running = true;
     configuration.loop.add(tick);
   };
@@ -81,32 +82,40 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
   function tick(deltaTime: number): boolean {
     if (destroyed) {
       running = false;
+
       return running;
     }
     let moving = cloud.step(deltaTime);
+
     for (const animatedValue of [pointerController.pointer.x, pointerController.pointer.y, pointerController.pointer.presence, radius]) {
       if (animatedValue.step(deltaTime)) moving = true;
     }
     if (!visible) {
       running = false;
+
       return running;
     }
     renderer.render();
     running = moving;
+
     return running;
   }
 
   function transitionTo(points: readonly CloudPoint[], transitionOptions: ParticlesToOptions = {}): void {
     if (destroyed) return;
+
     validatePairing(transitionOptions.pairing);
     const scatter = scatterOf(transitionOptions.transition);
+
     updateRadius({ radius: transitionOptions.radius, animatedRadius: radius, reducedMotion });
     shownPoints = points;
     fittedSize = dimensions(size);
     const ticket = ++pendingTransition;
     const show = (matches?: PointMatches) => {
       if (destroyed || ticket !== pendingTransition) return;
+
       const targetPoints = fitPointsToCanvas({ points, fit: configuration.fit, padding: configuration.padding, size });
+
       cloud.to(targetPoints, { instant: reducedMotion(), ...(matches ? { matches } : {}), ...(scatter ? { scatter } : {}) });
       setCanvasLabel(canvas, transitionOptions.label);
       renderer.render();
@@ -114,6 +123,7 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
     };
     if (transitionOptions.pairing === "index" && cloud.live === points.length) {
       show(matchByIndex(points.length));
+
       return;
     }
     const targetPoints = fitPointsToCanvas({ points, fit: configuration.fit, padding: configuration.padding, size });
@@ -144,6 +154,7 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
 function createConfiguration(options: ParticlesOptions) {
   const radius = options.radius ?? 2.5;
   const fit = options.fit ?? "contain";
+
   if (!(radius > 0)) throw new RangeError(`particles: radius must be positive, got ${radius}`);
   if (fit !== "contain" && fit !== "none") throw new RangeError(`particles: fit must be "contain" or "none", got ${fit}`);
   if (options.palette?.length === 0) throw new RangeError("particles: palette needs at least one colour");

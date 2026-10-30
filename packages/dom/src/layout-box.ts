@@ -13,6 +13,7 @@ export interface LayoutBox {
 /** Normalize a box to its container width without reading from the DOM. */
 export function normalizeLayoutBox(box: LayoutBox, container: LayoutBox): LayoutBox {
   const unit = container.width || 1;
+
   return {
     x: (box.x - container.x) / unit,
     y: (box.y - container.y) / unit,
@@ -28,5 +29,6 @@ export function measureLayoutBox(element: Element, container: Element): LayoutBo
 
 function readLayoutBox(element: Element): LayoutBox {
   const { left, top, width, height } = element.getBoundingClientRect();
+
   return { x: left, y: top, width, height };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Tick01Icon } from "@hugeicons/core-free-icons";
+import { CheckIcon } from "@hugeicons/core-free-icons";
 import { Switch as BaseSwitch } from "@base-ui/react/switch";
 import { Remold } from "@remold-ui/react";
 import { useEffect, useRef } from "react";
@@ -176,7 +176,7 @@ export function TwoFactorDemo({ framed = true, playing }: TwoFactorDemoProps) {
             <strong>Two-factor authentication</strong>
             {state.phase === "on" ? (
               <span key="on" className="tf-on">
-                <HugeiconsIcon icon={Tick01Icon} aria-hidden="true" strokeWidth={2.75} />
+                <HugeiconsIcon icon={CheckIcon} aria-hidden="true" strokeWidth={2.75} />
                 On · Authenticator app
               </span>
             ) : (

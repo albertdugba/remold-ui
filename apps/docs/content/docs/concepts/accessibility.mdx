@@ -5,7 +5,7 @@ description: "What Remold does for people using reduced motion, screen readers a
 
 ## Reduced motion
 
-By default every part follows the system's reduced-motion setting: changes happen at once, with no movement. Override it with `reducedMotion`.
+By default every part follows the system's reduced-motion setting: changes happen at once, with no movement. Override it with `reducedMotion`, a prop on every part and an option on `transition()` in plain JavaScript.
 
 | Value      | Behaviour                                                    |
 | ---------- | ------------------------------------------------------------ |
@@ -17,8 +17,12 @@ By default every part follows the system's reduced-motion setting: changes happe
 
 Pass `announce` to have a short summary of each change read to screen-reader users, such as "2 moved, 1 added", or a function that writes your own message.
 
-```tsx
-<Remold.Layout trigger={sort} announce={(s) => `Sorted. ${s.moved} files moved.`}>
+```tsx tab="React" tab-group="lang"
+<Remold.Layout trigger={sort} announce={(summary) => `Sorted. ${summary.moved} files moved.`}>
+```
+
+```js tab="JavaScript"
+transition(list, update, { announce: (summary) => `Sorted. ${summary.moved} files moved.` });
 ```
 
 ## Focus

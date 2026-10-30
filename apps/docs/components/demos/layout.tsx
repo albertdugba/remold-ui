@@ -13,6 +13,7 @@ const PEOPLE = [
 
 export function LayoutDemo() {
   const [view, setView] = useState<"Grid" | "List">("Grid");
+
   return (
     <Frame>
       <div className="rm-people">
@@ -25,29 +26,29 @@ export function LayoutDemo() {
         <LayoutGroup id="people-layout">
           {view === "Grid" ? (
             <div className="rm-people-grid">
-              {PEOPLE.map((p) => (
-                <motion.div layout layoutId={p.name} key={p.name} className="rm-person card">
+              {PEOPLE.map((person) => (
+                <motion.div layout layoutId={person.name} key={person.name} className="rm-person card">
                   <span
                     className="rm-avatar large"
-                    style={{ background: `hsl(${p.hue} 70% 62%)` }}
+                    style={{ background: `hsl(${person.hue} 70% 62%)` }}
                     aria-hidden="true"
                   />
-                  <strong>{p.name}</strong>
-                  <span>{p.role}</span>
+                  <strong>{person.name}</strong>
+                  <span>{person.role}</span>
                 </motion.div>
               ))}
             </div>
           ) : (
             <ul className="rm-people-list">
-              {PEOPLE.map((p) => (
-                <motion.li layout layoutId={p.name} key={p.name} className="rm-person row">
+              {PEOPLE.map((person) => (
+                <motion.li layout layoutId={person.name} key={person.name} className="rm-person row">
                   <span
                     className="rm-avatar"
-                    style={{ background: `hsl(${p.hue} 70% 62%)` }}
+                    style={{ background: `hsl(${person.hue} 70% 62%)` }}
                     aria-hidden="true"
                   />
-                  <strong>{p.name}</strong>
-                  <span>{p.role}</span>
+                  <strong>{person.name}</strong>
+                  <span>{person.role}</span>
                 </motion.li>
               ))}
             </ul>

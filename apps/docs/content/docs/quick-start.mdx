@@ -7,7 +7,7 @@ description: "Animate a list that sorts and filters, in a few lines."
 
 Put `Remold.Layout` around the content and give it a `trigger`: any value that changes when the content does. Render your content as you normally would.
 
-```tsx
+```tsx tab="React" tab-group="lang"
 import { Remold } from "@remold-ui/react";
 
 function Files({ files, sort, kind }) {
@@ -21,27 +21,51 @@ function Files({ files, sort, kind }) {
 }
 ```
 
+```js tab="JavaScript"
+import { transition } from "@remold-ui/dom";
+
+function show(files, sort, kind) {
+  transition(list, () => {
+    list.replaceChildren(...visible(files, sort, kind).map(renderRow));
+  });
+}
+```
+
 <Stage>
   <FilesDemo />
 </Stage>
 
-React's `key` is still there for React's own reasons. Remold doesn't read it: it would animate the same if the rows were rebuilt from scratch.
+React's `key` is still there for React's own reasons. Remold doesn't read it: it would animate the same if the rows were rebuilt from scratch. Without React, `transition` takes the element and a function that changes it: `innerHTML`, a template, or another framework's render.
 
 ## Animate from an event handler
 
 When there's no single value to watch, use `useRemold` and wrap the state change.
 
-```tsx
+```tsx tab="React" tab-group="lang"
 const { ref, animate } = useRemold();
 
 <ul ref={ref}>{items.map(renderItem)}</ul>
 <button onClick={() => animate(() => setItems(shuffle(items)))}>Shuffle</button>
 ```
 
+```js tab="JavaScript"
+shuffleButton.addEventListener("click", () => {
+  transition(list, () => {
+    list.replaceChildren(...shuffle(items).map(renderItem));
+  });
+});
+```
+
 ## Change text in place
 
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Text>{status}</Remold.Text>
+```
+
+```js tab="JavaScript"
+import { morphText } from "@remold-ui/dom";
+
+morphText(statusLabel, "Shipped");
 ```
 
 <Stage>

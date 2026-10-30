@@ -17,6 +17,7 @@ export interface CanvasSize {
  */
 export function backingSize(width: number, height: number, devicePixelRatio: number, maxPixelRatio = 2) {
   const pixelRatio = Math.max(1, Math.min(maxPixelRatio, devicePixelRatio || 1));
+
   return {
     pixelRatio,
     width: Math.max(1, Math.round(width * pixelRatio)),
@@ -37,7 +38,9 @@ export function fitCanvas(canvas: HTMLCanvasElement, { maxPixelRatio = 2 }: { ma
   const shown = width > 0 ? rect.width / width : 1;
   const ratio = (typeof devicePixelRatio === "number" ? devicePixelRatio : 1) * (shown > 0 ? shown : 1);
   const size = backingSize(width, height, ratio, maxPixelRatio);
+
   if (canvas.width !== size.width) canvas.width = size.width;
   if (canvas.height !== size.height) canvas.height = size.height;
+
   return { width, height, pixelRatio: size.pixelRatio };
 }

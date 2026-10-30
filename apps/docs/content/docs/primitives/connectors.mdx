@@ -9,48 +9,44 @@ description: "Lines between elements that stay attached while the elements move.
 
 ## Installation
 
-<Install packages="@remold-ui/react" vanilla="@remold-ui/dom" />
+<Install packages="@remold-ui/react" />
+
+Using plain JavaScript? Install `@remold-ui/dom` instead.
 
 ## Usage
 
 Mark the points lines run between with `Remold.Anchor`: give each a `name`, and `linkTo` the anchor its line comes from. Put a [Layout](/docs/primitives/layout) inside, and the lines follow every element while it moves.
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 import { Remold } from "@remold-ui/react";
 
 <Remold.Connectors radius={12}>
   <Remold.Layout trigger={thread}>
-    {comments.map((c) => (
-      <article key={c.id}>
-        <Remold.Anchor name={c.id} linkTo={c.parentId} render={<Avatar user={c.author} />} />
-        <p>{c.text}</p>
+    {comments.map((comment) => (
+      <article key={comment.id}>
+        <Remold.Anchor
+          name={comment.id}
+          linkTo={comment.parentId}
+          render={<Avatar user={comment.author} />}
+        />
+        <p>{comment.text}</p>
       </article>
     ))}
   </Remold.Layout>
-</Remold.Connectors>;
+</Remold.Connectors>
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
+```js tab="JavaScript"
 import { connectors, transition } from "@remold-ui/dom";
 
-// In your markup, name each point and the one its line comes from:
-// <img data-rm-anchor="c2" data-rm-link="c1" />
+const thread = document.getElementById("thread");
+const svg = thread.querySelector("svg.rm-connectors");
 
-// `svg` is laid over `thread`: absolutely positioned, the same size.
-const lines = connectors(thread, svg, { radius: 12 });
-
-// Lines follow the elements while a transition moves them.
-transition(thread, () => renderComments(thread, comments));
+connectors(thread, svg, { radius: 12 });
+transition(thread, () => renderThread(comments));
 ```
 
-</Variant>
-</CodeVariants>
+Without React, write the attributes yourself: `data-rm-anchor="c2"` and `data-rm-link="c1"` on each avatar. The root needs `position: relative`, and the `<svg>` should cover it (`position: absolute; inset: 0`). `connectors()` returns `update()` and `destroy()`.
 
 `linkTo` can be `undefined` for anchors with no line coming in, like the top-level comments. `Anchor` renders a `span`; `render` puts the anchor on your own element instead. Under the hood it's two attributes, `data-rm-anchor` and `data-rm-link`, which you can also write yourself.
 
@@ -115,13 +111,3 @@ transition(thread, () => renderComments(thread, comments));
     render: { type: "ReactElement | ((props, state) => ReactElement)", description: <>{"Replace the default element."}</> },
   }}
 />
-
-### Without React
-
-```ts
-import { connectors } from "@remold-ui/dom";
-
-// `svg` is laid over `root`: absolutely positioned, the same size.
-const lines = connectors(root, svg, { shape: "elbow", radius: 12 });
-lines.destroy();
-```

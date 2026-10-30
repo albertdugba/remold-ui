@@ -1,6 +1,6 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Copy01Icon, RotateLeft01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { Copy01Icon, RotateLeft01Icon, CheckIcon } from "@hugeicons/core-free-icons";
 import { useState, type ComponentType, type ReactNode } from "react";
 import { Stage } from "../stage";
 import { codeFor, defaultsOf, formatValue, type Control, type Customizable, type Values } from "./controls";
@@ -155,7 +155,7 @@ export function Customize({ name, code, width, wide }: { name: string; code?: Re
             }}
             className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-3 py-1.5 text-[13px] hover:bg-fd-accent"
           >
-            {copied ? <HugeiconsIcon icon={Tick01Icon} className="size-3.5" aria-hidden="true" /> : <HugeiconsIcon icon={Copy01Icon} className="size-3.5" aria-hidden="true" />}
+            {copied ? <HugeiconsIcon icon={CheckIcon} className="size-3.5" aria-hidden="true" /> : <HugeiconsIcon icon={Copy01Icon} className="size-3.5" aria-hidden="true" />}
             {copied ? "Copied" : "Copy code"}
           </button>
         </span>

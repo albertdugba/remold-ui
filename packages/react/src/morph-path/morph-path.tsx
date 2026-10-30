@@ -33,9 +33,11 @@ export function MorphPath({
   const shape = useMemo(() => createMorph(from, to, match), [from, to, match]);
   const target = useMotionValue(active ? 1 : 0);
   const progress = useSpring(target, { duration: 0.5, bounce: 0.15 });
-  const d = useTransform(progress, (value) => shape.d(value));
+  const d = useTransform(progress, (current) => shape.d(current));
 
-  useEffect(() => target.set(active ? 1 : 0), [active, target]);
+  useEffect(() => {
+    target.set(active ? 1 : 0);
+  }, [active, target]);
 
   return <motion.path {...pathProps} d={d} />;
 }

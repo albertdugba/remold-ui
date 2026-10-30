@@ -11,16 +11,15 @@ The orb is one `draw` function. Each state is a set of `values` (size, drift spe
 
 ## Installation
 
-<Install packages="@remold-ui/react" vanilla="@remold-ui/canvas" />
+<Install packages="@remold-ui/react" />
+
+Using plain JavaScript? Install `@remold-ui/canvas` instead, and use [painter()](/docs/canvas/painter).
 
 ## Usage
 
 Write `draw`. Pass the numbers it reads as `values`; change them and they spring there.
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 import { Remold } from '@remold-ui/react';
 
 <Remold.Canvas
@@ -34,13 +33,10 @@ import { Remold } from '@remold-ui/react';
 />
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
+```js tab="JavaScript"
 import { painter } from "@remold-ui/canvas";
 
-const dot = painter(canvas, {
+const orb = painter(canvas, {
   values: { radius: 40 },
   draw(context, { width, height, values }) {
     context.beginPath();
@@ -49,11 +45,8 @@ const dot = painter(canvas, {
   },
 });
 
-dot.to({ radius: 80 });
+orb.to({ radius: active ? 80 : 40 });
 ```
-
-</Variant>
-</CodeVariants>
 
 What you don't write:
 
@@ -66,7 +59,7 @@ What you don't write:
 
 Set `continuous` for drift, breathing, or anything that follows live input like audio. `draw` then runs every frame, with `time` and `dt` in seconds. Keep per-frame state in a ref.
 
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Canvas
   continuous
   values={LOOKS[state]}
@@ -78,11 +71,27 @@ Set `continuous` for drift, breathing, or anything that follows live input like 
 />
 ```
 
+```js tab="JavaScript"
+let drift = 0;
+
+const orb = painter(canvas, {
+  continuous: true,
+  values: LOOKS.idle,
+  spring: { duration: 0.7, bounce: 0 },
+  draw(context, { width, values, time, dt }) {
+    drift += values.flow * dt;
+    // paint with time, drift and values
+  },
+});
+
+orb.to(LOOKS[state]);
+```
+
 ## Gestures
 
-`actionsRef` gives you `to`, `set`, `values` and `still` for event handlers. Follow a finger with `set`, then hand the flick over with `to` and a `velocity`:
+`actionsRef` gives you `to`, `set`, `values` and `still` for event handlers. In plain JavaScript they're on the object `painter()` returns. Follow a finger with `set`, then hand the flick over with `to` and a `velocity`:
 
-```tsx
+```tsx tab="React" tab-group="lang"
 const actions = useRef<Remold.CanvasActions<{ turn: number }>>(null);
 
 <Remold.Canvas
@@ -93,6 +102,13 @@ const actions = useRef<Remold.CanvasActions<{ turn: number }>>(null);
   onPointerUp={() => actions.current?.to({ turn: landing }, { velocity: { turn: speed } })}
   draw={draw}
 />
+```
+
+```js tab="JavaScript"
+const wheel = painter(canvas, { values: { turn: 0 }, spring: { turn: springs.smooth }, draw });
+
+canvas.addEventListener("pointermove", (e) => wheel.set({ turn: start + e.clientX - x }));
+canvas.addEventListener("pointerup", () => wheel.to({ turn: landing }, { velocity: { turn: speed } }));
 ```
 
 `spring` takes one spring for every value, or one per name.
@@ -111,4 +127,6 @@ const actions = useRef<Remold.CanvasActions<{ turn: number }>>(null);
 | `maxPixelRatio` | `number`                               | `2`       | Cap on stored pixels per CSS pixel.                                         |
 | `actionsRef`    | `Ref<CanvasActions>`                   |           | `to`, `set`, `redraw`, `values`, `still`.                                   |
 
-Every other prop goes to the `<canvas>`. Without React, [painter()](/docs/canvas/painter) takes the same options.
+Every other prop goes to the `<canvas>`.
+
+In plain JavaScript, [painter()](/docs/canvas/painter) takes the same options apart from `actionsRef`, and returns the actions itself.

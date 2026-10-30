@@ -13,6 +13,7 @@ const STATUSES = [
 
 export function StatusDemo() {
   const [index, setIndex] = useState(0);
+
   return (
     <Frame>
       <div className="rm-status">
@@ -20,7 +21,7 @@ export function StatusDemo() {
         <button
           type="button"
           className="rm-button"
-          onClick={() => setIndex((i) => (i + 1) % STATUSES.length)}
+          onClick={() => setIndex((current) => (current + 1) % STATUSES.length)}
         >
           Next status
         </button>
@@ -43,9 +44,9 @@ export function PriceDemo({
 }) {
   const [own, setBilling] = useState<keyof typeof PLANS>("Monthly");
 
-  const billing =
-    index === undefined ? own : (["Monthly", "Yearly"] as const)[index % 2]!;
+  const billing = index === undefined ? own : (["Monthly", "Yearly"] as const)[index % 2]!;
   const plan = PLANS[billing];
+
   const body = (
     <div className="rm-price">
       {index === undefined && (
@@ -64,5 +65,6 @@ export function PriceDemo({
       <Remold.Text className="rm-price-note">{plan.note}</Remold.Text>
     </div>
   );
+
   return framed ? <Frame>{body}</Frame> : body;
 }

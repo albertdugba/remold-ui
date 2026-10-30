@@ -1,6 +1,6 @@
 "use client";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { ArrowDown01Icon, ArrowRight01Icon, Cancel01Icon, CreditCardIcon, Dollar01Icon, FilterIcon, Tag01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, ArrowRight01Icon, Cancel01Icon, CheckIcon, CreditCardIcon, Dollar01Icon, FilterIcon, Tag01Icon } from "@hugeicons/core-free-icons";
 import { Menu } from "@base-ui/react/menu";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -150,7 +150,9 @@ export function FilterBarDemo({ playing }: FilterBarDemoProps = {}) {
                               <Menu.RadioItem key={v} value={v} className="flt-item">
                                 {field === "category" && <i className="flt-dot" style={{ background: CATEGORY_COLOR[v] }} />}
                                 {v}
-                                <Menu.RadioItemIndicator className="flt-tick">✓</Menu.RadioItemIndicator>
+                                <Menu.RadioItemIndicator className="flt-tick">
+                                  <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
+                                </Menu.RadioItemIndicator>
                               </Menu.RadioItem>
                             ))}
                           </Menu.RadioGroup>

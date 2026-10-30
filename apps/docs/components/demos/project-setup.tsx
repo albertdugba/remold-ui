@@ -1,7 +1,7 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Tick01Icon } from "@hugeicons/core-free-icons";
+import { CheckIcon } from "@hugeicons/core-free-icons";
 import { Checkbox } from "@base-ui/react/checkbox";
 import { extrude } from "@remold-ui/canvas";
 import { Remold } from "@remold-ui/react";
@@ -226,7 +226,7 @@ export function ProjectSetupDemo({
                     onCheckedChange={() => toggle(step.id)}
                   >
                     <Checkbox.Indicator className="ps-check" keepMounted>
-                      <HugeiconsIcon icon={Tick01Icon} strokeWidth={3} />
+                      <HugeiconsIcon icon={CheckIcon} strokeWidth={3} />
                     </Checkbox.Indicator>
                     <span className="ps-copy">
                       <strong>{step.title}</strong>

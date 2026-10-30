@@ -1,0 +1,40 @@
+---
+title: "Training plan"
+description: "A week of workouts drawn as a path: finish a session and a pulse runs along the line to unlock the next, with a choice of sessions and a finisher medal at the end."
+status: "new"
+tags: ["Motion"]
+---
+
+<Stage name="training-plan" code={<Source demo="training-plan" />} minHeight={760}>
+  <TrainingPlanDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Tap a glowing workout.** A ring fills around it as the session runs. Then it turns orange with a check, shows how long it took, and floats the minutes into the weekly total. A pulse runs down the line and unlocks the next workout.
+- **Pick a session at the fork.** Choose Hills or Tempo. The other one dims and its lines fade, and both lead to the long run.
+- **Finish the long run.** The medal at the bottom glows. Tap it to claim it and set off a burst of sparks.
+- **Watch the header.** The streak, the weekly minutes and the progress bar update after every workout, and the numbers roll.
+
+## Install
+
+<AddCommand name="training-plan" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="training-plan" />
+
+## How it works
+
+- **Lines.** `Remold.Connectors` draws every line. Each workout badge has a `data-rm-link` that points at the workout before it. The long run has two parents, so it gets two small invisible ports. Each port links to one session and arrives on its own side of the badge.
+- **Unlock pulse.** Each line has `data-rm-pulse`. When a workout finishes, the value of that attribute changes, and the change sends one pulse along the line. The line's state is set by `data-rm-line`, and CSS uses it to style the line as dashed (locked), orange (open) or faded (skipped).
+- **Progress.** The ring is an SVG circle whose `pathLength` animates with Motion. The check, the minutes float and the medal sparks are Motion keyframes.
+- **Reduced motion.** When reduced motion is on, the glowing rings stop looping and the progress ring fills straight away.
+
+<Callout>
+  The plan is just data: a list of workouts, each pointing at the one before it. To add a session or another branch, add an entry. The lines follow.
+</Callout>

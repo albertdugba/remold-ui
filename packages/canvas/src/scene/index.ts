@@ -260,17 +260,21 @@ const resolvePalette = (p: PaletteName | Palette | undefined, fallback: Palette)
 
 export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
   const layoutNames = Object.keys(options.layouts);
+
   if (layoutNames.length === 0) throw new RangeError("scene: at least one layout is required");
+
   const spring = options.spring ?? { duration: 0.8, bounce: 0.18 };
   const loop = options.loop ?? { add: frames };
   const interact = { hover: true, tap: true, drag: true, keyboard: true, ...options.interact };
   const reduced = () => options.reducedMotion === "always" || (options.reducedMotion !== "never" && prefersReducedMotion());
   const basePalette = resolvePalette(options.palette, palettes.violet);
   const ctx = canvas.getContext("2d");
+
   if (!ctx) throw new Error("scene: canvas 2D context is not available");
 
   let size: CanvasSize = fitCanvas(canvas, { maxPixelRatio: options.maxPixelRatio });
   let current = options.initial ?? layoutNames[0]!;
+
   if (!options.layouts[current]) throw new RangeError(`scene: unknown initial layout "${current}"`);
   let focused: string | null = null;
   let hovered: string | null = null;

@@ -43,11 +43,13 @@ export function Segmented<T extends string>({
       value={[value]}
       onValueChange={(values) => {
         const next = values[0];
+
         if (next) onChange(next as T);
       }}
     >
-      {options.map((o) => {
-        const item = typeof o === "string" ? { value: o, label: o } : o;
+      {options.map((option) => {
+        const item = typeof option === "string" ? { value: option, label: option } : option;
+
         return (
           <Toggle key={item.value} value={item.value}>
             {item.label}

@@ -1,6 +1,5 @@
-import { forwardRef, useState, type ForwardedRef } from "react";
-import { prepareTransition, type PreparedTransition } from "@remold-ui/dom";
-import { useIsoLayoutEffect, useLatest } from "../utils/hooks.js";
+import { forwardRef, type ForwardedRef } from "react";
+import { useRemoldLayout } from "../use-remold-layout/use-remold-layout.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldLayoutProps, RemoldLayoutState } from "./types.js";
 
@@ -21,7 +20,7 @@ export const RemoldLayout = forwardRef(function RemoldLayout(
 ) {
   const {
     trigger,
-    disabled = false,
+    disabled,
     onTransition,
     spring,
     match,
@@ -34,45 +33,30 @@ export const RemoldLayout = forwardRef(function RemoldLayout(
     ...elementProps
   } = componentProps;
 
-  const [element, setElement] = useState<HTMLDivElement | null>(null);
-  const [committedTrigger, setCommittedTrigger] = useState(trigger);
-  const [pending, setPending] = useState<PreparedTransition | null>(null);
-  const [running, setRunning] = useState(0);
-  const onStart = useLatest(onTransition);
+  const { ref, animating } = useRemoldLayout<HTMLDivElement>(trigger, {
+    disabled,
+    onTransition,
+    spring,
+    match,
+    reducedMotion,
+    announce,
+    loop,
+    lift,
+  });
 
-  if (!sameTrigger(committedTrigger, trigger)) {
-    setCommittedTrigger(trigger);
-    setPending(!disabled && element ? prepareTransition(element, { spring, match, reducedMotion, announce, loop, lift }) : null);
-  }
+  const state: RemoldLayout.State = { animating };
 
-  useIsoLayoutEffect(() => {
-    if (!pending) return;
-    const transition = pending.play();
-    setRunning((n) => n + 1);
-    onStart.current?.(transition);
-    const done = () => setRunning((n) => n - 1);
-    transition.finished.then(done, done);
-  }, [pending]);
-
-  const state: RemoldLayout.State = { animating: running > 0 };
   return useRenderElement(
     "div",
     { render, className },
     {
       state,
-      refs: [setElement, forwardedRef],
+      refs: [ref, forwardedRef],
       props: elementProps,
       dataAttributes: { "data-rm-animating": state.animating ? "" : undefined },
     },
   );
 });
-
-/** Like React's effect dependencies: an array changes when any item does; anything else by `Object.is`. */
-function sameTrigger(a: unknown, b: unknown): boolean {
-  if (Object.is(a, b)) return true;
-  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
-  return a.every((item, i) => Object.is(item, b[i]));
-}
 
 export namespace RemoldLayout {
   export type State = RemoldLayoutState;

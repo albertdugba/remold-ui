@@ -5,29 +5,24 @@ description: "Animate a state change you make from an event handler."
 
 ## Usage
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 const { ref, animate } = useRemold();
 
 <ul ref={ref}>{items.map(renderItem)}</ul>
 <button onClick={() => animate(() => setSort('price'))}>Sort by price</button>
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
+```js tab="JavaScript"
 import { transition } from "@remold-ui/dom";
 
 sortButton.addEventListener("click", () => {
-  transition(list, () => renderItems(list, items, "price"));
+  transition(list, () => {
+    list.replaceChildren(...byPrice(items).map(renderItem));
+  });
 });
 ```
 
-</Variant>
-</CodeVariants>
+Without React, `transition` takes the element and the change, and returns the same `Transition`. The options below are the same.
 
 ## Options
 

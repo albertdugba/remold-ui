@@ -47,15 +47,19 @@ const STOPWORDS = new Set([
 /** Tokens without stopwords, unless that would leave nothing ("To do" is still "to do"). */
 function meaningful(tokens: readonly string[]): string[] {
   const kept = tokens.filter((t) => !STOPWORDS.has(t));
+
   return kept.length > 0 ? kept : [...tokens];
 }
 
 /** Overlap between two sets: shared, shared ÷ average size, and shared ÷ the smaller size. */
 export function overlap(setA: ReadonlySet<string>, setB: ReadonlySet<string>): { shared: number; dice: number; containment: number } {
   if (setA.size === 0 || setB.size === 0) return { shared: 0, dice: 0, containment: 0 };
+
   const [small, large] = setA.size <= setB.size ? [setA, setB] : [setB, setA];
   let shared = 0;
+
   for (const t of small) if (large.has(t)) shared++;
+
   return {
     shared,
     dice: (2 * shared) / (setA.size + setB.size),
@@ -77,19 +81,24 @@ export function setOverlap(a: readonly string[], b: readonly string[]): { shared
  */
 function bigrams(s: string): Uint32Array {
   const keys = new Uint32Array(Math.max(0, s.length - 1));
+
   for (let i = 0; i < keys.length; i++) keys[i] = s.charCodeAt(i) * 65536 + s.charCodeAt(i + 1);
+
   return keys.sort();
 }
 
 /** Dice over character pairs. A pair counts as many times as both texts have it. */
 function bigramDice({ a, keysA, b, keysB }: { a: string; keysA: Uint32Array; b: string; keysB: Uint32Array }): number {
   if (a.length < 2 || b.length < 2) return a === b ? 1 : 0;
+
   let shared = 0;
   let i = 0;
   let j = 0;
+
   while (i < keysA.length && j < keysB.length) {
     const x = keysA[i]!;
     const y = keysB[j]!;
+
     if (x === y) {
       shared++;
       i++;
@@ -126,6 +135,7 @@ export interface TextFeatures {
 export function textFeatures(text: string): TextFeatures {
   const normal = normalizeText(text);
   const masked = DIGIT.test(normal) ? maskNumbers(normal) : null;
+
   return {
     text: normal,
     tokens: new Set(meaningful(tokenize(normal))),
@@ -138,7 +148,9 @@ export function textFeatures(text: string): TextFeatures {
 export function compareText(a: TextFeatures, b: TextFeatures): number {
   const na = a.text;
   const nb = b.text;
+
   if (na === nb) return 1;
+
   if (na === "" || nb === "") return 0;
 
   const { dice, containment } = overlap(a.tokens, b.tokens);
@@ -153,6 +165,7 @@ export function compareText(a: TextFeatures, b: TextFeatures): number {
   if (a.masked && b.masked) {
     const ma = a.masked;
     const mb = b.masked;
+
     score = Math.max(
       score,
       ma.text === mb.text ? 0.55 : 0.45 * bigramDice({ a: ma.text, keysA: ma.bigrams, b: mb.text, keysB: mb.bigrams }),

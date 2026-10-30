@@ -1,7 +1,5 @@
 import { llms, loader } from "fumadocs-core/source";
 import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons";
-import { statusBadgesPlugin } from "fumadocs-core/source/status-badges";
-import { createElement } from "react";
 import { docsRoute } from "./shared";
 import { defineDocs } from "fumadocs-mdx/macro";
 import { metaSchema, pageSchema } from "fumadocs-core/source/schema";
@@ -11,7 +9,7 @@ const docs = defineDocs({
   docs: {
     // `tags`: short labels under the title (the parts a page uses). `kind: canvas` marks a
     // component drawn on a canvas (illustrations and diagrams), listed apart from interface ones.
-    // `status` (such as `new`) puts a small badge next to the page in the sidebar.
+    // `status` (such as `new`) marks a page as new on the components page.
     // All reuse the schema's own string type, so the docs don't need their own copy of zod.
     schema: pageSchema.extend({
       tags: pageSchema.shape.title.array().optional(),
@@ -33,7 +31,6 @@ export const source = loader({
   source: docs.toFumadocsSource(),
   plugins: [
     lucideIconsPlugin(),
-    statusBadgesPlugin({ renderBadge: (status) => createElement("span", { className: "rm-badge", "data-status": status }, status) }),
   ],
 });
 

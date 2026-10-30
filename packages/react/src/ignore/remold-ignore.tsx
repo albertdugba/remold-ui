@@ -19,6 +19,7 @@ export const RemoldIgnore = forwardRef(function RemoldIgnore(
   forwardedRef: ForwardedRef<HTMLSpanElement>,
 ) {
   const { render, className, style, ...elementProps } = componentProps;
+
   return useRenderElement(
     "span",
     { render, className },

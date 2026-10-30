@@ -63,7 +63,10 @@ export interface AnimatedValue {
  */
 export function value(initial: number, options: ValueOptions = {}): AnimatedValue {
   const precision = options.precision ?? 0.01;
-  if (!(precision > 0)) throw new RangeError(`value: precision must be positive, got ${precision}`);
+
+  if (!(precision > 0)) {
+    throw new RangeError(`value: precision must be positive, got ${precision}`);
+  }
 
   let coefficients = springCoefficients(options.spring ?? springs.smooth);
   const defaultCoefficients = coefficients;

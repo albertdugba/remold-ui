@@ -1,0 +1,36 @@
+---
+title: "Kitchen ticket"
+description: "A counter ticket whose ring fills as the order cooks, from received to picked up, and whose check and cross reshape into each other."
+status: "new"
+tags: ["Morph", "Base UI"]
+---
+
+<Stage name="kitchen-ticket" code={<Source demo="kitchen-ticket" />} minHeight={560}>
+  <KitchenTicketDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Open the ticket.** It springs open from the status button, and a highlight glides to whatever you point at.
+- **Cook the order.** The ring fills: empty when the ticket comes in, half on the grill, most of the way when it's at the pass.
+- **Hand it over.** Picked up fills the circle and draws a check. Canceled draws a cross. Switch between the two and they reshape into each other.
+- **Read the line.** Ticket in, on the grill, at the pass. For here and to-go use the same menu.
+
+## Install
+
+<AddCommand name="kitchen-ticket" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="kitchen-ticket" />
+
+## How it works
+
+- **One picker, used twice.** The ticket and for-here or to-go share a `Picker` built on Base UI's Select, with Motion on top for the opening spring and the gliding highlight.
+- **Check and cross.** The two marks are reshaped into each other with Remold's `createMorph`; the ring's fill is a plain stroke animation.
+
+<Callout>The order and the people are made up.</Callout>

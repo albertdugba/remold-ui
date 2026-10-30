@@ -22,7 +22,9 @@ const LIVE_REGION_ATTRIBUTE = "data-rm-announcer";
  */
 export function announce(message: string): void {
   if (typeof document === "undefined" || !message) return;
+
   let region = document.querySelector<HTMLElement>(`[${LIVE_REGION_ATTRIBUTE}]`);
+
   if (!region) {
     region = document.createElement("div");
     region.setAttribute(LIVE_REGION_ATTRIBUTE, "");
@@ -41,8 +43,11 @@ export function announce(message: string): void {
     });
     document.body.append(region);
   }
+
   region.textContent = "";
+
   const target = region;
+
   setTimeout(() => {
     target.textContent = message;
   }, 50);

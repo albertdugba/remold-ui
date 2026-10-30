@@ -18,20 +18,25 @@ import type { UseRemoldReturnValue } from "./types.js";
 export function useRemold<E extends HTMLElement = HTMLDivElement>(options: TransitionOptions = {}): useRemold.ReturnValue<E> {
   const element = useRef<E | null>(null);
   const latest = useLatest(options);
+
   const ref = useCallback((node: E | null) => {
     element.current = node;
   }, []);
+
   const animate = useCallback(
     (update: () => void, overrides?: TransitionOptions) => {
       const root = element.current;
+
       if (!root) {
         update();
         return null;
       }
+
       return transition(root, () => flushSync(update), { ...latest.current, ...overrides });
     },
     [latest],
   );
+
   return { ref, animate };
 }
 

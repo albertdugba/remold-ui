@@ -4,14 +4,14 @@
  * few chips to change its state. Every card plays by itself while it's on screen and stops for
  * good as soon as someone touches it.
  */
-import { Tabs } from "@base-ui/react/tabs";
 import { Remold, useAutoplay } from "@remold-ui/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useInPreview } from "../demos/portal-container";
 import {
   Children,
-  useState,
+  useLayoutEffect,
+  useRef,
   type ComponentType,
   type ReactElement,
   type ReactNode,
@@ -47,6 +47,14 @@ const OtpInputDemo = dynamic(
   () => import("../demos/otp-input").then((m) => m.OtpInputDemo),
   { ssr: false },
 );
+const TrainingPlanDemo = dynamic(
+  () => import("../demos/training-plan").then((m) => m.TrainingPlanDemo),
+  { ssr: false },
+);
+const DonationGoalDemo = dynamic(
+  () => import("../demos/donation-goal").then((m) => m.DonationGoalDemo),
+  { ssr: false },
+);
 const LiveRoomDemo = dynamic(
   () => import("../demos/live-room").then((m) => m.LiveRoomDemo),
   { ssr: false },
@@ -71,8 +79,12 @@ const SendMoneyDemo = dynamic(
   () => import("../demos/send-money").then((m) => m.SendMoneyDemo),
   { ssr: false },
 );
-const IssueStatusDemo = dynamic(
-  () => import("../demos/issue-status").then((m) => m.IssueStatusDemo),
+const CurrencyConverterDemo = dynamic(
+  () => import("../demos/currency-converter").then((m) => m.CurrencyConverterDemo),
+  { ssr: false },
+);
+const KitchenTicketDemo = dynamic(
+  () => import("../demos/kitchen-ticket").then((m) => m.KitchenTicketDemo),
   { ssr: false },
 );
 const SendMessageDemo = dynamic(
@@ -102,10 +114,6 @@ const EditorMentionsDemo = dynamic(
 );
 const UsageMeterDemo = dynamic(
   () => import("../demos/usage-meter").then((m) => m.UsageMeterDemo),
-  { ssr: false },
-);
-const WaitlistDemo = dynamic(
-  () => import("../demos/waitlist").then((m) => m.WaitlistDemo),
   { ssr: false },
 );
 const OnboardingChecklistDemo = dynamic(
@@ -146,9 +154,8 @@ const LogoMorph = dynamic(
 const PLAY = "M8 5.5v13l11-6.5z";
 const PAUSE = "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z";
 
-/** The tabs over the grid, like a gallery's sections. */
+/** Labels for the catalogue. The home grid shows every card, in the order below. */
 export const CATEGORIES = [
-  { id: "all", label: "All" },
   { id: "morphing", label: "Morphing" },
   { id: "canvas", label: "Canvas & Particles" },
   { id: "illustrations", label: "Illustrations" },
@@ -157,7 +164,7 @@ export const CATEGORIES = [
   { id: "forms", label: "Forms & Inputs" },
 ] as const;
 
-export type Category = Exclude<(typeof CATEGORIES)[number]["id"], "all">;
+export type Category = (typeof CATEGORIES)[number]["id"];
 
 /** The plain names people see in the component catalogue and docs, rather than each card's marketing headline. */
 const COMPONENT_NAME_BY_DOC: Record<string, string> = {
@@ -358,35 +365,98 @@ export function landingCards(): LandingCard[] {
 }
 
 export function Parts() {
-  // The cards show in the order they're written below: no shuffling.
-  const [tab, setTab] = useState<Category | "all">("all");
   const cards = Children.toArray(allCards().props.children) as Card[];
-  const shown =
-    tab === "all" ? cards : cards.filter((card) => card.props.category === tab);
-  const count = (id: Category | "all") =>
-    id === "all"
-      ? cards.length
-      : cards.filter((card) => card.props.category === id).length;
+  const grid = useMasonry();
+
   return (
-    <Tabs.Root
-      value={tab}
-      onValueChange={(value) => setTab(value as Category | "all")}
-      className="hp-tabs"
-    >
-      <Tabs.List className="hp-tab-list" aria-label="Kinds of component">
-        {CATEGORIES.map((c) => (
-          <Tabs.Tab key={c.id} value={c.id} className="hp-tab">
-            {c.label}
-            <span className="hp-tab-count">{count(c.id)}</span>
-          </Tabs.Tab>
-        ))}
-        <Tabs.Indicator className="hp-tab-indicator" />
-      </Tabs.List>
-      <Tabs.Panel value={tab} className="hp" keepMounted>
-        {shown}
-      </Tabs.Panel>
-    </Tabs.Root>
+    <div ref={grid} className="hp">
+      {cards}
+    </div>
   );
+}
+
+/**
+ * Packs the cards like masonry. The grid runs on tiny rows, and each card is placed in the
+ * shortest column (a wide card in the lowest pair, a full one below everything), spanning as many
+ * rows as its height needs. A card keeps the tallest height it has reached at its current width,
+ * held as a min-height, so a demo that shrinks mid-animation neither shuffles the grid nor leaves
+ * a wider gap below it. Cards are never sized by their slot, so nothing can feed back and grow.
+ */
+function useMasonry() {
+  const grid = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const root = grid.current;
+    if (!root) return;
+    const items = [...root.children] as HTMLElement[];
+    const authored = new Map(items.map((item) => [item, item.style.minHeight]));
+    const widths = new WeakMap<Element, number>();
+    let frame = 0;
+
+    const heightOf = (item: HTMLElement) => {
+      const { width } = item.getBoundingClientRect();
+      if (Math.abs((widths.get(item) ?? -1) - width) >= 1) {
+        item.style.minHeight = authored.get(item) ?? "";
+        widths.set(item, width);
+      }
+      const height = item.getBoundingClientRect().height;
+      item.style.minHeight = `${height}px`;
+      return height + (Number.parseFloat(getComputedStyle(item).marginBottom) || 0);
+    };
+
+    const columnsOf = (item: HTMLElement, count: number) => {
+      if (item.classList.contains("full") || item.classList.contains("hp-pair")) return count;
+      return item.classList.contains("wide") ? Math.min(2, count) : 1;
+    };
+
+    const layout = () => {
+      frame = 0;
+      const style = getComputedStyle(root);
+      const row = Number.parseFloat(style.gridAutoRows) || 1;
+      const count = style.gridTemplateColumns.split(" ").filter(Boolean).length || 1;
+      const bottoms = Array.from({ length: count }, () => 0);
+
+      for (const item of items) {
+        const span = columnsOf(item, count);
+        let start = 0;
+        let top = Number.POSITIVE_INFINITY;
+        for (let column = 0; column + span <= count; column++) {
+          const floor = Math.max(...bottoms.slice(column, column + span));
+          if (floor < top) {
+            top = floor;
+            start = column;
+          }
+        }
+        const rows = Math.ceil(heightOf(item) / row);
+        item.style.gridColumn = `${start + 1} / span ${span}`;
+        item.style.gridRow = `${top + 1} / span ${rows}`;
+        for (let column = start; column < start + span; column++) bottoms[column] = top + rows;
+      }
+    };
+
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(layout);
+    };
+
+    root.dataset.masonry = "";
+    layout();
+    const observer = new ResizeObserver(schedule);
+    observer.observe(root);
+    for (const item of items) observer.observe(item);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      delete root.dataset.masonry;
+      for (const item of items) {
+        item.style.gridColumn = "";
+        item.style.gridRow = "";
+        item.style.minHeight = authored.get(item) ?? "";
+      }
+    };
+  }, []);
+
+  return grid;
 }
 
 /** Every card on the grid, in the order the page is built with. */
@@ -405,7 +475,29 @@ function allCards() {
         {(_, playing) => <EditorMentionsDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Layout · Media"
+        featured
+        kicker="Connectors · Motion"
+        category="morphing"
+        title="Training plan"
+        docs="/docs/components/training-plan"
+        states={["Train"]}
+        minHeight={760}
+      >
+        {(_, playing) => <TrainingPlanDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        featured
+        kicker="Particles · Motion"
+        category="canvas"
+        title="Donation goal"
+        docs="/docs/components/donation-goal"
+        states={["Give"]}
+        minHeight={700}
+      >
+        {(_, playing) => <DonationGoalDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Motion · Media"
         category="morphing"
         title="Stack to live room"
         docs="/docs/components/live-room"
@@ -418,6 +510,7 @@ function allCards() {
         category="morphing"
         title="Post and comments"
         spotlight
+        tall
         docs="/docs/components/comment-thread"
         states={["Comments"]}
       >
@@ -490,13 +583,13 @@ function allCards() {
       <PartCard
         featured
         kicker="Motion · createMorph"
-        category="forms"
-        title="Issue status"
-        docs="/docs/components/issue-status"
-        states={["Status"]}
+        category="morphing"
+        title="Kitchen ticket"
+        docs="/docs/components/kitchen-ticket"
+        states={["Ticket"]}
         minHeight={560}
       >
-        {(_, playing) => <IssueStatusDemo playing={playing} />}
+        {(_, playing) => <KitchenTicketDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -508,6 +601,17 @@ function allCards() {
         minHeight={720}
       >
         {(_, playing) => <SendMoneyDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        featured
+        kicker="Layout · Motion"
+        category="payments"
+        title="Currency converter"
+        docs="/docs/components/currency-converter"
+        states={["Convert"]}
+        minHeight={560}
+      >
+        {(_, playing) => <CurrencyConverterDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -544,17 +648,6 @@ function allCards() {
       </PartCard>
       <PartCard
         featured
-        kicker="Base UI · Motion"
-        category="forms"
-        title="Waitlist"
-        docs="/docs/components/waitlist"
-        states={["Waitlist"]}
-        minHeight={600}
-      >
-        {(_, playing) => <WaitlistDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        featured
         kicker="Layout · Base UI"
         category="morphing"
         title="Onboarding checklist"
@@ -577,7 +670,7 @@ function allCards() {
       </PartCard>
       <PartCard
         featured
-        kicker="Layout · Base UI"
+        kicker="Motion · Base UI"
         category="morphing"
         title="Back online"
         docs="/docs/components/connection-banner"

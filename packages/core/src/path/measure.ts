@@ -17,11 +17,14 @@ export interface Bounds {
 /** Points along the outline: `perSegment` evenly spaced in t on every segment, plus the end. */
 export function samplePoints(subpath: Subpath, perSegment = 4): Point[] {
   const points: Point[] = [];
+
   for (const c of subpath.segments) {
     for (let k = 0; k < perSegment; k++) points.push(pointAt(c, k / perSegment));
   }
   const last = subpath.segments[subpath.segments.length - 1];
+
   if (last && !subpath.closed) points.push(last.p3);
+
   return points;
 }
 
@@ -32,9 +35,11 @@ export function samplePoints(subpath: Subpath, perSegment = 4): Point[] {
 export function signedArea(subpath: Subpath): number {
   const points = samplePoints(subpath);
   let sum = 0;
+
   for (let i = 0; i < points.length; i++) {
     const p = points[i]!;
     const q = points[(i + 1) % points.length]!;
+
     sum += p.x * q.y - q.x * p.y;
   }
   return sum / 2;
@@ -43,7 +48,9 @@ export function signedArea(subpath: Subpath): number {
 /** The average of the sampled outline points: a cheap centre for comparing positions. */
 export function centroid(subpath: Subpath): Point {
   const points = samplePoints(subpath);
+
   if (points.length === 0) return { x: 0, y: 0 };
+
   let x = 0,
     y = 0;
   for (const p of points) {
@@ -73,5 +80,6 @@ export function bounds(subpaths: readonly Subpath[]): Bounds | null {
     }
   }
   if (minX === Infinity) return null;
+
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }

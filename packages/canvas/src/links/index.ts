@@ -31,6 +31,7 @@ export function sidePort(b: FloorBox, toward: Point2, port?: ScenePort): Point3 
   const cy = b.y + b.depth / 2;
   let nx = 0;
   let ny = 0;
+
   if (port === "left") nx = -1;
   else if (port === "right") nx = 1;
   else if (port === "front") ny = 1;
@@ -39,6 +40,7 @@ export function sidePort(b: FloorBox, toward: Point2, port?: ScenePort): Point3 
     // Measured against the box's own size, so a long, thin box uses its long sides.
     const dx = (toward.x - cx) / Math.max(1, b.width);
     const dy = (toward.y - cy) / Math.max(1, b.depth);
+
     if (Math.abs(dx) >= Math.abs(dy)) nx = Math.sign(dx) || 1;
     else ny = Math.sign(dy) || 1;
   }
@@ -59,12 +61,14 @@ export function routeOnFloor(
   const cb = { x: b.x + b.width / 2, y: b.y + b.depth / 2 };
 
   const over = (p: Point2, box: FloorBox) => p.x > box.x && p.x < box.x + box.width && p.y > box.y && p.y < box.y + box.depth;
+
   if (over(ca, b) || over(cb, a)) {
     // Straight up and down: both ends sit under the middle of the smaller box, so the line is vertical.
     const aLow = a.z <= b.z;
     const small = a.width * a.depth <= b.width * b.depth ? ca : cb;
     const fromTop = aLow ? { ...small, z: a.z + a.height } : { ...small, z: a.z };
     const toEnd = aLow ? { ...small, z: b.z } : { ...small, z: b.z + b.height };
+
     return { points: [fromTop, toEnd], riser: true };
   }
 
@@ -78,9 +82,11 @@ export function routeOnFloor(
     const k = Math.min(160, Math.max(18, distance * 0.42));
     const c1 = { x: pa.x + pa.nx * k, y: pa.y + pa.ny * k };
     const c2 = { x: pb.x + pb.nx * k, y: pb.y + pb.ny * k };
+
     for (let i = 0; i <= 28; i++) {
       const t = i / 28;
       const u = 1 - t;
+
       flat.push({
         x: u * u * u * pa.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * pb.x,
         y: u * u * u * pa.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * pb.y,
@@ -95,18 +101,22 @@ export function routeOnFloor(
     const corners: Point2[] = [{ x: pa.x, y: pa.y }];
     const aAlongX = pa.nx !== 0;
     const bAlongX = pb.nx !== 0;
+
     if (aAlongX !== bAlongX) {
       corners.push(aAlongX ? { x: pb.x, y: pa.y } : { x: pa.x, y: pb.y });
     } else if (aAlongX) {
       const mid = (pa.x + pb.x) / 2;
+
       corners.push({ x: mid, y: pa.y }, { x: mid, y: pb.y });
     } else {
       const mid = (pa.y + pb.y) / 2;
+
       corners.push({ x: pa.x, y: mid }, { x: pb.x, y: mid });
     }
     corners.push({ x: pb.x, y: pb.y });
     // A route that would double back into A gets a curve instead.
     const first = corners[1]!;
+
     if ((first.x - pa.x) * pa.nx + (first.y - pa.y) * pa.ny < -0.5) cubic();
     else roundCorners(corners, 18, flat);
   } else {
@@ -131,13 +141,17 @@ function roundCorners(corners: Point2[], radius: number, out: Point2[]): void {
     const next = corners[i + 1]!;
     const inLength = Math.hypot(at.x - prev.x, at.y - prev.y);
     const outLength = Math.hypot(next.x - at.x, next.y - at.y);
+
     if (inLength < 0.5 || outLength < 0.5) continue;
+
     const r = Math.min(radius, inLength / 2, outLength / 2);
     const start = { x: at.x - ((at.x - prev.x) / inLength) * r, y: at.y - ((at.y - prev.y) / inLength) * r };
     const end = { x: at.x + ((next.x - at.x) / outLength) * r, y: at.y + ((next.y - at.y) / outLength) * r };
+
     for (let k = 0; k <= 6; k++) {
       const t = k / 6;
       const u = 1 - t;
+
       out.push({ x: u * u * start.x + 2 * u * t * at.x + t * t * end.x, y: u * u * start.y + 2 * u * t * at.y + t * t * end.y });
     }
   }

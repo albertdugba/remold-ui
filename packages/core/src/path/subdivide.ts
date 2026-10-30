@@ -19,6 +19,7 @@ export function splitCubic(c: Cubic, t = 0.5): [Cubic, Cubic] {
   const ab = lerpPoint(a, b, t);
   const bd = lerpPoint(b, d, t);
   const mid = lerpPoint(ab, bd, t);
+
   return [
     { p0: c.p0, p1: a, p2: ab, p3: mid },
     { p0: mid, p1: bd, p2: d, p3: c.p3 },

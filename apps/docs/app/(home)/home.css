@@ -540,48 +540,62 @@
   color: var(--hm-muted);
 }
 
-/* Compare */
+/* Why Remold: the selling points, a quiet grid of six */
 
-.cmp {
+.hm-points {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.cmp-pane {
-  margin: 0;
-  border: 1px solid var(--hm-line);
-  border-radius: 16px;
-  background: var(--color-fd-card);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 40px 0 0;
+  padding: 0;
   overflow: hidden;
+  border: 1px solid var(--hm-line);
+  border-radius: 20px;
+  background: var(--hm-line);
+  list-style: none;
 }
 
-.cmp-pane.ours {
-  border-color: var(--hm-ink);
+.hm-point {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 28px 26px 30px;
+  background: var(--color-fd-background);
 }
 
-.cmp-pane figcaption {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--hm-line);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.cmp-pane figcaption span {
-  font-weight: 400;
-  color: var(--hm-muted);
-}
-
-.cmp-pane pre {
-  margin: 0;
-  padding: 18px;
-  overflow-x: auto;
-  font-size: 13px;
-  line-height: 1.7;
+.hm-point-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--hm-ink) 6%, transparent);
   color: var(--hm-ink);
+}
+
+.hm-point-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.hm-point strong {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.hm-point p {
+  margin: 0;
+  color: var(--hm-muted);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+  .hm-points {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* Closing and footer: light, a hairline above */
@@ -694,9 +708,12 @@
   }
 
   .hm-split,
-  .hm-split.faq,
-  .cmp {
+  .hm-split.faq {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hm-points {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hm-head.row {
@@ -1526,81 +1543,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-top: 28px;
-}
-
-/* The sections over the grid: a row of pills with one sliding highlight */
-.hp-tabs {
-  margin-top: 28px;
-}
-
-.hp-tabs .hp {
-  margin-top: 18px;
-}
-
-.hp-tab-list {
-  position: relative;
-  z-index: 0;
-  display: flex;
-  gap: 4px;
-  width: max-content;
-  max-width: 100%;
-  padding: 4px;
-  overflow-x: auto;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--hm-ink) 5%, var(--color-fd-background));
-  scrollbar-width: none;
-}
-
-.hp-tab-list::-webkit-scrollbar {
-  display: none;
-}
-
-.hp-tab {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: color-mix(in oklab, var(--hm-ink) 55%, transparent);
-  font: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.hp-tab:hover,
-.hp-tab[data-active] {
-  color: var(--hm-ink);
-}
-
-.hp-tab:focus-visible {
-  outline: 2px solid var(--hm-ink);
-  outline-offset: -2px;
-}
-
-.hp-tab-count {
-  color: color-mix(in oklab, var(--hm-ink) 40%, transparent);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.hp-tab-indicator {
-  position: absolute;
-  top: 4px;
-  left: var(--active-tab-left);
-  z-index: -1;
-  width: var(--active-tab-width);
-  height: 34px;
-  border-radius: 999px;
-  background: var(--color-fd-background);
-  box-shadow: 0 0 0 1px var(--hm-line), 0 2px 6px -2px rgb(0 0 0 / 0.15);
-  transition: left 0.35s cubic-bezier(0.3, 0.9, 0.3, 1), width 0.35s cubic-bezier(0.3, 0.9, 0.3, 1);
+  align-items: start;
 }
 
 .hp-card {
@@ -1611,11 +1554,24 @@
   border: 1px solid var(--hm-line);
   border-radius: 24px;
   background: color-mix(in oklab, var(--hm-ink) 3%, var(--color-fd-background));
+  container-type: inline-size;
 }
 
-/* The regular gallery pieces read as deliberate tiles; feature cards retain their authored spans. */
-.hp-card:not(.wide, .full, .tall) {
-  aspect-ratio: 1;
+/* Masonry, once the cards are measured: tiny rows, each card spanning as many as its height needs.
+   Until then it's a plain grid, so nothing overlaps before the script runs. */
+.hp[data-masonry] {
+  grid-auto-rows: 1px;
+  row-gap: 0;
+  align-items: start;
+}
+
+/* A tall card stands as high as two regular ones and the gap between them. */
+.hp[data-masonry] .hp-card.tall {
+  min-height: 856px;
+}
+
+.hp[data-masonry] > * {
+  margin-bottom: 16px;
 }
 
 .hp-card.wide {
@@ -1651,17 +1607,33 @@
 
 .hp-stage {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   min-width: 0;
-  padding: 28px 24px;
+  /* The play button occupies the top-right corner (14px inset, 34px across).
+     Keep the demo clear of it, with the side insets matched so it stays centred. */
+  padding: 58px 58px 28px;
 }
 
 /* A part keeps its own fill (a white card stays white on the grey); its outer border and shadow go. */
 .hp-stage > * {
+  min-width: 0;
   max-width: 100%;
   margin: 0 !important;
   border: 0 !important;
   box-shadow: none !important;
+}
+
+/* The thread uses the card's width, and the whole preview stays readable. */
+.hp-stage > .cx {
+  width: 100%;
+}
+
+.hp-card .cx[data-variant="preview"] .cx-stage {
+  height: auto;
+  max-height: none;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .hp-stage > .otp {
@@ -1785,21 +1757,35 @@
   place-items: start center;
 }
 
-@media (max-width: 1000px) {
+/* Two columns while each card still has room for a demo. */
+@media (max-width: 1500px) {
   .hp {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 640px) {
+/* One column, a little wider than a squeezed pair, and centred on the page. */
+@media (max-width: 1100px) {
   .hp {
     grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
   }
-  .hp-card:not(.wide, .full, .tall) {
-    aspect-ratio: auto;
+  .hp-card,
+  .hp-card.wide,
+  .hp-card.full,
+  .hp-card.tall {
+    width: min(100%, 560px);
   }
-  .hp-card.wide {
+  .hp-card.wide,
+  .hp-card.tall {
     grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .hm {
+    --hm-pad: 12px;
   }
 }
 
@@ -1850,7 +1836,7 @@
 }
 
 .hp-card.tall .hp-stage {
-  padding: 20px;
+  padding: 58px 58px 24px;
 }
 
 .hp-card.tall .hp-stage {
@@ -1862,9 +1848,11 @@
   height: 100% !important;
 }
 
-@media (max-width: 640px) {
-  .hp-card.tall {
-    grid-row: auto;
+/* A narrow card gives the side padding back to the demo. The play button only needs the top corner. */
+@container (max-width: 560px) {
+  .hp-stage,
+  .hp-card.tall .hp-stage {
+    padding: 52px 18px 20px;
   }
 }
 

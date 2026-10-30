@@ -221,18 +221,22 @@ export function ApiKeysDemo({ playing }: ApiKeysDemoProps = {}) {
                   onValueChange={(v) => v[0] && take((s) => ({ ...s, env: v[0] as Env }))}
                 >
                   <Toggle value="live" className="ak-env-item">
+                    <span className="ak-dot" data-env="live" aria-hidden="true" />
                     Live
                   </Toggle>
                   <Toggle value="test" className="ak-env-item">
+                    <span className="ak-dot" data-env="test" aria-hidden="true" />
                     Test
                   </Toggle>
                 </ToggleGroup>
-                <button type="button" className="ak-ghost" onClick={() => take((s) => ({ ...s, stage: "list" }))}>
-                  Cancel
-                </button>
-                <button type="submit" className="ak-primary" disabled={!state.draft.trim()}>
-                  Create
-                </button>
+                <span className="ak-actions">
+                  <button type="button" className="ak-ghost" onClick={() => take((s) => ({ ...s, stage: "list" }))}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="ak-primary" disabled={!state.draft.trim()}>
+                    Create
+                  </button>
+                </span>
               </div>
             </form>
             </motion.div>

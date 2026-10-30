@@ -46,10 +46,12 @@ export function parseColor(value: string): Rgba {
   if (!value || value === "none") return [0, 0, 0, 0];
 
   const cached = colorCache.get(value);
+
   if (cached) return cached;
 
   const color = toRgb(value);
   const result: Rgba = color ? [byte(color.r), byte(color.g), byte(color.b), clamp(color.alpha ?? 1)] : [0, 0, 0, 1];
+
   colorCache.set(value, result);
 
   return result;

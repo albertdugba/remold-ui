@@ -3,7 +3,7 @@ import type { FrameCallback, FrameLoop } from "@remold-ui/dom";
 import { act, StrictMode, createRef, useEffect, useRef, useState, type ReactNode } from "react";
 import { createRoot, type Root as ReactRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { Remold, useAutoplay, useDragToDismiss, useRemold, useViewTransition, type Transition } from "./index.js";
+import { Remold, useAutoplay, useDragToDismiss, useRemold, useRemoldLayout, useViewTransition, type Transition } from "./index.js";
 
 /** Every fill on any canvas: cubes and objects each fill their sides and top. */
 let fills = 0;
@@ -159,6 +159,45 @@ describe("Remold.Layout", () => {
       <Remold.Layout trigger={1} render={(props, state) => <ul {...(props as object)} data-busy={String(state.animating)} />} />,
     );
     expect(container.querySelector("ul")!.getAttribute("data-busy")).toBe("false");
+  });
+});
+
+describe("useRemoldLayout", () => {
+  it("animates any element that forwards its ref, like a library component", async () => {
+    const frames = manualLoop();
+    const onTransition = vi.fn<(t: Transition) => void>();
+    // Stands in for a Base UI or MUI part: renders its own element and forwards the ref.
+    const Card = ({ ref, children }: { ref: (node: HTMLElement | null) => void; children: ReactNode }) => (
+      <article ref={ref} data-box="0 0 800 800">
+        {children}
+      </article>
+    );
+    function Sorted({ order }: { order: string[] }) {
+      const { ref, animating } = useRemoldLayout<HTMLElement>(order.join(), { reducedMotion: "never", loop: frames.loop, onTransition });
+      return (
+        <Card ref={ref}>
+          <span data-animating={String(animating)} />
+          {order.map((text, i) => (
+            <Item key={`${text}-${order.join()}`} text={text} y={i * 50} />
+          ))}
+        </Card>
+      );
+    }
+    await render(<Sorted order={["Alpha", "Beta"]} />);
+    expect(onTransition).not.toHaveBeenCalled();
+
+    await render(<Sorted order={["Beta", "Alpha"]} />);
+    expect(onTransition).toHaveBeenCalledTimes(1);
+    const transition = onTransition.mock.calls[0]![0];
+    expect((await transition.ready).matches.pairs).toHaveLength(2);
+    expect(translateOf(find("Alpha"))).toEqual([0, -50]);
+    expect(container.querySelector("span")!.dataset.animating).toBe("true");
+
+    await act(async () => {
+      frames.run();
+      await transition.finished;
+    });
+    expect(container.querySelector("span")!.dataset.animating).toBe("false");
   });
 });
 

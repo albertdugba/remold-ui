@@ -42,10 +42,12 @@ export const RemoldScene = forwardRef(function RemoldScene(
 
   const [layout] = useControlled(layoutProp, defaultLayout ?? Object.keys(layouts)[0] ?? "");
   const [focused, setFocused] = useControlled<string | null>(focusedProp, defaultFocused);
+
   const [element, setElement] = useState<HTMLCanvasElement | null>(null);
   const [instance, setInstance] = useState<Scene | null>(null);
   const live = useRef<Scene | null>(null);
   const lastPoints = useRef<Parameters<Scene["points"]> | null>(null);
+
   const onFocused = useLatest(onFocusedChange);
   const onDrawn = useLatest(onDraw);
   const setFocusedLatest = useLatest(setFocused);
@@ -79,7 +81,9 @@ export const RemoldScene = forwardRef(function RemoldScene(
     });
 
     live.current = created;
+
     if (lastPoints.current) created.points(...lastPoints.current);
+
     setInstance(created);
 
     return () => {
@@ -92,6 +96,7 @@ export const RemoldScene = forwardRef(function RemoldScene(
   useIsoLayoutEffect(() => {
     if (instance && instance.layout !== layout) instance.to(layout);
   }, [instance, layout]);
+
   useIsoLayoutEffect(() => {
     if (instance && instance.focused !== focused) instance.focus(focused);
   }, [instance, focused]);
@@ -112,6 +117,7 @@ export const RemoldScene = forwardRef(function RemoldScene(
   );
 
   const state: RemoldScene.State = { layout, focused };
+
   return useRenderElement(
     "canvas",
     { render, className },

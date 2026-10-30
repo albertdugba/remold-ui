@@ -1,6 +1,6 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, ArrowDown01Icon, Delete02Icon, Download01Icon, Layers01Icon, PauseIcon, PlayIcon, Redo02Icon, Tick01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowDown01Icon, Delete02Icon, Download01Icon, Layers01Icon, PauseIcon, PlayIcon, Redo02Icon, CheckIcon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { Menu } from "@base-ui/react/menu";
 import { NumberField } from "@base-ui/react/number-field";
 import { Slider } from "@base-ui/react/slider";
@@ -369,7 +369,7 @@ export function Studio() {
 
       {notice && (
         <p className="st-notice" role="status">
-          <HugeiconsIcon icon={Tick01Icon} aria-hidden="true" /> {notice}
+          <HugeiconsIcon icon={CheckIcon} aria-hidden="true" /> {notice}
         </p>
       )}
     </div>
@@ -547,7 +547,7 @@ function TemplatePicker({ title, onPick }: { title: string; onPick: (t: SceneDoc
             {TEMPLATES.map((t) => (
               <Menu.Item key={t.title} className="st-menu-item" onClick={() => onPick(t)}>
                 {t.title}
-                {t.title === title && <HugeiconsIcon icon={Tick01Icon} />}
+                {t.title === title && <HugeiconsIcon icon={CheckIcon} />}
               </Menu.Item>
             ))}
           </Menu.Popup>

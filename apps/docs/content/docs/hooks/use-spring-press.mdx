@@ -3,7 +3,7 @@ title: "useSpringPress"
 description: "A small, interruptible spring response for controls pressed with a pointer."
 ---
 
-```tsx
+```tsx tab="React" tab-group="lang"
 import { useSpringPress } from "@remold-ui/react";
 
 function PlayButton() {
@@ -15,6 +15,30 @@ function PlayButton() {
   return <button ref={press.ref}>Play</button>;
 }
 ```
+
+```js tab="JavaScript"
+import { value } from "@remold-ui/core";
+import { frames } from "@remold-ui/dom";
+
+const scale = value(1, { spring: { duration: 0.24, bounce: 0.12 } });
+let stop;
+
+function pressTo(target) {
+  stop?.();
+  scale.to(target);
+  stop = frames((dt) => {
+    scale.step(dt);
+    button.style.scale = String(scale.current);
+    return !scale.settled;
+  });
+}
+
+button.addEventListener("pointerdown", () => pressTo(0.94));
+button.addEventListener("pointerup", () => pressTo(1));
+button.addEventListener("pointercancel", () => pressTo(1));
+```
+
+There's no plain-JavaScript `springPress` yet. The hook is a spring from `@remold-ui/core` run on the frame loop from `@remold-ui/dom`, so you can build it in a few lines. Check `prefersReducedMotion()` from `@remold-ui/dom` first if it should stay still for people who ask for less motion.
 
 The control springs toward `scale` while its primary pointer is down, then returns to `1` when released. It is interruptible: releasing before it settles hands the spring back from its current position.
 

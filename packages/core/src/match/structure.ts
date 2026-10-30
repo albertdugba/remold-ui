@@ -16,6 +16,7 @@ function gap(p: PreparedNode, q: PreparedNode): number {
   const b = q.node;
   const dx = Math.max(0, Math.abs(a.x + a.width / 2 - (b.x + b.width / 2)) - (a.width + b.width) / 2);
   const dy = Math.max(0, Math.abs(a.y + a.height / 2 - (b.y + b.height / 2)) - (a.height + b.height) / 2);
+
   return Math.hypot(dx, dy);
 }
 
@@ -25,6 +26,7 @@ function aligned(p: PreparedNode, q: PreparedNode): boolean {
   const b = q.node;
   const overlapY = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
   const overlapX = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+
   return overlapY > 0.5 * Math.min(a.height, b.height) || overlapX > 0.5 * Math.min(a.width, b.width);
 }
 
@@ -32,6 +34,7 @@ function aligned(p: PreparedNode, q: PreparedNode): boolean {
 function positionIn(child: PreparedNode, parent: PreparedNode): [number, number] {
   const c = child.node;
   const p = parent.node;
+
   return [(c.x + c.width / 2 - p.x) / (p.width || 1), (c.y + c.height / 2 - p.y) / (p.height || 1)];
 }
 
@@ -72,6 +75,7 @@ export interface StructureContext {
 export function structureContext(a: readonly PreparedNode[], b: readonly PreparedNode[], style?: Float64Array): StructureContext {
   const evidence = (nodes: readonly PreparedNode[]) => nodes.map((_, i) => descendants(nodes, i).filter((d) => nodes[d]!.hasContent));
   const evidenceB = evidence(b);
+
   return {
     ancestorsA: a.map((_, i) => ancestors(a, i)),
     ancestorsB: b.map((_, j) => ancestors(b, j)),
@@ -84,6 +88,7 @@ export function structureContext(a: readonly PreparedNode[], b: readonly Prepare
 
 function sameKindStyle(a: readonly PreparedNode[], b: readonly PreparedNode[], style?: Float64Array): Float64Array {
   const out = new Float64Array(a.length * b.length);
+
   for (let i = 0; i < a.length; i++) {
     for (let j = 0; j < b.length; j++) {
       if (a[i]!.node.kind === b[j]!.node.kind) out[i * b.length + j] = style ? style[i * b.length + j]! : styleSimilarity(a[i]!, b[j]!);
@@ -108,6 +113,7 @@ export function withContext(
 ): Float64Array {
   const forward = new Int32Array(a.length).fill(-1);
   const backward = new Int32Array(b.length).fill(-1);
+
   for (const p of pairs) {
     forward[p.from] = p.to;
     backward[p.to] = p.from;
@@ -122,14 +128,17 @@ export function withContext(
     const ancestorsA = context.ancestorsA[i]!;
     const anchorsOfA = anchorsA[i]!;
     const da = context.evidenceA[i]!;
+
     for (let j = 0; j < cols; j++) {
       const score = base[i * cols + j]!;
       let family = 0;
       const pb = b[j]!.node.parent;
+
       if (pa >= 0 && pb >= 0 && parentPartner === pb) {
         // Matched parents: the closer the position inside the parent, the stronger.
         const [ax, ay] = positionIn(a[i]!, a[pa]!);
         const [bx, by] = positionIn(b[j]!, b[pb]!);
+
         family = 0.5 + 0.5 * Math.exp(-Math.hypot(ax - bx, ay - by) / 0.3);
       } else if (ancestorsA.some((x) => forward[x]! >= 0 && context.ancestorsB[j]!.includes(forward[x]!))) {
         family = 0.5;
@@ -141,9 +150,11 @@ export function withContext(
 
       // Containers whose contents moved together.
       const db = context.evidenceB[j]!;
+
       if (da.length > 0 && db.length > 0) {
         const inB = context.evidenceSetsB[j]!;
         let agree = 0;
+
         for (const c of da) if (forward[c]! >= 0 && inB.has(forward[c]!)) agree++;
         bonus += (0.18 * (2 * agree)) / (da.length + db.length);
       }

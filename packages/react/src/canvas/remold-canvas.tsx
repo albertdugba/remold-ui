@@ -22,7 +22,10 @@ import type { RemoldCanvasProps, RemoldCanvasState } from "./types.js";
  * />
  * ```
  */
-export const RemoldCanvas = forwardRef(function RemoldCanvas(componentProps: RemoldCanvasProps, forwardedRef: ForwardedRef<HTMLCanvasElement>) {
+export const RemoldCanvas = forwardRef(function RemoldCanvas(
+  componentProps: RemoldCanvasProps,
+  forwardedRef: ForwardedRef<HTMLCanvasElement>,
+) {
   const {
     draw,
     values,
@@ -48,6 +51,7 @@ export const RemoldCanvas = forwardRef(function RemoldCanvas(componentProps: Rem
   // new `continuous` doesn't rebuild it.
   useIsoLayoutEffect(() => {
     if (!element) return;
+
     const options: PainterOptions<PainterValues> = {
       draw: (context, frame) => latest.current.draw(context, frame),
       values: latest.current.values,
@@ -68,8 +72,11 @@ export const RemoldCanvas = forwardRef(function RemoldCanvas(componentProps: Rem
         return latest.current.reducedMotion;
       },
     };
+
     const created = painter(element, options);
+
     setInstance(created);
+
     return () => {
       created.destroy();
       setInstance(null);
@@ -84,7 +91,9 @@ export const RemoldCanvas = forwardRef(function RemoldCanvas(componentProps: Rem
     if (instance && latest.current.values) instance.to(latest.current.values, { spring: latest.current.spring });
   }, [instance, targets]);
 
-  useIsoLayoutEffect(() => instance?.label(label), [instance, label]);
+  useIsoLayoutEffect(() => {
+    instance?.label(label);
+  }, [instance, label]);
 
   // Anything else `draw` reads may have changed with this render.
   useIsoLayoutEffect(() => {
@@ -108,6 +117,7 @@ export const RemoldCanvas = forwardRef(function RemoldCanvas(componentProps: Rem
   );
 
   const state = useMemo<RemoldCanvas.State>(() => ({}), []);
+
   return useRenderElement(
     "canvas",
     { render, className },

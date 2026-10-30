@@ -30,7 +30,9 @@ const CHAPTERS: Remold.Story.Chapter[] = [
 
 export function StoryDemo() {
   const [chapter, setChapter] = useState(CHAPTERS[0]!.id);
-  const index = CHAPTERS.findIndex((c) => c.id === chapter);
+
+  const chapterIndex = CHAPTERS.findIndex((item) => item.id === chapter);
+
   return (
     <Frame tone="dark">
       <div className="rm-scene">
@@ -46,19 +48,19 @@ export function StoryDemo() {
           <button
             type="button"
             className="rm-button"
-            disabled={index === 0}
-            onClick={() => setChapter(CHAPTERS[index - 1]!.id)}
+            disabled={chapterIndex === 0}
+            onClick={() => setChapter(CHAPTERS[chapterIndex - 1]!.id)}
           >
             Back
           </button>
           <p>
-            {index + 1} of {CHAPTERS.length}
+            {chapterIndex + 1} of {CHAPTERS.length}
           </p>
           <button
             type="button"
             className="rm-button"
-            disabled={index === CHAPTERS.length - 1}
-            onClick={() => setChapter(CHAPTERS[index + 1]!.id)}
+            disabled={chapterIndex === CHAPTERS.length - 1}
+            onClick={() => setChapter(CHAPTERS[chapterIndex + 1]!.id)}
           >
             Next
           </button>

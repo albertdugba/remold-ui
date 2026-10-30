@@ -1,4 +1,5 @@
 .otp {
+  container-type: inline-size;
   --otp-surface: #ffffff;
   --otp-line: rgb(24 24 27 / 0.08);
   --otp-cell: #f1f1f1;
@@ -221,5 +222,33 @@
 
   .otp[data-phase="error"] .otp-stage {
     animation: none;
+  }
+}
+
+/* A narrow card keeps each digit inside its own cell, slightly smaller than the full row. */
+@container (max-width: 360px) {
+  .otp {
+    padding-inline: 16px;
+  }
+
+  .otp .cf {
+    gap: 6px;
+  }
+
+  .otp .cf-cell {
+    flex: none;
+    width: 40px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .otp .cf-cell:first-of-type {
+    width: 44px;
+    border-radius: 25px 16px 16px 25px;
+  }
+
+  .otp .cf-cell:last-of-type {
+    width: 44px;
+    border-radius: 16px 25px 25px 16px;
   }
 }

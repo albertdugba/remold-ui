@@ -4,7 +4,7 @@
  * is shared by every block on the page and remembered for next time.
  */
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
-import { FrameworkMenu, useFramework, type Framework } from "./framework";
+import { FrameworkMenu } from "./framework";
 import { Code } from "./code";
 
 export const MANAGERS = ["npm", "pnpm", "yarn", "bun"] as const;
@@ -87,23 +87,16 @@ export function PackageTabs({
   );
 }
 
-/**
- * `npm install <packages>` and the same for the other managers. `vanilla` is what to install for
- * plain JavaScript instead of React (`@remold-ui/dom`, say); `js` marks packages that are
- * JavaScript-only. Other frameworks are listed as coming soon.
- */
-export function Install({ packages, vanilla, js = false }: { packages: string; vanilla?: string; js?: boolean }) {
-  const available: Framework[] = js ? ["js"] : vanilla ? ["react", "js"] : ["react"];
-  const framework = useFramework(available);
-  const chosen = framework === "js" && vanilla ? vanilla : packages;
+/** `npm install <packages>` and the same for the other managers. Other frameworks are listed as coming soon. */
+export function Install({ packages }: { packages: string }) {
   return (
     <PackageTabs
-      menu={<FrameworkMenu available={available} />}
+      menu={<FrameworkMenu available={["react"]} />}
       commands={{
-        npm: `npm install ${chosen}`,
-        pnpm: `pnpm add ${chosen}`,
-        yarn: `yarn add ${chosen}`,
-        bun: `bun add ${chosen}`,
+        npm: `npm install ${packages}`,
+        pnpm: `pnpm add ${packages}`,
+        yarn: `yarn add ${packages}`,
+        bun: `bun add ${packages}`,
       }}
     />
   );

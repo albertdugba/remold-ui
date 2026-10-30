@@ -4,7 +4,7 @@ import { Remold } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { Cancel01Icon, Download01Icon, FavouriteIcon, Menu01Icon, PauseIcon, PlayIcon, Search01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Download01Icon, FavouriteIcon, Menu01Icon, PauseIcon, PlayIcon, Search01Icon, CheckIcon } from "@hugeicons/core-free-icons";
 import { useState } from "react";
 
 interface IconOption {
@@ -19,7 +19,7 @@ const ICONS: readonly IconOption[] = [
   { name: "Close", icon: Cancel01Icon },
   { name: "Search", icon: Search01Icon },
   { name: "Download", icon: Download01Icon },
-  { name: "Done", icon: Tick01Icon },
+  { name: "Done", icon: CheckIcon },
   { name: "Like", icon: FavouriteIcon },
 ];
 
@@ -46,12 +46,15 @@ export function MorphIconsDemo() {
         aria-label="Choose an icon"
         value={[selected.name]}
         onValueChange={(values) => {
-          const selected = values[0];
-          if (selected) setSelectedIndex(ICONS.findIndex((icon) => icon.name === selected));
+          const next = values[0];
+
+          if (!next) return;
+
+          setSelectedIndex(ICONS.findIndex((option) => option.name === next));
         }}
         className="flex max-w-[420px] flex-wrap justify-center gap-2"
       >
-        {ICONS.map(({ name, icon: Icon }, index) => (
+        {ICONS.map(({ name, icon: Icon }) => (
           <Toggle
             key={name}
             value={name}

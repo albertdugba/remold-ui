@@ -9,53 +9,31 @@ description: "An icon that reshapes into the next one. Pass any icon component, 
 
 ## Installation
 
-<Install packages="@remold-ui/react" vanilla="@remold-ui/core" />
+<Install packages="@remold-ui/react" />
+
+Using plain JavaScript? Install `@remold-ui/dom` instead. It brings `@remold-ui/core` with it.
 
 ## Usage
 
 Pass the icon you'd normally render, as a component or an element:
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 import { Remold } from "@remold-ui/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, Menu01Icon } from "@hugeicons/core-free-icons";
 
-<Remold.Icon icon={<HugeiconsIcon icon={open ? Cancel01Icon : Menu01Icon} />} className="size-5" />;
+<Remold.Icon
+  icon={<HugeiconsIcon icon={open ? Cancel01Icon : Menu01Icon} />}
+  className="size-5"
+/>
 ```
 
-</Variant>
-<Variant framework="js">
+```js tab="JavaScript"
+import { iconToPath } from "@remold-ui/dom";
 
-```ts
-import { createMorph, value } from "@remold-ui/core";
-import { frames, iconToPath } from "@remold-ui/dom";
-
-// Any two icons on the page (hidden is fine): read each into one path.
-const menu = iconToPath(document.querySelector("#icon-menu"))!.d;
-const close = iconToPath(document.querySelector("#icon-close"))!.d;
-const path = document.querySelector("#toggle path");
-
-let shown = menu;
-function morphTo(next: string) {
-  const morph = createMorph(shown, next, { padding: "merge" });
-  const t = value(0, { spring: { duration: 0.4, bounce: 0.15 } });
-  t.to(1);
-  frames((dt) => {
-    t.step(dt);
-    shown = morph.d(t.current);
-    path.setAttribute("d", shown);
-    return !t.settled;
-  });
-}
-
-button.addEventListener("click", () => morphTo(open ? close : menu));
+const menu = iconToPath(document.querySelector("#menu svg"));
+const close = iconToPath(document.querySelector("#close svg"));
 ```
-
-</Variant>
-</CodeVariants>
 
 It works with any icon set, or your own SVG components and inline `<svg>`. Remold reads the icon's shapes (paths, circles, ellipses, rectangles, lines, polylines and polygons) into one path, and takes its viewBox, fill and stroke from the icon. Props you set yourself, such as `strokeWidth`, win. When the next icon has more strokes or fewer, spare strokes grow out of a neighbour or merge into one.
 
@@ -65,23 +43,31 @@ On the server, and on the first paint in the browser, the icon is rendered exact
 
 If your icons are path data rather than components, pass `d` instead. Several strokes go in one path:
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
-<Remold.Icon d={open ? "M6 6l12 12M18 6 6 18" : "M4 7h16M4 12h16M4 17h16"} fill="none" stroke="currentColor" strokeWidth={2} />
+```tsx tab="React" tab-group="lang"
+<Remold.Icon
+  d={open ? "M6 6l12 12M18 6 6 18" : "M4 7h16M4 12h16M4 17h16"}
+  fill="none"
+  stroke="currentColor"
+  strokeWidth={2}
+/>
 ```
 
-</Variant>
-<Variant framework="js">
+```js tab="JavaScript"
+import { createMorph, value } from "@remold-ui/core";
+import { frames } from "@remold-ui/dom";
 
-```ts
-// With path data, skip iconToPath and morph straight between the strings.
-morphTo(open ? "M6 6l12 12M18 6 6 18" : "M4 7h16M4 12h16M4 17h16");
+const morph = createMorph(path.getAttribute("d"), "M6 6l12 12M18 6 6 18", { padding: "merge" });
+const t = value(0);
+
+t.to(1);
+frames((dt) => {
+  const moving = t.step(dt);
+  path.setAttribute("d", morph.d(t.current));
+  return moving;
+});
 ```
 
-</Variant>
-</CodeVariants>
+Without React you drive the morph yourself: `createMorph` pairs the two paths and a spring `value` moves between them. Paths from `iconToPath` (above) morph the same way, using their `d`.
 
 ### Limits
 

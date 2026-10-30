@@ -28,6 +28,7 @@ export function supportsViewTransitions(): boolean {
 /** CSS that gives every Remold-named group the spring's timing. */
 function timingRule(prefix: string, spring: SpringConfig): string {
   const { duration, easing } = springToCss(spring);
+
   return (
     `::view-transition-group(*.${prefix}),::view-transition-old(*.${prefix}),::view-transition-new(*.${prefix})` +
     `{animation-duration:${duration}ms;animation-timing-function:${easing}}`

@@ -12,6 +12,7 @@ export function toPathData(buffer: ArrayLike<number>, layout: readonly SubpathLa
   const scale = 10 ** precision;
   const n = (i: number) => String(Math.round(buffer[i]! * scale) / scale);
   let d = "";
+
   for (const { offset, segments, closed } of layout) {
     d += `M${n(offset)} ${n(offset + 1)}`;
     for (let s = 0, o = offset + 2; s < segments; s++, o += 6) {

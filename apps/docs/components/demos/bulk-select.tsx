@@ -1,6 +1,6 @@
 "use client";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { Cancel01Icon, Delete02Icon, FileAttachmentIcon, FileSpreadsheetIcon, FolderInputIcon, Image01Icon, MinusSignIcon, Share02Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Delete02Icon, FileAttachmentIcon, FileSpreadsheetIcon, FolderInputIcon, Image01Icon, MinusSignIcon, Share02Icon, CheckIcon } from "@hugeicons/core-free-icons";
 import { Checkbox } from "@base-ui/react/checkbox";
 import { Tooltip } from "@base-ui/react/tooltip";
 import { AnimatePresence, motion } from "motion/react";
@@ -112,7 +112,7 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
             aria-label="Select all files"
           >
             <Checkbox.Indicator className="bk-tick" render={(props, st) => (
-              <span {...props}>{st.indeterminate ? <HugeiconsIcon icon={MinusSignIcon} aria-hidden="true" /> : <HugeiconsIcon icon={Tick01Icon} aria-hidden="true" />}</span>
+              <span {...props}>{st.indeterminate ? <HugeiconsIcon icon={MinusSignIcon} aria-hidden="true" /> : <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />}</span>
             )} />
           </Checkbox.Root>
           <span className="bk-title">
@@ -154,7 +154,7 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
                       aria-label={`Select ${file.name}`}
                     >
                       <Checkbox.Indicator className="bk-tick">
-                        <HugeiconsIcon icon={Tick01Icon} aria-hidden="true" />
+                        <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
                       </Checkbox.Indicator>
                     </Checkbox.Root>
                     <span className="bk-name">
@@ -211,13 +211,13 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
                       <span className="bk-count">
                         {/* The count rolls: the old number lifts out as the new one comes up. */}
                         <span className="bk-roll">
-                          <AnimatePresence initial={false} mode="popLayout">
+                          <AnimatePresence initial={false}>
                             <motion.span
                               key={count}
-                              initial={{ y: "100%", opacity: 0 }}
-                              animate={{ y: 0, opacity: 1 }}
-                              exit={{ y: "-100%", opacity: 0 }}
-                              transition={{ type: "spring", duration: 0.35, bounce: 0.1 }}
+                              initial={{ y: "100%" }}
+                              animate={{ y: "0%" }}
+                              exit={{ y: "-100%" }}
+                              transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
                             >
                               {count}
                             </motion.span>

@@ -89,6 +89,7 @@ export function page(width: number, roots: Element[]): Page {
   const visit = (el: Element, parent: number) => {
     const [x, y, w, h] = el.rect;
     const index = nodes.length;
+
     nodes.push({
       kind: el.kind,
       text: el.text,
@@ -104,6 +105,7 @@ export function page(width: number, roots: Element[]): Page {
     for (const child of el.children) visit(child, index);
   };
   for (const root of roots) visit(root, -1);
+
   return { nodes, keys };
 }
 
@@ -111,6 +113,7 @@ export function page(width: number, roots: Element[]): Page {
 export function truth(a: Page, b: Page): Set<string> {
   const indexA = new Map<string, number>();
   const indexB = new Map<string, number>();
+
   a.keys.forEach((key, index) => {
     indexA.set(key, index);
   });
@@ -118,8 +121,10 @@ export function truth(a: Page, b: Page): Set<string> {
     indexB.set(key, index);
   });
   const relations = new Set<string>();
+
   for (const [k, i] of indexA) {
     const j = indexB.get(k);
+
     if (j !== undefined) relations.add(`${i}>${j}`);
   }
   b.keys.forEach((k, j) => {
