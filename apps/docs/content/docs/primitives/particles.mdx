@@ -11,16 +11,15 @@ Choose **Image** in the demo to see the field jacket photograph become an olive-
 
 ## Installation
 
-<Install packages="@remold-ui/react" vanilla="@remold-ui/canvas" />
+<Install packages="@remold-ui/react" />
+
+Using plain JavaScript? Install `@remold-ui/canvas` instead.
 
 ## Usage
 
 Give `Remold.Particles` a shape, and change it to morph. Each dot heads for its nearest place in the new shape; spare dots shrink away and new ones grow in. Dots near the pointer lean away.
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 import { Remold } from '@remold-ui/react';
 
 <Remold.Particles shape="Just landed" className="h-64 w-full" />
@@ -41,25 +40,23 @@ import { Remold } from '@remold-ui/react';
 <Remold.Particles shape={{ points: myPoints }} />
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
+```js tab="JavaScript"
 import { particles, sampleImagePoints, sampleTextPoints } from "@remold-ui/canvas";
 import { samplePath } from "@remold-ui/core";
 
-const palette = ["#2563eb", "#8d9bf8", "#eee4bd"];
-const dots = particles(canvas, { points: sampleTextPoints("Just landed", { count: 1200 }), palette });
+const dots = particles(canvas, { points: sampleTextPoints("Just landed", { count: 1200 }) });
 
-// Each call flows the dots into the next shape.
 dots.to(samplePath(HEART, { count: 1200 }));
-dots.to(sampleImagePoints(logo, { count: 1200, by: "dark" })); // once the image has loaded
-dots.to(sampleImagePoints(flower, { count: 7000, palette })); // keep colour detail from the image
+
+const logo = new Image();
+logo.src = "/logo.png";
+await logo.decode();
+dots.to(sampleImagePoints(logo, { by: "dark", count: 1200 }));
+
 dots.to(myPoints);
 ```
 
-</Variant>
-</CodeVariants>
+In plain JavaScript you sample each shape into points yourself and pass them to `to`. An image must have loaded before it's sampled.
 
 | `shape`                                              | Dots fill                                                                                                                                                               |
 | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -74,9 +71,14 @@ dots.to(myPoints);
 
 By default each dot springs straight to its new place. `transition="scatter"` gives the change a middle instead: the shape dissolves into a loose, glittering cloud, holds there a moment, then gathers into the next one, each dot setting off at a slightly different time. Try **Scatter** and **Direct** in the demo above.
 
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Particles shape={next} transition="scatter" />
 <Remold.Particles shape={next} transition={{ type: "scatter", spread: 1.6, hold: 0.5, stagger: 0.4 }} />
+```
+
+```js tab="JavaScript"
+dots.to(next, { transition: "scatter" });
+dots.to(next, { transition: { type: "scatter", spread: 1.6, hold: 0.5, stagger: 0.4 } });
 ```
 
 `spread` is how wide the cloud gets, `hold` how long it stays spread, and `stagger` how unevenly the dots set off again. See [particles()](/docs/canvas/particles#scatter) for each one. With reduced motion the dots go straight to the new shape.
@@ -84,10 +86,6 @@ By default each dot springs straight to its new place. `transition="scatter"` gi
 Image `details` use normalized source-image coordinates from `0` to `1` and count toward `count`. A `tone` of `1` uses the last color in the palette, useful for eye reflections or other tiny highlights.
 
 <Callout>Shapes are sampled in the browser. On the server the canvas renders empty and fills in on load.</Callout>
-
-## Without React
-
-`particles(canvas, options)` from `@remold-ui/canvas` does the same: call `to(points)` with each new shape, with points from `sampleTextPoints`, `samplePath` (in core), `sampleImagePoints` or `sampleMask`.
 
 ## API reference
 

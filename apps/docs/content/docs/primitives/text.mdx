@@ -9,31 +9,21 @@ description: "Text that changes letter by letter: shared letters slide, the rest
 
 ## Installation
 
-<Install packages="@remold-ui/react" vanilla="@remold-ui/dom" />
+<Install packages="@remold-ui/react" />
+
+Using plain JavaScript? Install `@remold-ui/dom` instead.
 
 ## Usage
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Text>{status}</Remold.Text>
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
+```js tab="JavaScript"
 import { morphText } from "@remold-ui/dom";
 
-const status = document.querySelector("#status");
-
-// Only the letters that differ move; the rest slide into place.
-morphText(status, "Saving…");
+morphText(label, status);
 ```
-
-</Variant>
-</CodeVariants>
 
 Letters the old and new text share stay on screen and slide into place; the rest fade out and in. It renders a `span`, and screen readers get the whole new text at once.
 

@@ -28,14 +28,17 @@ export function useViewTransition<E extends HTMLElement = HTMLDivElement>(
   const animate = useCallback(
     (update: () => void, overrides?: TransitionOptions) => {
       const root = element.current;
+
       if (!root) {
         update();
         return null;
       }
+
       return viewTransition(root, () => flushSync(update), { ...latest.current, ...overrides });
     },
     [latest],
   );
+
   return { ref, animate };
 }
 

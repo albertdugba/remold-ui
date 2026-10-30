@@ -18,8 +18,11 @@ export function matchOffThread({
   match: PointCloudOptions["match"];
 }): Promise<PointMatches> | null {
   const worker = getSharedWorker();
+
   if (!worker) return null;
+
   const id = ++nextRequestId;
+
   return new Promise((resolve, reject) => {
     pendingRequests.set(id, { resolve, reject });
     worker.postMessage({ id, from, to: to.map(({ x, y }) => ({ x, y })), match });
@@ -33,10 +36,13 @@ export function matchByIndex(count: number): PointMatches {
 
 function getSharedWorker(): Worker | null {
   if (sharedWorker !== undefined) return sharedWorker;
+
   sharedWorker = null;
   try {
     if (typeof Worker !== "function" || typeof Blob !== "function" || typeof URL?.createObjectURL !== "function") return null;
+
     const worker = new Worker(URL.createObjectURL(new Blob([MATCH_WORKER], { type: "text/javascript" })));
+
     worker.onmessage = ({ data }: MessageEvent<{ id: number; matches?: PointMatches; error?: string }>) => resolveRequest(data);
     worker.onerror = rejectRequests;
     sharedWorker = worker;
@@ -48,7 +54,9 @@ function getSharedWorker(): Worker | null {
 
 function resolveRequest({ id, matches, error }: { id: number; matches?: PointMatches; error?: string }): void {
   const request = pendingRequests.get(id);
+
   if (!request) return;
+
   pendingRequests.delete(id);
   if (matches) request.resolve(matches);
   else request.reject(new Error(error ?? "particles: matching failed"));

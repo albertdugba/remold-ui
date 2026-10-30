@@ -18,8 +18,12 @@ A spring has no fixed end time, so it can be redirected at any moment and keep i
   }}
 />
 
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Layout trigger={view} spring={{ duration: 0.6, bounce: 0.2 }}>
+```
+
+```js tab="JavaScript"
+transition(list, update, { spring: { duration: 0.6, bounce: 0.2 } });
 ```
 
 ## Presets
@@ -30,8 +34,12 @@ A spring has no fixed end time, so it can be redirected at any moment and keep i
 | `springs.snappy` | `{ duration: 0.5, bounce: 0.15 }` | Small controls and text |
 | `springs.bouncy` | `{ duration: 0.5, bounce: 0.3 }`  | Playful moments         |
 
-```ts
+```ts tab="React" tab-group="lang"
 import { springs } from "@remold-ui/react";
+```
+
+```js tab="JavaScript"
+import { springs } from "@remold-ui/core";
 ```
 
 ## Interruptions

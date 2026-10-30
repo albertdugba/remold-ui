@@ -30,18 +30,35 @@ export const RemoldConnectors = forwardRef(function RemoldConnectors(
   componentProps: RemoldConnectors.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,
 ) {
-  const { children, shape, radius, gap, end, from, arrow, pulse, spring, reducedMotion, loop, render, className, style, ...elementProps } =
-    componentProps;
+  const {
+    children,
+    shape,
+    radius,
+    gap,
+    end,
+    from,
+    arrow,
+    pulse,
+    spring,
+    reducedMotion,
+    loop,
+    render,
+    className,
+    style,
+    ...elementProps
+  } = componentProps;
 
   const [element, setElement] = useState<HTMLDivElement | null>(null);
-
   const svg = useRef<SVGSVGElement>(null);
 
   useIsoLayoutEffect(() => {
     if (!element || !svg.current) return;
+
     const lines = connectors(element, svg.current, { shape, radius, gap, end, from, arrow, pulse, spring, reducedMotion, loop });
     const update = () => lines.update();
+
     element.addEventListener(CONNECTOR_UPDATE_EVENT, update);
+
     return () => {
       element.removeEventListener(CONNECTOR_UPDATE_EVENT, update);
       lines.destroy();
@@ -64,6 +81,7 @@ export const RemoldConnectors = forwardRef(function RemoldConnectors(
   ]);
 
   const state: RemoldConnectors.State = {};
+
   return useRenderElement(
     "div",
     { render, className },

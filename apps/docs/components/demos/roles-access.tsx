@@ -1,6 +1,6 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowUpDownIcon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { ArrowUpDownIcon, CheckIcon } from "@hugeicons/core-free-icons";
 import { Select } from "@base-ui/react/select";
 import { extrude } from "@remold-ui/canvas";
 import { Remold } from "@remold-ui/react";
@@ -158,7 +158,7 @@ export function RolesAccess({ playing }: RolesAccessProps = {}) {
                       <Select.Item key={r.value} value={r.value} className="ra-item">
                         <Select.ItemText>{r.label}</Select.ItemText>
                         <Select.ItemIndicator className="ra-check">
-                          <HugeiconsIcon icon={Tick01Icon} aria-hidden="true" />
+                          <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
                         </Select.ItemIndicator>
                       </Select.Item>
                     ))}

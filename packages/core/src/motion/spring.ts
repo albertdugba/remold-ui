@@ -48,6 +48,7 @@ const MAX_STEP = 1 / 240;
  */
 export function substep({ stiffness, damping }: SpringCoefficients): number {
   const stable = (Math.sqrt(damping * damping + 2 * stiffness) - damping) / stiffness;
+
   return Math.min(MAX_STEP, stable);
 }
 

@@ -24,6 +24,7 @@ export const RemoldPathGroup = forwardRef(function RemoldPathGroup(
   forwardedRef: ForwardedRef<SVGSVGElement>,
 ) {
   const { paths, spring, reducedMotion, loop, match, viewBox = "0 0 24 24", render, className, ...svgProps } = componentProps;
+
   return useRenderElement(
     "svg",
     { render, className },

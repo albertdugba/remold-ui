@@ -175,6 +175,10 @@
   margin-top: 12px;
 }
 
+.cx-replies:not(.top) {
+  margin-left: 10px;
+}
+
 .cx-comment[data-depth="1"] > .cx-replies,
 .cx-comment[data-depth="2"] > .cx-replies {
   gap: 12px;
@@ -624,10 +628,10 @@
     margin-left: 0;
   }
 
-  .cx-replies {
+  .cx-replies,
+  .cx-replies:not(.top) {
     gap: 12px;
-
-    margin-left: -8px;
+    margin-left: 4px;
   }
 
   .cx-comment {

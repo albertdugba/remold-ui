@@ -33,15 +33,20 @@ export function createParticleRenderer({
   let fill: ParticleFill | null = null;
   const resolveFill = (drawingContext: CanvasRenderingContext2D) => {
     const resolved = typeof color === "function" ? color(drawingContext, getSize()) : color;
+
     if (resolved !== undefined && resolved !== "currentColor") return resolved;
+
     return (typeof getComputedStyle === "function" ? getComputedStyle(canvas).color : "") || "#000";
   };
   const render = () => {
     if (!context || isDestroyed()) return;
+
     const size = getSize();
+
     context.setTransform(size.pixelRatio, 0, 0, size.pixelRatio, 0, 0);
     context.clearRect(0, 0, size.width, size.height);
     const drawParticle = createParticleDrawer({ context, cloud, radius, pointer, shape, pointerEffect, reducedMotion });
+
     if (!palette || palette.length === 1) {
       if (palette) {
         context.fillStyle = palette[0]!;
@@ -52,6 +57,7 @@ export function createParticleRenderer({
       context.beginPath();
       drawAll({ count: cloud.length, drawParticle });
       context.fill();
+
       return;
     }
     drawPalette({ context, cloud, palette, drawParticle });
@@ -79,12 +85,16 @@ function createParticleDrawer({
   const leaning = pointerEffect !== null && !reducedMotion() && pointer.presence.current > 0.01;
   const strength = (pointerEffect?.strength ?? 0) * pointer.presence.current;
   const reach = pointerEffect?.radius ?? 0;
+
   return (index: number) => {
     const offset = index * CLOUD_STRIDE;
     const scale = cloud.data[offset + 2]!;
+
     if (scale < 0.02) return;
+
     const point = leanPoint({ x: cloud.data[offset]!, y: cloud.data[offset + 1]!, pointer, leaning, reach, strength });
     const particleRadius = radius.current * scale;
+
     if (shape === "square") context.rect(point.x - particleRadius, point.y - particleRadius, particleRadius * 2, particleRadius * 2);
     else {
       context.moveTo(point.x + particleRadius, point.y);
@@ -109,11 +119,15 @@ function leanPoint({
   strength: number;
 }) {
   if (!leaning) return { x, y };
+
   const deltaX = x - pointer.x.current;
   const deltaY = y - pointer.y.current;
   const distance = Math.hypot(deltaX, deltaY);
+
   if (distance >= reach || distance <= 0.01) return { x, y };
+
   const lean = (1 - distance / reach) ** 2 * strength;
+
   return { x: x + (deltaX / distance) * lean, y: y + (deltaY / distance) * lean };
 }
 
@@ -134,12 +148,15 @@ function drawPalette({
 }): void {
   const lastColor = palette.length - 1;
   const buckets = Array.from({ length: palette.length }, (): number[] => []);
+
   for (let index = 0; index < cloud.length; index++) {
     const colorIndex = Math.min(lastColor, Math.max(0, Math.round(cloud.data[index * CLOUD_STRIDE + 3]! * lastColor)));
+
     buckets[colorIndex]!.push(index);
   }
   for (let colorIndex = 0; colorIndex <= lastColor; colorIndex++) {
     if (buckets[colorIndex]!.length === 0) continue;
+
     context.fillStyle = palette[colorIndex]!;
     context.beginPath();
     for (const pointIndex of buckets[colorIndex]!) drawParticle(pointIndex);

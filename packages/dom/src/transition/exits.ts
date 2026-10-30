@@ -28,11 +28,15 @@ export function buildExitRecords({
   const exits: ExitRecord[] = [];
   let layer: HTMLElement | null = null;
   const removed = removedIndexes(matches);
+
   for (const index of removed) {
     if (removed.has(before.nodes[index]!.parent)) continue;
+
     const source = clones.get(before.elements[index]!);
     const box = before.boxes[index]!;
+
     if (!source || box.width === 0) continue;
+
     layer ??= createExitLayer(root);
     const clone = createExitClone({
       source,
@@ -66,6 +70,7 @@ function removedIndexes(matches: NodeMatches): Set<number> {
 
 function createExitLayer(root: HTMLElement): HTMLElement {
   const layer = document.createElement("div");
+
   layer.setAttribute(IGNORE_ATTRIBUTE, "");
   layer.setAttribute("aria-hidden", "true");
   layer.inert = true;
@@ -78,6 +83,7 @@ function createExitLayer(root: HTMLElement): HTMLElement {
     pointerEvents: "none",
   });
   root.append(layer);
+
   return layer;
 }
 
@@ -93,6 +99,7 @@ function createExitClone({
   zoom: number;
 }): HTMLElement {
   const clone = source.cloneNode(true) as HTMLElement;
+
   clone.setAttribute("data-rm-exiting", "");
   for (const element of [clone, ...clone.querySelectorAll<HTMLElement>("*")]) {
     element.style.removeProperty("translate");

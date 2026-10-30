@@ -9,7 +9,6 @@ import { AddCommand, Install } from "./package-tabs";
 import { Dependencies, Source } from "./source";
 import { Customize } from "./customize/customize";
 import { Stage } from "./stage";
-import { CodeVariants, Variant } from "./code-variants";
 import { ControlsTable } from "./customize/props-table";
 import { AllComponents } from "./component-grid";
 
@@ -29,8 +28,6 @@ export function getMDXComponents(components?: MDXComponents) {
     Dependencies,
     Customize,
     Stage,
-    CodeVariants,
-    Variant,
     ControlsTable,
     AllComponents,
     ...components,

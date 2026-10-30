@@ -3,7 +3,6 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import typescript from "typescript";
 
 const app = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const demos = path.join(app, "components/demos");
@@ -137,14 +136,29 @@ const ITEMS = [
     "A chat composer whose mic becomes a send arrow; the message rises into the thread and the read receipt moves down to it.",
   ],
   [
-    "issue-status",
-    "Issue status",
-    "An issue status menu whose icon fills its ring as work moves along, with a check and cross that reshape into each other.",
+    "kitchen-ticket",
+    "Kitchen ticket",
+    "A counter ticket whose ring fills as the order cooks, with a check and a cross that reshape into each other.",
   ],
   [
     "send-money",
     "Send money",
     "A keypad for sending money: digits roll in, an amount over your balance is refused with a shake, and Send becomes a spinner then a check.",
+  ],
+  [
+    "currency-converter",
+    "Currency converter",
+    "A transfer quote whose amounts roll as you type, and whose currencies Layout carries to the other side when you swap them.",
+  ],
+  [
+    "donation-goal",
+    "Donation goal",
+    "A fundraising goal told in dots: every donation flies in as particles and fills the picture of what it pays for, until it bursts into a thank you.",
+  ],
+  [
+    "training-plan",
+    "Training plan",
+    "A Couch to 5K training plan: finish a workout and a pulse runs down the plan to unlock the next, with a session to choose and a finisher medal at the end.",
   ],
   [
     "api-keys",
@@ -160,11 +174,6 @@ const ITEMS = [
     "usage-meter",
     "Usage meter",
     "A plan's usage bars that fill, warn and go over through the month, and spring back down on upgrade.",
-  ],
-  [
-    "waitlist",
-    "Waitlist",
-    "A waitlist form whose button slides across into the confirmation's check while the field reshapes into the panel around it.",
   ],
   [
     "onboarding-checklist",
@@ -206,6 +215,11 @@ const ITEMS = [
     "layout",
     "Grid and list",
     "People as cards or rows: different markup, matched without keys.",
+  ],
+  [
+    "library-layout",
+    "Base UI tabs",
+    "A pricing card built from Base UI tabs, animated through a ref with useRemoldLayout.",
   ],
   [
     "text",
@@ -290,30 +304,6 @@ function summariseSource(file) {
   return `${head}\n// … ${size} KB of generated data, left out here. See the comment above for how it's made.\n`;
 }
 
-function toJavaScript(file) {
-  const extension = path.extname(file.name);
-  if (extension !== ".ts" && extension !== ".tsx") {
-    return {
-      javascript: file.code,
-      javascriptName: file.name,
-      javascriptLang: extension.slice(1),
-    };
-  }
-
-  return {
-    javascript: typescript.transpileModule(file.code, {
-      compilerOptions: {
-        jsx: typescript.JsxEmit.Preserve,
-        module: typescript.ModuleKind.ESNext,
-        target: typescript.ScriptTarget.ES2022,
-      },
-      fileName: file.name,
-    }).outputText,
-    javascriptName: file.name.replace(/\.tsx$/, ".jsx").replace(/\.ts$/, ".js"),
-    javascriptLang: extension === ".tsx" ? "jsx" : "js",
-  };
-}
-
 /** A small first-use example for the docs. The full component source stays in its own tab below. */
 function usageExample(entry, file) {
   const exported = [...file.code.matchAll(/export\s+(?:function|const|class)\s+([A-Z]\w*)/g)]
@@ -334,7 +324,6 @@ function usageExample(entry, file) {
     ...usage,
     lang: "tsx",
     packages: [],
-    ...toJavaScript(usage),
   };
 }
 
@@ -360,7 +349,6 @@ async function collect(entry, dir = demos) {
       code: summariseSource(file),
       lang: path.extname(file.name).slice(1),
       packages: packageImports(file.code),
-      ...toJavaScript(file),
     });
     files.push({
       path: `${TARGET}/${file.name}`,

@@ -9,18 +9,23 @@ export interface TextSampleOptions extends MaskSampleOptions {
 export function sampleTextPoints(text: string, options: TextSampleOptions = {}): Point[] {
   const font = options.font ?? "700 160px system-ui, sans-serif";
   const measurementContext = createScratchContext({ width: 1, height: 1 });
+
   measurementContext.font = font;
   const metrics = measurementContext.measureText(text);
   const left = Math.ceil(metrics.actualBoundingBoxLeft ?? 0) + 2;
   const width = Math.ceil(left + (metrics.actualBoundingBoxRight ?? metrics.width)) + 2;
   const ascent = Math.ceil(metrics.actualBoundingBoxAscent ?? 0) + 2;
   const height = Math.ceil(ascent + (metrics.actualBoundingBoxDescent ?? 0)) + 2;
+
   if (!text || width <= 4 || height <= 4) return [];
+
   const context = createScratchContext({ width, height });
+
   context.font = font;
   context.textBaseline = "alphabetic";
   context.fillStyle = "#000";
   context.fillText(text, left, ascent);
+
   return sampleMask(context.getImageData(0, 0, width, height), options);
 }
 
@@ -40,19 +45,24 @@ export interface ImageSampleOptions extends MaskSampleOptions {
 export function sampleImagePoints(image: CanvasImageSource, options: ImageSampleOptions = {}): CloudPoint[] {
   const size = imageSize({ image, options });
   const context = createScratchContext(size);
+
   context.drawImage(image, 0, 0, size.width, size.height);
   const pixels = context.getImageData(0, 0, size.width, size.height);
   const samplingMode = options.by ?? "alpha";
   const mask = samplingMode === "alpha" ? pixels : imageMask({ pixels, by: samplingMode });
   const details = options.details ?? [];
   const count = options.count ?? (options.spacing === undefined ? 500 : undefined);
+
   if (count !== undefined && details.length > count) {
     throw new RangeError("sampleImagePoints: count must include all detail points");
   }
   const points = sampleMask(mask, { ...options, count: count === undefined ? undefined : count - details.length });
   const palette = options.palette?.map(parseHexColor);
+
   if (palette?.length === 0) throw new RangeError("sampleImagePoints: palette needs at least one colour");
+
   const sampled = palette ? points.map((point) => ({ ...point, tone: nearestPaletteTone({ point, pixels, palette }) })) : points;
+
   return [...sampled, ...details.map((detail) => imageDetailPoint({ detail, pixels, palette }))];
 }
 
@@ -72,11 +82,13 @@ function imageDetailPoint({
     throw new RangeError("sampleImagePoints: detail tone must be between 0 and 1");
   }
   const point = { x: detail.x * (pixels.width - 1), y: detail.y * (pixels.height - 1) };
+
   return { ...point, tone: detail.tone ?? (palette ? nearestPaletteTone({ point, pixels, palette }) : undefined) };
 }
 
 function parseHexColor(color: string): readonly [number, number, number] {
   const hex = /^#([0-9a-f]{6})$/i.exec(color)?.[1];
+
   if (!hex) throw new TypeError(`sampleImagePoints: palette colours must be six-digit hex values, got ${color}`);
   const rgb = Number.parseInt(hex, 16);
   return [(rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255];

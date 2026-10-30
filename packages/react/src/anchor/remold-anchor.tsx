@@ -25,8 +25,11 @@ export const RemoldAnchor = forwardRef(function RemoldAnchor(
   componentProps: RemoldAnchor.Props,
   forwardedRef: ForwardedRef<HTMLSpanElement>,
 ) {
-  const { name, linkTo, fromSide, toSide, label, arrow, pulse, pulseDelay, line, render, className, ...elementProps } = componentProps;
-  const text = (v: unknown) => (v === undefined || v === null ? undefined : String(v));
+  const { name, linkTo, fromSide, toSide, label, arrow, pulse, pulseDelay, line, render, className, ...elementProps } =
+    componentProps;
+
+  const text = (value: unknown) => (value === undefined || value === null ? undefined : String(value));
+
   return useRenderElement(
     "span",
     { render, className },

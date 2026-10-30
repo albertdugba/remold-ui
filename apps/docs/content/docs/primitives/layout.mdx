@@ -9,61 +9,40 @@ description: "Animates everything inside it whenever its trigger changes."
 
 ## Installation
 
-<Install packages="@remold-ui/react" vanilla="@remold-ui/dom" />
+<Install packages="@remold-ui/react" />
+
+Using plain JavaScript? Install `@remold-ui/dom` instead.
 
 ## Usage
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 import { Remold } from "@remold-ui/react";
 
 <Remold.Layout trigger={view}>{/* anything that changes when `view` does */}</Remold.Layout>;
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
+```js tab="JavaScript"
 import { transition } from "@remold-ui/dom";
 
-const root = document.querySelector("#files");
-
-// Wrap any change to the page. Remold reads it before and after, and animates the difference.
-transition(root, () => {
-  root.innerHTML = renderFiles(files, view);
+transition(list, () => {
+  // change the DOM however you like
+  list.innerHTML = render(view);
 });
 ```
 
-</Variant>
-</CodeVariants>
-
 `trigger` is any value that changes when the content does: a view, a sort order, a route. Layout reads the page during the render in which it changes and animates after React commits, so it works with any state library. It renders a `div`.
+
+Without React, call `transition` with the element and a function that changes it. It reads the page, runs the change, and animates what moved. The options below are the same.
 
 When more than one thing can change, pass them as a list. It's compared item by item, like an effect's dependencies, so a new array with the same items doesn't animate:
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Layout trigger={[view, sort, filter]}>
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
-// No trigger needed: wrap each change, whatever caused it.
-for (const control of [viewToggle, sortSelect, filterInput]) {
-  control.addEventListener("change", () => {
-    transition(root, () => renderPeople(root, { view, sort, filter }));
-  });
-}
+```js tab="JavaScript"
+transition(list, () => render({ view, sort, filter }));
 ```
-
-</Variant>
-</CodeVariants>
 
 ## Examples
 
@@ -75,46 +54,61 @@ The grid and the list below are rendered by different elements. Remold pairs eac
   <LayoutDemo />
 </Stage>
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Layout trigger={view}>{view === "Grid" ? <PeopleGrid people={people} /> : <PeopleList people={people} />}</Remold.Layout>
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
-transition(root, () => {
-  // Different markup each time; people are matched by what they show.
-  root.innerHTML = view === "Grid" ? peopleGrid(people) : peopleList(people);
+```js tab="JavaScript"
+transition(people, () => {
+  people.innerHTML = view === "Grid" ? peopleGrid(data) : peopleList(data);
 });
 ```
 
-</Variant>
-</CodeVariants>
+### Components from other libraries
+
+To animate a component you don't render yourself, like a Base UI or MUI part, use `useRemoldLayout`. It takes the same `trigger` and options as `Remold.Layout`, and gives you a ref to put on any component that forwards it to its element. Base UI and MUI components both do.
+
+<Stage code={<Source demo="library-layout" />}>
+  <LibraryLayoutDemo />
+</Stage>
+
+```tsx tab="React" tab-group="lang"
+import { useRemoldLayout } from "@remold-ui/react";
+
+const { ref, animating } = useRemoldLayout(billing);
+
+<Tabs.Root ref={ref} value={billing} onValueChange={setBilling}>
+  …
+</Tabs.Root>;
+```
+
+```js tab="JavaScript"
+import { transition } from "@remold-ui/dom";
+
+const card = document.querySelector(".plan-card");
+
+transition(card, () => showPlan("yearly"));
+```
+
+Without React there's nothing to forward: pass the library's own element to `transition`.
+
+A few things to know when you use it with component libraries:
+
+- **Portals aren't included.** Popovers, menus, selects and dialogs usually render into `document.body`, outside the element with the ref, so Remold doesn't see them.
+- **Turn off the library's own transitions** inside the animated area (MUI's `Collapse` and `Fade`, Base UI's `data-starting-style` styles). Remold skips elements at zero opacity, so an element that's still fading in won't be matched.
+- **Skip decoration** that isn't content, such as MUI's ripple, by wrapping it in `<Remold.Ignore>` or adding `data-rm-ignore`.
 
 ### Announcing changes
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
-<Remold.Layout trigger={sort} announce={(s) => `Sorted. ${s.moved} files moved.`}>
+```tsx tab="React" tab-group="lang"
+<Remold.Layout trigger={sort} announce={(summary) => `Sorted. ${summary.moved} files moved.`}>
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
-transition(list, () => renderFiles(list, files, sort), {
+```js tab="JavaScript"
+transition(files, () => sortFiles(), {
   announce: (summary) => `Sorted. ${summary.moved} files moved.`,
 });
 ```
-
-</Variant>
-</CodeVariants>
 
 ## API reference
 

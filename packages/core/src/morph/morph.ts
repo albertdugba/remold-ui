@@ -40,6 +40,7 @@ export type MorphOptions = MatchOptions;
 function layoutOf(subpaths: readonly Subpath[]): { layout: SubpathLayout[]; length: number } {
   const layout: SubpathLayout[] = [];
   let length = 0;
+
   for (const subpath of subpaths) {
     layout.push({ offset: length, segments: subpath.segments.length, closed: subpath.closed });
     length += 2 + 6 * subpath.segments.length;
@@ -76,6 +77,7 @@ export function lerpBuffers({
   output: Float32Array;
 }): Float32Array {
   for (let index = 0; index < output.length; index++) output[index] = from[index]! + (to[index]! - from[index]!) * progress;
+
   return output;
 }
 
@@ -99,6 +101,7 @@ export function createMorph(
   const { layout, length } = layoutOf(matched.from);
   const from = new Float32Array(length);
   const to = new Float32Array(length);
+
   pack(matched.from, layout, from);
   pack(matched.to, layout, to);
 

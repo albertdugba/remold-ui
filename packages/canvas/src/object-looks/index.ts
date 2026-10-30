@@ -96,9 +96,12 @@ function polygon(ctx: CanvasRenderingContext2D, points: readonly ScreenPoint[]):
 /** Draw text lying flat on the top face, centred. Size is in world units, so it zooms with the scene. */
 function label({ ctx, view, pixelRatio }: DrawContext, state: DrawState, size: number, alpha: number): void {
   if (!state.label) return;
+
   const { box } = state;
+
   ctx.save();
   const plane = view.plane(box.z + box.height);
+
   ctx.setTransform(...scaled(plane, pixelRatio));
   ctx.translate(box.x + box.width / 2, box.y + box.depth / 2);
   // Once the scene is turned past halfway, text on the floor would read upside down: flip it.

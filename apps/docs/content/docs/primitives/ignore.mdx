@@ -5,14 +5,13 @@ description: "Leaves its contents out of transitions."
 
 ## Installation
 
-<Install packages="@remold-ui/react" vanilla="@remold-ui/dom" />
+<Install packages="@remold-ui/react" />
+
+Using plain JavaScript? Install `@remold-ui/dom` instead.
 
 ## Usage
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Layout trigger={view}>
   <Remold.Ignore>
     <LiveChart />
@@ -20,20 +19,12 @@ description: "Leaves its contents out of transitions."
 </Remold.Layout>
 ```
 
-</Variant>
-<Variant framework="js">
+```js tab="JavaScript"
+import { transition } from "@remold-ui/dom";
 
-```html
-<!-- Anything inside data-rm-ignore is left out of matching and animation. -->
-<section id="dashboard">
-  <div data-rm-ignore>
-    <canvas id="live-chart"></canvas>
-  </div>
-</section>
+chart.setAttribute("data-rm-ignore", "");
+transition(dashboard, () => showView(view));
 ```
-
-</Variant>
-</CodeVariants>
 
 Anything inside is left out of transitions: it isn't measured, paired or moved. Use it for videos, live charts and anything that animates by itself. It renders a `span` with `data-rm-ignore`; you can put that attribute on any element instead.
 

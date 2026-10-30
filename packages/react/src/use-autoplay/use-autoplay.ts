@@ -20,6 +20,7 @@ const CONTROL: AutoplayControlAttribute = "data-rm-autoplay-control";
  */
 export function useAutoplay(count: number, options: AutoplayOptions = {}): Autoplay {
   const { every = 2400, initial = 0, stopOnInteraction = true, autoStart = true } = options;
+
   const [step, setStep] = useState(initial);
   const [playing, setPlaying] = useState(autoStart);
   const [visible, setVisible] = useState(false);
@@ -27,12 +28,16 @@ export function useAutoplay(count: number, options: AutoplayOptions = {}): Autop
 
   useEffect(() => {
     if (!element) return;
+
     if (typeof IntersectionObserver === "undefined") {
       setVisible(true);
       return;
     }
+
     const observer = new IntersectionObserver(([entry]) => setVisible(entry?.isIntersecting ?? false), { threshold: 0.25 });
+
     observer.observe(element);
+
     return () => observer.disconnect();
   }, [element]);
 
@@ -42,18 +47,24 @@ export function useAutoplay(count: number, options: AutoplayOptions = {}): Autop
   // biome-ignore lint/correctness/useExhaustiveDependencies: shown restarts the timer for each visible step.
   useEffect(() => {
     if (!playing || !visible || count < 2) return;
+
     const timer = setTimeout(() => setStep((s) => (s + 1) % count), delay);
+
     return () => clearTimeout(timer);
   }, [playing, visible, count, delay, shown]);
 
   useEffect(() => {
     if (!element || !stopOnInteraction || !playing) return;
+
     const stop = (event: Event) => {
       if (event.target instanceof Element && event.target.closest(`[${CONTROL}]`)) return;
+
       setPlaying(false);
     };
+
     element.addEventListener("pointerdown", stop, true);
     element.addEventListener("keydown", stop, true);
+
     return () => {
       element.removeEventListener("pointerdown", stop, true);
       element.removeEventListener("keydown", stop, true);
@@ -62,6 +73,7 @@ export function useAutoplay(count: number, options: AutoplayOptions = {}): Autop
 
   const next = useCallback(() => setStep((s) => (s + 1) % Math.max(1, count)), [count]);
   const toggle = useCallback(() => setPlaying((p) => !p), []);
+
   return {
     ref: setElement,
     step: shown,

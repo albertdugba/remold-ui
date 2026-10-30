@@ -1,0 +1,37 @@
+---
+title: "Currency converter"
+description: "A transfer quote: the amount you type rolls into what they receive, and swapping carries the two currencies across."
+status: "new"
+tags: ["Layout", "Motion", "Base UI"]
+---
+
+<Stage name="currency-converter" code={<Source demo="currency-converter" />} minHeight={560}>
+  <CurrencyConverterDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Type what you send.** What they get rolls with it, and so does the fee. You can also click their amount and type that instead: the amount you send follows.
+- **Swap.** The two currencies trade places, and the quote is worked out again.
+- **Change a currency.** Search by name or code. The rate and the arrival move with the pair. Picking the currency already on the other side swaps them.
+- **A longer route.** Pounds, dollars and euros arrive in seconds. Cedis and naira arrive by tomorrow.
+
+## Install
+
+<AddCommand name="currency-converter" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="currency-converter" />
+
+## How it works
+
+- **The currencies travel.** `Layout` wraps the quote and pairs each pill by the currency it shows, so a swap carries it to the other row. Nothing is given an id.
+- **The figures roll.** The amounts and the fee are digits that enter and leave by their place, the same treatment as Send money. The rate is one line, so it crossfades when the pair changes.
+- **A currency list.** Each pill opens Base UI's Combobox in a plain popup. The list narrows as you type, and a pick moves the pills like any other change.
+
+<Callout>The rates are made up, and they don't move with the market. The fee is a flat 0.45%, taken off before the exchange.</Callout>

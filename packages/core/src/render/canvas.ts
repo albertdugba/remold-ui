@@ -17,6 +17,7 @@ export interface PathSink {
 /** Replay a packed buffer into `sink`. Begin and fill or stroke the path yourself. */
 export function drawPath(buffer: ArrayLike<number>, layout: readonly SubpathLayout[], sink: PathSink): void {
   const b = buffer;
+
   for (const { offset, segments, closed } of layout) {
     sink.moveTo(b[offset]!, b[offset + 1]!);
     for (let s = 0, o = offset + 2; s < segments; s++, o += 6) {

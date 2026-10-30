@@ -108,6 +108,7 @@ export function connectorPath({
   const r2 = (n: number) => Math.round(n * 100) / 100;
   const { x: fx, y: fy } = from;
   const { x: tx, y: ty } = to;
+
   if (shape === "straight") return `M${r2(fx)} ${r2(fy)}L${r2(tx)} ${r2(ty)}`;
   if (shape === "elbow" && tx > fx && ty > fy) {
     const r = Math.max(0, Math.min(radius, tx - fx, ty - fy));
@@ -290,7 +291,6 @@ interface Line {
 }
 
 const SVG = "http://www.w3.org/2000/svg";
-
 let markers = 0;
 
 /**

@@ -50,7 +50,9 @@ export function reverseSubpath(subpath: Subpath): Subpath {
 /** A closed loop started from segment `k` instead of segment 0. */
 function rotateStart(subpath: Subpath, k: number): Subpath {
   if (k === 0) return subpath;
+
   const { segments } = subpath;
+
   return { segments: segments.slice(k).concat(segments.slice(0, k)), closed: subpath.closed };
 }
 
@@ -59,11 +61,14 @@ function bestRotation(a: Subpath, b: Subpath): number {
   const n = a.segments.length;
   let best = 0;
   let bestCost = Infinity;
+
   for (let k = 0; k < n; k++) {
     let cost = 0;
+
     for (let i = 0; i < n && cost < bestCost; i++) {
       const p = a.segments[i]!.p0;
       const q = b.segments[(i + k) % n]!.p0;
+
       cost += (p.x - q.x) ** 2 + (p.y - q.y) ** 2;
     }
     if (cost < bestCost) {
@@ -86,11 +91,13 @@ function pointLike(like: Subpath, at: Point): Subpath {
 function nearestOnOutline(outlines: readonly Subpath[], target: Point): Point {
   let best: Point = target;
   let bestDistance = Infinity;
+
   for (const subpath of outlines) {
     for (const c of subpath.segments) {
       for (let k = 0; k <= 8; k++) {
         const p = pointAt(c, k / 8);
         const d = (p.x - target.x) ** 2 + (p.y - target.y) ** 2;
+
         if (d < bestDistance) {
           bestDistance = d;
           best = p;
@@ -114,6 +121,7 @@ function pairSubpaths(a: readonly Subpath[], b: readonly Subpath[], mode: "auto"
   }
   const describe = (s: Subpath) => {
     const box = bounds([s]);
+
     return { center: centroid(s), size: box ? Math.hypot(box.width, box.height) : 0 };
   };
   const fa = a.map(describe);
@@ -123,6 +131,7 @@ function pairSubpaths(a: readonly Subpath[], b: readonly Subpath[], mode: "auto"
   const partner = hungarian(cost);
   const usedB = new Set(partner.filter((j) => j >= 0));
   const pairs: Pair[] = a.map((s, i): Pair => (partner[i]! >= 0 ? [s, b[partner[i]!]!] : [s, null]));
+
   b.forEach((s, j) => {
     if (!usedB.has(j)) pairs.push([null, s]);
   });
@@ -136,6 +145,7 @@ function orient(a: Subpath, b: Subpath): Subpath {
     const areaB = signedArea(b);
     // A shape with no area (a collapsed point, a flat line) has no winding to match.
     const flat = Math.abs(areaA) < 1e-9 || Math.abs(areaB) < 1e-9;
+
     return !flat && Math.sign(areaA) !== Math.sign(areaB) ? reverseSubpath(b) : b;
   }
   // Open paths: keep the ends close together.
@@ -145,6 +155,7 @@ function orient(a: Subpath, b: Subpath): Subpath {
     bEnd = b.segments[b.segments.length - 1]!.p3;
   const same = Math.hypot(aStart.x - bStart.x, aStart.y - bStart.y) + Math.hypot(aEnd.x - bEnd.x, aEnd.y - bEnd.y);
   const flipped = Math.hypot(aStart.x - bEnd.x, aStart.y - bEnd.y) + Math.hypot(aEnd.x - bStart.x, aEnd.y - bStart.y);
+
   return flipped < same - 1e-9 ? reverseSubpath(b) : b;
 }
 
@@ -155,6 +166,7 @@ function orient(a: Subpath, b: Subpath): Subpath {
 export function matchShapes(a: readonly Subpath[], b: readonly Subpath[], options: MatchOptions = {}): MatchedShapes {
   const shapeA = a.filter((s) => s.segments.length > 0);
   const shapeB = b.filter((s) => s.segments.length > 0);
+
   if (shapeA.length === 0 || shapeB.length === 0) {
     throw new Error("matchShapes: both shapes need at least one segment");
   }
@@ -162,6 +174,7 @@ export function matchShapes(a: readonly Subpath[], b: readonly Subpath[], option
 
   const from: Subpath[] = [];
   const to: Subpath[] = [];
+
   for (const [pa, pb] of pairSubpaths(shapeA, shapeB, pairing)) {
     // Every pair has at least one side.
     const real = (pa ?? pb)!;
@@ -172,10 +185,12 @@ export function matchShapes(a: readonly Subpath[], b: readonly Subpath[], option
     if (doOrient) sb = orient(sa, sb);
 
     const count = Math.max(sa.segments.length, sb.segments.length);
+
     sa = subdivide(sa, count);
     sb = subdivide(sb, count);
 
     const closed = sa.closed && sb.closed;
+
     if (closed && rotate) sb = rotateStart(sb, bestRotation(sa, sb));
 
     from.push({ segments: sa.segments, closed });

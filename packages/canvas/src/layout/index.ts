@@ -46,6 +46,7 @@ function ring(
   }: { radius: number; size: number; start?: number; at?: readonly [number, number]; extra?: Extra },
 ): Boxes {
   const out: Boxes = {};
+
   ids.forEach((id, i) => {
     const angle = ((start + (360 * i) / ids.length) * Math.PI) / 180;
     out[id] = square(at[0] + Math.cos(angle) * radius, at[1] + Math.sin(angle) * radius, size, extra);
@@ -66,6 +67,7 @@ function row(
 ): Boxes {
   const out: Boxes = {};
   const first = (-(ids.length - 1) * gap) / 2;
+
   ids.forEach((id, i) => {
     const offset = first + i * gap;
     out[id] = axis === "x" ? square(at[0] + offset, at[1], size, extra) : square(at[0], at[1] + offset, size, extra);
@@ -79,6 +81,7 @@ function stack(
   { gap, size, z = 0, at = [0, 0], extra }: { gap: number; size: number; z?: number; at?: readonly [number, number]; extra?: Extra },
 ): Boxes {
   const out: Boxes = {};
+
   ids.forEach((id, i) => {
     out[id] = square(at[0], at[1], size, { ...extra, z: z + i * gap });
   });
@@ -92,6 +95,7 @@ function grid(
 ): Boxes {
   const out: Boxes = {};
   const rows = Math.ceil(ids.length / columns);
+
   ids.forEach((id, i) => {
     const column = i % columns;
     const line = Math.floor(i / columns);

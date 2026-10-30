@@ -17,6 +17,7 @@ export const RemoldText = forwardRef(function RemoldText(
   forwardedRef: ForwardedRef<HTMLSpanElement>,
 ) {
   const { children, spring, reducedMotion, loop, render, className, ...elementProps } = componentProps;
+
   const [initial] = useState(children);
   const [element, setElement] = useState<HTMLSpanElement | null>(null);
   const [animating, setAnimating] = useState(false);
@@ -25,9 +26,13 @@ export const RemoldText = forwardRef(function RemoldText(
 
   useIsoLayoutEffect(() => {
     if (!element || shown.current === children) return;
+
     shown.current = children;
+
     const call = ++latestCall.current;
+
     setAnimating(true);
+
     void morphText(element, children, { spring, reducedMotion, loop }).then(() => {
       if (call === latestCall.current) setAnimating(false);
     });
@@ -42,6 +47,7 @@ export const RemoldText = forwardRef(function RemoldText(
   );
 
   const state: RemoldText.State = { animating };
+
   return useRenderElement(
     "span",
     { render, className },

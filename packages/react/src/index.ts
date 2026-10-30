@@ -1,5 +1,10 @@
 export * as Remold from "./index.parts.js";
 export { useRemold } from "./use-remold/use-remold.js";
+export { useRemoldLayout } from "./use-remold-layout/use-remold-layout.js";
+export type {
+  UseRemoldLayoutOptions,
+  UseRemoldLayoutReturnValue,
+} from "./use-remold-layout/types.js";
 export { useViewTransition } from "./use-view-transition/use-view-transition.js";
 export { MorphPath } from "./morph-path/morph-path.js";
 export type { MorphPathProps } from "./morph-path/types.js";

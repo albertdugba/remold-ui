@@ -50,22 +50,36 @@ export const RemoldStory = forwardRef(function RemoldStory(
     ...elementProps
   } = componentProps;
 
-  if (chapters.length === 0) throw new RangeError("Remold.Story: at least one chapter is required");
+  if (chapters.length === 0) {
+    throw new RangeError("Remold.Story: at least one chapter is required");
+  }
+
   const initial = defaultChapter ?? chapters[0]!.id;
   const [chapterId, setChapterId] = useControlled(chapterProp, initial);
   const index = chapters.findIndex((item) => item.id === chapterId);
-  if (index < 0) throw new RangeError(`Remold.Story: unknown chapter "${chapterId}"`);
+
+  if (index < 0) {
+    throw new RangeError(`Remold.Story: unknown chapter "${chapterId}"`);
+  }
+
   const chapter = chapters[index]!;
   const sceneActions = useRef<RemoldScene.Actions | null>(null);
   const annotation = useRef<HTMLDivElement | null>(null);
   const onChange = useLatest(onChapterChange);
 
-  const select = useCallback((id: string) => {
-    if (!chapters.some((item) => item.id === id)) throw new RangeError(`Remold.Story: unknown chapter "${id}"`);
-    if (id === chapterId) return;
-    setChapterId(id);
-    onChange.current?.(id);
-  }, [chapterId, chapters, onChange, setChapterId]);
+  const select = useCallback(
+    (id: string) => {
+      if (!chapters.some((item) => item.id === id)) {
+        throw new RangeError(`Remold.Story: unknown chapter "${id}"`);
+      }
+
+      if (id === chapterId) return;
+
+      setChapterId(id);
+      onChange.current?.(id);
+    },
+    [chapterId, chapters, onChange, setChapterId],
+  );
 
   useImperativeHandle(
     actionsRef,
@@ -82,23 +96,30 @@ export const RemoldStory = forwardRef(function RemoldStory(
 
   useIsoLayoutEffect(() => {
     if (!chapter.annotation) return;
+
     let frame = 0;
     const start = performance.now();
+
     const place = () => {
       const point = sceneActions.current?.anchor(chapter.annotation!.object, chapter.annotation!.port);
+
       if (point && annotation.current) {
         annotation.current.style.left = `${point.x}px`;
         annotation.current.style.top = `${point.y}px`;
       }
+
       const reduced = reducedMotion === "always" || (reducedMotion !== "never" && prefersReducedMotion());
+
       if (!reduced && performance.now() - start < 1200) frame = requestAnimationFrame(place);
     };
+
     place();
+
     return () => cancelAnimationFrame(frame);
   }, [chapter, reducedMotion]);
 
   const annotationContent = chapter.annotation
-    ? renderAnnotation?.({ chapter, index, count: chapters.length }) ?? <DefaultAnnotation chapter={chapter} index={index} />
+    ? (renderAnnotation?.({ chapter, index, count: chapters.length }) ?? <DefaultAnnotation chapter={chapter} index={index} />)
     : null;
   const placement = chapter.annotation?.placement ?? "above";
   const translate =
@@ -109,6 +130,7 @@ export const RemoldStory = forwardRef(function RemoldStory(
       : placement === "right"
       ? "translate(14px, -50%)"
       : "translate(-50%, calc(-100% - 14px))";
+
   const state: RemoldStory.State = { chapter, index, count: chapters.length };
 
   return useRenderElement(
@@ -166,6 +188,7 @@ export const RemoldStory = forwardRef(function RemoldStory(
 
 function DefaultAnnotation({ chapter, index }: { chapter: RemoldStory.Chapter; index: number }) {
   if (!chapter.title && !chapter.description) return null;
+
   return (
     <>
       <span>Chapter {index + 1}</span>

@@ -1,6 +1,6 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Cancel01Icon, Search01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Cancel01Icon, Search01Icon, CheckIcon } from "@hugeicons/core-free-icons";
 import { Popover } from "@base-ui/react/popover";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
@@ -198,7 +198,7 @@ export function LabelPickerDemo({ playing }: LabelPickerDemoProps = {}) {
                                         exit={{ scale: 0, opacity: 0 }}
                                         transition={POP}
                                       >
-                                        <HugeiconsIcon icon={Tick01Icon} aria-hidden="true" />
+                                        <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
                                       </motion.span>
                                     )}
                                   </AnimatePresence>

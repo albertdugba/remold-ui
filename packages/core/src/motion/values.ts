@@ -78,6 +78,7 @@ export interface AnimatedValues {
  */
 export function values(initial: ArrayLike<number>, options: ValuesOptions = {}): AnimatedValues {
   const precision = options.precision ?? 0.01;
+
   if (!(precision > 0) || !Number.isFinite(precision)) {
     throw new RangeError(`values: precision must be a positive number, got ${precision}`);
   }

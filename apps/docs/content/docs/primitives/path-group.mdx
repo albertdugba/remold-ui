@@ -9,12 +9,11 @@ description: "A multi-part SVG illustration whose parts each morph on their own,
 
 ## Installation
 
-<Install packages="@remold-ui/react" vanilla="@remold-ui/core" />
+<Install packages="@remold-ui/react" />
+
+PathGroup is React only for now. Without React, morph each part with `createMorph` from `@remold-ui/core`, as in the [Icon](/docs/primitives/icon) page's JavaScript tab.
 
 ## Usage
-
-<CodeVariants>
-<Variant framework="react">
 
 ```tsx
 <Remold.PathGroup
@@ -28,37 +27,6 @@ description: "A multi-part SVG illustration whose parts each morph on their own,
   ]}
 />
 ```
-
-</Variant>
-<Variant framework="js">
-
-```ts
-import { createMorph, value } from "@remold-ui/core";
-import { frames } from "@remold-ui/dom";
-
-// One path element per part, each morphing on its own spring.
-const parts = {
-  brows: document.querySelector("#brows"),
-  eyes: document.querySelector("#eyes"),
-  mouth: document.querySelector("#mouth"),
-};
-
-function show(mood: Record<keyof typeof parts, string>) {
-  for (const [id, path] of Object.entries(parts)) {
-    const morph = createMorph(path.getAttribute("d")!, mood[id]);
-    const t = value(0, { spring: { duration: 0.6, bounce: 0.2 } });
-    t.to(1);
-    frames((dt) => {
-      t.step(dt);
-      path.setAttribute("d", morph.d(t.current));
-      return !t.settled;
-    });
-  }
-}
-```
-
-</Variant>
-</CodeVariants>
 
 Each part is matched by its `id` and morphs from wherever it is when its path changes, even into a shape with a different number of pieces: angry brows lift into arches, a frown turns into a smile and opens into a laugh, and two round eyes become two hearts. Parts are drawn in the order you list them, so the eyes and mouth stay in front of the face.
 

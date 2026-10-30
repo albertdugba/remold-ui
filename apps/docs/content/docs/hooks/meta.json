@@ -1,10 +1,10 @@
 {
   "title": "Hooks",
   "pages": [
-    "use-autoplay",
-    "use-drag-to-dismiss",
-    "use-spring-press",
     "use-remold",
-    "use-view-transition"
+    "use-view-transition",
+    "use-autoplay",
+    "use-spring-press",
+    "use-drag-to-dismiss"
   ]
 }

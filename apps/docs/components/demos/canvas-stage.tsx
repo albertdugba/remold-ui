@@ -3,7 +3,7 @@
 import { Remold } from "@remold-ui/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 import "./canvas-stage.css";
 
 type SceneProps = Remold.Scene.Props;
@@ -42,28 +42,41 @@ export function CanvasStage({
   const [playing, setPlaying] = useState(true);
   const [visible, setVisible] = useState(false);
   const frame = useRef<HTMLDivElement>(null);
+
   const info = describe(layout, focused);
 
+  const advance = useEffectEvent(() => {
+    setLayout((current) => {
+      const next = layouts.indexOf(current) + 1;
+
+      return layouts[next % layouts.length]!;
+    });
+  });
+
   useEffect(() => {
-    const el = frame.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => setVisible(e?.isIntersecting ?? false),
+    const frameElement = frame.current;
+
+    if (!frameElement) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setVisible(entry?.isIntersecting ?? false);
+      },
       { threshold: 0.3 },
     );
-    io.observe(el);
-    return () => io.disconnect();
+
+    observer.observe(frameElement);
+
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
     if (!playing || !visible || focused) return;
-    const timer = setInterval(
-      () =>
-        setLayout((l) => layouts[(layouts.indexOf(l) + 1) % layouts.length]!),
-      every,
-    );
+
+    const timer = setInterval(advance, every);
+
     return () => clearInterval(timer);
-  }, [playing, visible, focused, every, layouts.join()]);
+  }, [playing, visible, focused, every]);
 
   return (
     <div className="cs not-prose" ref={frame}>
@@ -71,18 +84,18 @@ export function CanvasStage({
         <div className="cs-title">{title}</div>
         <div className="cs-controls">
           <div className="cs-tabs" role="group" aria-label="View">
-            {layouts.map((l) => (
+            {layouts.map((name) => (
               <button
-                key={l}
+                key={name}
                 type="button"
-                aria-pressed={layout === l}
+                aria-pressed={layout === name}
                 onClick={() => {
                   setPlaying(false);
                   setFocused(null);
-                  setLayout(l);
+                  setLayout(name);
                 }}
               >
-                {l}
+                {name}
               </button>
             ))}
           </div>
@@ -91,7 +104,7 @@ export function CanvasStage({
             className="cs-play"
             aria-label={playing ? "Pause" : "Play"}
             aria-pressed={playing}
-            onClick={() => setPlaying((p) => !p)}
+            onClick={() => setPlaying((current) => !current)}
           >
             <Remold.Icon
               icon={<HugeiconsIcon icon={playing ? PauseIcon : PlayIcon} />}

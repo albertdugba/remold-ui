@@ -75,6 +75,7 @@ export function buildMotionRecords({
     carried?: MotionRecord;
   }): MotionChannels => {
     const carriedVelocity = (key: "x" | "y" | "width" | "height") => (carried?.mode === "box" ? carried.channels[key]?.velocity ?? 0 : 0);
+
     if (reduced) {
       return {
         x: createChannel({
@@ -152,6 +153,7 @@ export function buildMotionRecords({
     const carried = previousRecords?.get(before.elements[pair.from]!);
     const textChanged = beforeNode.text !== afterNode.text;
     const marks = textChanged ? ["data-rm-matched", "data-rm-changed"] : ["data-rm-matched"];
+
     if (afterNode.text !== "" && afterNode.kind !== "box" && afterNode.kind !== "media") {
       const fontScale =
         ((beforeNode.fontSize ?? 16) * (carried?.mode === "text" ? carried.channels.scale!.current : 1)) / (afterNode.fontSize ?? 16);
@@ -223,6 +225,7 @@ export function buildMotionRecords({
 
   const fadeIn = ({ element, from, to }: { element: HTMLElement; from: PixelBox; to: PixelBox }): void => {
     const channels = boxChannels({ from, to, fromRadius: 0, toRadius: 0 });
+
     channels.opacity = createChannel({
       from: 0,
       to: 1,
@@ -252,8 +255,10 @@ export function buildMotionRecords({
     });
 
   const added = new Set(matches.added);
+
   for (const index of matches.added) {
     if (added.has(after.nodes[index]!.parent)) continue;
+
     const channels: MotionChannels = {
       opacity: createChannel({
         from: 0,
@@ -283,6 +288,7 @@ export function buildMotionRecords({
 function unionBoxes(boxes: readonly PixelBox[]): PixelBox {
   const x = Math.min(...boxes.map((box) => box.x));
   const y = Math.min(...boxes.map((box) => box.y));
+
   return {
     x,
     y,

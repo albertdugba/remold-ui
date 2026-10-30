@@ -21,11 +21,11 @@ export function useSpringPress({
   const animate = useCallback(
     (target: number) => {
       if (!element) return;
+
       stop.current?.();
 
-      const still =
-        reducedMotion === "always" ||
-        (reducedMotion === "user" && prefersReducedMotion());
+      const still = reducedMotion === "always" || (reducedMotion === "user" && prefersReducedMotion());
+
       if (still) {
         motion.current.set(target);
         element.style.scale = String(target);
@@ -50,14 +50,19 @@ export function useSpringPress({
       pressed.current = null;
       animate(1);
     };
+
     const down = (event: PointerEvent) => {
       if (event.button !== 0 || pressed.current !== null) return;
+
       pressed.current = event.pointerId;
+
       try {
         element.setPointerCapture(event.pointerId);
       } catch {}
+
       animate(scale);
     };
+
     const up = (event: PointerEvent) => {
       if (event.pointerId === pressed.current) release();
     };
@@ -75,5 +80,6 @@ export function useSpringPress({
   }, [animate, element, scale]);
 
   useEffect(() => () => stop.current?.(), []);
+
   return { ref: setElement };
 }

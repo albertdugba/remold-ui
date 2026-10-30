@@ -34,6 +34,7 @@ export function pointAt(c: Cubic, t: number): Point {
   const a = lerpPoint(c.p0, c.p1, t);
   const b = lerpPoint(c.p1, c.p2, t);
   const d = lerpPoint(c.p2, c.p3, t);
+
   return lerpPoint(lerpPoint(a, b, t), lerpPoint(b, d, t), t);
 }
 
@@ -58,8 +59,10 @@ export function quadToCubic(from: Point, handle: Point, to: Point): Cubic {
  */
 export function arcToCubics(from: Point, arc: Arc, to: Point): Cubic[] {
   if (from.x === to.x && from.y === to.y) return [];
+
   let rx = Math.abs(arc.rx);
   let ry = Math.abs(arc.ry);
+
   if (rx === 0 || ry === 0) return [lineToCubic(from, to)];
 
   // 1. Turn the picture so the ellipse is upright, measured from the chord's middle.
@@ -73,6 +76,7 @@ export function arcToCubics(from: Point, arc: Arc, to: Point): Cubic[] {
 
   // 2. If the ellipse is too small to reach both ends, grow it just enough.
   const lambda = (x1 * x1) / (rx * rx) + (y1 * y1) / (ry * ry);
+
   if (lambda > 1) {
     rx *= Math.sqrt(lambda);
     ry *= Math.sqrt(lambda);
@@ -98,6 +102,7 @@ export function arcToCubics(from: Point, arc: Arc, to: Point): Cubic[] {
     vy = (-y1 - cy1) / ry;
   const start = angle({ fromX: 1, fromY: 0, toX: ux, toY: uy });
   let sweep = angle({ fromX: ux, fromY: uy, toX: vx, toY: vy });
+
   if (!arc.sweep && sweep > 0) sweep -= 2 * Math.PI;
   else if (arc.sweep && sweep < 0) sweep += 2 * Math.PI;
 
@@ -111,6 +116,7 @@ export function arcToCubics(from: Point, arc: Arc, to: Point): Cubic[] {
   });
 
   const out: Cubic[] = [];
+
   for (let n = 0; n < count; n++) {
     const a1 = start + n * step,
       a2 = a1 + step;
@@ -181,5 +187,6 @@ export function toCubics(commands: PathCommand[]): Subpath[] {
     }
   }
   finish();
+
   return out;
 }

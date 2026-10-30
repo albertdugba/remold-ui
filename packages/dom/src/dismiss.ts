@@ -54,6 +54,7 @@ export function dragToDismiss(element: HTMLElement, options: DragToDismissOption
   const slop = options.slop ?? 4;
   const add = options.loop ? options.loop.add.bind(options.loop) : sharedFrames;
   const saved = { transform: element.style.transform, touchAction: element.style.touchAction };
+
   element.style.touchAction = axis === "y" ? "pan-x" : "pan-y";
 
   let press: { id: number; start: number; offset: number; dragging: boolean; tracker: ReturnType<typeof velocityTracker> } | null = null;
@@ -68,25 +69,34 @@ export function dragToDismiss(element: HTMLElement, options: DragToDismissOption
 
   const down = (e: PointerEvent) => {
     if (dismissed || e.button !== 0 || (e.target instanceof Element && e.target.closest(FIELDS))) return;
+
     settling?.();
     settling = null;
+
     const tracker = velocityTracker();
+
     tracker.add(e.timeStamp, coordinate(e));
+
     const current = Number.parseFloat(/-?\d+(\.\d+)?/.exec(element.style.transform)?.[0] ?? "0") || 0;
+
     press = { id: e.pointerId, start: coordinate(e) - current, offset: current, dragging: false, tracker };
   };
 
   const move = (e: PointerEvent) => {
     if (!press || e.pointerId !== press.id) return;
+
     const raw = coordinate(e) - press.start;
+
     if (!press.dragging) {
       if (Math.abs(raw - press.offset) < slop) return;
+
       press.dragging = true;
+
       try {
         element.setPointerCapture(e.pointerId);
-      } catch {
-      }
+      } catch {}
     }
+
     press.tracker.add(e.timeStamp, coordinate(e));
     press.offset = raw * direction > 0 ? raw : rubberband(raw, resistance);
     place(press.offset);
@@ -94,21 +104,29 @@ export function dragToDismiss(element: HTMLElement, options: DragToDismissOption
 
   const up = (e: PointerEvent) => {
     if (!press || e.pointerId !== press.id) return;
+
     const { offset, dragging, tracker } = press;
+
     press = null;
+
     if (!dragging) return;
+
     const speed = tracker.velocity(e.timeStamp);
     const along = offset * direction;
+
     if (along > distance || (along > 24 && speed * direction > flick)) {
       dismissed = true;
       options.onDismiss();
       return;
     }
+
     if (resolveReducedMotion(options.reducedMotion) || Math.abs(offset) < 0.5) {
       place(0);
       return;
     }
+
     const back = value(offset, { spring });
+
     back.release({ target: 0, velocity: speed });
     settling = add((dt) => {
       back.step(dt);

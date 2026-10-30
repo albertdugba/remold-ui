@@ -296,11 +296,18 @@
 }
 
 .bk-roll {
-  display: inline-grid;
+  position: relative;
+  display: grid;
+  height: 18px;
   overflow: hidden;
   color: var(--bk-bar-ink);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  line-height: 18px;
+}
+
+.bk-roll > span {
+  grid-area: 1 / 1;
 }
 
 .bk-clear,

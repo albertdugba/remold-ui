@@ -57,6 +57,7 @@ export function sharedLetters(previousText: readonly string[], nextText: readonl
   const candidatePairs: [number, number][] = [];
   let previousIndex = 0;
   let nextIndex = 0;
+
   while (previousIndex < previousLength && nextIndex < nextLength) {
     if (previousText[previousIndex] === nextText[nextIndex]) {
       candidatePairs.push([previousIndex, nextIndex]);
@@ -78,6 +79,7 @@ export function sharedLetters(previousText: readonly string[], nextText: readonl
 
   for (const pair of candidatePairs) {
     const previousPair = consecutivePairs.at(-1);
+
     if (previousPair && pair[0] === previousPair[0] + 1 && pair[1] === previousPair[1] + 1) consecutivePairs.push(pair);
     else {
       keepConsecutivePairs();
@@ -85,6 +87,7 @@ export function sharedLetters(previousText: readonly string[], nextText: readonl
     }
   }
   keepConsecutivePairs();
+
   return sharedPairs;
 }
 
@@ -118,6 +121,7 @@ const sharedLoop: FrameLoop = { add: frames };
 function createTextMorphState(element: HTMLElement, maxGraphemes: number): TextMorphState {
   const initial = element.textContent ?? "";
   const screenReaderText = document.createElement("span");
+
   Object.assign(screenReaderText.style, {
     position: "absolute",
     width: "1px",
@@ -128,10 +132,12 @@ function createTextMorphState(element: HTMLElement, maxGraphemes: number): TextM
     whiteSpace: "nowrap",
   });
   const visualLayer = document.createElement("span");
+
   visualLayer.setAttribute("aria-hidden", "true");
   visualLayer.style.position = "relative";
   const liveLetters = document.createElement("span");
   const exitingLetters = document.createElement("span");
+
   visualLayer.append(liveLetters, exitingLetters);
   element.replaceChildren(screenReaderText, visualLayer);
   const state: TextMorphState = {
@@ -145,11 +151,13 @@ function createTextMorphState(element: HTMLElement, maxGraphemes: number): TextM
     token: 0,
   };
   const initialText = graphemes(initial);
+
   if (initialText.length > maxGraphemes) renderPlainText(state, initialText);
   else renderLetters(state, initialText);
   screenReaderText.textContent = initial;
   states.set(element, state);
   morphedText.set(element, screenReaderText);
+
   return state;
 }
 
@@ -157,6 +165,7 @@ function renderLetters(state: TextMorphState, text: string[]): void {
   state.liveLetters.replaceChildren();
   state.letterElements = [];
   let word: HTMLSpanElement | null = null;
+
   for (const ch of text) {
     if (/^\s$/.test(ch)) {
       state.liveLetters.append(document.createTextNode(ch));
@@ -171,6 +180,7 @@ function renderLetters(state: TextMorphState, text: string[]): void {
       state.liveLetters.append(word);
     }
     const letter = document.createElement("span");
+
     letter.style.display = "inline-block";
     letter.textContent = ch;
     word.append(letter);
@@ -187,6 +197,7 @@ function renderPlainText(state: TextMorphState, text: string[]): void {
 
 function getElementPosition(element: Element): { x: number; y: number } {
   const bounds = element.getBoundingClientRect();
+
   return { x: bounds.left, y: bounds.top };
 }
 
@@ -194,6 +205,7 @@ function applyMotionStyles(motions: ReadonlyMap<HTMLSpanElement, LetterMotion>):
   for (const [element, letterMotion] of motions) {
     const x = letterMotion.x?.current ?? 0;
     const y = letterMotion.y?.current ?? 0;
+
     element.style.translate = x === 0 && y === 0 ? "" : `${x.toFixed(2)}px ${y.toFixed(2)}px`;
     if (letterMotion.opacity) element.style.opacity = Math.min(1, Math.max(0, letterMotion.opacity.current)).toFixed(3);
   }

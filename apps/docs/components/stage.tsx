@@ -1,6 +1,6 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CodeIcon, Copy01Icon, RotateLeft01Icon, Tick01Icon, ViewIcon } from "@hugeicons/core-free-icons";
+import { CodeIcon, Copy01Icon, RotateLeft01Icon, CheckIcon, ViewIcon } from "@hugeicons/core-free-icons";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 export interface StageProps {
@@ -63,7 +63,7 @@ export function Stage({ children, code, name, width = 900, minHeight = 480, wide
             >
               {name}
               {copied ? (
-                <HugeiconsIcon icon={Tick01Icon} className="size-3.5" aria-label="Install command copied" />
+                <HugeiconsIcon icon={CheckIcon} className="size-3.5" aria-label="Install command copied" />
               ) : (
                 <HugeiconsIcon icon={Copy01Icon} className="size-3.5" aria-label="Copy install command" />
               )}

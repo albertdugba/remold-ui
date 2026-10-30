@@ -9,33 +9,25 @@ description: "A canvas scene of objects that springs between layouts."
 
 ## Installation
 
-<Install packages="@remold-ui/react" vanilla="@remold-ui/canvas" />
+<Install packages="@remold-ui/react" />
+
+Using plain JavaScript? Install `@remold-ui/canvas` instead.
 
 ## Usage
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 <Remold.Scene label="Our architecture" objects={objects} layouts={layouts} layout={layout} />
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
+```js tab="JavaScript"
 import { scene } from "@remold-ui/canvas";
 
-const diagram = scene(canvas, { label: "Our architecture", objects, layouts });
+const diagram = scene(canvas, { label: "Our architecture", objects, layouts, initial: "simple" });
 
-// Spring every object, link and the camera to another layout.
-diagram.to("scaled");
+diagram.to(layout);
 ```
 
-</Variant>
-</CodeVariants>
-
-Describe the objects once and each layout as plain data: where every object sits, and the camera. Changing `layout` springs every object, link and the camera to the new arrangement. People can drag to turn the scene, tap an object to focus it, or tab through the objects with a screen reader. Without React, use [scene()](/docs/canvas/scene).
+Describe the objects once and each layout as plain data: where every object sits, and the camera. Changing `layout` (or calling `to` with a layout's name) springs every object, link and the camera to the new arrangement. People can drag to turn the scene, tap an object to focus it, or tab through the objects with a screen reader.
 
 ## API reference
 

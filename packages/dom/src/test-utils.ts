@@ -10,9 +10,11 @@ let installed = false;
 /** Make `getBoundingClientRect` read `data-box`. */
 export function useFakeLayout(): void {
   if (installed) return;
+
   installed = true;
   Element.prototype.getBoundingClientRect = function (this: Element) {
     const [x = 0, y = 0, width = 0, height = 0] = (this.getAttribute("data-box") ?? "").split(" ").filter(Boolean).map(Number);
+
     return {
       x,
       y,
@@ -35,6 +37,7 @@ export function manualLoop() {
   const loop: FrameLoop = {
     add(callback) {
       callbacks.add(callback);
+
       return () => callbacks.delete(callback);
     },
   };
@@ -58,8 +61,10 @@ export function manualLoop() {
 export function mount(html: string, box = "0 0 1000 800"): HTMLElement {
   document.body.replaceChildren();
   const root = document.createElement("div");
+
   root.setAttribute("data-box", box);
   root.innerHTML = html;
   document.body.append(root);
+
   return root;
 }

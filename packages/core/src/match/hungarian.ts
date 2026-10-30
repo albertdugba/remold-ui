@@ -7,7 +7,9 @@
 export function hungarian(cost: readonly (readonly number[])[]): number[] {
   const rows = cost.length;
   const cols = rows > 0 ? cost[0]!.length : 0;
+
   if (rows === 0 || cols === 0) return new Array<number>(rows).fill(-1);
+
   for (const row of cost) {
     if (row.length !== cols) throw new RangeError("hungarian: every row needs the same number of columns");
   }
@@ -16,6 +18,7 @@ export function hungarian(cost: readonly (readonly number[])[]): number[] {
     const transposed = Array.from({ length: cols }, (_, columnIndex) => cost.map((row) => row[columnIndex]!));
     const colToRow = hungarian(transposed);
     const result = new Array<number>(rows).fill(-1);
+
     colToRow.forEach((rowIndex, columnIndex) => {
       if (rowIndex >= 0) result[rowIndex] = columnIndex;
     });
@@ -23,6 +26,7 @@ export function hungarian(cost: readonly (readonly number[])[]): number[] {
   }
 
   const flatCosts = new Float64Array(rows * cols);
+
   cost.forEach((row, rowIndex) => {
     flatCosts.set(row, rowIndex * cols);
   });
@@ -50,6 +54,7 @@ export function solve({ cost, rows, cols }: SolveOptions): Int32Array {
   for (let row = 1; row <= rows; row++) {
     rowAtColumn[0] = row;
     let currentColumn = 0;
+
     minimumSlack.fill(Infinity);
     visitedColumns.fill(0);
     do {
@@ -58,9 +63,12 @@ export function solve({ cost, rows, cols }: SolveOptions): Int32Array {
       const rowOffset = (currentRow - 1) * cols - 1;
       let smallestSlack = Infinity;
       let nextColumn = 0;
+
       for (let column = 1; column <= cols; column++) {
         if (visitedColumns[column]) continue;
+
         const reducedCost = cost[rowOffset + column]! - rowPotential[currentRow]! - columnPotential[column]!;
+
         if (reducedCost < minimumSlack[column]!) {
           minimumSlack[column] = reducedCost;
           previousColumn[column] = currentColumn;
@@ -82,14 +90,17 @@ export function solve({ cost, rows, cols }: SolveOptions): Int32Array {
     } while (rowAtColumn[currentColumn] !== 0);
     do {
       const precedingColumn = previousColumn[currentColumn]!;
+
       rowAtColumn[currentColumn] = rowAtColumn[precedingColumn]!;
       currentColumn = precedingColumn;
     } while (currentColumn !== 0);
   }
 
   const columnByRow = new Int32Array(rows).fill(-1);
+
   for (let column = 1; column <= cols; column++) {
     const row = rowAtColumn[column]!;
+
     if (row > 0) columnByRow[row - 1] = column - 1;
   }
   return columnByRow;
@@ -109,6 +120,7 @@ export interface Assignment {
 export function assign(similarity: readonly (readonly number[])[], threshold: number): Assignment[] {
   const cost = similarity.map((row) => row.map((score) => 1 - Math.max(score, threshold)));
   const pairs: Assignment[] = [];
+
   hungarian(cost).forEach((to, from) => {
     if (to < 0) return;
     const score = similarity[from]![to]!;
@@ -133,17 +145,23 @@ export function assignFlat({
   threshold: number;
 }): Assignment[] {
   const pairs: Assignment[] = [];
+
   if (rows === 0 || cols === 0) return pairs;
+
   let columnOf: Int32Array;
+
   if (rows <= cols) {
     const cost = new Float64Array(rows * cols);
+
     for (let index = 0; index < cost.length; index++) cost[index] = 1 - Math.max(similarity[index]!, threshold);
     columnOf = solve({ cost, rows, cols });
   } else {
     const cost = new Float64Array(rows * cols);
+
     for (let row = 0; row < rows; row++)
       for (let column = 0; column < cols; column++) cost[column * rows + row] = 1 - Math.max(similarity[row * cols + column]!, threshold);
     const rowOf = solve({ cost, rows: cols, cols: rows });
+
     columnOf = new Int32Array(rows).fill(-1);
     rowOf.forEach((rowIndex, columnIndex) => {
       if (rowIndex >= 0) columnOf[rowIndex] = columnIndex;
@@ -151,8 +169,11 @@ export function assignFlat({
   }
   for (let from = 0; from < rows; from++) {
     const to = columnOf[from]!;
+
     if (to < 0) continue;
+
     const score = similarity[from * cols + to]!;
+
     if (score >= threshold) pairs.push({ from, to, score });
   }
   return pairs;

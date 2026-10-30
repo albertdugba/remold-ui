@@ -148,34 +148,59 @@
 .ak-form-foot {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .ak-env {
   display: flex;
+  flex: 1;
+  min-width: 0;
   gap: 2px;
-  margin-right: auto;
+  height: 32px;
   padding: 2px;
-  border-radius: 9px;
-  background: color-mix(in oklab, var(--ak-ink) 6%, transparent);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--ak-ink) 8%, var(--ak-field));
 }
 
 .ak-env-item {
-  height: 26px;
-  padding: 0 10px;
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+  padding: 0 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   background: none;
   color: var(--ak-muted);
   font: inherit;
-  font-size: 12px;
-  font-weight: 550;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .ak-env-item[data-pressed] {
   background: var(--ak-surface);
   color: var(--ak-ink);
+  box-shadow:
+    0 1px 2px rgb(24 24 27 / 0.06),
+    0 0 0 0.5px rgb(24 24 27 / 0.08);
+}
+
+.ak-env-item .ak-dot,
+.ak-env-item .ak-dot[data-env="test"] {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+.ak-actions {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
 }
 
 /* The secret, shown once: a dark vault that later folds into its row */

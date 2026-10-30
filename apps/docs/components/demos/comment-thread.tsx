@@ -474,8 +474,8 @@ export function CommentThreadDemo({
       <Remold.Connectors
         ref={connectorRoot}
         className={`cx-stage${hover ? " focus" : ""}`}
-        radius={24}
-        gap={8}
+        radius={16}
+        gap={4}
         onPointerLeave={() => setHover(null)}
       >
           <motion.div layout="position" {...connectorMotion} className="cx-top">

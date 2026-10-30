@@ -1,6 +1,6 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, ArrowRight01Icon, MinusSignIcon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowRight01Icon, MinusSignIcon, CheckIcon } from "@hugeicons/core-free-icons";
 import { NumberField } from "@base-ui/react/number-field";
 import { Slider } from "@base-ui/react/slider";
 import { Toggle } from "@base-ui/react/toggle";
@@ -106,7 +106,7 @@ export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
   const full = (tier.price ?? 0) * seats;
   const saving = (full - monthly) * 12;
   const features = TIERS.filter((t) => t.from <= tier.from).flatMap((t) => t.adds.map((f) => ({ f, tier: t.name })));
-  const shown = Math.min(seats, FACES.length - 1);
+  const shown = Math.min(seats, 4);
   const more = seats - shown;
 
   const setSeats = (n: number) => take((s) => ({ ...s, seats: Math.max(1, Math.min(999, Math.round(n))) }));
@@ -323,7 +323,7 @@ export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
                     animate={{ scale: 1 }}
                     transition={{ ...POP, delay: 0.12 }}
                   >
-                    <HugeiconsIcon icon={Tick01Icon} aria-hidden="true" />
+                    <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
                   </motion.span>
                   {f}
                 </span>

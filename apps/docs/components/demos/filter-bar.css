@@ -51,15 +51,14 @@
   list-style: none;
 }
 
-/* A token: field, operator, value and remove, joined into one segmented pill */
+/* A token: field, value and remove, joined into one filled pill so it sits off the card. */
 .flt-token {
   display: inline-flex;
   flex: none;
   height: 28px;
   overflow: hidden;
   border-radius: 8px;
-  box-shadow: inset 0 0 0 1px var(--flt-line);
-  background: var(--flt-surface);
+  background: var(--flt-field);
 }
 
 .flt-seg {
@@ -97,7 +96,7 @@
 .flt-value:hover,
 .flt-value[data-popup-open],
 .flt-remove:hover {
-  background: var(--flt-field);
+  background: color-mix(in oklab, var(--flt-ink) 6%, var(--flt-field));
 }
 
 .flt-roll {
@@ -332,7 +331,12 @@
 }
 
 .flt-tick {
+  display: inline-flex;
   margin-left: auto;
   color: var(--flt-accent);
-  font-size: 12px;
+}
+
+.flt-tick svg {
+  width: 14px;
+  height: 14px;
 }

@@ -34,6 +34,7 @@
 .um {
   display: grid;
   width: min(100%, 420px);
+  container-type: inline-size;
   padding: 18px;
   border-radius: 22px;
   background: var(--um-surface);
@@ -348,5 +349,33 @@
 @media (prefers-reduced-motion: reduce) {
   .um-row[data-tone="over"] .um-fill {
     animation: none;
+  }
+}
+
+/* A narrow card wraps a row instead of cutting the numbers off. */
+@container (max-width: 400px) {
+  .um {
+    padding: 14px;
+  }
+
+  .um-head,
+  .um-row-top,
+  .um-banner,
+  .um-lines li {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .um-lines li {
+    height: auto;
+    overflow: visible;
+    line-height: 1.4;
+    padding-block: 2px;
+  }
+
+  .um-value,
+  .um-cycle {
+    margin-left: auto;
+    font-size: 12px;
   }
 }

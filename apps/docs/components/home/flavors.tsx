@@ -11,14 +11,16 @@ import { FLAVOR_NAMES as NAMES, FLAVORS, type Flavor } from "./flavors-code";
 export function Flavors({ highlighted }: { highlighted: Record<Flavor, ReactNode> }) {
   const [flavor, setFlavor] = useState<Flavor>("React");
   const [copied, setCopied] = useState(false);
+
   const { file, code } = FLAVORS[flavor];
+
   return (
     <div className="fx">
       <div className="fx-bar">
         <div className="fx-tabs" role="tablist" aria-label="Layer">
-          {NAMES.map((n) => (
-            <button key={n} type="button" role="tab" aria-selected={flavor === n} onClick={() => setFlavor(n)}>
-              {n}
+          {NAMES.map((name) => (
+            <button key={name} type="button" role="tab" aria-selected={flavor === name} onClick={() => setFlavor(name)}>
+              {name}
             </button>
           ))}
         </div>

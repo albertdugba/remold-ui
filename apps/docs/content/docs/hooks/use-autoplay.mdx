@@ -19,6 +19,8 @@ function Showcase() {
 }
 ```
 
+React only for now. In plain JavaScript, step your own state on a timer and run each change through `transition` from `@remold-ui/dom`.
+
 - It only plays while the element with `ref` is on screen, so a page full of demos doesn't run them all at once.
 - The first click, tap or key press inside the element stops it for good: the person is in charge now. The button with `toggleProps` is the exception, so it can pause and play.
 - Give the steps different lengths with a function: `every: (step) => (step === last ? 4000 : 2000)`.

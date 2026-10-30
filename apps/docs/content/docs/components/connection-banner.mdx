@@ -1,8 +1,8 @@
 ---
 title: "Back online"
-description: "Losing the connection gracefully: a banner says your changes are kept on this device, unsynced edits are marked, and when you're back the banner folds into a small green \"Back online\" pill."
+description: "A support reply that survives a dropped connection: the draft stays on this device, the unsent line is marked, and when you're back the banner folds into a small green \"Back online\" pill."
 status: "new"
-tags: ["Layout", "Base UI"]
+tags: ["Motion", "Base UI"]
 ---
 
 <Stage name="connection-banner" code={<Source demo="connection-banner" />} minHeight={560}>
@@ -13,9 +13,9 @@ It plays a short scene while it's on screen.
 
 ## Things to try
 
-- **Go offline** with the switch. A banner slides in above the document saying your changes are kept on this device, and counts down to its next try.
-- **Write something meanwhile.** It's marked as not yet synced.
-- **Come back online.** The banner folds into a small green "Back online" pill, the marks clear, and the pill steps out of the way.
+- **Go offline** with the switch. A banner slides in above the reply saying the draft stays on this device, and counts down to its next try.
+- **The reply written while you're offline** is marked until it sends.
+- **Come back online.** The banner folds into a small green "Back online" pill, the mark clears, and the pill steps out of the way.
 - **Turn off your network for real.** It listens to the browser's own online and offline events, not just the switch.
 
 ## Install
@@ -30,5 +30,5 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **Banner to pill.** The banner and the pill are different markup, so [Layout](/docs/primitives/layout) animates the change, pairing them with no ids.
+- **Banner to pill.** The banner and the pill are one element with `layout`, so Motion animates the box between them. The reply has `layout` too, and follows.
 - The switch that simulates a dropped connection is Base UI's Switch.

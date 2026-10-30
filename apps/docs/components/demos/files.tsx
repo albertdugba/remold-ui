@@ -21,18 +21,18 @@ const FILES: File[] = [
 ];
 
 type Sort = "name" | "size" | "modified";
-const SORTS: Record<Sort, (a: File, b: File) => number> = {
-  name: (a, b) => a.name.localeCompare(b.name),
-  size: (a, b) => b.size - a.size,
-  modified: (a, b) => a.modified - b.modified,
+
+const SORTS: Record<Sort, (left: File, right: File) => number> = {
+  name: (left, right) => left.name.localeCompare(right.name),
+  size: (left, right) => right.size - left.size,
+  modified: (left, right) => left.modified - right.modified,
 };
 
 export function FilesDemo({ framed = true }: { framed?: boolean }) {
   const [sort, setSort] = useState<Sort>("name");
   const [kind, setKind] = useState<File["kind"] | "All">("All");
-  const shown = FILES.filter((f) => kind === "All" || f.kind === kind).sort(
-    SORTS[sort],
-  );
+
+  const shown = FILES.filter((file) => kind === "All" || file.kind === kind).sort(SORTS[sort]);
 
   const body = (
     <div className="rm-files">
@@ -59,23 +59,21 @@ export function FilesDemo({ framed = true }: { framed?: boolean }) {
         />
       </div>
       <Remold.Layout trigger={`${sort}:${kind}`} className="rm-files-list">
-        {shown.map((f) => (
-          <div key={f.name} className="rm-files-row">
-            <span
-              className={`rm-files-icon ${f.kind.toLowerCase()}`}
-              aria-hidden="true"
-            />
-            <span className="rm-files-name">{f.name}</span>
+        {shown.map((file) => (
+          <div key={file.name} className="rm-files-row">
+            <span className={`rm-files-icon ${file.kind.toLowerCase()}`} aria-hidden="true" />
+            <span className="rm-files-name">{file.name}</span>
             <span className="rm-files-meta">
-              {f.size < 1 ? `${Math.round(f.size * 1000)} KB` : `${f.size} MB`}
+              {file.size < 1 ? `${Math.round(file.size * 1000)} KB` : `${file.size} MB`}
             </span>
             <span className="rm-files-meta rm-files-date">
-              {f.modified === 1 ? "Yesterday" : `${f.modified} days ago`}
+              {file.modified === 1 ? "Yesterday" : `${file.modified} days ago`}
             </span>
           </div>
         ))}
       </Remold.Layout>
     </div>
   );
+
   return framed ? <Frame>{body}</Frame> : body;
 }

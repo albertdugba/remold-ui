@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight01Icon, CheckmarkCircle02Icon, CreditCardIcon, PackageIcon, RotateLeft01Icon, Tick01Icon, TruckIcon } from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, CheckmarkCircle02Icon, CreditCardIcon, PackageIcon, RotateLeft01Icon, CheckIcon, TruckIcon } from "@hugeicons/core-free-icons";
 import { ProductSummary } from "./product-summary";
 import { RETURN_REASONS, type RefundMethod, type ReturnReason } from "./return-data";
 
@@ -85,7 +85,7 @@ export function ReturnForm({ reason, refundMethod, onReasonChange, onRefundMetho
                 onChange={() => onReasonChange(option.label)}
               />
               <span className="hret-radio-mark">
-                <HugeiconsIcon icon={Tick01Icon} size={13} strokeWidth={2.5} />
+                <HugeiconsIcon icon={CheckIcon} size={13} strokeWidth={2.5} />
               </span>
               <span>
                 <strong>{option.label}</strong>
@@ -160,7 +160,7 @@ export function SubmittedView({ refundMethod }: { refundMethod: RefundMethod }) 
 
       <div className="hret-success-card">
         <div className="hret-success-icon">
-          <HugeiconsIcon icon={Tick01Icon} size={27} strokeWidth={2.2} />
+          <HugeiconsIcon icon={CheckIcon} size={27} strokeWidth={2.2} />
         </div>
         <span className="hret-overline">REQUEST RECEIVED</span>
         <h3>Your return is underway.</h3>
@@ -172,7 +172,7 @@ export function SubmittedView({ refundMethod }: { refundMethod: RefundMethod }) 
 
       <div className="hret-next-steps">
         <span className="hret-step-line done">
-          <HugeiconsIcon icon={Tick01Icon} size={13} /> Request sent
+          <HugeiconsIcon icon={CheckIcon} size={13} /> Request sent
         </span>
         <span className="hret-step-connector" />
         <span className="hret-step-line">

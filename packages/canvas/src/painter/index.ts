@@ -96,7 +96,9 @@ export interface Painter<V extends PainterValues> {
 
 export function painter<V extends PainterValues = PainterValues>(canvas: HTMLCanvasElement, options: PainterOptions<V>): Painter<V> {
   if (typeof options?.draw !== "function") throw new TypeError("painter: options.draw must be a function that paints a frame");
+
   const precision = options.precision ?? 0.001;
+
   if (!(precision > 0)) throw new RangeError(`painter: precision must be positive, got ${precision}`);
   const context = canvas.getContext("2d");
   if (!context) throw new Error("painter: this canvas has no 2D context (is it already used for WebGL?)");

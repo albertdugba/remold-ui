@@ -1,5 +1,3 @@
-/* A connection banner. Styling only: Remold.Layout animates the banner arriving and folding into the
-   pill; the switch is Base UI. */
 .cn {
   --cn-surface: #ffffff;
   --cn-field: #f4f4f5;
@@ -127,17 +125,53 @@
   justify-items: center;
 }
 
-/* The banner: full width, warm */
-.cn-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+.cn-status {
+  display: grid;
+  align-items: center;
+  justify-self: stretch;
+  box-sizing: border-box;
+  overflow: hidden;
   width: 100%;
   margin-top: 12px;
   padding: 11px 10px 11px 12px;
   border-radius: 14px;
   background: var(--cn-warn-bg);
   box-shadow: inset 0 0 0 1px var(--cn-warn-line);
+  color: var(--cn-ink);
+  transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
+}
+
+.cn-status[data-phase="back"] {
+  justify-self: center;
+  justify-items: center;
+  width: max-content;
+  padding: 6px 12px 6px 9px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--cn-good) 13%, var(--cn-surface));
+  box-shadow: none;
+  color: var(--cn-good);
+}
+
+.cn-banner-face {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.cn-pill-face {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cn-pill-face svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 3;
 }
 
 .cn-banner-icon {
@@ -185,47 +219,54 @@
   cursor: pointer;
 }
 
-/* The pill it folds into: small, green, centred */
-.cn-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 6px 12px 6px 9px;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--cn-good) 13%, var(--cn-surface));
-  color: var(--cn-good);
+.cn-thread {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.cn-msg {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--cn-field);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.cn-msg b {
   font-size: 12.5px;
   font-weight: 600;
 }
 
-.cn-pill svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 3;
-}
-
-.cn-body {
-  margin-top: 14px;
-  font-size: 13.5px;
-  line-height: 1.6;
-}
-
-.cn-body h4 {
-  margin: 0 0 6px;
-  font-size: 15px;
-  font-weight: 650;
-}
-
-.cn-body p {
-  margin: 0 0 8px;
-}
-
-.cn-muted {
+.cn-msg span {
   color: var(--cn-muted);
 }
 
-/* Written while offline: marked until it syncs */
+.cn-composer {
+  display: grid;
+  gap: 2px;
+  align-content: center;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--cn-surface);
+  box-shadow: inset 0 0 0 1px var(--cn-line);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.cn-composer-who {
+  color: var(--cn-quiet);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.cn-placeholder {
+  color: var(--cn-quiet);
+}
+
 .cn-new {
   text-decoration: underline dotted transparent;
   text-decoration-thickness: 2px;

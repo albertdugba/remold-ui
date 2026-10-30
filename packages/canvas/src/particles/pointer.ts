@@ -18,10 +18,12 @@ export function createPointerController({
   wake: () => void;
 }): { pointer: ParticlePointer; destroy: () => void } {
   const pointer = { x: value(0, { precision: 0.5 }), y: value(0, { precision: 0.5 }), presence: value(0, { precision: 0.005 }) };
+
   if (!enabled) return { pointer, destroy: () => {} };
 
   const move = (event: PointerEvent) => {
     const position = pointerPosition({ event, canvas, size: getSize() });
+
     if (pointer.presence.target === 0) {
       pointer.x.set(position.x);
       pointer.y.set(position.y);
@@ -38,6 +40,7 @@ export function createPointerController({
   };
   canvas.addEventListener("pointermove", move);
   canvas.addEventListener("pointerleave", leave);
+
   return {
     pointer,
     destroy: () => {
@@ -59,5 +62,6 @@ function pointerPosition({
   const bounds = canvas.getBoundingClientRect();
   const scaleX = bounds.width > 0 ? size.width / bounds.width : 1;
   const scaleY = bounds.height > 0 ? size.height / bounds.height : 1;
+
   return { x: (event.clientX - bounds.left) * scaleX, y: (event.clientY - bounds.top) * scaleY };
 }

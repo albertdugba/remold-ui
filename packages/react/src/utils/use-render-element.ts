@@ -65,6 +65,7 @@ export function useRenderElement<State, Tag extends IntrinsicElementName>(
   } as HTMLProps<ElementFromTag<Tag>>;
 
   if (typeof render === "function") return render(elementProps, state);
+
   if (!isValidElement(render)) return createElement(tag, elementProps);
 
   const renderedProps = render.props;

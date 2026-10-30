@@ -5,7 +5,7 @@ description: "Let a sheet, card or panel be pulled away: it follows the finger, 
 
 ## Usage
 
-```tsx
+```tsx tab="React" tab-group="lang"
 import { Remold, useDragToDismiss } from "@remold-ui/react";
 
 function CardPage({ card, onClose }) {
@@ -17,22 +17,25 @@ function CardPage({ card, onClose }) {
 <Remold.Layout trigger={open}>{open ? <CardPage card={open} onClose={close} /> : <Wallet />}</Remold.Layout>;
 ```
 
+```js tab="JavaScript"
+import { dragToDismiss, transition } from "@remold-ui/dom";
+
+const drag = dragToDismiss(card, {
+  onDismiss: () => transition(view, () => view.replaceChildren(renderWallet())),
+});
+
+// Later, when the card goes away for good:
+drag.destroy();
+```
+
+Without React, `dragToDismiss` takes the element and returns `reset()` and `destroy()`. There's no `disabled` option: call `destroy()` to turn it off.
+
 - It follows the finger along one axis. Pulling the wrong way stretches with resistance instead of moving freely.
 - Let go past `distance`, or flick faster than `velocity`, and `onDismiss` runs. Otherwise it springs back, starting at the speed of your finger.
 - After a dismiss the offset stays on the element, so the `Layout` transition that follows flies it from exactly there.
 - Taps and clicks inside still work: a press only becomes a drag after a few pixels, and a drag never ends in a click. Text fields and anything marked `data-rm-no-drag` never start one.
 - The page can still scroll along the other axis (it sets `touch-action` for you).
 - With reduced motion it jumps back instead of springing.
-
-## Without React
-
-```ts
-import { dragToDismiss } from "@remold-ui/dom";
-
-const drag = dragToDismiss(sheet, { onDismiss: close, axis: "y" });
-// later
-drag.destroy();
-```
 
 ## Options
 

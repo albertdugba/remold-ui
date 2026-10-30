@@ -19,6 +19,7 @@ const significantTokens = (node: PreparedNode) => node.significant;
 function isPartOf(part: PreparedNode, whole: PreparedNode): boolean {
   const partTokens = part.significant;
   const wholeTokens = whole.significantSet;
+
   return partTokens.length > 0 && partTokens.length < wholeTokens.size && partTokens.every((token) => wholeTokens.has(token));
 }
 
@@ -35,19 +36,25 @@ function findGroups(
   partFrom: ReadonlyMap<number, number>,
 ): Map<number, number[]> {
   const claims = new Map<number, number[]>();
+
   for (const part of parts) {
     if (!part.text) continue;
+
     const partner = partFrom.get(part.index);
     let best = -1;
     let bestScore = 0;
+
     for (const whole of wholes) {
       if (!whole.text || !isPartOf(part, whole)) continue;
       // Already matched one-to-one to some other whole: leave it.
       if (partner !== undefined && partner !== whole.index) continue;
       // The whole is matched to something that isn't one of its parts: leave it.
       const current = wholeTo.get(whole.index);
+
       if (current !== undefined && current !== part.index && !isPartOf(parts[current]!, whole)) continue;
+
       const score = closeness(part, whole) + (current === part.index ? 1 : 0);
+
       if (score > bestScore) {
         bestScore = score;
         best = whole.index;
@@ -57,12 +64,14 @@ function findGroups(
   }
 
   const groups = new Map<number, number[]>();
+
   for (const [whole, claimed] of claims) {
     if (claimed.length < 2) continue;
     // The parts must cover most of the whole, or it's a coincidence of shared words.
     const covered = new Set(claimed.flatMap((partIndex) => significantTokens(parts[partIndex]!)));
     const tokens = new Set(significantTokens(wholes[whole]!));
     let hits = 0;
+
     for (const t of tokens) if (covered.has(t)) hits++;
     if (hits / tokens.size >= 0.6) groups.set(whole, claimed);
   }
@@ -83,6 +92,7 @@ export function splitsAndMerges(
 
   const splits: Split[] = [];
   const before = maps(remaining);
+
   for (const [from, to] of findGroups(fromNodes, toNodes, before.forward, before.backward)) {
     splits.push({ from, to });
     remaining = remaining.filter((p) => p.from !== from && !to.includes(p.to));
@@ -90,6 +100,7 @@ export function splitsAndMerges(
 
   const merges: Merge[] = [];
   const after = maps(remaining);
+
   for (const [to, from] of findGroups(toNodes, fromNodes, after.backward, after.forward)) {
     merges.push({ from, to });
     remaining = remaining.filter((p) => p.to !== to && !from.includes(p.from));

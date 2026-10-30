@@ -44,21 +44,25 @@ const LENGTH = /(-?\d*\.?\d+)px/g;
 /** Splits a computed box-shadow around its pixel lengths; `null` when there's nothing to correct. */
 export function parseShadow(value: string): ShadowTemplate | null {
   if (!value || value === "none") return null;
+
   const text: string[] = [];
   const lengths: number[] = [];
   let last = 0;
+
   for (const m of value.matchAll(LENGTH)) {
     text.push(value.slice(last, m.index));
     lengths.push(Number.parseFloat(m[1]!));
     last = m.index! + m[0].length;
   }
   text.push(value.slice(last));
+
   return lengths.some((n) => n !== 0) ? { text, lengths } : null;
 }
 
 /** The shadow with every length divided by `scale`, so it looks the same size on the scaled box. */
 export function scaledShadow(template: ShadowTemplate, scale: number): string {
   let out = template.text[0]!;
+
   for (let i = 0; i < template.lengths.length; i++) {
     out += `${(template.lengths[i]! / scale).toFixed(3)}px${template.text[i + 1]!}`;
   }

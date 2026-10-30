@@ -22,6 +22,7 @@ export function springToCss(config: SpringConfig, samples = 40): CssSpring {
   if (!Number.isInteger(samples) || samples < 2) {
     throw new RangeError(`springToCss: samples must be a whole number of at least 2, got ${samples}`);
   }
+
   const coefficients = springCoefficients(config);
   const state = { value: 0, velocity: 0 };
   const step = 1 / 240;

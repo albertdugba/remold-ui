@@ -1,11 +1,10 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, CheckIcon } from "@hugeicons/core-free-icons";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 export const FRAMEWORKS = [
   { id: "react", label: "React" },
-  { id: "js", label: "JavaScript" },
   { id: "vue", label: "Vue" },
   { id: "svelte", label: "Svelte" },
   { id: "angular", label: "Angular" },
@@ -107,7 +106,7 @@ export function FrameworkMenu({ available }: { available: readonly Framework[] }
                       Soon
                     </span>
                   )}
-                  {f.id === current && <HugeiconsIcon icon={Tick01Icon} className="size-3.5" aria-hidden="true" />}
+                  {f.id === current && <HugeiconsIcon icon={CheckIcon} className="size-3.5" aria-hidden="true" />}
                 </button>
               </li>
             );

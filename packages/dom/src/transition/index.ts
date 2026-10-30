@@ -54,6 +54,7 @@ const moved = (a: PixelBox, b: PixelBox) =>
 export function summarize(before: PageSnapshot, after: PageSnapshot, matches: NodeMatches): ChangeSummary {
   const added = new Set(matches.added);
   const removed = new Set(matches.removed);
+
   return {
     moved: matches.pairs.filter((p) => moved(before.boxes[p.from]!, after.boxes[p.to]!)).length,
     changed: matches.pairs.filter((p) => before.nodes[p.from]!.text !== after.nodes[p.to]!.text).length,

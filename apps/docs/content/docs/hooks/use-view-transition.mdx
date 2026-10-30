@@ -5,10 +5,7 @@ description: "Run a change through the browser's View Transitions API, with Remo
 
 ## Usage
 
-<CodeVariants>
-<Variant framework="react">
-
-```tsx
+```tsx tab="React" tab-group="lang"
 const { ref, animate } = useViewTransition();
 
 <main ref={ref}>
@@ -16,20 +13,15 @@ const { ref, animate } = useViewTransition();
 </main>;
 ```
 
-</Variant>
-<Variant framework="js">
-
-```ts
+```js tab="JavaScript"
 import { viewTransition } from "@remold-ui/dom";
 
 openButton.addEventListener("click", () => {
-  // Every element is named for you; falls back to transition() where the API isn't available.
-  viewTransition(main, () => showPage(main, "detail"));
+  viewTransition(main, () => {
+    main.innerHTML = renderDetail(item);
+  });
 });
 ```
-
-</Variant>
-</CodeVariants>
 
 Best for large, route-sized changes, which the browser animates off the main thread. View transitions can't be interrupted, so it falls back to [useRemold](/docs/hooks/use-remold) where the API is missing, when reduced motion is on, or for very large pages.
 

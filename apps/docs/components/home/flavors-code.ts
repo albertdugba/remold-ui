@@ -7,20 +7,24 @@ export const FLAVORS = {
 export function Inbox({ messages, sort }) {
   return (
     <Remold.Layout trigger={sort}>
-      {messages.map((m) => <Message key={m.id} {...m} />)}
+      {messages.map((message) => (
+        <Message key={message.id} {...message} />
+      ))}
     </Remold.Layout>
   );
 }`,
   },
-  DOM: {
-    file: "inbox.ts",
+  JS: {
+    file: "inbox.js",
     code: `import { transition } from '@remold-ui/dom';
 
-const inbox = document.querySelector('#inbox');
+// Any element. Any framework, or none.
+const list = document.querySelector('ul');
 
-transition(inbox, () => {
-  inbox.innerHTML = renderMessages(messages, sort);
-});`,
+sort.onclick = () =>
+  transition(list, () => {
+    list.innerHTML = render(sorted);
+  });`,
   },
   Canvas: {
     file: "hero.ts",

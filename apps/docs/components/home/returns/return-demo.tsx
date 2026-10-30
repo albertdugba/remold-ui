@@ -1,7 +1,7 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowUpRight01Icon, HelpCircleIcon, PackageIcon, PauseIcon, PlayIcon, RotateLeft01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { ArrowUpRight01Icon, HelpCircleIcon, PackageIcon, PauseIcon, PlayIcon, RotateLeft01Icon, CheckIcon } from "@hugeicons/core-free-icons";
 import { Remold, useAutoplay } from "@remold-ui/react";
 import { useState } from "react";
 import { AUTO_RETURN_STATES, INITIAL_RETURN, type RefundMethod, type ReturnReason, type ReturnState } from "./return-data";
@@ -84,7 +84,7 @@ function ReturnAside({ phase }: { phase: ReturnState["phase"] }) {
       </div>
 
       <div className="hret-aside-foot">
-        <HugeiconsIcon icon={Tick01Icon} size={15} /> Secure, local demo · no real return is created
+        <HugeiconsIcon icon={CheckIcon} size={15} /> Secure, local demo · no real return is created
       </div>
     </aside>
   );

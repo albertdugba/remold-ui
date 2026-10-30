@@ -2,7 +2,7 @@
 title: "Live room"
 description: "A live audio room for build-in-public sessions, office hours or a launch Q&A. The speakers' stacked faces fan out onto the stage when it opens, and a listener who raises their hand moves up to speak."
 status: "new"
-tags: ["Layout"]
+tags: ["Motion"]
 ---
 
 <Stage name="live-room" code={<Source demo="live-room" />}>
@@ -30,8 +30,8 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **Same faces, different markup.** The pill's stack and the room's stage are separate pieces of markup with nothing tying them together. [Layout](/docs/primitives/layout) pairs each face by the image it shows, so a face in the stack becomes the same face on the stage, and your face in the listener grid becomes yours on stage.
-- **Only two things move.** Layout's `trigger` is whether the room is open and whether you're on stage. Whose turn it is to speak is plain CSS, so the ring never moves anything else.
-- The pill and the room match too, by the title and the listener count they both show, so the pill grows into the room rather than being swapped for it.
+- **Same faces.** Each face has a `layoutId`, so it travels from the stack to its spot on stage, and yours travels up from the listeners when you're invited.
+- **One room.** The pill and the room share a `layoutId`, so the pill grows into the room. The title, the live mark, and the listener count move with it.
+- Who is speaking is a CSS ring, so that pulse never moves the room.
 
 <Callout>The people and the room are made up. Avatars are illustrations from [DiceBear](https://www.dicebear.com) (the Notionists style).</Callout>

@@ -14,7 +14,7 @@ const QUESTIONS = [
   },
   {
     q: "Which frameworks does it support?",
-    a: "React today, as components and hooks. Without a framework, @remold-ui/dom animates any element and @remold-ui/canvas draws scenes and particles. The matching and spring maths in @remold-ui/core have no DOM at all. Vue and Angular adapters are planned.",
+    a: "Any of them, or none. React gets components and hooks. Everywhere else, @remold-ui/dom animates any element from plain JavaScript, so it works in Vue, Svelte, Astro or a server-rendered page. @remold-ui/canvas draws scenes and particles, and the maths in @remold-ui/core has no DOM at all.",
   },
   {
     q: "What happens if a change interrupts another?",

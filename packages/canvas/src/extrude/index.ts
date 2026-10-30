@@ -102,15 +102,19 @@ interface Rings {
 /** Twice the signed area of an outline on the floor: the sign gives its direction. */
 export function outlineArea(outline: Outline): number {
   let sum = 0;
+
   for (let i = 0, j = outline.length - 1; i < outline.length; j = i++) sum += outline[j]!.x * outline[i]!.y - outline[i]!.x * outline[j]!.y;
+
   return sum;
 }
 
 function inside(point: { x: number; y: number }, outline: Outline): boolean {
   let hit = false;
+
   for (let i = 0, j = outline.length - 1; i < outline.length; j = i++) {
     const a = outline[i]!;
     const b = outline[j]!;
+
     if (a.y > point.y !== b.y > point.y && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x) hit = !hit;
   }
   return hit;
@@ -126,6 +130,7 @@ function straight(c: Subpath["segments"][number]): boolean {
   const dy = c.p3.y - c.p0.y;
   const length = Math.hypot(dx, dy) || 1;
   const off = (p: { x: number; y: number }) => Math.abs((p.x - c.p0.x) * dy - (p.y - c.p0.y) * dx) / length;
+
   return off(c.p1) <= STRAIGHT && off(c.p2) <= STRAIGHT;
 }
 
@@ -136,6 +141,7 @@ function straight(c: Subpath["segments"][number]): boolean {
  */
 function sample(subpath: Subpath, perSegment: number): Outline {
   const points: Outline = [];
+
   for (const c of subpath.segments) {
     if (straight(c)) {
       points.push(c.p0);
@@ -153,7 +159,9 @@ const CACHE_LIMIT = 256;
 
 function unitRings(d: string): Rings {
   const cached = pathCache.get(d);
+
   if (cached) return cached;
+
   if (pathCache.size >= CACHE_LIMIT) pathCache.clear();
   const outlines = toCubics(parsePath(d))
     .map((s) => sample(s, 6))

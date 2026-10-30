@@ -59,6 +59,7 @@ const MAX_POINTS = 2_000_000;
 export function samplePath(path: string | readonly Subpath[], options: PathSampleOptions = {}): Point[] {
   const subpaths = typeof path === "string" ? toCubics(parsePath(path)) : path;
   const mode = options.mode ?? "fill";
+
   if (mode !== "fill" && mode !== "outline") throw new RangeError(`samplePath: mode must be "fill" or "outline", got ${mode}`);
   const fillRule = options.fillRule ?? "nonzero";
   if (fillRule !== "nonzero" && fillRule !== "evenodd") {

@@ -1,6 +1,6 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete01Icon } from "@hugeicons/core-free-icons";
+import { Eraser01Icon, CheckIcon } from "@hugeicons/core-free-icons";
 import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { MorphIcon } from "./morph-icon";
@@ -224,21 +224,48 @@ export function SendMoneyDemo({ playing }: SendMoneyDemoProps = {}) {
         </AnimatePresence>
       </div>
 
-      <div className="sm-keys" role="group" aria-label="Keypad">
-        {KEYS.map((key) => (
-          <motion.button
-            key={key}
-            type="button"
-            className="sm-key"
-            disabled={busy}
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: "spring", duration: 0.25, bounce: 0.3 }}
-            onClick={() => onKey(key)}
-            aria-label={key === "back" ? "Delete" : key === "." ? "Decimal point" : key}
-          >
-            {key === "back" ? <HugeiconsIcon icon={Delete01Icon} aria-hidden="true" /> : key}
-          </motion.button>
-        ))}
+      <div className="sm-stage">
+        <AnimatePresence initial={false}>
+          {state.phase === "sent" ? (
+            <motion.div
+              key="success"
+              className="sm-success"
+              initial={{ opacity: 0, scale: 0.72 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
+            >
+              <span className="sm-success-ring">
+                <HugeiconsIcon icon={CheckIcon} strokeWidth={2.25} aria-hidden="true" />
+              </span>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="keys"
+              className="sm-keys"
+              role="group"
+              aria-label="Keypad"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.18 } }}
+            >
+              {KEYS.map((key) => (
+                <motion.button
+                  key={key}
+                  type="button"
+                  className="sm-key"
+                  disabled={busy}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: "spring", duration: 0.25, bounce: 0.3 }}
+                  onClick={() => onKey(key)}
+                  aria-label={key === "back" ? "Backspace" : key === "." ? "Decimal point" : key}
+                >
+                  {key === "back" ? <HugeiconsIcon icon={Eraser01Icon} aria-hidden="true" /> : key}
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <motion.button
