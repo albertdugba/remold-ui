@@ -1,0 +1,78 @@
+---
+title: "Dot grid"
+description: "A dotted background that wakes up under the cursor. Dots swell and lean away from the pointer, a click sends a ripple, and your wordmark or logo can light up in the dots."
+---
+
+<Stage>
+  <DotGridDemo />
+</Stage>
+
+The grid above is one `<Remold.DotGrid>`. Each option is a different `shape`, and Shimmer is `ambient`.
+
+## Installation
+
+<Install packages="@remold-ui/react" />
+
+Using plain JavaScript? Install `@remold-ui/canvas` instead, and use `dotGrid()`.
+
+## Usage
+
+Put it behind your content. It follows the pointer over its parent, so it can keep `pointer-events: none`.
+
+```tsx tab="React" tab-group="lang"
+import { Remold } from '@remold-ui/react';
+
+<section className="relative isolate">
+  <Remold.DotGrid
+    className="pointer-events-none absolute inset-0 -z-10 size-full text-black/20 accent-indigo-500"
+    shape={{ text: "ship it" }}
+  />
+  <h1>Ship your side project this weekend.</h1>
+</section>
+```
+
+```js tab="JavaScript"
+import { dotGrid } from "@remold-ui/canvas";
+
+const grid = dotGrid(canvas, { shape: { text: "ship it" } });
+
+grid.ripple({ x: 240, y: 120 });
+grid.set({ shape: { path: logoPath }, ambient: true });
+```
+
+What you don't write:
+
+- **The grid.** Dots fill the canvas at an even spacing and refit when it resizes.
+- **The pointer.** Dots near it swell, brighten and lean away, with a soft falloff, and it trails the pointer smoothly. Touch doesn't light it up, so scrolling on a phone stays calm.
+- **Ripples.** A click sends a ring across the grid that pushes the dots as it passes.
+- **Shapes.** Text or an SVG path lights up in the dots, centred, and fades across when it changes.
+- **The plumbing.** It only draws while something is moving, pauses off screen, and holds still for reduced motion: no leaning, no ripples and no shimmer.
+
+## Colours
+
+Pass `colors`, or set them in CSS.
+
+| Colour | CSS fallback | Paints |
+| --- | --- | --- |
+| `dot` | `color` | Resting dots. A translucent colour keeps the grid quiet. |
+| `active` | `accent-color` | Dots under the pointer, in a ripple or in the shape. |
+
+To fade the grid at the edges, give the canvas a radial `mask-image`.
+
+## Options
+
+| Prop | Default | |
+| --- | --- | --- |
+| `gap` | `22` | Space between dots, in pixels. |
+| `size` | `1.2` | Resting dot radius, in pixels. |
+| `reach` | `140` | How far the pointer's glow reaches. |
+| `swell` | `1.4` | How much dots grow under the pointer. `1` doubles them. |
+| `push` | `6` | How far dots lean away from the pointer. |
+| `shape` | `null` | `{ text, font?, scale? }` or `{ path, viewBox?, scale? }` to light up. |
+| `ambient` | `false` | A slow shimmer across the grid. |
+| `ripples` | `true` | Ripple on click. |
+| `colors` | | See above. |
+| `actionsRef` | | Receives `hover(point \| null)` and `ripple(point?)`, for tours and demos. |
+| `label` | | The canvas's accessible name. Leave it out for a decorative background. |
+
+`dotGrid()` takes the same options plus `track` (the element to follow the pointer over), and returns `hover`, `ripple`, `set`, `redraw` and `destroy`.

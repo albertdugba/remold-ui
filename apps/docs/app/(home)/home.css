@@ -2,7 +2,7 @@
 
 .hm {
   /* A generous desktop frame leaves the three-column demo gallery room to breathe. */
-  --hm-max: 1760px;
+  --hm-max: 1440px;
   --hm-pad: 16px;
   --hm-ink: var(--color-fd-foreground);
   --hm-muted: var(--color-fd-muted-foreground);
@@ -922,25 +922,45 @@
 /* ───────────── Landing v3: centred hero, live showcase, galleries, dark band ───────────── */
 
 .hm-hero.center {
+  position: relative;
   display: grid;
   justify-items: center;
   text-align: center;
-  padding-top: clamp(56px, 7vw, 88px);
-  padding-bottom: clamp(32px, 4vw, 44px);
+  padding: clamp(40px, 5vw, 64px) 0 clamp(28px, 3vw, 40px);
+}
+
+.hm-hero.center::before {
+  content: "";
+  position: absolute;
+  inset: 12% 14%;
+  z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-fd-background) 78%, transparent) 45%, transparent);
+  pointer-events: none;
 }
 
 .hm-hero.center h1 {
-  max-width: 14ch;
-  font-size: clamp(42px, 7vw, 84px);
+  max-width: 16ch;
+  margin-top: 18px;
+  font-size: clamp(38px, 4.6vw, 64px);
 }
 
 .hm-hero.center .hm-lead {
-  max-width: 46ch;
-  margin-inline: auto;
+  max-width: 62ch;
+  margin: 18px auto 0;
+  font-size: 16px;
 }
 
 .hm-hero.center .hm-actions {
   justify-content: center;
+  margin-top: 26px;
+}
+
+.hm-hero.center .hm-install {
+  margin-left: 6px;
+}
+
+.hm-section.first {
+  padding-top: clamp(24px, 3vw, 40px);
 }
 
 /* The showcase: tabs, a large stage, a caption */
@@ -1300,39 +1320,26 @@
 }
 
 /* ───────────── Hero: text on top, then a wide stage with the live thread ───────────── */
-.hm-hero.top {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-  align-items: end;
-  gap: 24px 48px;
-  padding: clamp(48px, 6vw, 80px) 0 clamp(28px, 3.5vw, 40px);
+.hm-hero-band {
+  position: relative;
+  isolation: isolate;
 }
 
-.hm-hero.top h1 {
-  max-width: 13ch;
-  margin-top: 18px;
-  font-size: clamp(42px, 5.4vw, 76px);
+.hm-hero-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  color: color-mix(in oklab, var(--hm-ink) 11%, transparent);
+  accent-color: #6d5dfc;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 70% 90% at 50% 40%, #000 35%, transparent 90%);
+  mask-image: radial-gradient(ellipse 70% 90% at 50% 40%, #000 35%, transparent 90%);
 }
 
-.hm-hero.top .hm-actions {
-  margin-top: 28px;
-}
-
-.hm-hero-side {
-  display: grid;
-  gap: 16px;
-  justify-items: start;
-  padding-bottom: 4px;
-}
-
-.hm-hero-side .hm-lead {
-  margin: 0;
-  max-width: 42ch;
-  font-size: 16px;
-}
-
-.hm-hero-side .hm-install {
-  width: fit-content;
+.dark .hm-hero-grid {
+  accent-color: #a99dff;
 }
 
 /* "New: …", a small pill above the headline */
@@ -1528,9 +1535,6 @@
 }
 
 @media (max-width: 860px) {
-  .hm-hero.top {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .hst {
     padding: 10px;
     border-radius: 20px;

@@ -24,6 +24,8 @@ export type {
 } from "./use-spring-press/types.js";
 export type { BaseProps, RenderProp } from "./utils/use-render-element.js";
 export type { ParticleShape } from "./particles/types.js";
+export type { GlobeArcEvent, GlobePulse } from "./globe/types.js";
+export type { RemoldDotGridActions as DotGridActions } from "./dot-grid/types.js";
 export type {
   Transition,
   TransitionOptions,

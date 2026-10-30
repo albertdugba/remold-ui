@@ -156,9 +156,19 @@ const ITEMS = [
     "A fundraising goal told in dots: every donation flies in as particles and fills the picture of what it pays for, until it bursts into a thank you.",
   ],
   [
-    "training-plan",
-    "Training plan",
-    "A Couch to 5K training plan: finish a workout and a pulse runs down the plan to unlock the next, with a session to choose and a finisher medal at the end.",
+    "dot-grid-hero",
+    "Dot grid hero",
+    "A landing page hero on a dotted background that wakes up under the cursor: dots swell and lean away as you move, and a click sends a ripple across.",
+  ],
+  [
+    "focus-timer",
+    "Focus timer",
+    "A Pomodoro focus timer drawn as a particle hourglass: the sand really falls as the session runs, freezes on pause, and the glass flips into the break.",
+  ],
+  [
+    "visitors-globe",
+    "Live visitors",
+    "A real-time visitors panel: a glowing planet rises from the bottom of the card while signups and upgrades pulse at their cities and invites fly between them.",
   ],
   [
     "api-keys",

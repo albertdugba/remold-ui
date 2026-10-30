@@ -47,12 +47,16 @@ const OtpInputDemo = dynamic(
   () => import("../demos/otp-input").then((m) => m.OtpInputDemo),
   { ssr: false },
 );
-const TrainingPlanDemo = dynamic(
-  () => import("../demos/training-plan").then((m) => m.TrainingPlanDemo),
-  { ssr: false },
-);
 const DonationGoalDemo = dynamic(
   () => import("../demos/donation-goal").then((m) => m.DonationGoalDemo),
+  { ssr: false },
+);
+const VisitorsGlobeDemo = dynamic(
+  () => import("../demos/visitors-globe").then((m) => m.VisitorsGlobeDemo),
+  { ssr: false },
+);
+const FocusTimerDemo = dynamic(
+  () => import("../demos/focus-timer").then((m) => m.FocusTimerDemo),
   { ssr: false },
 );
 const LiveRoomDemo = dynamic(
@@ -476,17 +480,6 @@ function allCards() {
       </PartCard>
       <PartCard
         featured
-        kicker="Connectors · Motion"
-        category="morphing"
-        title="Training plan"
-        docs="/docs/components/training-plan"
-        states={["Train"]}
-        minHeight={760}
-      >
-        {(_, playing) => <TrainingPlanDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        featured
         kicker="Particles · Motion"
         category="canvas"
         title="Donation goal"
@@ -495,6 +488,26 @@ function allCards() {
         minHeight={700}
       >
         {(_, playing) => <DonationGoalDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Particles · Motion"
+        category="canvas"
+        title="Live visitors"
+        docs="/docs/components/visitors-globe"
+        states={["Watch"]}
+        minHeight={740}
+      >
+        {(_, playing) => <VisitorsGlobeDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Particles · Motion"
+        category="canvas"
+        title="Focus timer"
+        docs="/docs/components/focus-timer"
+        states={["Focus"]}
+        minHeight={740}
+      >
+        {(_, playing) => <FocusTimerDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Motion · Media"

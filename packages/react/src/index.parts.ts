@@ -12,3 +12,7 @@ export { RemoldParticles as Particles } from "./particles/remold-particles.js";
 export type { ParticleShape } from "./particles/types.js";
 export { RemoldCanvas as Canvas } from "./canvas/remold-canvas.js";
 export type { RemoldCanvasActions as CanvasActions } from "./canvas/types.js";
+export { RemoldGlobe as Globe } from "./globe/remold-globe.js";
+export type { GlobeArcEvent, GlobePulse } from "./globe/types.js";
+export { RemoldDotGrid as DotGrid } from "./dot-grid/remold-dot-grid.js";
+export type { RemoldDotGridActions as DotGridActions } from "./dot-grid/types.js";

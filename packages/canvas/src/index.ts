@@ -86,4 +86,6 @@ export {
   type SceneOptions,
 } from "./scene";
 export { layout } from "./layout";
+export { dotGrid, type DotGrid, type DotGridColors, type DotGridLook, type DotGridOptions, type DotGridPoint, type DotGridShape } from "./dot-grid";
+export { globe, type Globe, type GlobeArc, type GlobeColors, type GlobeFocus, type GlobeLook, type GlobeMarker, type GlobeOptions, type GlobePoint, type GlobePulseOptions } from "./globe";
 export { painter, type Painter, type PainterFrame, type PainterOptions, type PainterSpring, type PainterToOptions, type PainterValues } from "./painter";

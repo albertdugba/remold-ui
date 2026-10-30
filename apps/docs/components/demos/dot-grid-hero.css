@@ -1,0 +1,182 @@
+.dt {
+  --dt-surface: #ffffff;
+  --dt-ink: #18181b;
+  --dt-muted: #71717a;
+  --dt-line: #e4e4e7;
+  --dt-dots: rgba(24, 24, 27, 0.2);
+  --dt-accent: #6366f1;
+  --dt-primary: #18181b;
+  --dt-on-primary: #ffffff;
+  width: min(100%, 720px);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .dt {
+  --dt-surface: #111113;
+  --dt-ink: #fafafa;
+  --dt-muted: #a1a1aa;
+  --dt-line: #27272a;
+  --dt-dots: rgba(255, 255, 255, 0.16);
+  --dt-accent: #a5b4fc;
+  --dt-primary: #fafafa;
+  --dt-on-primary: #18181b;
+}
+
+.dt-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  min-height: 440px;
+  padding: 48px 28px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--dt-surface);
+  color: var(--dt-ink);
+}
+
+.dt-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  color: var(--dt-dots);
+  accent-color: var(--dt-accent);
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 40%, transparent 100%);
+}
+
+.dt-content {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  max-width: 480px;
+  text-align: center;
+}
+
+.dt-content::before {
+  content: "";
+  position: absolute;
+  inset: -40px -60px;
+  z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--dt-surface) 80%, transparent) 30%, transparent);
+  pointer-events: none;
+}
+
+.dt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--dt-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dt-surface) 80%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: var(--dt-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.dt-badge-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dt-accent) 16%, transparent);
+  color: var(--dt-accent);
+  font-weight: 650;
+}
+
+.dt-title {
+  font-size: clamp(28px, 6vw, 40px);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.dt-sub {
+  max-width: 400px;
+  margin: 0;
+  color: var(--dt-muted);
+  font-size: 15px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.dt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.dt-primary,
+.dt-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.dt-primary {
+  border: 0;
+  background: var(--dt-primary);
+  color: var(--dt-on-primary);
+}
+
+.dt-ghost {
+  border: 1px solid var(--dt-line);
+  background: color-mix(in srgb, var(--dt-surface) 85%, transparent);
+  color: var(--dt-ink);
+}
+
+.dt-primary:active,
+.dt-ghost:active {
+  transform: scale(0.97);
+}
+
+.dt-primary:focus-visible,
+.dt-ghost:focus-visible,
+.dt-badge:focus-visible {
+  outline: 2px solid var(--dt-accent);
+  outline-offset: 2px;
+}
+
+.dt-ghost svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.dt-count {
+  padding-left: 8px;
+  border-left: 1px solid var(--dt-line);
+  color: var(--dt-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dt-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  fill: var(--dt-ink);
+  stroke: var(--dt-surface);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
