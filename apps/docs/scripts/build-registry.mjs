@@ -153,7 +153,7 @@ const ITEMS = [
   [
     "donation-goal",
     "Donation goal",
-    "A fundraising goal told in dots: every donation flies in as particles and fills the picture of what it pays for, until it bursts into a thank you.",
+    "A fundraising goal told in dots: every donation flies in as particles and fills the picture of what it pays for, until the water gathers into a heart.",
   ],
   [
     "dot-grid-hero",
@@ -169,6 +169,21 @@ const ITEMS = [
     "visitors-globe",
     "Live visitors",
     "A real-time visitors panel: a glowing planet rises from the bottom of the card while signups and upgrades pulse at their cities and invites fly between them.",
+  ],
+  [
+    "unit-chart",
+    "Unit chart",
+    "A chart where every dot is 25 customers: regroup by plan, region or channel and the same dots walk to their new column.",
+  ],
+  [
+    "inbox-triage",
+    "Inbox triage",
+    "An inbox where archived and deleted mail breaks into dust and pours into its tab, with multi-select, swipe, hover actions and an undo toast.",
+  ],
+  [
+    "assistant-answer",
+    "Assistant answer",
+    "An assistant's waiting, thinking and answering shown in one cloud of dots: a breathing orb, a turning ring, then the answer's headline as the reply streams in.",
   ],
   [
     "api-keys",

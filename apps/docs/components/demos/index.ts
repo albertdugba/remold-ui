@@ -54,3 +54,6 @@ export { ParticlesStory } from "../home/particles-story/particles-story";
 export { FocusTimerDemo } from "./focus-timer";
 export { VisitorsGlobeDemo } from "./visitors-globe";
 export { DotGridHeroDemo } from "./dot-grid-hero";
+export { UnitChartDemo } from "./unit-chart";
+export { InboxTriageDemo } from "./inbox-triage";
+export { AssistantAnswerDemo } from "./assistant-answer";

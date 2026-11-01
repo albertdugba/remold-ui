@@ -23,7 +23,7 @@ export type RemoldParticlesState = Record<string, never>;
 export interface RemoldParticlesProps
   extends BaseProps<RemoldParticlesState, HTMLCanvasElement>,
     Omit<CanvasHTMLAttributes<HTMLCanvasElement>, "className" | "color">,
-    Pick<ParticlesOptions, "color" | "palette" | "padding" | "pointer" | "spring" | "enter" | "reducedMotion" | "loop" | "maxPixelRatio"> {
+    Pick<ParticlesOptions, "color" | "palette" | "fit" | "padding" | "pointer" | "spring" | "enter" | "reducedMotion" | "loop" | "maxPixelRatio"> {
   /** What the dots show: words, `{ text, font }`, `{ path }`, `{ image, by, threshold, pattern, jitter, details }` or `{ points }`. Change it to morph. */
   shape: ParticleShape;
   /** How many dots. Default 1200. Ignored for `{ points }`, which brings its own. */

@@ -191,6 +191,12 @@ export interface FitOptions {
   padding?: number;
   /** `"contain"` (default) scales to fit inside, keeping proportions; `"none"` only centres. */
   mode?: "contain" | "none";
+  /**
+   * The frame the points are drawn in, fitted instead of the points' own bounds. Give one when
+   * successive shapes share a frame (a chart's axes, a card), so a shape that grows or shrinks
+   * moves within it rather than being rescaled to fill the box.
+   */
+  from?: { x?: number; y?: number; width: number; height: number };
 }
 
 /**
@@ -209,11 +215,19 @@ export function fitPoints<T extends Point>(
     minY = Infinity,
     maxX = -Infinity,
     maxY = -Infinity;
-  for (const p of points) {
-    if (p.x < minX) minX = p.x;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.y > maxY) maxY = p.y;
+  if (options.from) {
+    const { x = 0, y = 0, width, height } = options.from;
+    if (![x, y, width, height].every(Number.isFinite) || width < 0 || height < 0) {
+      throw new RangeError(`fitPoints: from must be a finite box with a size of 0 or more, got ${JSON.stringify(options.from)}`);
+    }
+    [minX, minY, maxX, maxY] = [x, y, x + width, y + height];
+  } else {
+    for (const p of points) {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
   }
   const w = maxX - minX;
   const h = maxY - minY;
@@ -451,4 +465,30 @@ function mulberry32(seed: number) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+export interface ClusterOptions {
+  /** Where the heap sits. */
+  x: number;
+  y: number;
+  /** How far the heap reaches from its middle, in the points' units. Default 6. */
+  radius?: number;
+}
+
+/**
+ * The same points gathered into a small, round heap at one spot: a bin, a cart, an inbox. The
+ * heap is spread like a sunflower's seeds, so it's even at any count. Each point keeps everything
+ * else it carries (a tone, an id) and its place in the list, so pairing by index sends every point
+ * from the shape to the heap and back again.
+ */
+export function clusterPoints<T extends Point>(points: readonly T[], options: ClusterOptions): T[] {
+  const radius = options.radius ?? 6;
+  if (![options.x, options.y, radius].every(Number.isFinite) || radius < 0) {
+    throw new RangeError(`clusterPoints: x, y and radius must be finite, and radius 0 or more, got ${JSON.stringify(options)}`);
+  }
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  return points.map((p, i) => {
+    const r = radius * Math.sqrt((i + 0.5) / points.length);
+    return { ...p, x: options.x + Math.cos(i * golden) * r, y: options.y + Math.sin(i * golden) * r };
+  });
 }

@@ -11,11 +11,13 @@ import { frames, prefersReducedMotion } from "@remold-ui/dom";
 import { fitCanvas, type CanvasSize } from "../canvas-size";
 import { matchByIndex, matchOffThread, OFF_THREAD_MATCH_CELLS } from "./matching";
 import { createPointerController } from "./pointer";
+import { hasVariables, resolveColors, watchTheme } from "./css-colors";
 import { createParticleRenderer } from "./renderer";
-import type { Particles, ParticlesOptions, ParticlesToOptions, ParticleTransition } from "./types";
+import type { ParticleFit, Particles, ParticlesOptions, ParticlesToOptions, ParticleTransition } from "./types";
 
 export { sampleImagePoints, sampleTextPoints, type ImageSampleOptions, type TextSampleOptions } from "./sampling";
-export type { ParticleFill, ParticleTransition, Particles, ParticlesOptions, ParticlesToOptions } from "./types";
+export { sampleElementPoints, type ElementSampleOptions } from "./element";
+export type { ParticleFill, ParticleFit, ParticleTransition, Particles, ParticlesOptions, ParticlesToOptions } from "./types";
 
 export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions = {}): Particles {
   const configuration = createConfiguration(options);
@@ -26,6 +28,8 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
   let destroyed = false;
   let running = false;
   let visible = true;
+  let pairing = 0;
+  const waiting: (() => void)[] = [];
   const cloud = pointCloud(
     fitPointsToCanvas({ points: shownPoints, fit: configuration.fit, padding: configuration.padding, size }),
     options,
@@ -46,6 +50,15 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
     wake,
   });
 
+  // `var(--name)` colours are read from the canvas's styles, and again whenever the theme changes.
+  let palette = options.palette && resolveColors(options.palette, canvas);
+  const stopWatchingTheme = hasVariables(options.palette)
+    ? watchTheme(() => {
+        palette = resolveColors(options.palette!, canvas);
+        renderer.render();
+      })
+    : null;
+
   const renderer = createParticleRenderer({
     canvas,
     context: canvas.getContext("2d"),
@@ -54,7 +67,7 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
     pointer: pointerController.pointer,
     getSize: () => size,
     color: options.color,
-    palette: options.palette,
+    getPalette: () => palette,
     shape: configuration.shape,
     pointerEffect: configuration.pointer,
     reducedMotion,
@@ -69,7 +82,7 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
     setSize: (nextSize) => (size = nextSize),
     getFittedSize: () => fittedSize,
     setFittedSize: (nextSize) => (fittedSize = nextSize),
-    refit: configuration.fit === "contain",
+    refit: configuration.fit !== "none",
     maxPixelRatio: options.maxPixelRatio,
     resetFill: renderer.resetFill,
     render: renderer.render,
@@ -97,8 +110,14 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
     }
     renderer.render();
     running = moving;
+    if (!running) settle();
 
     return running;
+  }
+
+  function settle(): void {
+    if (pairing > 0) return;
+    for (const resolve of waiting.splice(0)) resolve();
   }
 
   function transitionTo(points: readonly CloudPoint[], transitionOptions: ParticlesToOptions = {}): void {
@@ -132,8 +151,16 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
       heading.length * points.length > OFF_THREAD_MATCH_CELLS
         ? matchOffThread({ from: heading, to: targetPoints, match: options.match })
         : null;
-    if (matches) matches.then(show, () => show());
-    else show();
+    if (matches) {
+      // Paired off the main thread: `settled()` waits for the pairing too.
+      pairing++;
+      const finish = (found?: PointMatches) => {
+        pairing--;
+        show(found);
+        if (!running) settle();
+      };
+      matches.then(finish, () => finish());
+    } else show();
   }
 
   return {
@@ -142,8 +169,16 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
     },
     to: transitionTo,
     render: renderer.render,
+    settled() {
+      return new Promise<void>((resolve) => {
+        waiting.push(resolve);
+        if (!running) settle();
+      });
+    },
     destroy() {
       destroyed = true;
+      stopWatchingTheme?.();
+      settle();
       resizeObserver?.disconnect();
       visibilityObserver?.disconnect();
       pointerController.destroy();
@@ -156,7 +191,10 @@ function createConfiguration(options: ParticlesOptions) {
   const fit = options.fit ?? "contain";
 
   if (!(radius > 0)) throw new RangeError(`particles: radius must be positive, got ${radius}`);
-  if (fit !== "contain" && fit !== "none") throw new RangeError(`particles: fit must be "contain" or "none", got ${fit}`);
+  const frame = typeof fit === "object" && fit !== null;
+  if (fit !== "contain" && fit !== "none" && !(frame && fit.width > 0 && fit.height > 0)) {
+    throw new RangeError(`particles: fit must be "contain", "none" or a frame with a positive width and height, got ${JSON.stringify(fit)}`);
+  }
   if (options.palette?.length === 0) throw new RangeError("particles: palette needs at least one colour");
   return {
     radius,
@@ -175,11 +213,12 @@ function fitPointsToCanvas({
   size,
 }: {
   points: readonly CloudPoint[];
-  fit: "contain" | "none";
+  fit: ParticleFit;
   padding: number;
   size: CanvasSize;
 }) {
-  return fit === "contain" ? fitPoints(points, { x: 0, y: 0, width: size.width, height: size.height }, { padding }) : points;
+  if (fit === "none") return points;
+  return fitPoints(points, { x: 0, y: 0, width: size.width, height: size.height }, { padding, from: fit === "contain" ? undefined : fit });
 }
 
 function createResizeObserver({

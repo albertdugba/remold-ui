@@ -11,6 +11,8 @@ export type { MorphPathProps } from "./morph-path/types.js";
 export { useConnectorMotion } from "./use-connector-motion/use-connector-motion.js";
 export type { UseConnectorMotion } from "./use-connector-motion/types.js";
 export { useAutoplay } from "./use-autoplay/use-autoplay.js";
+export { useDust, type UseDust } from "./use-dust/use-dust.js";
+export type { Dust, DustOptions } from "@remold-ui/canvas";
 export type { Autoplay, AutoplayOptions } from "./use-autoplay/types.js";
 export { useDragToDismiss } from "./use-drag-to-dismiss/use-drag-to-dismiss.js";
 export type {

@@ -11,7 +11,7 @@ export function createParticleRenderer({
   pointer,
   getSize,
   color,
-  palette,
+  getPalette,
   shape,
   pointerEffect,
   reducedMotion,
@@ -24,7 +24,7 @@ export function createParticleRenderer({
   pointer: ParticlePointer;
   getSize: () => CanvasSize;
   color: ParticleFill | ((context: CanvasRenderingContext2D, size: CanvasSize) => ParticleFill) | undefined;
-  palette: readonly string[] | undefined;
+  getPalette: () => readonly string[] | undefined;
   shape: "circle" | "square";
   pointerEffect: { radius: number; strength: number } | null;
   reducedMotion: () => boolean;
@@ -46,6 +46,7 @@ export function createParticleRenderer({
     context.setTransform(size.pixelRatio, 0, 0, size.pixelRatio, 0, 0);
     context.clearRect(0, 0, size.width, size.height);
     const drawParticle = createParticleDrawer({ context, cloud, radius, pointer, shape, pointerEffect, reducedMotion });
+    const palette = getPalette();
 
     if (!palette || palette.length === 1) {
       if (palette) {

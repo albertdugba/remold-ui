@@ -1,0 +1,36 @@
+---
+title: "Unit chart"
+description: "A chart where every dot is 25 customers: regroup by plan, region or channel and the same dots move to their new column."
+status: "new"
+kind: particles
+tags: ["Particles", "Charts"]
+---
+
+<Stage name="unit-chart" code={<Source demo="unit-chart" />} minHeight={560}>
+  <UnitChartDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Regroup.** Switch between Plan, Region and Channel. Each dot is a customer, and it moves from its old column to its new one, so you can see where people went.
+- **Read the numbers.** Each column's count rolls to its new value.
+
+## Install
+
+<AddCommand name="unit-chart" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="unit-chart" />
+
+## How it works
+
+- **Dot `i` is always customer `i`.** Every grouping lays out the same list, and `pairing="index"` carries each customer to their new place.
+- **Equal columns.** Each group gets an equal share of the width and stacks from the bottom, plans in bands. The labels use the same grid, so they line up.
+- **A fixed frame.** Four unseen corner dots keep the bounds still, so columns grow in place instead of the chart rescaling.
+
+<Callout>The customers are made up. Swap in your own rows: any record with a few categories works.</Callout>

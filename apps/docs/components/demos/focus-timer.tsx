@@ -2,8 +2,8 @@
 
 import { samplePath, type CloudPoint } from "@remold-ui/core";
 import { Remold } from "@remold-ui/react";
-import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useEffect, useMemo, useReducer, useRef, useState, type RefObject } from "react";
+import { MotionConfig, motion } from "motion/react";
+import { useEffect, useMemo, useReducer } from "react";
 import { Odometer } from "./odometer";
 import { useScene } from "./use-scene";
 import "./focus-timer.css";
@@ -18,13 +18,16 @@ const RUSH_TICKS = 10;
 const FLIP_TICKS = 10;
 const GRAIN_GAP = 1.8;
 const STREAM = 14;
-const POP = { type: "spring" as const, duration: 0.4, bounce: 0.2 };
 const FLIP = { type: "spring" as const, duration: 1, bounce: 0.18 };
+const PLAY = "M8 5.5v13l11-6.5z";
+const PAUSE = "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z";
 
 const GLASS =
   "M22 6C22 30 44 40 47 50C44 60 22 70 22 94L78 94C78 70 56 60 53 50C56 40 78 30 78 6Z M12 4L88 4 M12 96L88 96";
 
 const TONE = { glass: 0, sand: 1 } as const;
+/** Read from the card's CSS, so the dots follow dark mode. */
+const PALETTE = ["var(--ft-glass)", "var(--ft-sand)"];
 
 function seeded(i: number) {
   const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
@@ -162,25 +165,7 @@ const clock = (seconds: number) => {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 };
 
-function usePalette(root: RefObject<HTMLElement | null>) {
-  const [palette, setPalette] = useState<string[] | null>(null);
-
-  useEffect(() => {
-    const read = () => {
-      if (!root.current) return;
-      const style = getComputedStyle(root.current);
-      setPalette([style.getPropertyValue("--ft-glass").trim(), style.getPropertyValue("--ft-sand").trim()]);
-    };
-    read();
-    const observer = new MutationObserver(read);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, [root]);
-
-  return palette;
-}
-
-function Hourglass({ timer, palette }: { timer: Timer; palette: string[] }) {
+function Hourglass({ timer }: { timer: Timer }) {
   const total = lengthOf(timer.phase);
   const fallen = Math.round((1 - timer.remaining / total) * GRAINS);
   const flowing = timer.wait === 0 && fallen < GRAINS && (timer.running || timer.rush || fallen > 0);
@@ -190,10 +175,9 @@ function Hourglass({ timer, palette }: { timer: Timer; palette: string[] }) {
   return (
     <motion.div className="ft-glass" initial={false} animate={{ rotate: timer.flips * 180 }} transition={FLIP}>
       <Remold.Particles
-        key={palette.join()}
         className="ft-canvas"
         shape={{ points }}
-        palette={palette}
+        palette={PALETTE}
         radius={1.5}
         padding={4}
         pointer={false}
@@ -207,7 +191,7 @@ function Hourglass({ timer, palette }: { timer: Timer; palette: string[] }) {
 
 function Icon({ d }: { d: string }) {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={d} />
     </svg>
   );
@@ -216,8 +200,6 @@ function Icon({ d }: { d: string }) {
 export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
   const scene = useScene(BEATS, beatAction, playing);
   const [timer, dispatch] = useReducer(reduce, INITIAL);
-  const root = useRef<HTMLElement>(null);
-  const palette = usePalette(root);
   const { live, step, take } = scene;
   const active = timer.running || timer.rush || timer.wait > 0;
 
@@ -241,46 +223,20 @@ export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
   return (
     <MotionConfig reducedMotion="user">
       <section
-        ref={(el) => {
-          root.current = el;
-          scene.ref(el);
-        }}
+        ref={scene.ref}
         className="ft not-prose"
         aria-label="Focus timer"
         data-phase={timer.phase}
       >
-        <header className="ft-head">
-          <div className="ft-meta">
-            <span className="ft-phase">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span key={timer.phase} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={POP}>
-                  {focus ? "Focus" : "Break"}
-                </motion.span>
-              </AnimatePresence>
-            </span>
-            <span className="ft-rounds" aria-label={`Round ${timer.round} of ${ROUNDS}`}>
-              {Array.from({ length: ROUNDS }, (_, i) => (
-                <motion.span
-                  key={i}
-                  className="ft-round"
-                  data-state={i + 1 < timer.round ? "done" : i + 1 === timer.round ? "now" : undefined}
-                  initial={false}
-                  animate={{ width: i + 1 === timer.round ? 18 : 6 }}
-                  transition={POP}
-                />
-              ))}
-            </span>
-          </div>
-          <span role="heading" aria-level={3} className="ft-title">
-            Ship the onboarding flow
-          </span>
-        </header>
-
-        <div className="ft-stage">{palette && <Hourglass timer={timer} palette={palette} />}</div>
+        <div className="ft-stage">
+          <Hourglass timer={timer} />
+        </div>
 
         <div className="ft-readout">
           <Odometer className="ft-time" value={clock(shown(timer))} />
-          <span className="ft-note">{focus ? "until your break" : "until the next round"}</span>
+          <span className="ft-note">
+            <span className="ft-phase">{focus ? "Focus" : "Break"}</span> · {timer.round} of {ROUNDS}
+          </span>
         </div>
 
         <div className="ft-actions">
@@ -290,21 +246,12 @@ export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
           <motion.button
             type="button"
             className="ft-primary"
+            aria-label={timer.running ? "Pause" : "Start"}
             aria-pressed={timer.running}
             onClick={() => act({ type: "toggle" })}
-            whileTap={{ scale: 0.96 }}
+            whileTap={{ scale: 0.92 }}
           >
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.span
-                key={timer.running ? "pause" : "start"}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={POP}
-              >
-                {timer.running ? "Pause" : timer.remaining < lengthOf(timer.phase) ? "Resume" : "Start"}
-              </motion.span>
-            </AnimatePresence>
+            <Remold.Icon d={timer.running ? PAUSE : PLAY} viewBox="0 0 24 24" fill="currentColor" className="ft-play" aria-hidden="true" />
           </motion.button>
           <button type="button" className="ft-icon" aria-label={focus ? "Skip to break" : "Skip break"} onClick={() => act({ type: "skip" })}>
             <Icon d="M5 5l10 7-10 7V5zM19 5v14" />

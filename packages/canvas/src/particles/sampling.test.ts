@@ -42,6 +42,13 @@ describe("sampleImagePoints", () => {
     expect(points.filter((point) => point.x > 11).every((point) => point.tone === 1)).toBe(true);
   });
 
+  it("takes palette colours in any CSS spelling, as a minifier or getComputedStyle writes them", () => {
+    const points = sampleImagePoints(imageWithTwoColours(), { count: 60, palette: ["#f00", "rgb(0, 0, 255)"] });
+
+    expect(points.filter((point) => point.x < 9).every((point) => point.tone === 0)).toBe(true);
+    expect(points.filter((point) => point.x > 11).every((point) => point.tone === 1)).toBe(true);
+  });
+
   it("keeps silhouette-only sampling when no palette is supplied", () => {
     const points = sampleImagePoints(imageWithTwoColours(), { count: 20 });
     expect(points).toHaveLength(20);
@@ -84,9 +91,9 @@ describe("sampleImagePoints", () => {
     expect(() => sampleImagePoints(image, { count: 0, details: [{ x: 0.5, y: 0.5 }] })).toThrow(/count/);
   });
 
-  it("rejects empty or non-hex palettes", () => {
+  it("rejects empty palettes and colours that aren't colours", () => {
     const image = imageWithTwoColours();
     expect(() => sampleImagePoints(image, { count: 20, palette: [] })).toThrow(/at least one colour/);
-    expect(() => sampleImagePoints(image, { count: 20, palette: ["blue"] })).toThrow(/six-digit hex/);
+    expect(() => sampleImagePoints(image, { count: 20, palette: ["not a colour"] })).toThrow(/CSS colours/);
   });
 });

@@ -4,6 +4,9 @@ import type { FrameLoop, ReducedMotion } from "@remold-ui/dom";
 
 export type ParticleFill = string | CanvasGradient | CanvasPattern;
 
+/** How shapes map onto the canvas: their own bounds fitted, CSS pixels as they are, or a shared frame fitted. */
+export type ParticleFit = "contain" | "none" | { x?: number; y?: number; width: number; height: number };
+
 export interface ParticlesToOptions {
   /** Read to screen-reader users. */
   label?: string;
@@ -25,8 +28,13 @@ export type ParticleTransition = "direct" | "scatter" | ({ type: "scatter" } & P
 export interface ParticlesOptions extends PointCloudOptions {
   /** The first shape. More shapes follow with `to`. A point's `tone` picks its `palette` colour. */
   points?: readonly CloudPoint[];
-  /** Scale shapes to fit the canvas, or leave their coordinates unchanged. */
-  fit?: "contain" | "none";
+  /**
+   * How shapes map onto the canvas. `"contain"` (the default) scales each shape's bounds to fit.
+   * `"none"` takes points as the canvas's CSS pixels. A frame (`{ width, height, x?, y? }`) fits
+   * that box instead of each shape's bounds, so shapes drawn in the same frame (a chart, a card)
+   * keep their size and place as they change. Read once.
+   */
+  fit?: ParticleFit;
   /** Space kept clear round a fitted shape, in CSS pixels. Default 24. */
   padding?: number;
   /** Dot radius at full size, in CSS pixels. Default 2.5. */
@@ -35,7 +43,7 @@ export interface ParticlesOptions extends PointCloudOptions {
   shape?: "circle" | "square";
   /** The dots' colour, or a function that creates one for the canvas size. */
   color?: ParticleFill | ((context: CanvasRenderingContext2D, size: CanvasSize) => ParticleFill);
-  /** Colours by tone. Replaces `color`. */
+  /** Colours by tone. Replaces `color`. Any CSS colour, including `var(--name)`, which follows theme changes. */
   palette?: readonly string[];
   /** Dots near the pointer lean away. `false` turns it off. */
   pointer?: false | { radius?: number; strength?: number };
@@ -53,6 +61,8 @@ export interface Particles {
   to(points: readonly CloudPoint[], options?: ParticlesToOptions): void;
   /** Redraw now. */
   render(): void;
+  /** Resolves once the dots have stopped moving: after the latest `to` has played out, or at once if nothing is moving. */
+  settled(): Promise<void>;
   /** Stop animating and remove listeners. */
   destroy(): void;
 }

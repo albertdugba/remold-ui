@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Point } from "../interpolate";
-import { fitPoints, sampleMask, samplePath } from "./sampling";
+import { clusterPoints, fitPoints, sampleMask, samplePath } from "./sampling";
 
 const SQUARE = "M0 0 H100 V100 H0 Z";
 /** A circle of radius 50 round (50, 50), from two arcs. */
@@ -238,5 +238,43 @@ describe("fitPoints", () => {
   it("centres a single point and handles none", () => {
     expect(fitPoints([{ x: 7, y: 7 }], { x: 0, y: 0, width: 20, height: 10 })).toEqual([{ x: 10, y: 5 }]);
     expect(fitPoints([], { x: 0, y: 0, width: 20, height: 10 })).toEqual([]);
+  });
+  it("fits a shared frame instead of the points' bounds, so a growing shape stays in place", () => {
+    const box = { x: 0, y: 0, width: 200, height: 100 };
+    const from = { width: 100, height: 50 };
+    const short = fitPoints([{ x: 10, y: 50 }, { x: 10, y: 40 }], box, { from });
+    const tall = fitPoints([{ x: 10, y: 50 }, { x: 10, y: 10 }], box, { from });
+    expect(short).toEqual([{ x: 20, y: 100 }, { x: 20, y: 80 }]);
+    expect(tall[0]).toEqual(short[0]);
+    expect(tall[1]).toEqual({ x: 20, y: 20 });
+  });
+
+  it("takes a frame's offset and padding, and rejects a bad frame", () => {
+    const fitted = fitPoints([{ x: 60, y: 60 }], { x: 0, y: 0, width: 120, height: 120 }, { from: { x: 50, y: 50, width: 20, height: 20 }, padding: 10 });
+    expect(fitted).toEqual([{ x: 60, y: 60 }]);
+    expect(() => fitPoints([{ x: 0, y: 0 }], { x: 0, y: 0, width: 1, height: 1 }, { from: { width: -1, height: 1 } })).toThrow(/from/);
+  });
+});
+
+describe("clusterPoints", () => {
+  it("gathers every point within the radius, keeping order and everything else on it", () => {
+    const shape = Array.from({ length: 50 }, (_, i) => ({ x: i * 10, y: 0, tone: i / 50 }));
+    const heap = clusterPoints(shape, { x: 100, y: 200, radius: 5 });
+    expect(heap).toHaveLength(50);
+    heap.forEach((p, i) => {
+      expect(Math.hypot(p.x - 100, p.y - 200)).toBeLessThanOrEqual(5 + 1e-9);
+      expect(p.tone).toBe(shape[i]!.tone);
+    });
+  });
+
+  it("spreads the heap out rather than stacking points", () => {
+    const heap = clusterPoints(Array.from({ length: 40 }, () => ({ x: 0, y: 0 })), { x: 0, y: 0, radius: 10 });
+    expect(new Set(heap.map((p) => `${p.x.toFixed(3)},${p.y.toFixed(3)}`)).size).toBe(40);
+  });
+
+  it("collapses to one spot with radius 0, and rejects bad options", () => {
+    expect(clusterPoints([{ x: 3, y: 4 }], { x: 1, y: 2, radius: 0 })).toEqual([{ x: 1, y: 2 }]);
+    expect(() => clusterPoints([], { x: Number.NaN, y: 0 })).toThrow(/clusterPoints/);
+    expect(() => clusterPoints([], { x: 0, y: 0, radius: -1 })).toThrow(/clusterPoints/);
   });
 });

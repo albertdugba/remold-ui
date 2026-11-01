@@ -5,6 +5,7 @@
     "use-view-transition",
     "use-autoplay",
     "use-spring-press",
-    "use-drag-to-dismiss"
+    "use-drag-to-dismiss",
+    "use-dust"
   ]
 }

@@ -35,7 +35,7 @@ export interface ImageSampleOptions extends MaskSampleOptions {
   height?: number;
   /** Which pixels count as the shape. */
   by?: "alpha" | "dark" | "light" | "saturation";
-  /** Hex colours to assign to sampled dots from the image's pixels. Use the same palette with `particles()`. */
+  /** Colours to assign to sampled dots from the image's pixels: any CSS colours. Use the same palette with `particles()`. */
   palette?: readonly string[];
   /** Extra dots at normalized image coordinates, for small details that the mask omits. */
   details?: readonly { x: number; y: number; tone?: number }[];
@@ -86,12 +86,33 @@ function imageDetailPoint({
   return { ...point, tone: detail.tone ?? (palette ? nearestPaletteTone({ point, pixels, palette }) : undefined) };
 }
 
+/** Any CSS colour as red, green and blue: hex and `rgb()` directly, anything else (names, `hsl()`) through a canvas. */
 function parseHexColor(color: string): readonly [number, number, number] {
-  const hex = /^#([0-9a-f]{6})$/i.exec(color)?.[1];
+  const direct = rgbOf(color);
+  if (direct) return direct;
 
-  if (!hex) throw new TypeError(`sampleImagePoints: palette colours must be six-digit hex values, got ${color}`);
-  const rgb = Number.parseInt(hex, 16);
-  return [(rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255];
+  // The canvas spells any colour it understands as hex or rgba(); an invalid one leaves it unchanged.
+  const context = typeof document !== "undefined" ? document.createElement("canvas").getContext("2d") : null;
+  if (context) {
+    context.fillStyle = "#010203";
+    context.fillStyle = color;
+    const read = rgbOf(String(context.fillStyle));
+    if (read && read.join() !== "1,2,3") return read;
+  }
+  throw new TypeError(`sampleImagePoints: palette colours must be CSS colours, got ${color}`);
+}
+
+function rgbOf(color: string): [number, number, number] | null {
+  const c = color.trim();
+  const long = /^#([0-9a-f]{6})(?:[0-9a-f]{2})?$/i.exec(c)?.[1];
+  if (long) {
+    const rgb = Number.parseInt(long, 16);
+    return [(rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255];
+  }
+  const short = /^#([0-9a-f])([0-9a-f])([0-9a-f])[0-9a-f]?$/i.exec(c);
+  if (short) return [short[1]!, short[2]!, short[3]!].map((h) => Number.parseInt(h + h, 16)) as [number, number, number];
+  const rgb = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i.exec(c);
+  return rgb ? ([Number(rgb[1]), Number(rgb[2]), Number(rgb[3])].map(Math.round) as [number, number, number]) : null;
 }
 
 function nearestPaletteTone({
@@ -158,7 +179,7 @@ function imageMask({ pixels, by }: { pixels: ImageData; by: "dark" | "light" | "
   return { width: pixels.width, height: pixels.height, data: mask };
 }
 
-function createScratchContext({ width, height }: { width: number; height: number }): CanvasRenderingContext2D {
+export function createScratchContext({ width, height }: { width: number; height: number }): CanvasRenderingContext2D {
   const canvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
   if (!canvas) throw new Error("particles: sampling text and images needs a browser (a canvas to draw into)");
   canvas.width = width;

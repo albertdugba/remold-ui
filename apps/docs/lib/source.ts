@@ -8,7 +8,8 @@ const docs = defineDocs({
   dir: "content/docs",
   docs: {
     // `tags`: short labels under the title (the parts a page uses). `kind: canvas` marks a
-    // component drawn on a canvas (illustrations and diagrams), listed apart from interface ones.
+    // component drawn on a canvas (illustrations and diagrams), listed apart from interface ones;
+    // `kind: particles` marks product UI built from particles.
     // `status` (such as `new`) marks a page as new on the components page.
     // All reuse the schema's own string type, so the docs don't need their own copy of zod.
     schema: pageSchema.extend({

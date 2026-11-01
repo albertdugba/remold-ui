@@ -485,7 +485,7 @@ function allCards() {
         title="Donation goal"
         docs="/docs/components/donation-goal"
         states={["Give"]}
-        minHeight={700}
+        minHeight={520}
       >
         {(_, playing) => <DonationGoalDemo playing={playing} />}
       </PartCard>
@@ -505,7 +505,7 @@ function allCards() {
         title="Focus timer"
         docs="/docs/components/focus-timer"
         states={["Focus"]}
-        minHeight={740}
+        minHeight={560}
       >
         {(_, playing) => <FocusTimerDemo playing={playing} />}
       </PartCard>

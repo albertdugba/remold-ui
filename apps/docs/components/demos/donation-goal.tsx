@@ -1,10 +1,9 @@
 "use client";
 
-import { sampleTextPoints } from "@remold-ui/canvas";
 import { samplePath, type CloudPoint } from "@remold-ui/core";
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Odometer } from "./odometer";
 import { useScene } from "./use-scene";
 import "./donation-goal.css";
@@ -13,14 +12,19 @@ const GOAL = 1000;
 const START = 640;
 const AMOUNTS = [10, 25, 50] as const;
 const DROP = "M50 2C38 22 16 42 16 64C16 84 31 98 50 98C69 98 84 84 84 64C84 42 62 22 50 2Z";
+const HEART = "M50 94C50 94 12 70 12 40C12 26 22 16 35 16C42 16 47 20 50 26C53 20 58 16 65 16C78 16 88 26 88 40C88 70 50 94 50 94Z";
 const DOTS = 1100;
-const THANKS_FONT = "500 132px -apple-system, BlinkMacSystemFont, Inter, sans-serif";
+/** The picture's frame: the drop, and the water waiting below it. Fitting it keeps the drop still as it fills. */
+const FRAME = { x: 10, y: 0, width: 80, height: 108 };
 const STREAM_STEPS = 10;
 const STREAM_EVERY = 60;
 const POP = { type: "spring" as const, duration: 0.4, bounce: 0.2 };
 const BAR = { type: "spring" as const, duration: 0.8, bounce: 0.1 };
 
-const TONE = { ghost: 0, water: 0.5, hidden: 1 } as const;
+/** Colours paint in order, so the water draws over the empty drop. Water on its way passes through accent only. */
+const TONE = { ghost: 0, hidden: 0.5, water: 1 } as const;
+/** Read from the card's CSS, so the dots follow dark mode. */
+const PALETTE = ["var(--dg-ghost)", "var(--dg-ghost)", "transparent", "var(--dg-accent)", "var(--dg-accent)"];
 
 function seeded(i: number) {
   const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
@@ -32,12 +36,7 @@ const PICTURE: CloudPoint[] = samplePath(DROP, { count: DOTS })
   .sort((a, b) => b.order - a.order)
   .map(({ x, y }) => ({ x, y }));
 
-const CORNERS: CloudPoint[] = [
-  { x: 10, y: 0, tone: TONE.hidden },
-  { x: 90, y: 0, tone: TONE.hidden },
-  { x: 10, y: 108, tone: TONE.hidden },
-  { x: 90, y: 108, tone: TONE.hidden },
-];
+const LOVE: CloudPoint[] = samplePath(HEART, { spacing: 2.3 }).map((p) => ({ ...p, tone: TONE.water }));
 
 function frame(filled: number, from: number): CloudPoint[] {
   const ghost = PICTURE.map((p) => ({ ...p, tone: TONE.ghost }));
@@ -46,7 +45,7 @@ function frame(filled: number, from: number): CloudPoint[] {
       ? { ...p, tone: TONE.water }
       : { x: from * 100 + (seeded(i) - 0.5) * 18, y: 105 + seeded(i + 3) * 2, tone: TONE.hidden },
   );
-  return [...ghost, ...fill, ...CORNERS];
+  return [...ghost, ...fill];
 }
 
 interface State {
@@ -71,26 +70,6 @@ function fromBeat(step: number): State {
 const money = (n: number) => `£${n.toLocaleString("en-GB")}`;
 const filledFor = (raised: number) => Math.round(Math.min(1, raised / GOAL) * PICTURE.length);
 
-function usePalette(root: RefObject<HTMLElement | null>) {
-  const [palette, setPalette] = useState<string[] | null>(null);
-
-  useEffect(() => {
-    const read = () => {
-      if (!root.current) return;
-      const style = getComputedStyle(root.current);
-      const get = (name: string) => style.getPropertyValue(name).trim();
-      const accent = get("--dg-accent");
-      setPalette([get("--dg-ghost"), accent, accent, accent, "rgba(0,0,0,0)"]);
-    };
-    read();
-    const observer = new MutationObserver(read);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, [root]);
-
-  return palette;
-}
-
 function useStream(target: number) {
   const [shown, setShown] = useState(target);
 
@@ -104,25 +83,24 @@ function useStream(target: number) {
   return shown;
 }
 
-function Picture({ raised, from, reached, palette }: { raised: number; from: number; reached: boolean; palette: string[] }) {
+function Picture({ raised, from, reached }: { raised: number; from: number; reached: boolean }) {
   const shown = useStream(filledFor(raised));
   const points = useMemo(() => frame(shown, from), [shown, from]);
-  const thanks = useMemo(() => sampleTextPoints("Thank you", { count: DOTS, font: THANKS_FONT }).map((p) => ({ ...p, tone: TONE.water })), []);
 
   return (
     <Remold.Particles
-      key={palette.join()}
       className="dg-canvas"
-      shape={{ points: reached ? thanks : points }}
+      shape={{ points: reached ? LOVE : points }}
       count={DOTS}
-      palette={palette}
-      radius={1.5}
+      palette={PALETTE}
+      radius={1.4}
+      fit={FRAME}
       padding={4}
       pointer={false}
       pairing={reached ? "match" : "index"}
       transition={reached ? { type: "scatter", spread: 0.4, hold: 0.2 } : "direct"}
       spring={{ duration: 0.9, bounce: 0.15 }}
-      label={reached ? "Thank you" : `${Math.round((raised / GOAL) * 100)}% of the well is funded`}
+      label={reached ? "Funded" : `${Math.round((raised / GOAL) * 100)}% of the well is funded`}
     />
   );
 }
@@ -130,8 +108,6 @@ function Picture({ raised, from, reached, palette }: { raised: number; from: num
 export function DonationGoalDemo({ playing }: { playing?: boolean } = {}) {
   const scene = useScene(BEATS, fromBeat, playing);
   const { state, take } = scene;
-  const root = useRef<HTMLElement>(null);
-  const palette = usePalette(root);
   const [choice, setChoice] = useState(1);
   const reached = state.raised >= GOAL;
   const percent = Math.min(100, (state.raised / GOAL) * 100);
@@ -148,10 +124,7 @@ export function DonationGoalDemo({ playing }: { playing?: boolean } = {}) {
   return (
     <MotionConfig reducedMotion="user">
       <section
-        ref={(el) => {
-          root.current = el;
-          scene.ref(el);
-        }}
+        ref={scene.ref}
         className="dg not-prose"
         aria-label="Donation goal"
         data-reached={reached || undefined}
@@ -160,89 +133,52 @@ export function DonationGoalDemo({ playing }: { playing?: boolean } = {}) {
           <span role="heading" aria-level={3} className="dg-title">
             A well for Asante village
           </span>
-          <span className="dg-sub">Ashanti, Ghana · 9 days left</span>
+          <span className="dg-sub">9 days left</span>
         </header>
 
-        <div className="dg-stage">{palette && <Picture raised={state.raised} from={state.from} reached={reached} palette={palette} />}</div>
+        <div className="dg-stage">
+          <Picture raised={state.raised} from={state.from} reached={reached} />
+        </div>
 
         <div className="dg-stats">
-          <div className="dg-figures">
-            <span className="dg-raised">
-              <Odometer value={money(state.raised)} />
-              <span>raised of {money(GOAL)}</span>
-            </span>
+          <span className="dg-figures">
+            <Odometer className="dg-raised" value={money(state.raised)} />
+            <span>of {money(GOAL)}</span>
             <span className="dg-backers">
               <Odometer value={String(state.backers)} /> backers
             </span>
-          </div>
+          </span>
           <span className="dg-bar" aria-hidden="true">
             <motion.span initial={false} animate={{ width: `${percent}%` }} transition={BAR} />
           </span>
         </div>
 
-        <div className="dg-actions">
-          <AnimatePresence mode="popLayout" initial={false}>
-            {reached ? (
-              <motion.button
-                key="again"
-                type="button"
-                className="dg-again"
-                onClick={reset}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={POP}
-              >
-                Start again
-              </motion.button>
-            ) : (
-              <motion.div
-                key="amounts"
-                className="dg-amounts"
-                role="radiogroup"
-                aria-label="Amount"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={POP}
-              >
+        <AnimatePresence mode="popLayout" initial={false}>
+          {reached ? (
+            <motion.div key="done" className="dg-actions dg-done" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={POP}>
+              <span>Funded by {state.backers} backers. Thank you!</span>
+              <button type="button" className="dg-again" onClick={reset} aria-label="Start again">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" />
+                </svg>
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div key="give" className="dg-actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={POP}>
+              <div className="dg-amounts" role="radiogroup" aria-label="Amount">
                 <motion.span className="dg-thumb" aria-hidden="true" initial={false} animate={{ x: `${choice * 100}%` }} transition={POP} />
                 {AMOUNTS.map((amount, index) => (
-                  <button
-                    key={amount}
-                    type="button"
-                    role="radio"
-                    aria-checked={choice === index}
-                    className="dg-amount"
-                    onClick={() => setChoice(index)}
-                  >
+                  <button key={amount} type="button" role="radio" aria-checked={choice === index} className="dg-amount" onClick={() => setChoice(index)}>
                     {money(amount)}
                   </button>
                 ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <motion.button
-            type="button"
-            className="dg-donate"
-            disabled={reached}
-            onClick={donate}
-            whileTap={reached ? undefined : { scale: 0.96 }}
-          >
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.span
-                key={reached ? "reached" : "donate"}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={POP}
-              >
-                {reached ? "Goal reached" : "Donate"}
-              </motion.span>
-            </AnimatePresence>
-          </motion.button>
-        </div>
+              </div>
+              <motion.button type="button" className="dg-donate" onClick={donate} whileTap={{ scale: 0.96 }}>
+                Donate
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
     </MotionConfig>
   );
