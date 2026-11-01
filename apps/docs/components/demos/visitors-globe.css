@@ -1,0 +1,195 @@
+.vg {
+  --vg-ink: #eef2ff;
+  --vg-muted: #8b97c2;
+  --vg-accent: #4ade80;
+  --vg-glass: rgba(255, 255, 255, 0.07);
+  --vg-line: rgba(255, 255, 255, 0.12);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  width: min(100%, 400px);
+  height: 560px;
+  padding: 24px;
+  overflow: hidden;
+  border-radius: 28px;
+  background:
+    radial-gradient(1px 1px at 12% 22%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 78% 14%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 64% 36%, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 30% 40%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 88% 30%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(120% 70% at 50% 100%, #16275e 0%, #0a1129 55%, #060a1a 100%);
+  color: var(--vg-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.vg-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vg-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.vg-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--vg-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.vg-beacon {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--vg-accent);
+}
+
+.vg-beacon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--vg-accent);
+  animation: vg-beacon 1.8s ease-out infinite;
+}
+
+@keyframes vg-beacon {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+.vg-count {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 4px;
+  margin-top: -8px;
+}
+
+.vg-number {
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.vg-unit {
+  color: var(--vg-muted);
+  font-size: 13px;
+}
+
+.vg-globe {
+  position: absolute;
+  top: 150px;
+  left: 50%;
+  width: 640px;
+  height: 640px;
+  transform: translateX(-50%);
+}
+
+.vg::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 150px;
+  background: linear-gradient(to bottom, transparent, rgba(6, 10, 26, 0.92));
+  pointer-events: none;
+}
+
+.vg-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.vg-toast-slot {
+  position: absolute;
+  right: 24px;
+  bottom: 60px;
+  left: 24px;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.vg-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--vg-line);
+  border-radius: 999px;
+  background: var(--vg-glass);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  color: var(--vg-muted);
+  font: inherit;
+  font-size: 13px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.vg-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.vg-what {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.vg-what b {
+  color: var(--vg-ink);
+  font-weight: 600;
+}
+
+.vg-legend {
+  position: absolute;
+  right: 24px;
+  bottom: 22px;
+  left: 24px;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  color: var(--vg-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.vg-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vg-legend i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}

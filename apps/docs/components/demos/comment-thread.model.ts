@@ -15,6 +15,7 @@ export interface Comment {
   age: number;
   typing?: boolean;
   sending?: boolean;
+  mention?: string;
   replies: Comment[];
 }
 
@@ -64,6 +65,8 @@ export const updateComment = (
       ? update(comment)
       : { ...comment, replies: updateComment(comment.replies, key, update) },
   );
+
+export const handleOf = (name: string) => `@${name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
 
 export const countComments = (comments: Comment[]): number =>
   comments.reduce(

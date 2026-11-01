@@ -1,0 +1,38 @@
+---
+title: "Focus timer"
+description: "A Pomodoro timer drawn as an hourglass of real sand: it pours while you work, freezes when you pause, and flips over for your break."
+status: "new"
+tags: ["Particles", "Motion"]
+---
+
+<Stage name="focus-timer" code={<Source demo="focus-timer" />} minHeight={560}>
+  <FocusTimerDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Start and pause.** Sand streams through the neck and piles up below while the clock counts down. Pause and the stream hangs in the air until you resume.
+- **Skip.** The rest of the sand rushes down, the hourglass flips, and the break starts full. Skipping a break moves you on to the next round.
+- **Reset.** The sand pours back up into the top bulb and the clock returns to the start of the session.
+- **Watch the rounds.** The line under the clock counts the rounds, and turns green while you rest.
+
+## Install
+
+<AddCommand name="focus-timer" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="focus-timer" />
+
+## How it works
+
+- **The sand is a fixed set of grains.** The top bulb is filled with a grid of grains, ordered from the surface down. The bottom bulb holds the same grains mirrored, so grain 10 always has a place in each bulb.
+- **Time is how many have fallen.** The share of the session that has passed decides how many grains sit in the bottom pile. The next few wait in a thin stream between the neck and the pile, so as time moves on each grain slides down the stream and lands.
+- **Flipping is a rotation, not a rebuild.** At the end of a session the canvas turns half a circle, and the grains are laid out mirrored from then on. A full bottom bulb is already a full top bulb, so nothing jumps.
+- **Colour is a tone.** Glass and sand each carry a tone, and the palette is `var(--name)` entries from the card's CSS, so it follows dark mode.
+
+<Callout>The demo runs fast so you can watch a whole session. Set `SPEED` to `{ focus: 1, break: 1 }` for real time, and change `FOCUS`, `BREAK` and `ROUNDS` to suit your app.</Callout>

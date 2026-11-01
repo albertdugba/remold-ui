@@ -6,6 +6,7 @@ import { Faq } from "@/components/home/faq";
 import { Flavors } from "@/components/home/flavors";
 import { Parts } from "@/components/home/parts";
 import { Points } from "@/components/home/points";
+import { HeroGrid } from "@/components/home/hero-grid";
 import { HeroWord } from "@/components/home/hero-word";
 import { FLAVOR_NAMES, FLAVORS, type Flavor } from "@/components/home/flavors-code";
 import { highlight } from "fumadocs-core/highlight";
@@ -43,9 +44,10 @@ export default async function HomePage() {
   const highlighted = await highlightFlavors();
   return (
     <main className="hm">
-      <div className="hm-frame">
-        <section className="hm-hero top">
-          <div className="hm-hero-main">
+      <div className="hm-hero-band">
+        <HeroGrid />
+        <div className="hm-frame">
+          <section className="hm-hero center">
             <Link href="/docs/components/otp-input" className="hm-new">
               <span>New</span> Watch a code verify itself <span aria-hidden="true">→</span>
             </Link>
@@ -54,6 +56,10 @@ export default async function HomePage() {
               <br />
               <HeroWord />
             </h1>
+            <p className="hm-lead">
+              Animated components for the screens you actually ship, ready to copy into your app. Under them, a small engine for layouts,
+              text, SVG and canvas. React or plain JavaScript.
+            </p>
             <div className="hm-actions">
               <Link className="hm-cta primary" href="/docs/quick-start">
                 Get started <span aria-hidden="true">→</span>
@@ -61,22 +67,16 @@ export default async function HomePage() {
               <Link className="hm-cta" href="/docs/components">
                 Explore morphs
               </Link>
+              <div className="hm-install">
+                <CopyCommand command="npm i @remold-ui/react" />
+              </div>
             </div>
-          </div>
-          <div className="hm-hero-side">
-            <p className="hm-lead">
-              A card becomes a page. A label becomes a new state. The familiar parts should not disappear and start over. Remold finds what
-              carries through a change and moves it into place, without hand-wiring animation IDs.
-            </p>
-            <div className="hm-install">
-              <CopyCommand command="npm i @remold-ui/react" />
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
 
       <div className="hm-frame">
-        <Section kicker="The same idea, in every form">
+        <Section kicker="The same idea, in every form" className="first">
           <header className="hm-head row">
             <div>
               <h2>Watch one state become the next.</h2>

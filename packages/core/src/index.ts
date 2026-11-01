@@ -24,9 +24,11 @@ export { matchPoints, type MatchPointsOptions, type Point3, type PointMatches } 
 
 // Points: shapes into dots, and clouds that rebuild themselves
 export {
+  clusterPoints,
   fitPoints,
   sampleMask,
   samplePath,
+  type ClusterOptions,
   type FitOptions,
   type Mask,
   type MaskSampleOptions,

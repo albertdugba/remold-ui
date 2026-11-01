@@ -83,6 +83,42 @@ describe("particles", () => {
     expect(drawing.frame.arcs[0]).toMatchObject({ x: 7, y: 9 });
   });
 
+  it("fits a shared frame rather than each shape's bounds", () => {
+    // A 100 × 50 frame in a 400 × 200 canvas: four times bigger, so (10, 50) lands at (40, 200).
+    particles(canvas, { points: [{ x: 10, y: 50 }, { x: 10, y: 40 }], fit: { width: 100, height: 50 }, padding: 0, loop: frames.loop });
+    expect(drawing.frame.arcs.map(({ x, y }) => ({ x, y }))).toEqual([
+      { x: 40, y: 200 },
+      { x: 40, y: 160 },
+    ]);
+  });
+
+  it("rejects a frame without a size", () => {
+    expect(() => particles(canvas, { fit: { width: 0, height: 10 }, loop: frames.loop })).toThrow(/frame/);
+  });
+
+  it("resolves settled() at once when still, and only once a change has played out", async () => {
+    const dots = particles(canvas, { points: row(5), loop: frames.loop, fit: "none" });
+    await dots.settled();
+    dots.to(row(5, 40), { pairing: "index" });
+    let done = false;
+    void dots.settled().then(() => (done = true));
+    await Promise.resolve();
+    expect(done).toBe(false);
+    frames.run();
+    await Promise.resolve();
+    expect(done).toBe(true);
+  });
+
+  it("paints var(--name) palette colours from the canvas's styles, and again when the theme changes", async () => {
+    canvas.style.setProperty("--dot", "#123456");
+    particles(canvas, { points: row(3), palette: ["var(--dot)"], loop: frames.loop });
+    expect(drawing.frame.fills.at(-1)).toBe("#123456");
+    canvas.style.setProperty("--dot", "#abcdef");
+    document.documentElement.classList.toggle("dark");
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(drawing.frame.fills.at(-1)).toBe("#abcdef");
+  });
+
   it("morphs to a new shape, then stops the loop", () => {
     const dots = particles(canvas, { points: row(5), loop: frames.loop, fit: "none" });
     dots.to(row(3, 50));

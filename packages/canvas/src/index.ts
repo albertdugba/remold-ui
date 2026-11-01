@@ -62,10 +62,13 @@ export {
 } from "./object-looks";
 export {
   particles,
+  sampleElementPoints,
   sampleImagePoints,
   sampleTextPoints,
+  type ElementSampleOptions,
   type ImageSampleOptions,
   type ParticleFill,
+  type ParticleFit,
   type ParticleTransition,
   type Particles,
   type ParticlesOptions,
@@ -85,5 +88,8 @@ export {
   type LinkRoute,
   type SceneOptions,
 } from "./scene";
+export { dust, type Dust, type DustOptions } from "./particles/dust";
 export { layout } from "./layout";
+export { dotGrid, type DotGrid, type DotGridColors, type DotGridLook, type DotGridOptions, type DotGridPoint, type DotGridShape } from "./dot-grid";
+export { globe, type Globe, type GlobeArc, type GlobeColors, type GlobeFocus, type GlobeLook, type GlobeMarker, type GlobeOptions, type GlobePoint, type GlobePulseOptions } from "./globe";
 export { painter, type Painter, type PainterFrame, type PainterOptions, type PainterSpring, type PainterToOptions, type PainterValues } from "./painter";

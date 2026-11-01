@@ -18,6 +18,7 @@ import {
   addVotes,
   commentTrail,
   countComments,
+  handleOf,
   makeComment,
   postThread,
   previewThread,
@@ -35,6 +36,7 @@ const avatar = (name: string) =>
   )}&backgroundColor=f1f1f3`;
 
 const AUTHOR = { name: "Ama Mensah", handle: "@amamensah" };
+const MAX_DEPTH = 3;
 const POST_LIKES = 248;
 const REPOSTS = 31;
 
@@ -233,12 +235,12 @@ export function CommentThreadDemo({
       return next;
     });
 
-  const send = (e: FormEvent, parent: string) => {
+  const send = (e: FormEvent, parent: string, mention?: string) => {
     e.preventDefault();
     const text = draft.trim();
     if (!text) return;
     const key = `you-${Date.now()}`;
-    const mine = makeComment(key, "You", text, 0, 0, { sending: true });
+    const mine = makeComment(key, "You", text, 0, 0, { sending: true, mention });
     setComments((list) =>
       updateComment(list, parent, (comment) => ({
         ...comment,
@@ -263,12 +265,15 @@ export function CommentThreadDemo({
     );
   };
 
-  const thread = (list: Comment[], parent: string, depth = 0): ReactNode =>
+  const thread = (list: Comment[], parent: string, depth = 0, parentAuthor?: string): ReactNode =>
     list.map((x) => {
       const isFolded = folded.has(x.key);
       const total = countComments(x.replies);
       const isLit = lit.has(x.key);
       const author = x.badge === "Author";
+      const deep = depth >= MAX_DEPTH;
+      const mention = x.mention ?? (depth >= 2 && parentAuthor ? handleOf(parentAuthor) : undefined);
+      const replyTo = depth > 0 ? handleOf(x.author) : undefined;
       return (
         <motion.article
           layout="position"
@@ -314,7 +319,10 @@ export function CommentThreadDemo({
                     {x.sending ? "Sending…" : ago(x.age)}
                   </span>
                 </p>
-                <p className="cx-text">{x.text}</p>
+                <p className="cx-text">
+                  {mention && <span className="cx-mention">{mention} </span>}
+                  {x.text}
+                </p>
               </div>
               <div className="cx-under">
                 <button
@@ -357,7 +365,7 @@ export function CommentThreadDemo({
                 )}
               </div>
               {replying === x.key && (
-                <form className="cx-compose" onSubmit={(e) => send(e, x.key)}>
+                <form className="cx-compose" onSubmit={(e) => send(e, deep ? parent : x.key, replyTo)}>
                   <img
                     className="cx-compose-face"
                     src={avatar("You")}
@@ -366,6 +374,7 @@ export function CommentThreadDemo({
                     height={28}
                   />
                   <div className="cx-compose-box">
+                    {replyTo && <span className="cx-compose-to">{replyTo}</span>}
                     <textarea
                       ref={input}
                       rows={1}
@@ -378,7 +387,7 @@ export function CommentThreadDemo({
                           e.currentTarget.form?.requestSubmit();
                         }
                       }}
-                      placeholder={`Reply to ${x.author.split(" ")[0]}…`}
+                      placeholder={replyTo ? "Add a reply…" : `Reply to ${x.author.split(" ")[0]}…`}
                       aria-label={`Reply to ${x.author}`}
                     />
                     <div className="cx-compose-bar">
@@ -433,7 +442,7 @@ export function CommentThreadDemo({
           )}
           {!isFolded && x.replies.length > 0 && (
             <motion.div layout="position" {...connectorMotion} className="cx-replies">
-              {thread(x.replies, x.key, depth + 1)}
+              {thread(x.replies, x.key, depth + 1, x.author)}
             </motion.div>
           )}
         </motion.article>
@@ -502,7 +511,9 @@ export function CommentThreadDemo({
               ))}
             </div>
           </motion.div>
-          <motion.div layout="position" {...connectorMotion} className="cx-replies top">{thread(shown, "top")}</motion.div>
+          <motion.div layout="position" {...connectorMotion} className="cx-replies top">
+            {thread(shown, "top")}
+          </motion.div>
       </Remold.Connectors>
     </div>
   );

@@ -155,6 +155,21 @@ const PREVIEWS: Record<string, Preview> = {
       import("./demos/product-anatomy").then((m) => m.ProductAnatomyDemo),
     ),
   },
+  "unit-chart": {
+    Component: load(() => import("./demos/unit-chart").then((m) => m.UnitChartDemo)),
+    width: 440,
+    surface: true,
+  },
+  "inbox-triage": {
+    Component: load(() => import("./demos/inbox-triage").then((m) => m.InboxTriageDemo)),
+    width: 460,
+    surface: true,
+  },
+  "assistant-answer": {
+    Component: load(() => import("./demos/assistant-answer").then((m) => m.AssistantAnswerDemo)),
+    width: 420,
+    surface: true,
+  },
 
   // The home page
   "home/text": {

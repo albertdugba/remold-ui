@@ -1,0 +1,56 @@
+---
+title: "useDust"
+description: "Break parts of the page into dots that pour somewhere else: a row into a bin, a product into a cart, and back again."
+---
+
+## Usage
+
+```tsx
+import { useDust } from "@remold-ui/react";
+
+function Inbox() {
+  const card = useRef<HTMLElement>(null);
+  const trail = useDust(card, { palette: ["var(--ink)", "var(--muted)", "var(--surface)"] });
+
+  async function archive(row: HTMLElement) {
+    setHidden(row.id); // hide it as its dust takes over
+    await trail.away(row, archiveTab.current!);
+    removeRow(row.id);
+  }
+
+  async function undo(row: HTMLElement) {
+    await trail.back(row, archiveTab.current!); // the same dots pour back out
+    setHidden(null);
+  }
+
+  return <section ref={card}>…</section>;
+}
+```
+
+In plain JavaScript, `dust(container, options)` from `@remold-ui/canvas` gives you the same `away`, `back` and `destroy`.
+
+- Each pour samples the elements as they look (backgrounds, text and images), so every dot keeps its colour, then gathers them into a heap at the target's middle.
+- The dots are drawn on a canvas laid over the container for the length of the pour, and it's removed once they land. Nothing runs between pours.
+- Positions are measured in the container's own pixels, so pours line up inside a CSS transform, such as a scaled-down preview.
+- The palette takes `var(--name)`, read from the container when the pour starts, so dust follows dark mode. Make the last colour the one the elements sit on, so anti-aliased edges vanish into it.
+
+## Options
+
+<TypeTable
+  type={{
+    palette: { type: "string[]", description: <>{"Colours to sort the dots into: any CSS colours, var(--name) included."}</> },
+    count: { type: "number", default: "600", description: <>{"Dots per element."}</> },
+    radius: { type: "number", default: "1.2", description: <>{"Dot radius, in CSS pixels."}</> },
+    heap: { type: "number", default: "6", description: <>{"How far the heap reaches from the target's middle."}</> },
+    background: { type: "boolean", default: "false", description: <>{"Whether each element's own background becomes dots too."}</> },
+    transition: { type: "ParticleTransition", default: "a short scatter", description: <>{"How the dots travel."}</> },
+    spring: { type: "{ duration, bounce }", default: "{ duration: 0.6, bounce: 0.1 }", description: <>{"How the dots move."}</> },
+  }}
+/>
+
+## Returns
+
+| Field                    | What it is                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------- |
+| `away(elements, target)` | Pours one element or several into `target`. Resolves once the dots land.                |
+| `back(elements, source)` | Pours out of `source` and settles into the elements. Show them once it resolves.        |

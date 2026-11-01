@@ -21,12 +21,16 @@ Each dot pairs with a nearby spot in the next shape and springs there; spare dot
 <TypeTable
   type={{
     points: { type: "CloudPoint[]", description: "The first shape. A point’s tone picks its palette colour." },
-    fit: { type: '"contain" | "none"', default: '"contain"', description: "Scale each shape to the canvas, or use points as CSS pixels." },
+    fit: {
+      type: '"contain" | "none" | { width, height, x?, y? }',
+      default: '"contain"',
+      description: "Scale each shape to the canvas, use points as CSS pixels, or fit a frame that every shape shares so shapes keep their size and place as they change.",
+    },
     padding: { type: "number", default: "24", description: "Space kept round a fitted shape." },
     radius: { type: "number", default: "2.5", description: "Dot radius at full size." },
     shape: { type: '"circle" | "square"', default: '"circle"', description: "Squares are cheaper for very large clouds." },
     color: { type: "fill | ((ctx, size) => fill)", default: "CSS color", description: "One fill for every dot, such as a gradient." },
-    palette: { type: "string[]", description: "Colours by tone, from 0 (first) to 1 (last)." },
+    palette: { type: "string[]", description: "Colours by tone, from 0 (first) to 1 (last). Any CSS colour, var(--name) included, which is read from the canvas and follows theme changes." },
     pointer: {
       type: "false | { radius, strength }",
       default: "{ radius: 90, strength: 22 }",
@@ -78,7 +82,12 @@ With reduced motion the dots go straight to the new shape, scatter or not. In co
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `samplePath(d, options)`            | An SVG path's inside, or its outline with `mode: "outline"`.                                                                                                                    |
 | `sampleTextPoints(text, options)`   | Text in a CSS font. Load web fonts first.                                                                                                                                       |
-| `sampleImagePoints(image, options)` | An image's opaque, dark, light, or saturated pixels; pass the same hex `palette` to sample colour tones. Optional normalized `details` preserve tiny features outside the mask. |
+| `sampleImagePoints(image, options)` | An image's opaque, dark, light, or saturated pixels; pass the same `palette` (any CSS colours) to sample colour tones. Optional normalized `details` preserve tiny features outside the mask. |
+| `sampleElementPoints(element, options)` | A piece of the page as it looks: backgrounds, text and images, each dot toned from `palette`. Positions are in `relativeTo`'s CSS pixels, so they land on the element under an overlay canvas with `fit: "none"`. |
 | `sampleMask(mask, options)`         | Any pixel data, such as `ImageData`.                                                                                                                                            |
 
 All take `count` (exactly that many points) or `spacing`, plus `pattern` and `jitter`.
+
+`dots.settled()` resolves once the dots stop moving, so you can wait for a change to play out.
+
+To pour part of the page somewhere else (a row into a bin, a product into a cart), use `dust(container)`: `await trail.away(row, bin)` and `await trail.back(row, bin)`. It's built from `sampleElementPoints`, which turns an element into coloured dots, and `clusterPoints` from core, which gathers them into a heap. See [useDust](/docs/hooks/use-dust).

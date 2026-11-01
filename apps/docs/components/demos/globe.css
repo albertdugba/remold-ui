@@ -1,0 +1,75 @@
+.gb {
+  --gb-surface: #ffffff;
+  --gb-ink: #18181b;
+  --gb-muted: #71717a;
+  --gb-soft: #f4f4f5;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  width: min(100%, 440px);
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--gb-surface);
+  color: var(--gb-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  transition: background-color 0.3s ease;
+}
+
+.dark .gb {
+  --gb-surface: #1c1c1f;
+  --gb-ink: #fafafa;
+  --gb-muted: #a1a1aa;
+  --gb-soft: #27272a;
+}
+
+.gb[data-look="night"] {
+  --gb-surface: #070d1f;
+  --gb-ink: #e6ecff;
+  --gb-muted: #8693b8;
+  --gb-soft: #121b36;
+}
+
+.gb[data-look="paper"] {
+  --gb-surface: #fffaf0;
+  --gb-ink: #3b3427;
+  --gb-muted: #8a7f6a;
+  --gb-soft: #f1e9d6;
+}
+
+.gb-canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  color: var(--gb-ink);
+}
+
+.gb-looks {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--gb-soft);
+}
+
+.gb-look {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gb-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.gb-look[aria-pressed="true"] {
+  background: var(--gb-surface);
+  color: var(--gb-ink);
+}
+
+.gb-look:focus-visible {
+  outline: 2px solid var(--gb-ink);
+  outline-offset: 2px;
+}

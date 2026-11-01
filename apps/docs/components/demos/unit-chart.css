@@ -1,0 +1,146 @@
+.uc {
+  --uc-surface: #ffffff;
+  --uc-soft: #f4f4f5;
+  --uc-ink: #18181b;
+  --uc-muted: #71717a;
+  --uc-free: #a5b4fc;
+  --uc-pro: #4f46e5;
+  --uc-team: #db2777;
+  display: grid;
+  gap: 20px;
+  width: min(100%, 440px);
+  padding: 28px;
+  border-radius: 24px;
+  background: var(--uc-surface);
+  color: var(--uc-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .uc {
+  --uc-surface: #1c1c1f;
+  --uc-soft: #27272a;
+  --uc-ink: #fafafa;
+  --uc-muted: #a1a1aa;
+  --uc-free: #4c4f8f;
+  --uc-pro: #818cf8;
+  --uc-team: #f472b6;
+}
+
+.uc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.uc-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.uc-sub {
+  color: var(--uc-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.uc-views {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--uc-soft);
+}
+
+.uc-thumb {
+  position: absolute;
+  inset: 3px auto 3px 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: 9px;
+  background: var(--uc-surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.uc-view {
+  position: relative;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: var(--uc-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.uc-view[aria-checked="true"] {
+  color: var(--uc-ink);
+}
+
+/* The same shape as the dots' frame, so each label sits under its column. */
+.uc-stage {
+  aspect-ratio: 100 / 42;
+}
+
+.uc-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.uc-groups {
+  display: grid;
+  margin: -8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.uc-groups li {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.uc-groups li > span:first-child {
+  color: var(--uc-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.uc-legend {
+  display: flex;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--uc-soft);
+  font-size: 13px;
+}
+
+.uc-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--uc-free);
+}
+
+.uc-legend [data-plan="1"]::before {
+  background: var(--uc-pro);
+}
+
+.uc-legend [data-plan="2"]::before {
+  background: var(--uc-team);
+}
+
+.uc-view:focus-visible {
+  outline: 2px solid var(--uc-pro);
+  outline-offset: 2px;
+}

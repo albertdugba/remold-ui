@@ -1,11 +1,11 @@
 ---
 title: "Donation goal"
-description: "A fundraising goal told in dots: every donation flies in as particles and fills the picture of what it pays for, until it bursts into a thank you."
+description: "A fundraising goal told in dots: every donation flies in as particles and fills the picture of what it pays for, until the water gathers into a heart."
 status: "new"
 tags: ["Particles", "Motion"]
 ---
 
-<Stage name="donation-goal" code={<Source demo="donation-goal" />} minHeight={700}>
+<Stage name="donation-goal" code={<Source demo="donation-goal" />} minHeight={520}>
   <DonationGoalDemo />
 </Stage>
 
@@ -15,7 +15,7 @@ It plays a short scene while it's on screen. Touch it and it's yours.
 
 - **Give.** Pick an amount and press Donate. A stream of dots rises from below the drop and settles at the waterline, so the drop fills by exactly the share you added.
 - **Watch the numbers.** The total and the backer count roll and the bar grows.
-- **Reach the goal.** The water scatters and gathers again into "Thank you", and Donate becomes Goal reached. Start again empties it back to where it began.
+- **Reach the goal.** The water scatters and gathers into a heart, and the buttons give way to a thank-you line. The reset button empties the drop back to where it began.
 
 ## Install
 
@@ -29,9 +29,9 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **One set of dots, always the same size.** The drop is sampled once into points, ordered from the bottom up. Every frame draws all of them: a faint copy for the empty drop, a second copy for the water, and four invisible corners that keep the picture's frame still while it fills.
+- **One set of dots, always the same size.** The drop is sampled once into points, ordered from the bottom up. Every frame draws all of them: a faint copy for the empty drop and a second copy for the water. `fit` is the picture's frame, so the drop stays still while it fills.
 - **Filling is moving dots.** Water that isn't raised yet waits, invisible, below the drop. A gift moves the next few into their places in the drop, a handful at a time, so they arrive as a stream.
 - **Colour is a tone.** Each dot carries a tone that springs with it, and the palette maps it to empty, water or hidden. The colours come from the card's CSS variables, so they follow dark mode.
-- **The thank you is another shape.** At the goal the particles flow into the words with a scatter transition, then back into the drop when it starts again.
+- **The heart is another shape.** At the goal the particles flow into a heart path drawn in the same frame, with a scatter transition, then back into the drop when it starts again.
 
 <Callout>The campaign and the backers are made up. Swap the drop for the shape of what your campaign pays for: any SVG path works.</Callout>

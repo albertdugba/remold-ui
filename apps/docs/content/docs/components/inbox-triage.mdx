@@ -1,0 +1,40 @@
+---
+title: "Inbox triage"
+description: "An inbox where archived and deleted mail breaks into dust and pours into its tab, with multi-select, swipe, hover actions and an undo toast."
+status: "new"
+kind: particles
+tags: ["Particles", "Base UI", "Motion"]
+---
+
+<Stage name="inbox-triage" code={<Source demo="inbox-triage" />} minHeight={620}>
+  <InboxTriageDemo />
+</Stage>
+
+It plays a short scene while it's on screen. Touch it and it's yours.
+
+## Things to try
+
+- **Archive or delete one.** Hover a message and use its actions, or swipe it: right to archive, left to bin. The whole row, avatar included, breaks into dust that pours into the Archive or Trash tab, and the tab's count goes up as it lands.
+- **Select a few.** Tick them, or tick the box at the top for all of them, and use the toolbar. Every selected row pours in together.
+- **Undo.** The toast counts down for five seconds, and pauses while you hover it. Undo pours the dust back out of the tab into the rows.
+- **Look in the other tabs.** Archive and Trash list what you moved, and can send it back to the inbox the same way.
+- **Empty a list.** Its empty state draws itself in dots.
+
+## Install
+
+<AddCommand name="inbox-triage" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="inbox-triage" />
+
+## How it works
+
+- **`useDust` does the pouring.** `trail.away(rows, tab)` samples the rows as they look (avatars, text, colours), pours the dots into the tab, and resolves once they land. Undo is `trail.back(rows, tab)`.
+- **State is where each message is.** Moving mail just changes its mailbox. An effect compares that with where rows are drawn: rows that left the view pour out, rows that came back pour in, and the rows fold and the counts change once the dust lands.
+- **Colours come from CSS.** The palette is `var(--name)` entries, so the dust and the empty state follow dark mode.
+- **Base UI for the parts.** Tabs, Checkbox (with select all), Toolbar, Tooltip, Avatar and Toast. The empty state is particles on their own.
+
+<Callout>The messages are made up and the avatars come from DiceBear. If an avatar can't be read by the canvas, the dust is made without it.</Callout>

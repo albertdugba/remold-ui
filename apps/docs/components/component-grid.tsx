@@ -41,7 +41,7 @@ export function AllComponents() {
       title: page.data.title,
       description: page.data.description ?? "",
       href: page.url,
-      category: page.data.kind === "canvas" ? "Canvas" : "Interface",
+      category: page.data.kind === "canvas" ? "Canvas" : page.data.kind === "particles" ? "Particles" : "Interface",
       isNew: page.data.status === "new",
     }));
   const rank = (id: string) => {

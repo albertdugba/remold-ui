@@ -153,12 +153,37 @@ const ITEMS = [
   [
     "donation-goal",
     "Donation goal",
-    "A fundraising goal told in dots: every donation flies in as particles and fills the picture of what it pays for, until it bursts into a thank you.",
+    "A fundraising goal told in dots: every donation flies in as particles and fills the picture of what it pays for, until the water gathers into a heart.",
   ],
   [
-    "training-plan",
-    "Training plan",
-    "A Couch to 5K training plan: finish a workout and a pulse runs down the plan to unlock the next, with a session to choose and a finisher medal at the end.",
+    "dot-grid-hero",
+    "Dot grid hero",
+    "A landing page hero on a dotted background that wakes up under the cursor: dots swell and lean away as you move, and a click sends a ripple across.",
+  ],
+  [
+    "focus-timer",
+    "Focus timer",
+    "A Pomodoro focus timer drawn as a particle hourglass: the sand really falls as the session runs, freezes on pause, and the glass flips into the break.",
+  ],
+  [
+    "visitors-globe",
+    "Live visitors",
+    "A real-time visitors panel: a glowing planet rises from the bottom of the card while signups and upgrades pulse at their cities and invites fly between them.",
+  ],
+  [
+    "unit-chart",
+    "Unit chart",
+    "A chart where every dot is 25 customers: regroup by plan, region or channel and the same dots walk to their new column.",
+  ],
+  [
+    "inbox-triage",
+    "Inbox triage",
+    "An inbox where archived and deleted mail breaks into dust and pours into its tab, with multi-select, swipe, hover actions and an undo toast.",
+  ],
+  [
+    "assistant-answer",
+    "Assistant answer",
+    "An assistant's waiting, thinking and answering shown in one cloud of dots: a breathing orb, a turning ring, then the answer's headline as the reply streams in.",
   ],
   [
     "api-keys",

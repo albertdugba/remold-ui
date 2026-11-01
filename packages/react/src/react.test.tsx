@@ -3,7 +3,7 @@ import type { FrameCallback, FrameLoop } from "@remold-ui/dom";
 import { act, StrictMode, createRef, useEffect, useRef, useState, type ReactNode } from "react";
 import { createRoot, type Root as ReactRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { Remold, useAutoplay, useDragToDismiss, useRemold, useRemoldLayout, useViewTransition, type Transition } from "./index.js";
+import { Remold, useAutoplay, useDragToDismiss, useDust, useRemold, useRemoldLayout, useViewTransition, type Transition } from "./index.js";
 
 /** Every fill on any canvas: cubes and objects each fill their sides and top. */
 let fills = 0;
@@ -777,6 +777,37 @@ describe("Remold.Particles", () => {
     await act(async () => frames.run());
     await render(<Remold.Particles shape={{ points }} loop={frames.loop} />);
     expect(frames.running).toBe(false);
+  });
+});
+
+describe("useDust", () => {
+  it("keeps the same pours across renders, and resolves when there's nothing to pour", async () => {
+    const seen: unknown[] = [];
+    let pour: Promise<void> | null = null;
+    function Card({ n }: { n: number }) {
+      const card = useRef<HTMLElement>(null);
+      const target = useRef<HTMLSpanElement>(null);
+      const trail = useDust(card);
+      seen.push(trail);
+      useEffect(() => {
+        if (n !== 2) return;
+        const row = card.current!.querySelector("p")!;
+        // Nothing laid out, so nothing to sample: the pour has nothing to do and resolves.
+        row.getBoundingClientRect = () => new DOMRect(0, 0, 0, 0);
+        pour = trail.away(row, target.current!);
+      }, [n, trail]);
+      return (
+        <section ref={card}>
+          <p>Row {n}</p>
+          <span ref={target} />
+        </section>
+      );
+    }
+    await render(<Card n={1} />);
+    await render(<Card n={2} />);
+    expect(seen.at(-1)).toBe(seen[0]);
+    await expect(pour).resolves.toBeUndefined();
+    expect(container.querySelector("canvas")).toBeNull();
   });
 });
 
