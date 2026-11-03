@@ -1,0 +1,35 @@
+---
+title: "Order tracker"
+description: "A food order told like a short film: each stage plays live (the lid lifts off the steaming pot, the bag hops, the scooter's wheels spin down the road, the front door opens), then the drawing reshapes into the next stage and that one comes alive."
+status: "new"
+tags: ["Remold", "SVG"]
+---
+
+<Stage name="order-tracker" code={<Source demo="order-tracker" />} minHeight={460}>
+  <OrderTrackerDemo />
+</Stage>
+
+## Things to try
+
+- **Watch it play.** Each stage comes alive on its own: the lid lifts off the pot and the steam puffs out, the sealed bag hops and its handle swings, the scooter's wheels spin as the road rushes past, and the front door swings open as the badge pings.
+- **Tap a step.** It stops playing and jumps there: the drawing holds still, reshapes, and that stage comes alive.
+- **Jump around.** Go from Preparing straight to Delivered and the pot reshapes into the house in one move.
+
+## Install
+
+<AddCommand name="order-tracker" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="order-tracker" />
+
+## How it works
+
+- **Four layers, one drawing.** The illustration is four `Remold.Icon` layers on the same frame: the dark ink, the green, the white details and the soft grey. Each one morphs its own shapes, so every colour stays where it belongs.
+- **Live, then morph.** Each stage's motion is plain CSS on the layers: the whole object (a hop, a bump) and its moving part on top (the lid, the handle, the door), plus spokes that spin on the hubs. It holds still while the layers reshape, then the next stage's motion starts, so the two never fight.
+- **Swap in your own art.** Each stage is plain path data per layer. Draw your stages on the same viewBox and the morph pairs the shapes for you.
+- **The words follow.** The headline and the line under it are `Remold.Text`, so only the letters that change move.
+
+<Callout>The kitchen, the rider and the times are made up.</Callout>

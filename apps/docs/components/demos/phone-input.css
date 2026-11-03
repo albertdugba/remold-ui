@@ -1,0 +1,146 @@
+/* Phone input. Styling only: Motion moves the digits and separators. */
+.phn-box {
+  gap: 0;
+  padding: 0 12px 0 4px;
+}
+
+.phn-country {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 6px 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--fk-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.phn-country:hover,
+.phn-country[data-popup-open] {
+  background: var(--fk-well);
+}
+
+.phn-flag {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.phn-chevron {
+  display: grid;
+  color: var(--fk-muted);
+}
+
+.phn-chevron svg {
+  width: 14px;
+  height: 14px;
+}
+
+.phn-rule {
+  flex: none;
+  width: 1px;
+  height: 20px;
+  margin: 0 10px 0 6px;
+  background: var(--fk-line);
+}
+
+.phn-number {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+  height: 42px;
+  cursor: text;
+}
+
+.phn-drawn {
+  display: inline-flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  white-space: pre;
+}
+
+.phn-char {
+  display: inline-block;
+}
+
+.phn-char[data-separator] {
+  color: var(--fk-faint);
+}
+
+/* Spaces are drawn with a fixed width, so the gap reads the same in every format */
+.phn-char[data-separator]:empty,
+.phn-char[data-separator] {
+  min-width: 0.32em;
+  text-align: center;
+}
+
+.phn-placeholder {
+  position: absolute;
+  color: var(--fk-faint);
+  font-weight: 450;
+  pointer-events: none;
+}
+
+.phn-caret {
+  width: 1.5px;
+  height: 20px;
+  margin-left: 1px;
+  border-radius: 1px;
+  background: var(--fk-ink);
+  animation: phn-blink 1.1s steps(1) infinite;
+}
+
+@keyframes phn-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.phn-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: transparent;
+  caret-color: transparent;
+  font-size: 16px;
+  outline: none;
+  opacity: 0;
+}
+
+.phn-help[data-complete] {
+  color: var(--fk-ink);
+  font-weight: 550;
+}
+
+.phn-popup {
+  min-width: 240px;
+}
+
+.phn-check {
+  display: grid;
+  margin-left: 4px;
+  color: var(--fk-ink);
+}
+
+.phn-check svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phn-caret {
+    animation: none;
+  }
+}

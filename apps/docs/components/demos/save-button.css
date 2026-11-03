@@ -1,0 +1,195 @@
+.svb {
+  --svb-surface: #ffffff;
+  --svb-fill: #f4f4f5;
+  --svb-line: rgb(24 24 27 / 0.1);
+  --svb-ink: #18181b;
+  --svb-muted: #71717a;
+  --svb-good: #15803d;
+  --svb-bad: #b91c1c;
+  --svb-track: #e4e4e7;
+  display: grid;
+  gap: 8px;
+  width: 380px;
+  max-width: 100%;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  background: var(--svb-surface);
+  color: var(--svb-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.dark .svb {
+  --svb-surface: #232327;
+  --svb-fill: #2c2c31;
+  --svb-line: rgb(255 255 255 / 0.1);
+  --svb-ink: #fafafa;
+  --svb-muted: #a1a1aa;
+  --svb-good: #4ade80;
+  --svb-bad: #f87171;
+  --svb-track: #3a3a40;
+}
+
+.svb-greeting {
+  margin: 0 0 6px;
+  color: var(--svb-muted);
+}
+
+.svb-name {
+  color: var(--svb-ink);
+  font-weight: 600;
+}
+
+.svb-field {
+  display: grid;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.svb-field input {
+  height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--svb-fill);
+  box-shadow: inset 0 0 0 1px var(--svb-line);
+  color: var(--svb-ink);
+  font: inherit;
+  font-weight: 400;
+  outline: none;
+  transition: box-shadow 0.2s;
+}
+
+.svb-field input:focus-visible {
+  box-shadow: inset 0 0 0 1.5px var(--svb-ink);
+}
+
+.svb-field input[aria-invalid] {
+  box-shadow: inset 0 0 0 1.5px var(--svb-bad);
+}
+
+.svb-help {
+  color: var(--svb-muted);
+  font-size: 12px;
+}
+
+.svb[data-status="error"] .svb-help {
+  color: var(--svb-bad);
+}
+
+.svb-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.svb-fail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--svb-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.svb-switch {
+  display: flex;
+  width: 30px;
+  height: 18px;
+  padding: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--svb-track);
+  cursor: pointer;
+}
+
+.svb-switch[data-checked] {
+  justify-content: flex-end;
+  background: var(--svb-bad);
+}
+
+.svb-switch:focus-visible {
+  outline: 2px solid var(--svb-ink);
+  outline-offset: 2px;
+}
+
+.svb-knob {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+/* The button: its width follows the word, its colour follows what happened. */
+.svb-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--svb-ink);
+  color: var(--svb-surface);
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.25s, opacity 0.2s;
+}
+
+.svb-button:focus-visible {
+  outline: 2px solid var(--svb-ink);
+  outline-offset: 2px;
+}
+
+.svb[data-status="idle"] .svb-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.svb[data-status="saving"] .svb-button {
+  cursor: progress;
+}
+
+.svb[data-status="saved"] .svb-button {
+  background: var(--svb-good);
+}
+
+.svb[data-status="error"] .svb-button {
+  background: var(--svb-bad);
+}
+
+.svb-icon {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The spinner is the saving icon turning; the same arc then reshapes into the result. */
+.svb[data-status="saving"] .svb-icon {
+  animation: svb-spin 0.8s linear infinite;
+}
+
+@keyframes svb-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svb[data-status="saving"] .svb-icon {
+    animation-duration: 2.4s;
+  }
+
+  .svb-button,
+  .svb-field input {
+    transition: none;
+  }
+}

@@ -14,9 +14,16 @@ import {
   MeridianMark,
   NorthwindMark,
 } from "./demo-icons";
-import { JFK, LHR, type Airport } from "./swap-airports";
 import { useScene } from "./use-scene";
 import "./flight-booking.css";
+
+export interface Airport {
+  code: string;
+  city: string;
+}
+
+const LHR: Airport = { code: "LHR", city: "London Heathrow" };
+const JFK: Airport = { code: "JFK", city: "New York JFK" };
 
 interface Airline {
   name: string;

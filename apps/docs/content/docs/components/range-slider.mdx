@@ -1,0 +1,33 @@
+---
+title: "Range slider"
+description: "A price range slider with a histogram behind it: while you drag a handle its price lifts out of the label and rides above the handle, then flies back when you let go."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="range-slider" code={<Source demo="range-slider" />} minHeight={340}>
+  <RangeSliderDemo />
+</Stage>
+
+## Things to try
+
+- **Drag a handle.** Its price moves from the label to above your finger.
+- **Let go.** The price flies back into the label.
+- **Watch the bars.** They darken inside your range, and the count below updates.
+
+## Install
+
+<AddCommand name="range-slider" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="range-slider" />
+
+## How it works
+
+- **Built on Base UI.** `Slider` with a thumb for each end gives dragging, keyboard and the minimum gap between them.
+- **The price follows you.** The label's price and the bubble share a Motion `layoutId`, so it travels between them.
+
+<Callout>The prices and counts are made up.</Callout>

@@ -1,0 +1,32 @@
+---
+title: "Save button"
+description: "A save button that says what's happening: Saving with a spinner, Saved with a check, and a visible rollback with Retry when the save fails."
+status: "new"
+tags: ["Icon", "Text", "Layout"]
+---
+
+<Stage name="save-button" code={<Source demo="save-button" />}>
+  <SaveButtonDemo />
+</Stage>
+
+## Things to try
+
+- **Change your name and press Save changes.** The greeting above updates at once, before the server answers. The button turns to Saving with a spinner, then Saved with a check, then back to Save changes on its own.
+- **Switch on "Fail the next save" and save again.** The greeting shows the new name while it saves. Then the save fails: the greeting changes back to your old name, the field and the note under it turn red, and the button offers Retry.
+- **Press Retry** with the switch off, and it saves.
+
+## Install
+
+<AddCommand name="save-button" />
+
+## Dependencies
+
+<Dependencies demo="save-button" />
+
+## How it works
+
+- **The change shows before the answer.** This is an optimistic update: the greeting uses the new name while it saves, and the saved name otherwise. A failed save puts the old name back through [Text](/docs/primitives/text), letter by letter, so the rollback is something you see rather than a silent reset.
+- **One icon, three shapes.** The spinner is an arc that turns. When the save finishes, the same [Icon](/docs/primitives/icon) reshapes that arc into a check, or into an alert if the save failed.
+- **The button fits its word.** A [Layout](/docs/primitives/layout) around it lets its width ease from "Save changes" to "Saving" to "Saved" instead of jumping.
+- **Focus stays put.** While it's busy, the button is `aria-disabled` and `aria-busy` rather than disabled, so keyboard focus doesn't fall off it mid-save. The note under the field is announced when it changes.
+- **Swap in your own request.** Replace the timeout in `save()` with your request, and resolve to Saved or Error.

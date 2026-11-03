@@ -1,0 +1,34 @@
+---
+title: "Split amount"
+description: "Splitting a bill: tap the people at the table and each one takes an equal slice of the bar, while everyone's share rolls down to the new amount, cents and all."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="split-amount" code={<Source demo="split-amount" />} minHeight={440}>
+  <SplitAmountDemo />
+</Stage>
+
+## Things to try
+
+- **Add someone.** The bar re-divides and every share rolls down.
+- **Take someone out.** Their slice closes and the others grow.
+- **Look at the cents.** The shares always add up to the bill exactly.
+
+## Install
+
+<AddCommand name="split-amount" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="split-amount" />
+
+## How it works
+
+- **Built on Base UI.** `ToggleGroup` with `multiple` is the row of people.
+- **The bill re-divides.** Each slice is a Motion flex item, so they resize together; shares roll with the Odometer.
+- **No lost cents.** What's left after an even split goes a cent at a time to the first people.
+
+

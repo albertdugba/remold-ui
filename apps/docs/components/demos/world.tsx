@@ -4,7 +4,6 @@ import type { PainterFrame } from "@remold-ui/canvas";
 import { deceleration, project, velocityTracker } from "@remold-ui/core";
 import { Remold } from "@remold-ui/react";
 import { useMemo, useRef, useState, type PointerEvent } from "react";
-import "./world.css";
 
 const LAND: [number, [number, number][]][] = [
   [
@@ -305,7 +304,7 @@ export function WorldDemo({
   };
 
   return (
-    <div className="rm-world">
+    <div className="grid w-full justify-items-center gap-2">
       <Remold.Canvas
         actionsRef={actions}
         values={values}
@@ -313,7 +312,7 @@ export function WorldDemo({
         continuous={view === 1 && !dragging}
         draw={draw}
         label={`A dotted world: ${name}`}
-        className="rm-world-canvas"
+        className="block h-[280px] w-full touch-pan-y cursor-grab active:cursor-grabbing"
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={() => {
@@ -327,7 +326,7 @@ export function WorldDemo({
           e.stopPropagation();
         }}
       />
-      <span className="rm-world-label">{name}</span>
+      <span className="text-[13px] font-semibold text-white/70">{name}</span>
     </div>
   );
 }

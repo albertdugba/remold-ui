@@ -16,7 +16,6 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef } from "react";
 import { useScene } from "./use-scene";
 import { NIGHT, PLATFORM_INK, WIRE_INK } from "./night-stage";
-import "./achievement-unlocked.css";
 
 type SceneProps = Remold.Scene.Props;
 type Beat = "locked" | "unlocked" | "kept";
@@ -174,23 +173,23 @@ export function AchievementUnlocked({ playing }: AchievementUnlockedProps = {}) 
         {state.beat === "unlocked" && (
           <motion.div
             key="toast"
-            className="au-toast"
+            className="absolute top-[22px] left-1/2 flex w-max max-w-[calc(100%-32px)] -translate-x-1/2 items-center gap-[11px] rounded-[14px] bg-[rgb(26_24_36_/_0.86)] py-[9px] pr-3 pl-[9px] shadow-[inset_0_0_0_1px_rgb(255_255_255_/_0.08),0_12px_30px_-12px_rgb(0_0_0_/_0.6),0_0_40px_-12px_rgb(245_196_81_/_0.35)] backdrop-blur-[10px]"
             role="status"
             initial={{ opacity: 0, y: -14, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.96 }}
             transition={{ type: "spring", duration: 0.5, bounce: 0.25, delay: 0.25 }}
           >
-            <span className="au-toast-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
+            <span className="grid size-[34px] shrink-0 place-items-center rounded-[10px] bg-[linear-gradient(150deg,#ffd76a,#d9a21f)]" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="size-5 fill-[#3a2504]">
                 <path d={FLAME} />
               </svg>
             </span>
-            <span className="au-toast-copy">
-              <span>Achievement unlocked</span>
-              <b>On a roll · 7 days in a row</b>
+            <span className="grid min-w-0">
+              <span className="text-[11px] font-semibold tracking-[0.04em] text-[#f5c451] uppercase">Achievement unlocked</span>
+              <b className="overflow-hidden text-[13.5px] font-semibold text-ellipsis whitespace-nowrap">On a roll · 7 days in a row</b>
             </span>
-            <span className="au-xp">+50 XP</span>
+            <span className="shrink-0 rounded-full bg-[rgb(245_196_81_/_0.14)] px-2 py-[3px] font-mono text-[11.5px] font-semibold text-[#f5c451]">+50 XP</span>
           </motion.div>
         )}
       </AnimatePresence>

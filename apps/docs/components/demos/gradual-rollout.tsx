@@ -15,7 +15,6 @@ import { extrude } from "@remold-ui/canvas";
 import { Remold } from "@remold-ui/react";
 import { NIGHT, PLATFORM_INK, VIOLET, WIRE_INK } from "./night-stage";
 import { useScene } from "./use-scene";
-import "./gradual-rollout.css";
 
 type SceneProps = Remold.Scene.Props;
 
@@ -131,9 +130,9 @@ export function GradualRollout({ playing }: GradualRolloutProps = {}) {
       />
 
       <div className="night-chip gr-flag">
-        <span className="gr-dot" data-on={state.percent > 0 || undefined} aria-hidden="true" />
-        <code>checkout-v2</code>
-        <span className="gr-errors">errors 0.02%</span>
+        <span className="size-[7px] rounded-full bg-[#5b5868] transition-[background-color,box-shadow] duration-300 data-[on]:bg-[#7c5cff] data-[on]:shadow-[0_0_0_3px_rgb(124_92_255_/_0.25)]" data-on={state.percent > 0 || undefined} aria-hidden="true" />
+        <code className="font-mono text-[12.5px]">checkout-v2</code>
+        <span className="rounded-full bg-[rgb(52_199_89_/_0.12)] px-[7px] py-0.5 font-mono text-[11px] text-[#5ee08a]">errors 0.02%</span>
       </div>
 
       <div className="night-foot">
@@ -141,13 +140,13 @@ export function GradualRollout({ playing }: GradualRolloutProps = {}) {
           <b>{reachedOf(state.percent)}</b> users
         </span>
         <ToggleGroup
-          className="gr-steps"
+          className="flex gap-0.5 rounded-[10px] bg-white/5 p-[3px] shadow-[inset_0_0_0_1px_rgb(255_255_255_/_0.07)]"
           aria-label="Roll out to"
           value={[String(state.percent)]}
           onValueChange={(v) => v[0] !== undefined && take({ percent: Number(v[0]) as Percent })}
         >
           {PERCENTS.map((p) => (
-            <Toggle key={p} value={String(p)} className="gr-step">
+            <Toggle key={p} value={String(p)} className="h-7 min-w-[46px] rounded-[7px] px-2 font-mono text-xs text-[#8f8ca3] transition-[background-color,color] hover:text-[#ecebf5] data-[pressed]:bg-[rgb(124_92_255_/_0.22)] data-[pressed]:text-white data-[pressed]:shadow-[inset_0_0_0_1px_rgb(124_92_255_/_0.55)] focus-visible:outline-2 focus-visible:outline-[#a48bff] focus-visible:outline-offset-1">
               {p}%
             </Toggle>
           ))}

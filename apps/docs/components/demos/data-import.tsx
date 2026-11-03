@@ -15,7 +15,6 @@ import { useEffect } from "react";
 import { DATASTORE_GLYPH } from "./demo-glyphs";
 import { NIGHT, PLATFORM_INK, WIRE_INK } from "./night-stage";
 import { useScene } from "./use-scene";
-import "./data-import.css";
 
 type SceneProps = Remold.Scene.Props;
 type Beat = "idle" | "reading" | "imported";
@@ -148,7 +147,7 @@ export function DataImport({ playing }: DataImportProps = {}) {
         {done && (
           <motion.div
             key="done"
-            className="night-chip di-chip"
+            className="night-chip gap-0 overflow-hidden p-0"
             role="status"
             initial={{ opacity: 0, y: -12, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -156,9 +155,9 @@ export function DataImport({ playing }: DataImportProps = {}) {
             transition={{ type: "spring", duration: 0.5, bounce: 0.2, delay: 1 }}
           >
             {TABLES.map((t) => (
-              <span key={t.id} className="di-table">
-                <span>{t.id}</span>
-                <b>{t.rows}</b>
+              <span key={t.id} className="grid gap-px px-3.5 py-2 [&+span]:shadow-[inset_1px_0_0_rgb(255_255_255_/_0.08)]">
+                <span className="font-mono text-[11px] text-[#8f8ca3]">{t.id}</span>
+                <b className="text-sm tabular-nums">{t.rows}</b>
               </span>
             ))}
           </motion.div>

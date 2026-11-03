@@ -1,0 +1,31 @@
+---
+title: "Avatar stack"
+description: "Overlapping faces with a +3 for the rest. Opening it loosens the stack and the three faces it stood for join the row, and closing folds them back into the count."
+status: "new"
+tags: ["Layout"]
+---
+
+<Stage name="avatar-stack" code={<Source demo="avatar-stack" />}>
+  <AvatarStackDemo />
+</Stage>
+
+## Things to try
+
+- **Press +3.** The four faces move apart, and the three people the count stood for join the end of the row.
+- **Press the arrow** to close it. The three fold away, and the stack tightens back up behind +3.
+- **Hover a face, or tab to it.** It comes to the front with the person's name above it.
+
+## Install
+
+<AddCommand name="avatar-stack" />
+
+## Dependencies
+
+<Dependencies demo="avatar-stack" />
+
+## How it works
+
+- One [Layout](/docs/primitives/layout) wraps the row. Opening changes the faces' overlap and adds three more. Layout moves the four you already see to their new places, and brings the new ones in, in the same motion.
+- Layout matches each face by what it shows, so Ada stays Ada as the row changes around her.
+- Earlier faces sit on top, so the stack reads left to right. A face you hover or focus comes to the front.
+- The +3 is a button with `aria-expanded`, and its label says how many more there are. Each face is in the tab order and is named for its person.

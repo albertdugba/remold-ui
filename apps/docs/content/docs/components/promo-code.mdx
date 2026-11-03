@@ -1,0 +1,34 @@
+---
+title: "Promo code"
+description: "A promo code field in an order summary: apply a code and the field springs down into a green ticket chip with the code and what it's worth, while the discount line opens and the total rolls down. A code that doesn't work shakes the field and says why."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="promo-code" code={<Source demo="promo-code" />} minHeight={420}>
+  <PromoCodeDemo />
+</Stage>
+
+## Things to try
+
+- **Try SUMMER.** The field gives a small shake and says the code has ended, keeping what you typed.
+- **Try SAVE20.** The field springs down into a green ticket chip, “SAVE20 · 20% off”, the discount line opens and the total rolls down, with the old price struck through.
+- **Press ×.** The chip springs back out into the empty field and the total rolls back up.
+
+## Install
+
+<AddCommand name="promo-code" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="promo-code" />
+
+## How it works
+
+- **Built on Base UI.** `Field` handles the invalid state and the error message; the code box is its `Control`.
+- **One box.** The field and the chip are the same element. Motion springs its width and height, and its contents are scale-corrected, so the text never stretches while it shrinks; the field's contents fade out as the chip's fade in.
+- **One spring.** The box and the discount line share it, so they arrive together. The total rolls with the Odometer, and the shake runs on a wrapper so it never fights the spring.
+
+<Callout>SAVE20 and WELCOME10 work; SUMMER has expired.</Callout>

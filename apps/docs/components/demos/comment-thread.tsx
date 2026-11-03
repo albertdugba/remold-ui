@@ -168,7 +168,7 @@ export function CommentThreadDemo({
   const [hover, setHover] = useState<string | null>(null);
   const [replying, setReplying] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [live, setLive] = useState(playing ?? true);
+  const [live, setLive] = useState(playing ?? false);
   const [visible, setVisible] = useState(false);
   const step = useRef(0);
   const frame = useRef<HTMLDivElement>(null);

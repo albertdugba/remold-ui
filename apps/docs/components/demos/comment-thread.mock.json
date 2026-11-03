@@ -100,7 +100,33 @@
               "author": "Esi Ofori",
               "text": "Stealing this. We do it backwards at work and it shows.",
               "votes": 9,
-              "age": 120
+              "age": 120,
+              "replies": [
+                {
+                  "key": "r-yaw",
+                  "author": "Yaw Darko",
+                  "text": "Same here. Writing it first would have saved us a rewrite.",
+                  "votes": 3,
+                  "age": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "r-kofi",
+          "author": "Kofi Agyeman",
+          "text": "How long was it from the first commit to launch?",
+          "votes": 7,
+          "age": 90,
+          "replies": [
+            {
+              "key": "r-ama-time",
+              "author": "Ama Mensah",
+              "badge": "Author",
+              "text": "About ten weeks of evenings. The last two were all docs.",
+              "votes": 5,
+              "age": 80
             }
           ]
         }

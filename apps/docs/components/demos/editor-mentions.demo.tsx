@@ -46,6 +46,7 @@ export function EditorMentionsDemo({ playing }: { playing?: boolean } = {}) {
   const autoplay = useAutoplay(script.length, {
     every: (index) => script[index]!.duration,
     stopOnInteraction: playing === undefined,
+    autoStart: playing !== undefined,
   });
   const { step, setPlaying } = autoplay;
   const [editedState, setEditedState] = useState<MentionsState | null>(null);

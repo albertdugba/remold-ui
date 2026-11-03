@@ -1,0 +1,184 @@
+.sp {
+  --sp-surface: #ffffff;
+  --sp-ink: #18181b;
+  --sp-muted: #71717a;
+  --sp-faint: #d4d4d8;
+  --sp-accent: #18181b;
+  --sp-good: #15803d;
+  --sp-line: rgb(24 24 27 / 0.08);
+  --sp-track: rgb(24 24 27 / 0.16);
+  display: grid;
+  gap: 22px;
+  width: 420px;
+  max-width: 100%;
+  padding: 22px 20px 18px;
+  border-radius: 18px;
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .sp {
+  --sp-surface: #232327;
+  --sp-ink: #fafafa;
+  --sp-muted: #a1a1aa;
+  --sp-faint: #52525b;
+  --sp-accent: #fafafa;
+  --sp-good: #4ade80;
+  --sp-line: rgb(255 255 255 / 0.08);
+  --sp-track: rgb(255 255 255 / 0.18);
+}
+
+:where(.sp) button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+:where(.sp) button:disabled {
+  cursor: default;
+}
+
+:where(.sp) button:focus-visible {
+  outline: 2px solid var(--sp-ink);
+  outline-offset: 2px;
+}
+
+/* The row of markers: equal columns, each a marker over its name. */
+.sp-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sp-step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.sp-marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--sp-faint);
+  transition: color 0.25s;
+}
+
+.sp-marker svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sp-step[data-state="current"] .sp-marker {
+  color: var(--sp-accent);
+}
+
+.sp-step[data-state="done"] .sp-marker {
+  color: var(--sp-good);
+}
+
+.sp-name {
+  font-size: 12px;
+  color: var(--sp-muted);
+  transition: color 0.25s;
+}
+
+.sp-step[data-state="current"] .sp-name {
+  color: var(--sp-ink);
+  font-weight: 600;
+}
+
+/* The lines between markers come from Connectors; a step that's done lights the line after it. */
+.sp-track {
+  position: relative;
+}
+
+.sp .rm-connector {
+  stroke: var(--sp-track);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke 0.35s;
+}
+
+.sp .rm-connector[data-line="done"] {
+  stroke: var(--sp-good);
+}
+
+.sp-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
+  box-shadow: 0 -1px 0 var(--sp-line);
+}
+
+.sp-caption {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+}
+
+.sp-count {
+  font-size: 12px;
+  color: var(--sp-muted);
+}
+
+.sp-title {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.sp-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sp-back,
+.sp-next {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sp-back {
+  color: var(--sp-muted);
+}
+
+.sp-back:disabled {
+  opacity: 0.4;
+}
+
+.sp-next {
+  background: var(--sp-ink);
+  color: var(--sp-surface);
+}
+
+.sp-next:disabled {
+  opacity: 0.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-marker,
+  .sp-name,
+  .sp .rm-connector {
+    transition: none;
+  }
+}

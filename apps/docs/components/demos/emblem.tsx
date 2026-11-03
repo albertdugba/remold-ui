@@ -3,7 +3,6 @@
 import { springs, Remold } from "@remold-ui/react";
 import { useId, useState } from "react";
 import { Frame, Segmented } from "./frame";
-import "./emblem.css";
 
 const EMBLEMS = {
   Listen:
@@ -28,7 +27,7 @@ export function EmblemDemo({
   const name = index === undefined ? own : NAMES[index % NAMES.length]!;
   const gradient = `emblem-${useId().replace(/:/g, "")}`;
   const body = (
-    <div className="rm-emblem">
+    <div className="grid min-h-full place-items-center content-center gap-3.5 self-stretch bg-[var(--color-fd-card)]">
       <svg
         width="0"
         height="0"
@@ -43,7 +42,7 @@ export function EmblemDemo({
         </defs>
       </svg>
       <Remold.Icon
-        className="rm-emblem-art"
+        className="size-[150px] drop-shadow-[0_14px_24px_rgb(79_70_229_/_0.25)]"
         d={EMBLEMS[name]}
         viewBox="0 0 100 100"
         fill={`url(#${gradient})`}
@@ -59,7 +58,7 @@ export function EmblemDemo({
           options={NAMES}
         />
       ) : (
-        <span className="rm-emblem-name">{name}</span>
+        <span className="text-sm font-medium text-[var(--color-fd-muted-foreground)]">{name}</span>
       )}
     </div>
   );

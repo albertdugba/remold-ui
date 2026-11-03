@@ -4,12 +4,83 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowDown01Icon, GoBackward15SecIcon, GoForward30SecIcon } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import {
   formatClock,
   usePodcastPlayer,
   type Episode,
 } from "./podcast-player.model";
+import "./podcast-player.css";
+
+/** How many bars the waveform has: thin ones, so it reads as a sound rather than as blocks. */
+const BARS = 56;
+
+/** Each bar's resting height, 0 to 1: a smooth envelope like a real waveform, the same every time. */
+const WAVE = Array.from({ length: BARS }, (_, i) => {
+  const x = i / (BARS - 1);
+  const envelope = 0.55 * Math.abs(Math.sin(x * Math.PI * 2.3 + 0.4)) + 0.45 * Math.abs(Math.sin(x * Math.PI * 5.1 + 1.2));
+  const grain = 0.12 * Math.sin(i * 1.7);
+  return Math.min(1, Math.max(0.14, envelope * 0.85 + grain + 0.1));
+});
+
+/**
+ * The song as sound waves. Paused, it's the still waveform; playing, a smooth wave travels through
+ * it frame by frame, so it moves like one sound rather than separate bars. The part already played
+ * is drawn darker, so it doubles as where you are in the song.
+ */
+function Waves({ playing, progress }: { playing: boolean; progress: number }) {
+  const bars = useRef<(HTMLSpanElement | null)[]>([]);
+
+  useEffect(() => {
+    const els = bars.current;
+    if (!playing || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      for (const el of els) if (el) el.style.transform = "";
+      return;
+    }
+    let frame = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = (now - start) / 1000;
+      // A slow swell over the whole song, so loud and quiet passages come and go.
+      const energy = 0.75 + 0.25 * Math.sin(t * 0.9) * Math.sin(t * 0.37 + 1);
+      els.forEach((el, i) => {
+        if (!el) return;
+        const wave = 0.5 + 0.5 * Math.sin(t * 5.2 - i * 0.32) * Math.cos(t * 2.1 + i * 0.11);
+        el.style.transform = `scaleY(${(0.35 + 0.75 * wave) * energy})`;
+      });
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [playing]);
+
+  return (
+    <div className="ppw" data-playing={playing || undefined} aria-hidden="true">
+      {WAVE.map((h, i) => (
+        <span
+          key={i}
+          ref={(el) => {
+            bars.current[i] = el;
+          }}
+          className="ppw-bar"
+          data-played={i / BARS < progress || undefined}
+          style={{ "--h": h } as CSSProperties}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Four little bars beside the title in the mini player, only while it plays. */
+function Equalizer() {
+  return (
+    <span className="ppw-eq" aria-hidden="true">
+      {[0, 1, 2, 3].map((i) => (
+        <span key={i} style={{ "--d": `${0.55 + i * 0.13}s`, "--o": `${-i * 0.21}s` } as CSSProperties} />
+      ))}
+    </span>
+  );
+}
 
 function Art({ episode, className }: { episode: Episode; className: string }) {
   if (episode.artwork)
@@ -186,6 +257,7 @@ export function PodcastPlayer({
             </div>
 
             <div className="mt-5">
+              <Waves playing={playing} progress={progress} />
               <input
                 type="range"
                 min={0}
@@ -244,8 +316,22 @@ export function PodcastPlayer({
             />
             </motion.div>
             <div className="pointer-events-none min-w-0 flex-1">
-              <motion.h4 layoutId="podcast-title" transition={SPRING} className="m-0 truncate text-[14px] leading-snug font-semibold">
-                {episode.title}
+              <motion.h4 layoutId="podcast-title" transition={SPRING} className="m-0 flex items-center gap-2 text-[14px] leading-snug font-semibold">
+                <span className="truncate">{episode.title}</span>
+                <AnimatePresence initial={false}>
+                  {playing && (
+                    <motion.span
+                      key="eq"
+                      className="inline-flex"
+                      initial={{ opacity: 0, scale: 0.6 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.6 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Equalizer />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </motion.h4>
               <motion.p layoutId="podcast-show" transition={SPRING} className="m-0 truncate text-[12.5px] text-zinc-500 dark:text-zinc-400">
                 {episode.show}

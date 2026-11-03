@@ -12,6 +12,8 @@ export function useScene<S>(
   const autoplay = useAutoplay(beats.length, {
     every: (i) => beats[i]!.ms,
     stopOnInteraction: standalone,
+    // On a docs page (no `playing` from outside) the scene waits to be touched; only the home page plays it.
+    autoStart: !standalone,
   });
   const { setPlaying } = autoplay;
   const [own, setOwn] = useState<S | null>(null);

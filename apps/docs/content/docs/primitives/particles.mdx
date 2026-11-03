@@ -13,6 +13,8 @@ Choose **Image** in the demo to see the field jacket photograph become an olive-
 
 <Install packages="@remold-ui/react" />
 
+Import particles from `@remold-ui/react/canvas` so canvas rendering stays opt-in.
+
 Using plain JavaScript? Install `@remold-ui/canvas` instead.
 
 ## Usage
@@ -20,7 +22,7 @@ Using plain JavaScript? Install `@remold-ui/canvas` instead.
 Give `Remold.Particles` a shape, and change it to morph. Each dot heads for its nearest place in the new shape; spare dots shrink away and new ones grow in. Dots near the pointer lean away.
 
 ```tsx tab="React" tab-group="lang"
-import { Remold } from '@remold-ui/react';
+import { Remold } from '@remold-ui/react/canvas';
 
 <Remold.Particles shape="Just landed" className="h-64 w-full" />
 <Remold.Particles shape={{ path: HEART }} />

@@ -131,7 +131,8 @@ function prism(context: DrawContext, state: DrawState, outline: Outline, labelSi
     gradient.addColorStop(0.55, palette.sides[1]);
     gradient.addColorStop(1, palette.sides[2]);
     polygon(ctx, sides);
-    halo({ context: ctx, color: palette.glow, alpha: 0.6 * (0.25 + 0.45 * glow), radius: 19 * (0.5 + glow) });
+    // Keep hover/focus legible on light canvases without turning a selected tile into a large halo.
+    halo({ context: ctx, color: palette.glow, alpha: 0.22 * (0.2 + 0.38 * glow), radius: 11 * (0.5 + glow) });
     ctx.fillStyle = gradient;
     ctx.fill();
   }

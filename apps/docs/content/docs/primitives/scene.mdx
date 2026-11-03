@@ -11,11 +11,15 @@ description: "A canvas scene of objects that springs between layouts."
 
 <Install packages="@remold-ui/react" />
 
+Import scenes from `@remold-ui/react/canvas` so canvas rendering stays opt-in.
+
 Using plain JavaScript? Install `@remold-ui/canvas` instead.
 
 ## Usage
 
 ```tsx tab="React" tab-group="lang"
+import { Remold } from "@remold-ui/react/canvas";
+
 <Remold.Scene label="Our architecture" objects={objects} layouts={layouts} layout={layout} />
 ```
 

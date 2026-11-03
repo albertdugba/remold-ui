@@ -280,7 +280,8 @@ type Turn = {
 };
 
 export function VoiceOrbDemo({ index }: { index?: number } = {}) {
-  const auto = useAutoplay(SCENE.length, { every: (i) => SCENE[i]!.ms });
+  // Waits to be tapped on its docs page; the scripted scene only plays when there's no microphone.
+  const auto = useAutoplay(SCENE.length, { every: (i) => SCENE[i]!.ms, autoStart: false });
   const scripted = SCENE[index != null ? index % SCENE.length : auto.step]!;
   const speech = useSpeechRecognition();
   const [turn, setTurn] = useState<Turn | null>(null);

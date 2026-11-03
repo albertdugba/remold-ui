@@ -1,0 +1,31 @@
+---
+title: "Step progress"
+description: "Checkout steps joined by lines: finishing a step turns its dot into a check and fills the line to the next one, and going back undoes both."
+status: "new"
+tags: ["Icon", "Text", "Connectors"]
+---
+
+<Stage name="step-progress" code={<Source demo="step-progress" />}>
+  <StepProgressDemo />
+</Stage>
+
+## Things to try
+
+- **Press Continue.** The dot in the current marker turns into a check, the line to the next step turns green, and the next marker gets its dot.
+- **Press Back,** or tap a step you've finished. The check turns back into a dot, and the line goes grey again.
+- **Reach Review.** The button says Place order. Press it and every step is checked, and the caption says All done.
+
+## Install
+
+<AddCommand name="step-progress" />
+
+## Dependencies
+
+<Dependencies demo="step-progress" />
+
+## How it works
+
+- Each marker is an [Icon](/docs/primitives/icon) that changes between three icons: an empty circle, a circle with a dot, and a check. Icon morphs from one to the next, so the dot turns into the check rather than swapping.
+- The lines are [Connectors](/docs/primitives/connectors): each marker is an anchor linked to the one before it, so the lines stay attached however the row is laid out. A step that's done marks the line after it `line="done"`, and that line turns green.
+- The caption and the buttons are [Text](/docs/primitives/text), so "Step 2 of 4" and "Continue" change letter by letter instead of swapping all at once.
+- It's an ordered list, and the current step carries `aria-current="step"`. Steps ahead of you are disabled; steps you've done take you back.

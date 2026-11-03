@@ -13,6 +13,8 @@ The orb is one `draw` function. Each state is a set of `values` (size, drift spe
 
 <Install packages="@remold-ui/react" />
 
+Import canvas primitives from `@remold-ui/react/canvas` so canvas rendering stays out of your interface-only entry point.
+
 Using plain JavaScript? Install `@remold-ui/canvas` instead, and use [painter()](/docs/canvas/painter).
 
 ## Usage
@@ -20,7 +22,7 @@ Using plain JavaScript? Install `@remold-ui/canvas` instead, and use [painter()]
 Write `draw`. Pass the numbers it reads as `values`; change them and they spring there.
 
 ```tsx tab="React" tab-group="lang"
-import { Remold } from '@remold-ui/react';
+import { Remold } from '@remold-ui/react/canvas';
 
 <Remold.Canvas
   values={{ radius: active ? 80 : 40 }}

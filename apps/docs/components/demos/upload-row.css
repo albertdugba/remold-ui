@@ -1,0 +1,197 @@
+/* Upload row. Styling only: one box throughout. Remold reshapes the icon and morphs the status;
+   Motion springs the box and swaps its contents. */
+.upl {
+  --fk-width: 360px;
+}
+
+.upl-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10.5px;
+  overflow: hidden;
+  /* Empty: a dashed edge. With a file it turns into the same solid hairline as every other field. */
+  border: 1.5px dashed color-mix(in oklab, var(--fk-muted) 45%, transparent);
+  border-radius: 14px;
+  background: var(--fk-surface);
+  transition:
+    border-color 0.25s,
+    background-color 0.25s;
+}
+
+.upl-box[data-state="empty"] {
+  cursor: pointer;
+}
+
+.upl-box[data-state="empty"]:hover,
+.upl-box[data-state="empty"]:focus-visible,
+.upl-box[data-dragging] {
+  background-color: var(--fk-well);
+  outline: none;
+}
+
+.upl-box[data-dragging] {
+  border-style: solid;
+  border-color: var(--fk-ink);
+}
+
+.upl-box:not([data-state="empty"]) {
+  border-style: solid;
+  border-color: var(--fk-line);
+  box-shadow: var(--fk-shadow);
+}
+
+.upl-icon {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--fk-well);
+  color: var(--fk-muted);
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+
+.upl-icon svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.upl-box[data-dragging] .upl-icon svg {
+  transform: translateY(-2px);
+}
+
+.upl-icon[data-state="uploading"] {
+  color: var(--fk-ink);
+}
+
+.upl-icon[data-state="uploading"] svg {
+  transform: translateY(-4px) scale(0.85);
+}
+
+.upl-icon[data-state="done"] {
+  background: color-mix(in oklab, var(--fk-good) 14%, var(--fk-surface));
+  color: var(--fk-good);
+}
+
+.upl-kind {
+  position: absolute;
+  bottom: 5px;
+  color: var(--fk-muted);
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}
+
+.upl-copy {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.upl-copy b {
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upl-status {
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--fk-muted);
+  font-size: 12.5px;
+  white-space: pre;
+}
+
+.upl-percent {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.upl-browse {
+  color: var(--fk-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--fk-faint);
+  text-underline-offset: 3px;
+}
+
+.upl-action {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--fk-muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.upl-action[data-kind="cancel"] {
+  padding: 0;
+}
+
+.upl-action:hover {
+  background: var(--fk-well);
+  color: var(--fk-ink);
+}
+
+.upl-action svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* A hairline of progress along the bottom edge, gone once it's done */
+.upl-progress {
+  position: absolute;
+  right: 14px;
+  bottom: 0;
+  left: 14px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.upl-progress[data-visible] {
+  opacity: 1;
+}
+
+.upl-track {
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--fk-well);
+}
+
+.upl-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--fk-ink);
+  transition: width 0.3s ease-out;
+}
+
+/* The real file input: present for choosing, never seen */
+.upl-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

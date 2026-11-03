@@ -13,6 +13,8 @@ The grid above is one `<Remold.DotGrid>`. Each option is a different `shape`, an
 
 <Install packages="@remold-ui/react" />
 
+Import the dot grid from `@remold-ui/react/canvas` so canvas rendering stays opt-in.
+
 Using plain JavaScript? Install `@remold-ui/canvas` instead, and use `dotGrid()`.
 
 ## Usage
@@ -20,7 +22,7 @@ Using plain JavaScript? Install `@remold-ui/canvas` instead, and use `dotGrid()`
 Put it behind your content. It follows the pointer over its parent, so it can keep `pointer-events: none`.
 
 ```tsx tab="React" tab-group="lang"
-import { Remold } from '@remold-ui/react';
+import { Remold } from '@remold-ui/react/canvas';
 
 <section className="relative isolate">
   <Remold.DotGrid

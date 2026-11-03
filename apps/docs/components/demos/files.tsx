@@ -2,7 +2,6 @@
 import { Remold } from "@remold-ui/react";
 import { useState } from "react";
 import { Frame, Segmented } from "./frame";
-import "./files.css";
 
 interface File {
   name: string;
@@ -35,8 +34,8 @@ export function FilesDemo({ framed = true }: { framed?: boolean }) {
   const shown = FILES.filter((file) => kind === "All" || file.kind === kind).sort(SORTS[sort]);
 
   const body = (
-    <div className="rm-files">
-      <div className="rm-files-bar">
+    <div className="w-full max-w-[560px]">
+      <div className="mb-3 flex flex-wrap justify-between gap-2">
         <Segmented
           label="Sort by"
           value={sort}
@@ -58,15 +57,15 @@ export function FilesDemo({ framed = true }: { framed?: boolean }) {
           ]}
         />
       </div>
-      <Remold.Layout trigger={`${sort}:${kind}`} className="rm-files-list">
+      <Remold.Layout trigger={`${sort}:${kind}`} className="overflow-hidden rounded-[10px] border border-[var(--color-fd-border)] bg-[var(--color-fd-background)]">
         {shown.map((file) => (
-          <div key={file.name} className="rm-files-row">
-            <span className={`rm-files-icon ${file.kind.toLowerCase()}`} aria-hidden="true" />
-            <span className="rm-files-name">{file.name}</span>
-            <span className="rm-files-meta">
+          <div key={file.name} className="grid grid-cols-[16px_minmax(0,1fr)_64px_90px] items-center gap-3 border-b border-[var(--color-fd-border)] bg-[var(--color-fd-background)] px-3.5 py-2.5 text-sm last:border-b-0 max-[520px]:grid-cols-[16px_minmax(0,1fr)_64px]">
+            <span className={`h-[17px] w-3.5 rounded-[3px] bg-[var(--color-fd-muted)] shadow-[inset_0_0_0_1px_var(--color-fd-border)] ${file.kind === "Image" ? "bg-[#93c5fd]" : file.kind === "Video" ? "bg-[#fcd34d]" : ""}`} aria-hidden="true" />
+            <span className="overflow-hidden text-ellipsis whitespace-nowrap">{file.name}</span>
+            <span className="text-right text-[13px] tabular-nums text-[var(--color-fd-muted-foreground)]">
               {file.size < 1 ? `${Math.round(file.size * 1000)} KB` : `${file.size} MB`}
             </span>
-            <span className="rm-files-meta rm-files-date">
+            <span className="text-right text-[13px] tabular-nums text-[var(--color-fd-muted-foreground)] max-[520px]:hidden">
               {file.modified === 1 ? "Yesterday" : `${file.modified} days ago`}
             </span>
           </div>

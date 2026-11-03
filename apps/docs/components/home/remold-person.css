@@ -1,11 +1,11 @@
-/* ───────────── One person, four components (a card in "Every part, live") ───────────── */
+/* ───────────── One person, three components (a card in "Every part, live") ───────────── */
 .hr {
   /* Its own colours, so it looks the same on the home page and in the docs. */
   --hm-ink: var(--color-fd-foreground);
   --hm-muted: var(--color-fd-muted-foreground);
   --hm-line: var(--color-fd-border);
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   min-height: 520px;
   overflow: hidden;
   border: 1px solid var(--hm-line);
@@ -17,8 +17,7 @@
   );
 }
 
-.hr-bar,
-.hr-foot {
+.hr-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -31,17 +30,7 @@
   border-bottom: 1px solid var(--hm-line);
 }
 
-.hr-foot {
-  border-top: 1px solid var(--hm-line);
-  padding: 12px 18px;
-  font-size: 12.5px;
-  color: var(--hm-muted);
-}
 
-.hr-foot > span:first-child {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  color: var(--hm-ink);
-}
 
 .hr-tabs {
   display: flex;
@@ -110,8 +99,5 @@
   }
   .hr-root {
     padding: 18px;
-  }
-  .hr-count {
-    display: none;
   }
 }

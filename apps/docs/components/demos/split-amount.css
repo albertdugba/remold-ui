@@ -1,0 +1,121 @@
+/* Split amount. Styling only: Motion re-divides the bar; the Odometer rolls the shares. */
+.spl {
+  --fk-width: 340px;
+  gap: 14px;
+}
+
+.spl-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.spl-title {
+  display: grid;
+  line-height: 1.2;
+}
+
+.spl-title b {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.spl-people {
+  display: flex;
+  justify-content: space-between;
+}
+
+.spl-person {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fk-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.spl-face {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--fk-well);
+  color: var(--fk-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1.5px var(--fk-line);
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s;
+}
+
+.spl-person:active .spl-face {
+  transform: scale(0.94);
+}
+
+.spl-person[data-pressed] {
+  color: var(--fk-ink);
+}
+
+.spl-person[data-pressed] .spl-face {
+  background: var(--spl-face);
+  color: #fff;
+  box-shadow:
+    0 0 0 2px var(--fk-surface),
+    0 0 0 4px var(--spl-face);
+}
+
+.spl-person[data-pressed][data-you] .spl-face {
+  color: var(--fk-surface);
+}
+
+.spl-bar {
+  display: flex;
+  gap: 3px;
+  height: 10px;
+}
+
+.spl-slice {
+  flex-basis: 0;
+  min-width: 0;
+  border-radius: 999px;
+  background: var(--spl-face);
+}
+
+.spl-shares {
+  display: grid;
+}
+
+.spl-share {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 32px;
+}
+
+.spl-share i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--spl-face);
+}
+
+.spl-share span {
+  flex: 1;
+  color: var(--fk-muted);
+}
+
+.spl-share b {
+  font-weight: 650;
+}

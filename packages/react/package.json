@@ -28,10 +28,20 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./canvas": {
+      "import": {
+        "types": "./dist/canvas.d.ts",
+        "default": "./dist/esm/canvas.js"
+      },
+      "require": {
+        "types": "./dist/canvas.d.cts",
+        "default": "./dist/canvas.cjs"
+      }
     }
   },
   "scripts": {
-    "build": "tsup && cp dist/index.d.cts dist/index.d.ts",
+    "build": "tsup && cp dist/index.d.cts dist/index.d.ts && cp dist/canvas.d.cts dist/canvas.d.ts",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo",

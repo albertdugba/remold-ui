@@ -121,7 +121,7 @@ export function LogoMorph({
   color = "currentColor",
   every = 1800,
   bounce = 0.12,
-  autoplay: play = true,
+  autoplay: play = false,
   height = 300,
   selected,
   controls = true,

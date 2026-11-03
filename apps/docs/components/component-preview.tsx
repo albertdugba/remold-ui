@@ -59,13 +59,6 @@ const PREVIEWS: Record<string, Preview> = {
     width: 440,
     surface: true,
   },
-  "swap-airports": {
-    Component: load(() =>
-      import("./demos/swap-airports").then((m) => m.SwapAirportsDemo),
-    ),
-    width: 400,
-    surface: true,
-  },
   "otp-input": {
     Component: load(() =>
       import("./demos/otp-input").then((m) => m.OtpInputDemo),
@@ -82,9 +75,6 @@ const PREVIEWS: Record<string, Preview> = {
     crop: true,
     width: 480,
   },
-  letters: {
-    Component: load(() => import("./demos/letters").then((m) => m.LettersDemo)),
-  },
   "logo-morph": {
     Component: load(() =>
       import("./demos/logo-morph").then((m) => m.LogoMorphDemo),
@@ -96,6 +86,39 @@ const PREVIEWS: Record<string, Preview> = {
     Component: load(() =>
       import("./demos/morph-icons").then((m) => m.MorphIconsDemo),
     ),
+  },
+  "step-progress": {
+    Component: load(() =>
+      import("./demos/step-progress").then((m) => m.StepProgressDemo),
+    ),
+    width: 460,
+    surface: true,
+  },
+  "avatar-stack": {
+    Component: load(() =>
+      import("./demos/avatar-stack").then((m) => m.AvatarStackDemo),
+    ),
+    width: 380,
+    surface: true,
+  },
+  "save-button": {
+    Component: load(() =>
+      import("./demos/save-button").then((m) => m.SaveButtonDemo),
+    ),
+    width: 420,
+    surface: true,
+  },
+  "product-tour": {
+    Component: load(() =>
+      import("./demos/product-tour").then((m) => m.ProductTourDemo),
+    ),
+    width: 720,
+  },
+  "command-palette": {
+    Component: load(() =>
+      import("./demos/command-palette").then((m) => m.CommandPaletteDemo),
+    ),
+    width: 480,
   },
   "two-factor": {
     Component: load(() =>
@@ -137,23 +160,13 @@ const PREVIEWS: Record<string, Preview> = {
     ),
     width: 640,
     cover: true,
-    props: { source: "/api/podcasts", height: 480 },
+    props: { source: "/api/music", height: 480 },
   },
   "voice-orb": {
     Component: load(() =>
       import("./demos/voice-orb").then((m) => m.VoiceOrbDemo),
     ),
     width: 420,
-  },
-  "integrations-hub": {
-    Component: load(() =>
-      import("./demos/integrations-hub").then((m) => m.IntegrationsHubDemo),
-    ),
-  },
-  "product-anatomy": {
-    Component: load(() =>
-      import("./demos/product-anatomy").then((m) => m.ProductAnatomyDemo),
-    ),
   },
   "unit-chart": {
     Component: load(() => import("./demos/unit-chart").then((m) => m.UnitChartDemo)),
@@ -165,11 +178,73 @@ const PREVIEWS: Record<string, Preview> = {
     width: 460,
     surface: true,
   },
-  "assistant-answer": {
-    Component: load(() => import("./demos/assistant-answer").then((m) => m.AssistantAnswerDemo)),
+
+  "amount-input": {
+    Component: load(() => import("./demos/amount-input").then((m) => m.AmountInputDemo)),
+    width: 400,
+  },
+
+  "phone-input": {
+    Component: load(() => import("./demos/phone-input").then((m) => m.PhoneInputDemo)),
+    width: 380,
+    surface: true,
+  },
+
+  "tag-input": {
+    Component: load(() => import("./demos/tag-input").then((m) => m.TagInputDemo)),
+    width: 400,
+    surface: true,
+  },
+
+
+
+  "address-autocomplete": {
+    Component: load(() => import("./demos/address-autocomplete").then((m) => m.AddressAutocompleteDemo)),
     width: 420,
     surface: true,
   },
+
+  "quantity-stepper": {
+    Component: load(() => import("./demos/quantity-stepper").then((m) => m.QuantityStepperDemo)),
+    width: 400,
+    surface: true,
+  },
+
+  "promo-code": {
+    Component: load(() => import("./demos/promo-code").then((m) => m.PromoCodeDemo)),
+    width: 380,
+    surface: true,
+  },
+
+
+
+  "range-slider": {
+    Component: load(() => import("./demos/range-slider").then((m) => m.RangeSliderDemo)),
+    width: 400,
+    surface: true,
+  },
+
+
+
+  "upload-row": {
+    Component: load(() => import("./demos/upload-row").then((m) => m.UploadRowDemo)),
+    width: 400,
+    surface: true,
+  },
+
+
+  "split-amount": {
+    Component: load(() => import("./demos/split-amount").then((m) => m.SplitAmountDemo)),
+    width: 380,
+    surface: true,
+  },
+
+
+
+
+
+
+
 
   // The home page
   "home/text": {
@@ -290,8 +365,14 @@ export function ComponentPreview({
   const inner = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
   const [scale, setScale] = useState(0);
+  /** How far the drawn component's centre sits from the frame's centre, before scaling. */
+  const [shift, setShift] = useState({ x: 0, y: 0 });
   const width = preview?.width ?? 760;
   const crop = !interactive && !!preview?.crop;
+  // A catalogue picture is fitted to what's actually drawn, not the width it's drawn at, so a 360px
+  // field in a 440px stage fills its card. Live landing demos, cropped and full-bleed ones keep the
+  // whole frame.
+  const tight = !interactive && !crop && !preview?.cover && !preview?.dark;
 
   // Load the component once the card comes near the screen.
   useEffect(() => {
@@ -310,39 +391,84 @@ export function ComponentPreview({
     return () => io.disconnect();
   }, []);
 
-  // Fit the whole component inside the frame, keeping its proportions.
+  // Fit the component inside the frame, keeping its proportions.
   useEffect(() => {
     const outer = frame.current;
     const content = inner.current;
     if (!near || !outer || !content) return;
-    // The tallest the component has been. Demos change state as they play (a thread folds into a
+    // The largest the component has been. Demos change state as they play (a thread folds into a
     // summary, a list reorders), and refitting to each state would zoom the whole thing in and
-    // out, and distort its own layout animations mid-flight. Fitting the tallest keeps it still.
+    // out, and distort its own layout animations mid-flight. Fitting the largest keeps it still.
     let tallest = 0;
+    let box: { left: number; top: number; right: number; bottom: number } | null = null;
+
+    /** The union of everything drawn inside, in the component's own unscaled pixels. */
+    const drawn = () => {
+      const previous = content.style.transform;
+      content.style.transform = "none";
+      const frameBox = content.getBoundingClientRect();
+      let found: typeof box = null;
+      for (const el of content.querySelectorAll<HTMLElement>("*")) {
+        if (el.closest(".rm-preview-layer")) continue;
+        const r = el.getBoundingClientRect();
+        // Skip empty boxes, wrappers as wide as the stage (layout, not what's drawn) and visually
+        // hidden helpers such as the 1px inputs form libraries keep for screen readers and forms.
+        if (r.width <= 2 || r.height <= 2 || r.width >= frameBox.width - 1) continue;
+        const style = getComputedStyle(el);
+        if (style.position === "fixed" || style.visibility === "hidden" || (style.clip !== "auto" && style.clip !== "")) continue;
+        // Only what sits inside the component's own box counts, clamped to it: a popup or an
+        // element passing through mid-animation mustn't shrink the picture for good.
+        const b = {
+          left: Math.max(0, r.left - frameBox.left),
+          top: Math.max(0, r.top - frameBox.top),
+          right: Math.min(frameBox.width, r.right - frameBox.left),
+          bottom: Math.min(frameBox.height, r.bottom - frameBox.top),
+        };
+        if (b.right - b.left <= 2 || b.bottom - b.top <= 2) continue;
+        found = found
+          ? { left: Math.min(found.left, b.left), top: Math.min(found.top, b.top), right: Math.max(found.right, b.right), bottom: Math.max(found.bottom, b.bottom) }
+          : b;
+      }
+      content.style.transform = previous;
+      return found ? { ...found, frameWidth: frameBox.width, frameHeight: frameBox.height } : null;
+    };
+
     const fit = () => {
-      // scrollHeight catches late-loading copy and images, so the lower part of a
-      // component never gets cropped after the first measurement.
-      tallest = Math.max(tallest, content.offsetHeight, content.scrollHeight);
-      const height = tallest;
-      if (!height) return;
       // A frame can ask for breathing room around the component with `--rm-preview-inset`.
       const inset =
         parseFloat(
           getComputedStyle(outer).getPropertyValue("--rm-preview-inset"),
         ) || 0;
-      const across = (outer.clientWidth - inset * 2) / width;
-      setScale(
-        crop
-          ? across
-          : Math.min(across, (outer.clientHeight - inset * 2) / height),
-      );
+      const roomX = outer.clientWidth - inset * 2;
+      const roomY = outer.clientHeight - inset * 2;
+
+      if (tight) {
+        const now = drawn();
+        if (!now) return;
+        box = box
+          ? { left: Math.min(box.left, now.left), top: Math.min(box.top, now.top), right: Math.max(box.right, now.right), bottom: Math.max(box.bottom, now.bottom) }
+          : now;
+        const w = box.right - box.left;
+        const h = box.bottom - box.top;
+        if (!w || !h) return;
+        setScale(Math.min(roomX / w, roomY / h));
+        setShift({ x: (box.left + box.right) / 2 - now.frameWidth / 2, y: (box.top + box.bottom) / 2 - now.frameHeight / 2 });
+        return;
+      }
+
+      // scrollHeight catches late-loading copy and images, so the lower part of a
+      // component never gets cropped after the first measurement.
+      tallest = Math.max(tallest, content.offsetHeight, content.scrollHeight);
+      if (!tallest) return;
+      const across = roomX / width;
+      setScale(crop ? across : Math.min(across, roomY / tallest));
     };
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(outer);
     ro.observe(content);
     return () => ro.disconnect();
-  }, [near, width, crop]);
+  }, [near, width, crop, tight]);
 
   if (!preview) return <div className="rm-preview" aria-hidden="true" />;
   const { Component, height, dark, every, props, aspectRatio, surface, cover } =
@@ -357,6 +483,7 @@ export function ComponentPreview({
       data-surface={surface || undefined}
       data-cover={cover || undefined}
       data-crop={crop || undefined}
+      data-tight={tight || undefined}
       data-landing={custom ? "" : undefined}
       data-bare={custom?.bare || undefined}
       data-playing={playing || undefined}
@@ -372,9 +499,7 @@ export function ComponentPreview({
             width,
             height,
             overflow: height ? "hidden" : undefined,
-            transform: `translate(-50%, ${
-              crop ? "0" : "-50%"
-            }) scale(${scale})`,
+            transform: `translate(-50%, ${crop ? "0" : "-50%"}) translate(${-shift.x * scale}px, ${-shift.y * scale}px) scale(${scale})`,
             opacity: scale ? 1 : 0,
           }}
         >

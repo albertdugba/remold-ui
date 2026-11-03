@@ -1,0 +1,323 @@
+/* The form kit: the shared look of the small form elements (phone field, tag input, stepper and the
+   rest), matching the amount input. Each element adds only what its own moment needs. */
+.fk {
+  --fk-surface: #ffffff;
+  --fk-raised: #ffffff;
+  --fk-well: #f4f4f5;
+  --fk-well-strong: #e8e8eb;
+  --fk-ink: #0a0a0b;
+  --fk-muted: #71717a;
+  --fk-faint: #b4b4bd;
+  --fk-line: rgb(10 10 11 / 0.1);
+  --fk-focus: #0a0a0b;
+  --fk-accent: #2563eb;
+  --fk-good: #16a34a;
+  --fk-warn: #d97706;
+  --fk-bad: #e5484d;
+  --fk-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  --fk-pop: 0 12px 32px -12px rgb(0 0 0 / 0.25), 0 0 0 1px var(--fk-line);
+  display: grid;
+  gap: 8px;
+  width: min(100%, var(--fk-width, 340px));
+  color: var(--fk-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  text-align: start;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dark .fk,
+.dark .fk-popup {
+  --fk-surface: #18181b;
+  --fk-raised: #222226;
+  --fk-well: #26262b;
+  --fk-well-strong: #313137;
+  --fk-ink: #fafafa;
+  --fk-muted: #a1a1aa;
+  --fk-faint: #5b5b64;
+  --fk-line: rgb(255 255 255 / 0.1);
+  --fk-focus: #fafafa;
+  --fk-accent: #60a5fa;
+  --fk-good: #34d399;
+  --fk-warn: #fbbf24;
+  --fk-bad: #ff6369;
+  --fk-pop: 0 12px 32px -12px rgb(0 0 0 / 0.7), 0 0 0 1px var(--fk-line);
+}
+
+.fk *,
+.fk *::before,
+.fk *::after {
+  box-sizing: border-box;
+}
+
+.fk :where(p, ul, ol) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fk-label {
+  color: var(--fk-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fk-description {
+  margin: 0;
+  color: var(--fk-muted);
+  font-size: 12.5px;
+}
+
+.fk-error {
+  margin: 0;
+  color: var(--fk-bad);
+  font-size: 12.5px;
+  font-weight: 550;
+}
+
+/* The box every field sits in: a hairline, a shade darker while you type in it. No rings. */
+.fk-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--fk-surface);
+  box-shadow:
+    inset 0 0 0 1.5px var(--fk-line),
+    var(--fk-shadow);
+  transition: box-shadow 0.2s;
+}
+
+.fk-box:focus-within,
+.fk-box[data-focused] {
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in oklab, var(--fk-ink) 22%, transparent),
+    var(--fk-shadow);
+}
+
+.fk-box[data-invalid] {
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in oklab, var(--fk-bad) 70%, transparent),
+    var(--fk-shadow);
+}
+
+.fk-input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fk-ink);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.fk-input::placeholder {
+  color: var(--fk-faint);
+}
+
+/* Buttons */
+.fk-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--fk-ink);
+  color: var(--fk-surface);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    opacity 0.15s;
+}
+
+.fk-btn[data-variant="soft"] {
+  background: var(--fk-well);
+  color: var(--fk-ink);
+}
+
+.fk-btn[data-variant="soft"]:hover:not(:disabled) {
+  background: var(--fk-well-strong);
+}
+
+.fk-btn[data-variant="ghost"] {
+  background: none;
+  color: var(--fk-muted);
+}
+
+.fk-btn[data-variant="ghost"]:hover:not(:disabled) {
+  color: var(--fk-ink);
+}
+
+.fk-btn[data-variant="danger"] {
+  background: var(--fk-bad);
+  color: #fff;
+}
+
+.fk-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.fk-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* A small square icon button */
+.fk-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--fk-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.fk-icon:hover {
+  background: var(--fk-well);
+  color: var(--fk-ink);
+}
+
+.fk-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Chips */
+.fk-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  border-radius: 8px;
+  background: var(--fk-well);
+  color: var(--fk-ink);
+  font-size: 13px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+.fk-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--fk-muted);
+  cursor: pointer;
+}
+
+.fk-chip button:hover {
+  background: color-mix(in oklab, var(--fk-ink) 8%, transparent);
+  color: var(--fk-ink);
+}
+
+.fk-chip svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Popups: menus and suggestion lists */
+.fk-popup {
+  /* Popups mount outside the element, so they carry their own copy of the tokens they use. */
+  --fk-surface: #ffffff;
+  --fk-raised: #ffffff;
+  --fk-well: #f4f4f5;
+  --fk-ink: #0a0a0b;
+  --fk-muted: #71717a;
+  --fk-faint: #b4b4bd;
+  --fk-accent: #2563eb;
+  --fk-line: rgb(10 10 11 / 0.1);
+  --fk-pop: 0 12px 32px -12px rgb(0 0 0 / 0.25), 0 0 0 1px var(--fk-line);
+  min-width: var(--anchor-width);
+  max-height: min(var(--available-height), 280px);
+  padding: 4px;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: var(--fk-surface);
+  box-shadow: var(--fk-pop);
+  color: var(--fk-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-size: 14px;
+  outline: none;
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+.fk-popup[data-starting-style],
+.fk-popup[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+.fk-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  cursor: default;
+  outline: none;
+  user-select: none;
+}
+
+.fk-option[data-highlighted] {
+  background: var(--fk-well);
+}
+
+.fk-option-note {
+  margin-left: auto;
+  color: var(--fk-muted);
+  font-size: 12.5px;
+}
+
+.fk-empty:not(:empty) {
+  padding: 10px;
+  color: var(--fk-muted);
+  font-size: 13px;
+}
+
+.fk :where(button, [tabindex]):focus-visible {
+  outline: 2px solid var(--fk-focus);
+  outline-offset: 2px;
+}
+
+/* Where each demo puts its element */
+.fk-stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+}

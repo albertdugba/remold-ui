@@ -1,0 +1,35 @@
+---
+title: "Command palette"
+description: "A command palette that grows out of its search pill, keeps results in place as you type, turns a scope into a chip in the field, and folds back into a pill that says what you did."
+status: "new"
+tags: ["Layout", "Text"]
+---
+
+<Stage name="command-palette" code={<Source demo="command-palette" />}>
+  <CommandPaletteDemo />
+</Stage>
+
+## Things to try
+
+- **Press the pill,** or focus it and press ⌘K (Ctrl+K on Windows and Linux). It grows into the palette, with the cursor in the field.
+- **Type "set".** Results that don't match leave, and the rest slide up to close the gap. Arrow keys move the highlight. Enter opens the highlighted result.
+- **Choose Projects.** The row's name turns into a chip in the field, and the results narrow to projects. Backspace on an empty field takes the chip out.
+- **Pick anything.** The palette folds back into the pill, and the pill says what happened ("Opened Billing", "Invite sent") before going back to asking.
+- **Press Escape,** or click outside, to close it.
+
+## Install
+
+<AddCommand name="command-palette" />
+
+## Dependencies
+
+<Dependencies demo="command-palette" />
+
+## How it works
+
+- **One box is both the pill and the palette.** It stays on the page while its contents change. A [Layout](/docs/primitives/layout) eases it from pill to panel and back, and the search icon travels with it.
+- **Results keep their identity.** The same Layout is triggered by the list of results, so typing moves each remaining row from where it was to where it is now, instead of redrawing the list.
+- **The scope chip is the row it came from.** Layout matches pieces by what they show, so the "Projects" row and the "Projects" chip pair up, and the row's label travels into the field.
+- **The pill reports back.** It's [Text](/docs/primitives/text), so "Search or jump to…" changes into "Opened Billing" letter by letter, and the same line is announced to screen readers.
+- **It follows the ARIA combobox pattern.** The field is a `combobox` that owns a `listbox` of `option`s, and `aria-activedescendant` tracks the highlight while focus stays in the field. Groups are labelled.
+- **⌘K only fires while the demo has focus,** so it doesn't fight the docs' own search. In your app, listen on `window`.

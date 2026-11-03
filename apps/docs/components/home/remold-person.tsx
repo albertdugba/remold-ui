@@ -2,7 +2,7 @@
 import { Remold, useAutoplay } from "@remold-ui/react";
 import "./remold-person.css";
 
-const FORMS = ["Chip", "Card", "List", "Profile"] as const;
+const FORMS = ["Card", "List", "Profile"] as const;
 const SPRING = { duration: 0.65, bounce: 0.18 };
 const PLAY = "M8 5.5v13l11-6.5z";
 const PAUSE = "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z";
@@ -46,21 +46,6 @@ const follow =
   "inline-flex items-center justify-center rounded-full bg-zinc-900 font-medium text-white dark:bg-white dark:text-zinc-900";
 
 function Form({ form }: { form: (typeof FORMS)[number] }) {
-  if (form === "Chip")
-    return (
-      <div className="flex items-center gap-2.5 rounded-full bg-white py-1.5 pr-4 pl-1.5 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-        <Avatar name={ME.name} size={30} />
-        <span className="text-[14px] font-semibold">{ME.name}</span>
-        {/* Left out of the morph: a plain dot has nothing to tell it apart, so it would pair with
-            whatever coloured box the next form has, such as the profile's banner. */}
-        <span
-          className="size-2 rounded-full bg-emerald-500"
-          aria-label="Online"
-          data-rm-ignore=""
-        />
-      </div>
-    );
-
   if (form === "Card")
     return (
       <div className="grid w-full max-w-[280px] justify-items-center gap-3 rounded-[26px] bg-white p-6 text-center ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
@@ -203,12 +188,6 @@ export function RemoldPerson() {
         </Remold.Layout>
       </div>
 
-      <div className="hr-foot">
-        <span>
-          <Remold.Text>{`<${form}Person />`}</Remold.Text>
-        </span>
-        <span className="hr-count">4 components · 0 ids · 1 person</span>
-      </div>
     </div>
   );
 }

@@ -2,14 +2,12 @@
 title: "Bulk selection"
 description: "Selecting many rows at once: shift-click selects a range, neighbouring picks join into one band, and the hint at the foot gives way to an action bar whose count rolls as the selection grows."
 status: "new"
-tags: ["Motion", "Base UI"]
+tags: ["TanStack Table", "Base UI", "Motion"]
 ---
 
 <Stage name="bulk-select" code={<Source demo="bulk-select" />} minHeight={600}>
   <BulkSelectDemo />
 </Stage>
-
-It plays a short scene while it's on screen. Touch it and it's yours.
 
 ## Things to try
 
@@ -30,7 +28,8 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- The checkboxes, including the header's mixed state, are Base UI's Checkbox; the action bar's buttons have Base UI tooltips.
-- The joined bands, the rolling count and the rows folding away are Motion.
+- **TanStack Table models it.** `useReactTable` holds the columns, the row model and row selection, so select-all, the header's mixed state and each row's checkbox read from one selection. Swap in your own data and columns and the rest keeps working.
+- **Base UI draws the controls.** The checkboxes are Base UI's Checkbox, and the action bar's buttons have Base UI tooltips.
+- **Motion moves it.** The joined bands, the rolling count and the rows folding away are Motion.
 
 <Callout>The files are made up.</Callout>

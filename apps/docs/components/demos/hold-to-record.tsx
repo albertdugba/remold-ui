@@ -76,6 +76,7 @@ export function HoldToRecordDemo({ playing }: HoldToRecordDemoProps = {}) {
   const autoplay = useAutoplay(STEPS.length, {
     every: (i) => STEPS[i]!.ms,
     stopOnInteraction: playing === undefined,
+    autoStart: playing !== undefined,
   });
   const { step, playing: live, setPlaying: setLive } = autoplay;
 

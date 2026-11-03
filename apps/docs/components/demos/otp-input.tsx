@@ -49,6 +49,7 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
   const autoplay = useAutoplay(STEPS.length, {
     every: (i) => STEPS[i]!.ms,
     stopOnInteraction: playing === undefined,
+    autoStart: playing !== undefined,
   });
   const { step, playing: live, setPlaying } = autoplay;
 

@@ -12,7 +12,7 @@ import { FLAVOR_NAMES, FLAVORS, type Flavor } from "@/components/home/flavors-co
 import { highlight } from "fumadocs-core/highlight";
 
 export const metadata = {
-  title: "Remold UI · Motion for interfaces that change",
+  title: "Remold UI · Change you can follow",
   description:
     "An open-source morph engine that finds what persists between interface states and animates what changes, across layouts, text, SVG and canvas.",
 };
@@ -145,13 +145,12 @@ export default async function HomePage() {
         <div className="hm-footer">
           <div>
             <RemoldMark size={20} wordmark />
-            <p className="hm-footer-note">Motion for interfaces that change. The engine is open source under the MIT licence.</p>
+            <p className="hm-footer-note">Change you can follow. The engine is open source under the MIT licence.</p>
           </div>
           <nav aria-label="Footer">
             <p>Navigate</p>
             <Link href="/docs">Docs</Link>
             <Link href="/docs/components">Examples</Link>
-            <Link href="/play">Playground</Link>
           </nav>
           <nav aria-label="For assistants">
             <p>For assistants</p>
