@@ -1,12 +1,20 @@
-/* Promo code. Styling only: Motion shrinks the field into the chip; the Odometer rolls the total. */
 .prm {
-  --fk-width: 340px;
-  gap: 12px;
+  --fk-width: 360px;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--fk-surface);
+}
+
+.prm-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 
 .prm-lines {
   display: grid;
-  gap: 6px;
   margin: 0;
   font-size: 13.5px;
 }
@@ -14,7 +22,6 @@
 .prm-lines div {
   display: flex;
   justify-content: space-between;
-  overflow: hidden;
 }
 
 .prm-lines dt {
@@ -23,11 +30,19 @@
 
 .prm-lines dd {
   margin: 0;
+  font-variant-numeric: tabular-nums;
 }
 
-.prm-discount dd,
-.prm-discount dt {
-  color: var(--fk-good) !important;
+.prm-lines div + div > * {
+  padding-top: 8px;
+}
+
+.prm-lines .prm-discount {
+  overflow: clip;
+}
+
+.prm-lines .prm-discount > * {
+  color: var(--fk-good);
   font-weight: 600;
 }
 
@@ -37,49 +52,42 @@
 
 .prm-shaker {
   display: grid;
+  align-items: center;
   justify-items: start;
+  height: 46px;
 }
 
-/* One box. Entering a code it's the full-width field; applied, it springs down to the chip. */
 .prm-box {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
   height: 46px;
-  overflow: hidden;
+  border-radius: 12px;
+  overflow: clip;
   background: var(--fk-surface);
-  box-shadow:
-    inset 0 0 0 1.5px var(--fk-line),
-    var(--fk-shadow);
+  box-shadow: inset 0 0 0 1.5px var(--fk-line);
   transition:
     background-color 0.3s,
     box-shadow 0.3s;
 }
 
 .prm-box:focus-within {
-  box-shadow:
-    inset 0 0 0 1.5px color-mix(in oklab, var(--fk-ink) 22%, transparent),
-    var(--fk-shadow);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--fk-ink) 22%, transparent);
 }
 
 .prm-box[data-invalid] {
-  box-shadow:
-    inset 0 0 0 1.5px color-mix(in oklab, var(--fk-bad) 70%, transparent),
-    var(--fk-shadow);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--fk-bad) 70%, transparent);
 }
 
 .prm-box[data-state="applied"] {
-  width: auto;
-  height: 38px;
   background: color-mix(in oklab, var(--fk-good) 12%, var(--fk-surface));
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--fk-good) 30%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--fk-good) 28%, transparent);
 }
 
 .prm-entry {
   display: flex;
   flex: 1;
-  align-items: center;
   align-self: stretch;
   min-width: 0;
   padding-left: 12px;
@@ -97,27 +105,20 @@
   letter-spacing: 0;
 }
 
-/* Apply: a solid segment filling the right end, just inside the border */
 .prm-apply {
+  display: grid;
   flex: none;
-  align-self: stretch;
-  margin: 3px 3px 3px 0;
-  padding: 0 16px;
+  place-items: center;
+  min-width: 76px;
+  padding: 0 18px;
   border: 0;
-  border-radius: 0 9px 9px 0;
   background: var(--fk-ink);
   color: var(--fk-surface);
   font: inherit;
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    background-color 0.15s,
-    opacity 0.15s;
-}
-
-.prm-apply:hover:not(:disabled) {
-  background: color-mix(in oklab, var(--fk-ink) 85%, var(--fk-surface));
+  transition: opacity 0.15s;
 }
 
 .prm-apply:disabled {
@@ -126,19 +127,40 @@
 }
 
 .prm-apply:focus-visible {
-  outline: 2px solid var(--fk-focus);
-  outline-offset: 2px;
+  outline: 2px solid var(--fk-surface);
+  outline-offset: -4px;
 }
 
-/* The chip: a ticket, the code, what it's worth, and a way to remove it */
+.prm-apply-label {
+  display: grid;
+  grid-area: 1 / 1;
+}
+
+.prm-spin {
+  width: 16px;
+  height: 16px;
+  animation: prm-spin 0.8s linear infinite;
+}
+
+@keyframes prm-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
 .prm-chip {
   display: flex;
+  flex: none;
   align-items: center;
   gap: 8px;
-  padding: 0 4px 0 12px;
+  padding: 0 5px 0 12px;
   color: color-mix(in oklab, var(--fk-good) 75%, var(--fk-ink));
   font-size: 13px;
   white-space: nowrap;
+}
+
+.prm-chip > * {
+  display: grid;
 }
 
 .prm-ticket {
@@ -151,18 +173,17 @@
   letter-spacing: 0.06em;
 }
 
-.prm-chip > span {
+.prm-chip-label {
   opacity: 0.8;
 }
 
 .prm-chip button {
-  display: grid;
   place-items: center;
   width: 28px;
   height: 28px;
   padding: 0;
   border: 0;
-  border-radius: 7px;
+  border-radius: 50%;
   background: none;
   color: inherit;
   cursor: pointer;
@@ -178,14 +199,18 @@
 }
 
 .prm-error {
-  padding-top: 6px;
+  overflow: clip;
+}
+
+.prm-error > * {
+  padding-top: 8px;
 }
 
 .prm-total {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding-top: 12px;
+  padding-top: 14px;
   border-top: 1px solid var(--fk-line);
   font-size: 14px;
   font-weight: 600;
@@ -198,23 +223,52 @@
 }
 
 .prm-total-value b {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 650;
   letter-spacing: -0.02em;
 }
 
 .prm-was {
+  position: relative;
   color: var(--fk-muted);
   font-size: 13px;
   font-weight: 450;
+  text-decoration: none;
   opacity: 0;
-  transform: translateX(4px);
+  translate: 6px 0;
   transition:
-    opacity 0.3s,
-    transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    opacity 0.25s,
+    translate 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.prm-was::after {
+  content: "";
+  position: absolute;
+  inset: 55% -1px auto;
+  height: 1.5px;
+  background: currentColor;
+  scale: 0 1;
+  transform-origin: left;
+  transition: scale 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .prm-was[data-shown] {
   opacity: 1;
-  transform: none;
+  translate: none;
+}
+
+.prm-was[data-shown]::after {
+  scale: 1;
+  transition-delay: 0.18s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prm-spin {
+    animation: none;
+  }
+
+  .prm-was,
+  .prm-was::after {
+    transition: none;
+  }
 }

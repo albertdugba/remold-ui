@@ -43,7 +43,7 @@ export function EmblemDemo({
       </svg>
       <Remold.Icon
         className="size-[150px] drop-shadow-[0_14px_24px_rgb(79_70_229_/_0.25)]"
-        d={EMBLEMS[name]}
+        path={EMBLEMS[name]}
         viewBox="0 0 100 100"
         fill={`url(#${gradient})`}
         spring={springs.bouncy}

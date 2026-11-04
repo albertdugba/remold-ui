@@ -84,11 +84,11 @@ function layoutFor(beat: Beat): SceneProps["layouts"][string] {
         color: beat === "build" ? AMBER : built ? GREEN : VIOLET,
       },
       ...Object.fromEntries(
-        REGIONS.map((r, i) => [
+        REGIONS.map((r, index) => [
           r.id,
           live
-            ? { x: r.x, y: r.y, z: 0, width: 92, depth: 92, height: 12, arc: 30, delay: 0.12 * i, color: GREEN }
-            : { x: r.x, y: r.y, z: 60, width: 92, depth: 92, height: 12, opacity: 0, delay: 0.06 * (2 - i) },
+            ? { x: r.x, y: r.y, z: 0, width: 92, depth: 92, height: 12, arc: 30, delay: 0.12 * index, color: GREEN }
+            : { x: r.x, y: r.y, z: 60, width: 92, depth: 92, height: 12, opacity: 0, delay: 0.06 * (2 - index) },
         ]),
       ),
     },

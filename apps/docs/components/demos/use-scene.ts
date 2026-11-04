@@ -10,7 +10,7 @@ export function useScene<S>(
 ) {
   const standalone = playing === undefined;
   const autoplay = useAutoplay(beats.length, {
-    every: (i) => beats[i]!.ms,
+    every: (index) => beats[index]!.ms,
     stopOnInteraction: standalone,
     // On a docs page (no `playing` from outside) the scene waits to be touched; only the home page plays it.
     autoStart: !standalone,
@@ -46,4 +46,17 @@ export function useScene<S>(
     take,
     live: own === null && autoplay.playing,
   };
+}
+
+/** Beats that type `text` one character at a time after `from`, at an even pace, holding on the last. */
+export function typing<S>(
+  text: string,
+  state: (typed: string) => S,
+  { from = "", every = 65, hold = 600 }: { from?: string; every?: number; hold?: number } = {},
+): (S & { ms: number })[] {
+  const characters = [...text];
+  return characters.map((_, index) => ({
+    ...state(from + characters.slice(0, index + 1).join("")),
+    ms: index === characters.length - 1 ? hold : every,
+  }));
 }

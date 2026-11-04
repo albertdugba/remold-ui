@@ -13,7 +13,7 @@ import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { AnimatePresence, motion } from "motion/react";
 import { useId } from "react";
 import { usePortalContainer } from "./portal-container";
-import { useScene } from "./use-scene";
+import { typing, useScene } from "./use-scene";
 import "./form-kit.css";
 import "./tag-input.css";
 
@@ -128,12 +128,9 @@ interface State {
 
 const BEATS: readonly (State & { ms: number })[] = [
   { tags: ["design"], draft: "", ms: 1000 },
-  { tags: ["design"], draft: "res", ms: 200 },
-  { tags: ["design"], draft: "resear", ms: 200 },
-  { tags: ["design"], draft: "research", ms: 600 },
+  ...typing("research", (draft) => ({ tags: ["design"], draft }), { every: 75 }),
   { tags: ["design", "research"], draft: "", ms: 900 },
-  { tags: ["design", "research"], draft: "lau", ms: 200 },
-  { tags: ["design", "research"], draft: "launch", ms: 600 },
+  ...typing("launch", (draft) => ({ tags: ["design", "research"], draft }), { every: 75 }),
   { tags: ["design", "research", "launch"], draft: "", ms: 2400 },
 ];
 
@@ -153,9 +150,9 @@ export function TagInputDemo({ playing }: TagInputDemoProps = {}) {
     <div ref={ref} className="fk-stage not-prose">
       <TagInput
         value={state.tags}
-        onValueChange={(tags) => take((s) => ({ ...s, tags }))}
+        onValueChange={(tags) => take((current) => ({ ...current, tags }))}
         inputValue={state.draft}
-        onInputValueChange={(draft) => take((s) => ({ ...s, draft }))}
+        onInputValueChange={(draft) => take((current) => ({ ...current, draft }))}
       />
     </div>
   );

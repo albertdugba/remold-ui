@@ -38,9 +38,9 @@ const OBJECTS: SceneProps["objects"] = {
     palette: SKY,
   },
   ...Object.fromEntries(
-    WEEKS.map((w, i) => [
+    WEEKS.map((w, index) => [
       w.id,
-      { look: extrude({ radius: 0.22, shadow: true, fillColor: "#ffd166", decal: { text: `W${i + 1}`, size: 13 } }), label: `Week ${i + 1}`, palette: PAPER },
+      { look: extrude({ radius: 0.22, shadow: true, fillColor: "#ffd166", decal: { text: `W${index + 1}`, size: 13 } }), label: `Week ${index + 1}`, palette: PAPER },
     ]),
   ),
   tag: {
@@ -64,9 +64,9 @@ function layoutFor(saved: number, trip: boolean): SceneProps["layouts"][string] 
         ? { x: JAR_BOX.x - 20, y: JAR_BOX.y + 10, z: 40, width: 170, depth: 110, height: 70, shape: CASE, fill: 1, color: "#ff9a4d", arc: 30 }
         : { ...JAR_BOX, z: 16, height: 110, shape: JAR, fill: 0.06 + saved * 0.22, color: "#ffd166" },
       ...Object.fromEntries(
-        WEEKS.map((w, i) => {
-          const on = i < saved;
-          return [w.id, { x: -170 + i * 78, y: 80, z: on ? 30 : 16, width: 58, depth: 58, height: on ? 12 : 6, fill: on ? 1 : 0, color: "#ffd166", delay: on ? 0 : 0.03 * i }];
+        WEEKS.map((w, index) => {
+          const on = index < saved;
+          return [w.id, { x: -170 + index * 78, y: 80, z: on ? 30 : 16, width: 58, depth: 58, height: on ? 12 : 6, fill: on ? 1 : 0, color: "#ffd166", delay: on ? 0 : 0.03 * index }];
         }),
       ),
       // The destination tag swings in beside the suitcase once it's booked.
@@ -114,7 +114,7 @@ export function SavingsGoal({ playing }: SavingsGoalProps = {}) {
     if (scene.live) return;
     if (state.trip) return;
     const t = setTimeout(
-      () => take((s) => (s.saved < 4 ? { ...s, saved: s.saved + 1 } : { ...s, trip: true })),
+      () => take((current) => (current.saved < 4 ? { ...current, saved: current.saved + 1 } : { ...current, trip: true })),
       state.saved < 4 ? 800 : 1000,
     );
     return () => clearTimeout(t);

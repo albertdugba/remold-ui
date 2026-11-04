@@ -113,7 +113,7 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
   // Undo stays a few seconds, then the bar leaves.
   useEffect(() => {
     if (scene.live || !state.undo) return;
-    const t = setTimeout(() => take((s) => ({ ...s, undo: null })), 4500);
+    const t = setTimeout(() => take((current) => ({ ...current, undo: null })), 4500);
     return () => clearTimeout(t);
   }, [scene.live, state.undo, take]);
 
@@ -121,34 +121,34 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
   const count = state.selected.length;
 
   const tick = (id: string, on: boolean) =>
-    take((s) => {
-      const visible = FILES.filter((f) => !s.gone.includes(f.id)).map((f) => f.id);
+    take((current) => {
+      const visible = FILES.filter((f) => !current.gone.includes(f.id)).map((f) => f.id);
       // Shift-click selects everything between the last row ticked and this one.
-      if (shift.current && s.anchor && on) {
-        const [from, to] = [visible.indexOf(s.anchor), visible.indexOf(id)].sort((x, y) => x - y);
+      if (shift.current && current.anchor && on) {
+        const [from, to] = [visible.indexOf(current.anchor), visible.indexOf(id)].sort((x, y) => x - y);
         const range = visible.slice(from, to + 1);
-        return { ...s, selected: [...new Set([...s.selected, ...range])], undo: null };
+        return { ...current, selected: [...new Set([...current.selected, ...range])], undo: null };
       }
       return {
-        ...s,
-        selected: on ? [...s.selected, id] : s.selected.filter((x) => x !== id),
+        ...current,
+        selected: on ? [...current.selected, id] : current.selected.filter((x) => x !== id),
         anchor: id,
         undo: null,
       };
     });
 
   const remove = () =>
-    take((s) => ({ gone: [...s.gone, ...s.selected], selected: [], anchor: null, undo: s.selected }));
-  const restore = () => take((s) => ({ ...s, gone: s.gone.filter((g) => !s.undo?.includes(g)), undo: null }));
+    take((current) => ({ gone: [...current.gone, ...current.selected], selected: [], anchor: null, undo: current.selected }));
+  const restore = () => take((current) => ({ ...current, gone: current.gone.filter((g) => !current.undo?.includes(g)), undo: null }));
 
   // TanStack Table holds the rows, columns and selection model; the scene's state stays the source
   // of truth, so selection is read from it and written back to it.
   const rowSelection = useMemo<RowSelectionState>(() => Object.fromEntries(state.selected.map((id) => [id, true])), [state.selected]);
   const onRowSelectionChange = (updater: Updater<RowSelectionState>) =>
-    take((s) => {
-      const previous = Object.fromEntries(s.selected.map((id) => [id, true]));
+    take((current) => {
+      const previous = Object.fromEntries(current.selected.map((id) => [id, true]));
       const next = typeof updater === "function" ? updater(previous) : updater;
-      return { ...s, selected: Object.keys(next).filter((id) => next[id]), undo: null };
+      return { ...current, selected: Object.keys(next).filter((id) => next[id]), undo: null };
     });
 
   const columns = [
@@ -218,7 +218,7 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
 
           <ul role="rowgroup" className="bk-rows">
             <AnimatePresence initial={false}>
-              {tableRows.map((row, i) => {
+              {tableRows.map((row, index) => {
                 const on = row.getIsSelected();
                 const order = state.undo?.indexOf(row.id) ?? -1;
                 return (
@@ -230,15 +230,15 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
                     className="bk-row"
                     data-selected={on || undefined}
                     // Selected neighbours join into one band: only its outer corners round.
-                    data-joins-up={(on && tableRows[i - 1]?.getIsSelected()) || undefined}
-                    data-joins-down={(on && tableRows[i + 1]?.getIsSelected()) || undefined}
+                    data-joins-up={(on && tableRows[index - 1]?.getIsSelected()) || undefined}
+                    data-joins-down={(on && tableRows[index + 1]?.getIsSelected()) || undefined}
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     // Deleted rows fold away one after another, in the order they sit.
                     exit={{ opacity: 0, height: 0, transition: { duration: 0.28, delay: Math.max(0, order) * 0.06, ease: [0.4, 0, 0.2, 1] } }}
                     transition={SPRING}
-                    onClickCapture={(e: MouseEvent) => {
-                      shift.current = e.shiftKey;
+                    onClickCapture={(event: MouseEvent) => {
+                      shift.current = event.shiftKey;
                     }}
                   >
                     <label className="bk-row-inner">
@@ -288,7 +288,7 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.18 }}
                     >
-                      <button type="button" className="bk-clear" onClick={() => take((s) => ({ ...s, selected: [] }))} aria-label="Clear selection">
+                      <button type="button" className="bk-clear" onClick={() => take((current) => ({ ...current, selected: [] }))} aria-label="Clear selection">
                         <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
                       </button>
                       <span className="bk-count">

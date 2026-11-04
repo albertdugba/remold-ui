@@ -28,6 +28,7 @@ export const RemoldLayout = forwardRef(function RemoldLayout(
     announce,
     loop,
     lift,
+    choreography,
     render,
     className,
     ...elementProps
@@ -42,6 +43,7 @@ export const RemoldLayout = forwardRef(function RemoldLayout(
     announce,
     loop,
     lift,
+    choreography,
   });
 
   const state: RemoldLayout.State = { animating };

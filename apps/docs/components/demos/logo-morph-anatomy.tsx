@@ -144,11 +144,11 @@ export function LogoMorphAnatomy() {
             strokeOpacity={0.12}
             strokeDasharray="3 4"
           />
-          {parts.map((d, i) => (
+          {parts.map((d, index) => (
             <path
-              key={i}
+              key={index}
               d={d}
-              fill={HUES[i % HUES.length]}
+              fill={HUES[index % HUES.length]}
               fillOpacity={0.88}
             />
           ))}
@@ -182,9 +182,9 @@ export function LogoMorphAnatomy() {
             step={0.001}
             value={t}
             aria-label="Progress from the word to the logo"
-            onChange={(e) => {
+            onChange={(event) => {
               setPlaying(false);
-              setT(Number(e.target.value));
+              setT(Number(event.target.value));
             }}
             className="h-1 flex-1 cursor-pointer accent-zinc-900 dark:accent-zinc-100"
           />

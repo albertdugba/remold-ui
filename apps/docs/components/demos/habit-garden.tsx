@@ -39,7 +39,7 @@ const OBJECTS: SceneProps["objects"] = {
   ...Object.fromEntries(LEAVES.map((l) => [l.id, { look: extrude({ shape: { path: LEAF_SHAPE }, decal: { text: "" } }), palette: LEAF, interactive: false }])),
   flower: { look: extrude({ shape: { path: FLOWER }, edge: true, decal: { text: "" } }), label: "Flower", palette: BLOOM },
   ...Object.fromEntries(
-    DAYS.map((d, i) => [`d${i}`, { look: extrude({ radius: 0.28, shadow: true, fillColor: "#4fa865", decal: { text: d, size: 13 } }), label: `Day ${i + 1}`, palette: PAPER }]),
+    DAYS.map((d, index) => [`d${index}`, { look: extrude({ radius: 0.28, shadow: true, fillColor: "#4fa865", decal: { text: d, size: 13 } }), label: `Day ${index + 1}`, palette: PAPER }]),
   ),
 };
 
@@ -61,8 +61,8 @@ function layoutFor(days: number): SceneProps["layouts"][string] {
       pot: POT,
       stem: { x: STEM_X, y: STEM_Y, z: POT.z + POT.height, width: 10, depth: 10, height: stemHeight(Math.min(days, 6)) },
       ...Object.fromEntries(
-        LEAVES.map((l, i) => {
-          const out = i < leaves;
+        LEAVES.map((l, index) => {
+          const out = index < leaves;
           const x = STEM_X + (l.side < 0 ? -44 : 10);
           return [
             l.id,
@@ -76,9 +76,9 @@ function layoutFor(days: number): SceneProps["layouts"][string] {
         ? { x: STEM_X - 30, y: STEM_Y - 30, z: POT.z + POT.height + stemHeight(6), width: 70, depth: 70, height: 8, arc: 20 }
         : { x: STEM_X - 4, y: STEM_Y - 4, z: POT.z + POT.height + stemHeight(Math.min(days, 6)) - 10, width: 18, depth: 18, height: 4, opacity: 0 },
       ...Object.fromEntries(
-        DAYS.map((_, i) => {
-          const kept = i < days;
-          return [`d${i}`, { x: -200 + i * 46, y: 120, z: kept ? 26 : 16, width: 36, depth: 36, height: kept ? 10 : 5, fill: kept ? 1 : 0, color: "#4fa865" }];
+        DAYS.map((_, index) => {
+          const kept = index < days;
+          return [`d${index}`, { x: -200 + index * 46, y: 120, z: kept ? 26 : 16, width: 36, depth: 36, height: kept ? 10 : 5, fill: kept ? 1 : 0, color: "#4fa865" }];
         }),
       ),
     },
@@ -135,7 +135,7 @@ export function HabitGarden({ playing }: HabitGardenProps = {}) {
         <span className="day-readout">
           <b>{state.days}</b> of 7 days this week
         </span>
-        <button type="button" className="day-cta" onClick={() => take((s) => ({ days: s.days >= 7 ? 0 : s.days + 1 }))}>
+        <button type="button" className="day-cta" onClick={() => take((current) => ({ days: current.days >= 7 ? 0 : current.days + 1 }))}>
           {bloom ? "New week" : "Water today"}
         </button>
       </div>

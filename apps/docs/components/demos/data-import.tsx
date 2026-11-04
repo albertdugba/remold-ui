@@ -70,19 +70,19 @@ function layoutFor(beat: Beat): SceneProps["layouts"][string] {
       base: BASE,
       hub: HUB,
       ...Object.fromEntries(
-        FILES.map((f, i) => [
+        FILES.map((f, index) => [
           f.id,
           done
-            ? { x: -30, y: -30, z: 34, width: 60, depth: 60, height: 10, arc: 90, delay: 0.12 * i, opacity: 0, fadeDelay: 0.45 }
+            ? { x: -30, y: -30, z: 34, width: 60, depth: 60, height: 10, arc: 90, delay: 0.12 * index, opacity: 0, fadeDelay: 0.45 }
             : { x: f.x, y: f.y, z: beat === "reading" ? 8 : 0, width: 64, depth: 64, height: 10 },
         ]),
       ),
       ...Object.fromEntries(
-        TABLES.map((t, i) => [
+        TABLES.map((t, index) => [
           t.id,
           done
-            ? { x: -90, y: -90, z: 46 + i * 22, width: 180, depth: 180, height: 6, ghost: 0.25, delay: 0.55 + 0.14 * i }
-            : { x: -90, y: -90, z: 170 + i * 46, width: 180, depth: 180, height: 6, ghost: 1, opacity: 0.55 },
+            ? { x: -90, y: -90, z: 46 + index * 22, width: 180, depth: 180, height: 6, ghost: 0.25, delay: 0.55 + 0.14 * index }
+            : { x: -90, y: -90, z: 170 + index * 46, width: 180, depth: 180, height: 6, ghost: 1, opacity: 0.55 },
         ]),
       ),
     },

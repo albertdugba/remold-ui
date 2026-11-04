@@ -12,7 +12,7 @@ tags: ["Base UI", "Motion"]
 ## Things to try
 
 - **Try SUMMER.** The field gives a small shake and says the code has ended, keeping what you typed.
-- **Try SAVE20.** The field springs down into a green ticket chip, “SAVE20 · 20% off”, the discount line opens and the total rolls down, with the old price struck through.
+- **Try SAVE20.** It checks the code, then the field springs down into a green ticket chip, “SAVE20 · 20% off”, the discount line opens and the total rolls down, with the old price struck through.
 - **Press ×.** The chip springs back out into the empty field and the total rolls back up.
 
 ## Install
@@ -28,7 +28,8 @@ The install command adds these for you. If you copy the code by hand, install th
 ## How it works
 
 - **Built on Base UI.** `Field` handles the invalid state and the error message; the code box is its `Control`.
-- **One box.** The field and the chip are the same element. Motion springs its width and height, and its contents are scale-corrected, so the text never stretches while it shrinks; the field's contents fade out as the chip's fade in.
-- **One spring.** The box and the discount line share it, so they arrive together. The total rolls with the Odometer, and the shake runs on a wrapper so it never fights the spring.
+- **One box.** The field and the chip are the same element. It springs its real width, height and radius and clips what's inside, so the text never stretches while it shrinks. The field's contents blur out quickly as the chip's arrive.
+- **Choreographed, not all at once.** Apply checks the code first, then the box springs into the chip, and the chip's ticket, code, offer and × arrive one after another. The discount line opens a beat later, the old total slides in and is struck through, and only then does the new total roll down. Removing runs back at once and puts focus back in the field.
+- **One spring.** Everything that changes shape shares it, with a little bounce. The total rolls with the Odometer, and the shake runs on a wrapper so it never fights the spring.
 
-<Callout>SAVE20 and WELCOME10 work; SUMMER has expired.</Callout>
+<Callout>SAVE20 and WELCOME10 work; SUMMER has expired. Swap the timeout in `apply` for a request to your own API.</Callout>

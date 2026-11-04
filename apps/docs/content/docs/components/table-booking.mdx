@@ -1,0 +1,34 @@
+---
+title: "Table booking"
+description: "A restaurant booking that fell through offers two other times; the one you pick grows into the updated booking, and its party size opens a compact picker. Built on Base UI's Button, Toggle Group and Tooltip."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="table-booking" code={<Source demo="table-booking" />} minHeight={500}>
+  <TableBookingDemo />
+</Stage>
+
+## Things to try
+
+- **Pick a new time.** The card springs into the updated booking, and the time you chose travels from its option into the booking's header while the notice and the other option step out of the way.
+- **Change the party.** Press the guest count to open the party-size picker. Pick a number and you're back on the same booking with the new count already in place.
+- **Go back** with the arrow. The booking settles back into the options it came from. Hover the confirmation code to see what it's for.
+
+## Install
+
+<AddCommand name="table-booking" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="table-booking" />
+
+## How it works
+
+- **One card, three faces.** The notice, the booking and the party-size picker are faces of one card. It springs its real height between them and clips what's inside, so nothing is scaled.
+- **The time carries over.** The time you pick is the same chip in the option and in the booking, so Motion's `layoutId` moves it without resizing it. Everything else scales in from just below its size, unblurring, a beat after the part before.
+- **Built on Base UI.** `Button` for the options and every press, `ToggleGroup` and `Toggle` for the party size, whose highlight slides to your pick, and `Tooltip` on the confirmation code.
+
+<Callout>The restaurant and the booking are made up.</Callout>

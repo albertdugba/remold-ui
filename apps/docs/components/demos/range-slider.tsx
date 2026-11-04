@@ -41,8 +41,8 @@ export interface RangeSliderProps {
 
 export function RangeSlider({ value, onValueChange, active, onActiveChange }: RangeSliderProps) {
   const [lo, hi] = value;
-  const count = SPREAD.reduce((sum, n, i) => {
-    const from = (i / SPREAD.length) * MAX;
+  const count = SPREAD.reduce((sum, n, index) => {
+    const from = (index / SPREAD.length) * MAX;
     return from >= lo && from < hi ? sum + n : sum;
   }, 0);
 
@@ -71,18 +71,18 @@ export function RangeSlider({ value, onValueChange, active, onActiveChange }: Ra
         </span>
 
         <span className="rng-bars" aria-hidden="true">
-          {SPREAD.map((n, i) => {
-            const from = (i / SPREAD.length) * MAX;
-            return <i key={i} style={{ height: `${(n / 35) * 100}%` }} data-in={(from >= lo && from < hi) || undefined} />;
+          {SPREAD.map((n, index) => {
+            const from = (index / SPREAD.length) * MAX;
+            return <i key={index} style={{ height: `${(n / 35) * 100}%` }} data-in={(from >= lo && from < hi) || undefined} />;
           })}
         </span>
 
         <Slider.Control className="rng-control">
           <Slider.Track className="rng-track">
             <Slider.Indicator className="rng-indicator" />
-            {[0, 1].map((i) => (
-              <Slider.Thumb key={i} index={i} className="rng-thumb" aria-label={i === 0 ? "Lowest price" : "Highest price"}>
-                {active === i && <Price index={i} value={value[i]!} bubble />}
+            {[0, 1].map((index) => (
+              <Slider.Thumb key={index} index={index} className="rng-thumb" aria-label={index === 0 ? "Lowest price" : "Highest price"}>
+                {active === index && <Price index={index} value={value[index]!} bubble />}
               </Slider.Thumb>
             ))}
           </Slider.Track>
@@ -127,9 +127,9 @@ export function RangeSliderDemo({ playing }: RangeSliderDemoProps = {}) {
     <div ref={ref} className="fk-stage not-prose">
       <RangeSlider
         value={state.value}
-        onValueChange={(value) => take((s) => ({ ...s, value }))}
+        onValueChange={(value) => take((current) => ({ ...current, value }))}
         active={state.active}
-        onActiveChange={(active) => take((s) => ({ ...s, active }))}
+        onActiveChange={(active) => take((current) => ({ ...current, active }))}
       />
     </div>
   );

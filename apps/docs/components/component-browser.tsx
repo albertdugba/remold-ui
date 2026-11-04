@@ -4,7 +4,7 @@ import { Search01Icon } from "@hugeicons/core-free-icons";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import Link from "next/link";
-import { useDeferredValue, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { ComponentPreview, type CustomPreview } from "./component-preview";
 import { landingCards } from "./home/parts";
 
@@ -39,6 +39,8 @@ const LANDING_COPY: Record<string, string> = {
   "dot-grid-hero": "A landing page background that wakes up under the cursor, with a ripple on every click.",
   "donation-goal": "Every gift streams up as dots and fills the drop, until it bursts into a thank you.",
   "api-keys": "A secret appears once, then folds into a newly masked row.",
+  "price-filter": "Drag the price sideways and the stepper stretches into a slider over the price histogram.",
+  "event-rsvp": "The RSVP button grows into your answer, then travels down into your spot.",
   "promo-code": "The code field springs down into a ticket chip as the discount opens and the total rolls.",
   "seat-calculator": "Team size changes the people, plan, price and features together.",
   "usage-meter": "Usage crosses limits, changes tone and rolls into the projected bill.",
@@ -50,11 +52,11 @@ const LANDING_COPY: Record<string, string> = {
   "from-first-look-to-front-door": "One field of particles tells the journey from product to delivery.",
   "turn-on-two-factor": "A settings row opens into setup, then resolves into its enabled state.",
   "hold-to-record": "Holding one control stretches it into recording, then sends it away.",
-  "result-to-boarding-pass": "A changed flight carries the chosen option into an updated boarding pass.",
+  "option-to-booking": "A table that fell through offers two times; the one you pick carries into the updated booking.",
   "email-to-teammate": "An email becomes an invite, then becomes the teammate it represents.",
   "artwork-in-motion": "The pieces of an illustration flow into new artwork instead of fading away.",
   "mini-player-to-full": "The compact player grows into its full view while artwork and controls stay connected.",
-  "word-into-logo": "A word’s glyphs travel into a logo mark and find their way back.",
+  "logo-into-logo": "One brand mark reshapes into the next, with no text in between.",
 };
 
 /** The groups the shelf filters by, in the order the chips show them. */
@@ -131,8 +133,6 @@ export function ComponentBrowser({ extras }: { extras: BrowserItem[] }) {
     );
     return sort === "az" ? [...matched].sort((a, b) => a.title.localeCompare(b.title)) : matched;
   }, [items, value, filter, sort]);
-  const [playing, setPlaying] = useState<string | null>(null);
-  const touchPreview = useRef<string | null>(null);
   return (
     <div className="rm-browser not-prose">
       <div className="rm-browser-tools">
@@ -173,27 +173,9 @@ export function ComponentBrowser({ extras }: { extras: BrowserItem[] }) {
       ) : (
         <div className="rm-browser-grid">
           {shown.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className="rm-card"
-              onPointerEnter={() => setPlaying(item.id)}
-              onPointerLeave={() => setPlaying((current) => current === item.id ? null : current)}
-              onPointerDown={(event) => {
-                if (event.pointerType !== "touch" || playing === item.id) return;
-                touchPreview.current = item.id;
-                setPlaying(item.id);
-              }}
-              onClick={(event) => {
-                if (touchPreview.current !== item.id) return;
-                event.preventDefault();
-                touchPreview.current = null;
-              }}
-              onFocus={() => setPlaying(item.id)}
-              onBlur={() => setPlaying((current) => current === item.id ? null : current)}
-            >
+            <Link key={item.id} href={item.href} className="rm-card">
               <span className="rm-card-stage">
-                <ComponentPreview id={item.id} custom={item.custom} playing={playing === item.id} />
+                <ComponentPreview id={item.id} custom={item.custom} />
                 {item.isNew && <span className="rm-card-new">New</span>}
               </span>
               <span className="rm-card-meta">

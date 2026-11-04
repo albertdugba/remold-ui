@@ -30,7 +30,7 @@ Without React, `transition` takes the element and the change, and returns the sa
   type={{
     spring: {
       type: "{ duration, bounce }",
-      default: "springs.smooth",
+      default: "springs.snappy",
       description: (
         <>
           {"How it moves. See "}
@@ -49,10 +49,23 @@ Without React, `transition` takes the element and the change, and returns the sa
         </>
       ),
     },
+    choreography: {
+      type: "boolean | { move, enter, stagger, maxStagger }",
+      default: "false",
+      description: (
+        <>
+          {"Play a change in beats: what leaves, then what moves, then what arrives, one after another. See "}
+          <a href="/docs/primitives/layout#choreography">{"Choreography"}</a>
+          {"."}
+        </>
+      ),
+    },
     announce: {
       type: "boolean | ((summary) => string)",
       default: "false",
-      description: <>{"Read a summary of each change to screen-reader users."}</>,
+      description: (
+        <>{"Read a summary of each change to screen-reader users."}</>
+      ),
     },
     reducedMotion: {
       type: '"user" | "always" | "never"',
@@ -68,7 +81,9 @@ Without React, `transition` takes the element and the change, and returns the sa
     loop: {
       type: "FrameLoop",
       default: "shared loop",
-      description: <>{"The frame loop to run on. Pass your own to slow down or test."}</>,
+      description: (
+        <>{"The frame loop to run on. Pass your own to slow down or test."}</>
+      ),
     },
   }}
 />
@@ -77,14 +92,19 @@ Without React, `transition` takes the element and the change, and returns the sa
 
 <TypeTable
   type={{
-    ref: { type: "(node) => void", description: <>{"Attach to the element whose contents change."}</> },
+    ref: {
+      type: "(node) => void",
+      description: <>{"Attach to the element whose contents change."}</>,
+    },
     animate: {
       type: "(update, options?) => Transition | null",
       description: (
         <>
           {"Runs "}
           <code>{"update"}</code>
-          {" synchronously and animates what it changed. Use it in event handlers, not effects."}
+          {
+            " synchronously and animates what it changed. Use it in event handlers, not effects."
+          }
         </>
       ),
     },

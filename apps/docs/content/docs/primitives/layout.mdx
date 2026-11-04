@@ -18,7 +18,9 @@ Using plain JavaScript? Install `@remold-ui/dom` instead.
 ```tsx tab="React" tab-group="lang"
 import { Remold } from "@remold-ui/react";
 
-<Remold.Layout trigger={view}>{/* anything that changes when `view` does */}</Remold.Layout>;
+<Remold.Layout trigger={view}>
+  {/* anything that changes when `view` does */}
+</Remold.Layout>;
 ```
 
 ```js tab="JavaScript"
@@ -55,7 +57,13 @@ The grid and the list below are rendered by different elements. Remold pairs eac
 </Stage>
 
 ```tsx tab="React" tab-group="lang"
-<Remold.Layout trigger={view}>{view === "Grid" ? <PeopleGrid people={people} /> : <PeopleList people={people} />}</Remold.Layout>
+<Remold.Layout trigger={view}>
+  {view === "Grid" ? (
+    <PeopleGrid people={people} />
+  ) : (
+    <PeopleList people={people} />
+  )}
+</Remold.Layout>
 ```
 
 ```js tab="JavaScript"
@@ -98,6 +106,29 @@ A few things to know when you use it with component libraries:
 - **Turn off the library's own transitions** inside the animated area (MUI's `Collapse` and `Fade`, Base UI's `data-starting-style` styles). Remold skips elements at zero opacity, so an element that's still fading in won't be matched.
 - **Skip decoration** that isn't content, such as MUI's ripple, by wrapping it in `<Remold.Ignore>` or adding `data-rm-ignore`.
 
+### Choreography
+
+By default everything moves at once. With `choreography`, a change plays in beats instead: what leaves goes first, then what moves, then what arrives, one after another in reading order. Each part gets out of the way of the next, so the change is easier to follow.
+
+```tsx tab="React" tab-group="lang"
+<Remold.Layout trigger={query} choreography>
+```
+
+```js tab="JavaScript"
+transition(results, () => renderResults(), { choreography: true });
+```
+
+Pass an object to change the timing, in seconds:
+
+| Option | Default | |
+| --- | --- | --- |
+| `move` | `0.06` | How long moves wait once something starts leaving. Only applies when something leaves. |
+| `enter` | `0.1` | How long arrivals wait after moves start. Only applies when something moves. |
+| `stagger` | `0.03` | The gap between one arrival and the next. |
+| `maxStagger` | `0.24` | The longest the whole stagger may take, so a long list still arrives quickly. |
+
+The beats overlap, so a choreographed change takes only a little longer than an unchoreographed one, and it can still be interrupted at any point. With reduced motion, changes fade at once.
+
 ### Announcing changes
 
 ```tsx tab="React" tab-group="lang"
@@ -117,9 +148,19 @@ transition(files, () => sortFiles(), {
     trigger: {
       type: "unknown",
       required: true,
-      description: <>{"Animate whenever this changes (compared with Object.is): a view, a sort order, a route."}</>,
+      description: (
+        <>
+          {
+            "Animate whenever this changes (compared with Object.is): a view, a sort order, a route."
+          }
+        </>
+      ),
     },
-    disabled: { type: "boolean", default: "false", description: <>{"Leave changes unanimated."}</> },
+    disabled: {
+      type: "boolean",
+      default: "false",
+      description: <>{"Leave changes unanimated."}</>,
+    },
     onTransition: {
       type: "(transition) => void",
       description: (
@@ -136,7 +177,7 @@ transition(files, () => sortFiles(), {
     },
     spring: {
       type: "{ duration, bounce }",
-      default: "springs.smooth",
+      default: "springs.snappy",
       description: (
         <>
           {"How it moves. See "}
@@ -158,12 +199,31 @@ transition(files, () => sortFiles(), {
     lift: {
       type: "boolean",
       default: "true",
-      description: <>{"Raise elements above their neighbours while they travel, farthest on top, so a card flying across the layout never slides under what it passes. Put back when they land."}</>,
+      description: (
+        <>
+          {
+            "Raise elements above their neighbours while they travel, farthest on top, so a card flying across the layout never slides under what it passes. Put back when they land."
+          }
+        </>
+      ),
+    },
+    choreography: {
+      type: "boolean | { move, enter, stagger, maxStagger }",
+      default: "false",
+      description: (
+        <>
+          {"Play a change in beats: what leaves, then what moves, then what arrives, one after another. See "}
+          <a href="#choreography">{"Choreography"}</a>
+          {"."}
+        </>
+      ),
     },
     announce: {
       type: "boolean | ((summary) => string)",
       default: "false",
-      description: <>{"Read a summary of each change to screen-reader users."}</>,
+      description: (
+        <>{"Read a summary of each change to screen-reader users."}</>
+      ),
     },
     reducedMotion: {
       type: '"user" | "always" | "never"',
@@ -179,10 +239,18 @@ transition(files, () => sortFiles(), {
     loop: {
       type: "FrameLoop",
       default: "shared loop",
-      description: <>{"The frame loop to run on. Pass your own to slow down or test."}</>,
+      description: (
+        <>{"The frame loop to run on. Pass your own to slow down or test."}</>
+      ),
     },
-    className: { type: "string | ((state) => string)", description: <>{"A class name, or a function of the state."}</> },
-    render: { type: "ReactElement | ((props, state) => ReactElement)", description: <>{"Replace the default element."}</> },
+    className: {
+      type: "string | ((state) => string)",
+      description: <>{"A class name, or a function of the state."}</>,
+    },
+    render: {
+      type: "ReactElement | ((props, state) => ReactElement)",
+      description: <>{"Replace the default element."}</>,
+    },
   }}
 />
 

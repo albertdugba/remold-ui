@@ -110,10 +110,10 @@ const fromBeat = (step: number): State => ({ beat: BEATS[step]!.beat });
 function ring(r: number, z: number, count = 22) {
   const cx = BADGES[1].x + 45;
   const cy = SLOT.y + 45;
-  return Array.from({ length: count }, (_, i) => {
-    const a = (i / count) * Math.PI * 2 + (i % 2) * 0.12;
-    const reach = r * (i % 3 === 0 ? 1.18 : i % 3 === 1 ? 0.9 : 1);
-    return { x: cx + Math.cos(a) * reach, y: cy + Math.sin(a) * reach, z: z + (i % 4) * 14 };
+  return Array.from({ length: count }, (_, index) => {
+    const a = (index / count) * Math.PI * 2 + (index % 2) * 0.12;
+    const reach = r * (index % 3 === 0 ? 1.18 : index % 3 === 1 ? 0.9 : 1);
+    return { x: cx + Math.cos(a) * reach, y: cy + Math.sin(a) * reach, z: z + (index % 4) * 14 };
   });
 }
 

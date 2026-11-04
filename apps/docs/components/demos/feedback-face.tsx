@@ -87,35 +87,35 @@ export function FeedbackFaceDemo({
     index === undefined
       ? own
       : ((index % RATINGS.length) + RATINGS.length) % RATINGS.length;
-  const r = RATINGS[rating]!;
+  const shown = RATINGS[rating]!;
   const body = (
     <div className="ff" data-rating={rating + 1}>
       <Remold.PathGroup
         className="ff-art"
         viewBox="0 0 200 200"
         role="img"
-        aria-label={`A face that looks ${r.label
+        aria-label={`A face that looks ${shown.label
           .toLowerCase()
           .replace("!", "")}`}
         spring={{ duration: 0.55, bounce: 0.25 }}
         paths={[
-          { id: "face", d: FACE, className: "ff-face" },
-          { id: "extra", d: r.extra, className: "ff-extra" },
+          { id: "face", path: FACE, className: "ff-face" },
+          { id: "extra", path: shown.extra, className: "ff-extra" },
           {
             id: "brows",
-            d: r.brows,
+            path: shown.brows,
             className: "ff-brows",
             fill: "none",
             strokeWidth: 7,
             strokeLinecap: "round",
           },
-          { id: "eyes", d: r.eyes, className: "ff-eyes" },
-          { id: "mouth", d: r.mouth, className: "ff-mouth" },
+          { id: "eyes", path: shown.eyes, className: "ff-eyes" },
+          { id: "mouth", path: shown.mouth, className: "ff-mouth" },
         ]}
       />
       <div className="ff-copy">
         <p className="ff-question">How was your delivery?</p>
-        <span className="ff-label">{r.label}</span>
+        <span className="ff-label">{shown.label}</span>
       </div>
       <ToggleGroup
         className="ff-scale"
@@ -126,18 +126,18 @@ export function FeedbackFaceDemo({
           if (next) setOwn(Number(next));
         }}
       >
-        {RATINGS.map((item, i) => (
+        {RATINGS.map((item, position) => (
           <Toggle
             key={item.label}
-            value={String(i)}
+            value={String(position)}
             aria-label={item.label}
             disabled={index !== undefined}
           >
-            {i + 1}
+            {position + 1}
           </Toggle>
         ))}
       </ToggleGroup>
-      <span className="ff-ask">{r.ask}</span>
+      <span className="ff-ask">{shown.ask}</span>
     </div>
   );
   return framed ? <Frame>{body}</Frame> : body;

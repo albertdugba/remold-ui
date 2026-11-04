@@ -144,8 +144,8 @@ function Leather({ id, d, stitch, tone }: { id: string; d: string; stitch: strin
       {/* Pebbled grain: fine noise, clipped to the hide */}
       <rect width="340" height="226" filter={`url(#${id}-grain)`} clipPath={`url(#${id}-${tone}-clip)`} className="wa-grain" />
       <path d={d} className="wa-edge" />
-      {stitch.map((s) => (
-        <path key={s} d={s} className="wa-stitch" />
+      {stitch.map((line) => (
+        <path key={line} d={line} className="wa-stitch" />
       ))}
     </svg>
   );
@@ -165,16 +165,16 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
   const peeking = hover && !open;
 
   // The pocket takes the cards out or puts them all away; a card opens the wallet, or is chosen.
-  const togglePocket = () => take((s) => ({ ...s, open: s.chosen ? true : !s.open, chosen: null }));
+  const togglePocket = () => take((current) => ({ ...current, open: current.chosen ? true : !current.open, chosen: null }));
   const pick = (card: Card) =>
-    take((s) => (!s.open ? { ...s, open: true } : { ...s, chosen: s.chosen === card.id ? null : card.id }));
+    take((current) => (!current.open ? { ...current, open: true } : { ...current, chosen: current.chosen === card.id ? null : card.id }));
 
   const sunk = chosen ? SUNK : 0;
-  const yOf = (card: Card, i: number) => {
+  const yOf = (card: Card, index: number) => {
     if (chosen === card.id) return 0;
-    if (chosen) return CLOSED[i]! + sunk;
-    if (!open) return CLOSED[i]! - (peeking ? PEEK[i]! : 0);
-    return OPEN[i]!;
+    if (chosen) return CLOSED[index]! + sunk;
+    if (!open) return CLOSED[index]! - (peeking ? PEEK[index]! : 0);
+    return OPEN[index]!;
   };
   const picked = CARDS.find((c) => c.id === chosen);
   const nameOf = (card: Card) =>
@@ -197,7 +197,7 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
           <Leather id={id} d={BACK} stitch={[BACK_STITCH, BACK_STITCH_L]} tone="back" />
         </motion.div>
 
-        {CARDS.map((card, i) => {
+        {CARDS.map((card, index) => {
           const isChosen = chosen === card.id;
           const name = nameOf(card);
           return (
@@ -207,12 +207,12 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
               className="wa-card"
               data-look={card.look}
               // The chosen card rides above everything; the rest keep their order.
-              style={{ zIndex: isChosen ? 30 : i + 1 }}
+              style={{ zIndex: isChosen ? 30 : index + 1 }}
               initial={false}
-              animate={{ y: yOf(card, i) }}
-              whileHover={open && !chosen ? { y: OPEN[i]! - 6 } : undefined}
+              animate={{ y: yOf(card, index) }}
+              whileHover={open && !chosen ? { y: OPEN[index]! - 6 } : undefined}
               // Out and peeking back to front, in front to back: a beat apart either way.
-              transition={{ ...SPRING, delay: isChosen ? 0 : chosen ? 0.04 : open || peeking ? i * 0.05 : (CARDS.length - 1 - i) * 0.045 }}
+              transition={{ ...SPRING, delay: isChosen ? 0 : chosen ? 0.04 : open || peeking ? index * 0.05 : (CARDS.length - 1 - index) * 0.045 }}
               aria-label={isChosen ? `${name}, ending ${card.last4}. Back to all cards` : `${name}, ending ${card.last4}`}
               aria-pressed={open ? isChosen : undefined}
               onClick={() => pick(card)}
@@ -297,7 +297,7 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
                 <Switch.Root
                   className="wa-switch"
                   checked={state.primary === picked.id}
-                  onCheckedChange={(on) => on && take((s) => ({ ...s, primary: picked.id }))}
+                  onCheckedChange={(on) => on && take((current) => ({ ...current, primary: picked.id }))}
                   aria-label={`Make ${nameOf(picked)} your default card`}
                 >
                   <Switch.Thumb className="wa-thumb" />

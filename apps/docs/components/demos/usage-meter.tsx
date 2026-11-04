@@ -184,7 +184,7 @@ export function UsageMeterDemo({ playing }: UsageMeterDemoProps = {}) {
                     <span>
                       <b>You're on Scale.</b> The new limits apply straight away.
                     </span>
-                    <button type="button" className="um-link" onClick={() => take((s) => ({ ...s, plan: "pro" }))}>
+                    <button type="button" className="um-link" onClick={() => take((current) => ({ ...current, plan: "pro" }))}>
                       Undo
                     </button>
                   </motion.div>
@@ -203,7 +203,7 @@ export function UsageMeterDemo({ playing }: UsageMeterDemoProps = {}) {
                     <motion.button
                       type="button"
                       className="um-upgrade"
-                      onClick={() => take((s) => ({ ...s, plan: "scale" }))}
+                      onClick={() => take((current) => ({ ...current, plan: "scale" }))}
                       whileTap={{ scale: 0.96 }}
                     >
                       Upgrade

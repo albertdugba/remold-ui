@@ -1,5 +1,3 @@
-/* API keys. Styling only: Motion unfolds the form, opens the secret panel and folds it into the
-   list; the scramble decodes and masks the key. */
 .ak {
   --ak-surface: #ffffff;
   --ak-field: #f4f4f5;
@@ -13,8 +11,10 @@
   --ak-vault-ink: #f4f4f5;
   --ak-vault-muted: #8b8b93;
   --ak-vault-line: rgb(255 255 255 / 0.08);
-  display: grid;
-  gap: 10px;
+  position: relative;
+  display: block;
+  overflow: clip;
+  box-sizing: border-box;
   width: min(100%, 420px);
   padding: 18px;
   border-radius: 22px;
@@ -39,7 +39,17 @@
   justify-content: space-between;
   gap: 12px;
   min-height: 36px;
-  margin-bottom: 2px;
+}
+
+.ak-content {
+  position: relative;
+  display: grid;
+  gap: 14px;
+}
+
+.ak-view {
+  display: grid;
+  gap: 10px;
 }
 
 .ak-title {
@@ -59,16 +69,15 @@
 }
 
 .ak-create,
-.ak-primary,
 .ak-ghost,
 .ak-done {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 32px;
-  padding: 0 12px;
+  height: 34px;
+  padding: 0 13px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 10px;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -76,8 +85,7 @@
   cursor: pointer;
 }
 
-.ak-create,
-.ak-primary {
+.ak-create {
   background: var(--ak-ink);
   color: var(--ak-surface);
 }
@@ -88,7 +96,7 @@
   stroke-width: 2.5;
 }
 
-.ak-primary:disabled {
+.ak-create:disabled {
   opacity: 0.3;
   cursor: default;
 }
@@ -102,20 +110,6 @@
   color: var(--ak-ink);
 }
 
-/* What opens and folds: a plain clipping wrapper, so its contents never squeeze */
-.ak-fold {
-  overflow: hidden;
-}
-
-/* Naming the new key: a row that unfolds above the list */
-.ak-form {
-  display: grid;
-  gap: 10px;
-  overflow: hidden;
-  padding: 12px;
-  border-radius: 14px;
-  background: var(--ak-field);
-}
 
 .ak-field {
   display: grid;
@@ -129,16 +123,20 @@
 }
 
 .ak-field input {
-  height: 36px;
-  padding: 0 11px;
+  height: 42px;
+  padding: 0 12px;
   border: 0;
-  border-radius: 9px;
-  background: var(--ak-surface);
+  border-radius: 12px;
+  background: var(--ak-field);
   color: var(--ak-ink);
   font: inherit;
   font-size: 14px;
   outline: none;
-  box-shadow: inset 0 0 0 1px var(--ak-line);
+  transition: box-shadow 0.15s;
+}
+
+.ak-field input:focus {
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--ak-ink) 20%, transparent);
 }
 
 .ak-field input::placeholder {
@@ -151,15 +149,18 @@
   gap: 8px;
 }
 
-.ak-env {
-  display: flex;
+.ak-env-wrap {
   flex: 1;
   min-width: 0;
+}
+
+.ak-env {
+  display: flex;
   gap: 2px;
-  height: 32px;
-  padding: 2px;
+  height: 34px;
+  padding: 3px;
   border-radius: 10px;
-  background: color-mix(in oklab, var(--ak-ink) 8%, var(--ak-field));
+  background: var(--ak-field);
 }
 
 .ak-env-item {
@@ -169,10 +170,11 @@
   justify-content: center;
   gap: 6px;
   min-width: 0;
+  position: relative;
   height: 100%;
   padding: 0 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 7px;
   background: none;
   color: var(--ak-muted);
   font: inherit;
@@ -182,11 +184,19 @@
 }
 
 .ak-env-item[data-pressed] {
-  background: var(--ak-surface);
   color: var(--ak-ink);
-  box-shadow:
-    0 1px 2px rgb(24 24 27 / 0.06),
-    0 0 0 0.5px rgb(24 24 27 / 0.08);
+}
+
+.ak-env-item > * {
+  position: relative;
+}
+
+.ak-env-item > .ak-env-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  background: var(--ak-surface);
+  box-shadow: 0 1px 2px rgb(24 24 27 / 0.08);
 }
 
 .ak-env-item .ak-dot,
@@ -196,20 +206,11 @@
   box-shadow: none;
 }
 
-.ak-actions {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 2px;
-}
-
-/* The secret, shown once: a dark vault that later folds into its row */
 .ak-secret {
   display: grid;
   gap: 12px;
-  overflow: hidden;
   padding: 14px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--ak-vault);
   color: var(--ak-vault-ink);
 }
@@ -274,33 +275,21 @@
   stroke-width: 2.25;
 }
 
-.ak-copy-label {
-  display: inline-grid;
-  overflow: hidden;
-}
-
-.ak-secret-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--ak-vault-muted);
-  font-size: 12px;
-}
-
 .ak-done {
-  height: 28px;
-  background: rgb(255 255 255 / 0.1);
-  color: var(--ak-vault-ink);
+  justify-content: center;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--ak-field);
+  color: var(--ak-ink);
 }
 
 .ak-done:hover {
-  background: rgb(255 255 255 / 0.16);
+  background: color-mix(in oklab, var(--ak-ink) 8%, var(--ak-field));
 }
 
-/* The keys you have: one quiet line each */
 .ak-list {
   display: grid;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -308,13 +297,17 @@
 
 .ak-row {
   position: relative;
-  overflow: hidden;
+  overflow: clip;
+  border-radius: 12px;
+  transition: background-color 0.2s;
+}
+
+.ak-row-inner {
   display: flex;
   align-items: center;
   gap: 11px;
   min-height: 52px;
   padding: 0 4px;
-  border-radius: 12px;
 }
 
 .ak-row + .ak-row::before {
@@ -371,11 +364,83 @@
 }
 
 .ak-create:focus-visible,
-.ak-primary:focus-visible,
 .ak-ghost:focus-visible,
 .ak-done:focus-visible,
 .ak-copy:focus-visible,
 .ak-env-item:focus-visible {
   outline: 2px solid #6366f1;
   outline-offset: 2px;
+}
+
+.ak-revoke {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ak-muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.ak-row:hover .ak-revoke,
+.ak-revoke:focus-visible,
+.ak-row[data-confirming] .ak-revoke {
+  opacity: 1;
+}
+
+.ak-revoke:hover {
+  color: #dc2626;
+}
+
+.ak-revoke:focus-visible {
+  outline: 2px solid var(--ak-ink);
+  outline-offset: -2px;
+}
+
+.ak-row[data-confirming] {
+  background: color-mix(in oklab, #dc2626 7%, transparent);
+}
+
+.ak-row[data-confirming] .ak-row-used {
+  display: none;
+}
+
+.ak-row[data-confirming] .ak-revoke {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.dark .ak-row[data-confirming] {
+  background: rgb(248 113 113 / 0.12);
+}
+
+.dark .ak-revoke:hover {
+  color: #f87171;
+}
+
+.dark .ak-row[data-confirming] .ak-revoke {
+  background: #f87171;
+  color: #1f1f23;
+}
+
+@media (hover: none) {
+  .ak-revoke {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ak-revoke {
+    transition: none;
+  }
 }

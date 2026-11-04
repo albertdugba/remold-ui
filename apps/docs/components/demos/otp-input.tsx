@@ -23,15 +23,15 @@ const SPRING = { type: "spring" as const, duration: 0.32, bounce: 0.16 };
 
 const STEPS = [
   { ms: 1400, act: "clear" },
-  ...Array.from(ERROR_CODE, (digit, i) => ({
-    ms: i === LENGTH - 1 ? 300 : 140,
+  ...Array.from(ERROR_CODE, (digit, index) => ({
+    ms: index === LENGTH - 1 ? 300 : 140,
     act: "type" as const,
     digit,
   })),
   { ms: SETTLE + CHECKING + 1500, act: "wait" },
   { ms: 400, act: "clear" },
-  ...Array.from(CODE, (digit, i) => ({
-    ms: i === LENGTH - 1 ? 300 : 140,
+  ...Array.from(CODE, (digit, index) => ({
+    ms: index === LENGTH - 1 ? 300 : 140,
     act: "type" as const,
     digit,
   })),
@@ -47,7 +47,7 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
   const [phase, setPhase] = useState<Phase>("entry");
   const input = useRef<HTMLInputElement>(null);
   const autoplay = useAutoplay(STEPS.length, {
-    every: (i) => STEPS[i]!.ms,
+    every: (index) => STEPS[index]!.ms,
     stopOnInteraction: playing === undefined,
     autoStart: playing !== undefined,
   });
@@ -135,7 +135,7 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
             inputRef={input}
             describedBy="otp-copy"
             // After a wrong code, clicking in selects it all, so typing starts a fresh one.
-            onFocus={(e) => failed && e.currentTarget.select()}
+            onFocus={(event) => failed && event.currentTarget.select()}
           />
           {/* Centred in the field even while hidden, so it fades in where it lands instead of travelling. */}
           <motion.span layout className="otp-result" role="status" aria-live="polite" transition={SPRING}>

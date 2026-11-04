@@ -8,7 +8,6 @@ import { useEffect, useRef } from "react";
 import { Frame } from "./frame";
 import { CodeField } from "./code-field";
 import { useScene } from "./use-scene";
-import "./two-factor.css";
 
 const CODE = "482915";
 const LENGTH = CODE.length;
@@ -75,7 +74,7 @@ for (let y = 0; y < SIZE; y++)
 function Qr() {
   return (
     <svg
-      className="tf-qr"
+      className="size-[62px] text-zinc-900"
       viewBox={`-1 -1 ${SIZE + 2} ${SIZE + 2}`}
       aria-hidden="true"
       shapeRendering="crispEdges"
@@ -119,12 +118,12 @@ function Switch({
 }) {
   return (
     <BaseSwitch.Root
-      className="tf-switch"
+      className="flex h-[22px] w-9 flex-none cursor-pointer rounded-full border-0 bg-(--tf-track) p-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--tf-ink) data-checked:justify-end data-checked:bg-(--tf-on)"
       aria-label={label}
       checked={on}
       onCheckedChange={onToggle}
     >
-      <BaseSwitch.Thumb className="tf-knob" />
+      <BaseSwitch.Thumb className="size-[18px] rounded-full bg-white dark:data-checked:bg-zinc-900" />
     </BaseSwitch.Root>
   );
 }
@@ -150,11 +149,11 @@ export function TwoFactorDemo({ framed = true, playing }: TwoFactorDemoProps) {
 
   const enter = (value: string) => {
     const code = value.replace(/\D/g, "").slice(0, LENGTH);
-    take((s) => ({ ...s, code }));
+    take((current) => ({ ...current, code }));
     clearTimeout(accepting.current);
     if (code.length === LENGTH)
       accepting.current = setTimeout(
-        () => take((s) => ({ ...s, phase: "on" })),
+        () => take((current) => ({ ...current, phase: "on" })),
         ACCEPT,
       );
   };
@@ -162,25 +161,26 @@ export function TwoFactorDemo({ framed = true, playing }: TwoFactorDemoProps) {
   const body = (
     <section
       ref={scene.ref}
-      className="tf"
+      className="grid w-[min(100%,360px)] font-sans text-(--tf-ink) [--tf-faint:#a1a1aa] [--tf-fill:#f4f4f5] [--tf-good:#15803d] [--tf-ink:#18181b] [--tf-line:rgb(24_24_27/0.07)] [--tf-muted:#71717a] [--tf-on:#18181b] [--tf-surface:#ffffff] [--tf-track:#e4e4e7] dark:[--tf-faint:#71717a] dark:[--tf-fill:#2c2c31] dark:[--tf-good:#4ade80] dark:[--tf-ink:#fafafa] dark:[--tf-line:rgb(255_255_255/0.07)] dark:[--tf-muted:#a1a1aa] dark:[--tf-on:#fafafa] dark:[--tf-surface:#232327] dark:[--tf-track:#3a3a40]"
       data-phase={state.phase}
       aria-label="Two-factor settings"
     >
       <Remold.Layout
         trigger={[state.phase, state.alerts]}
         spring={SPRING}
-        className="tf-panel"
+        choreography
+        className="grid rounded-[18px] bg-(--tf-surface) px-4 py-1 in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(24_24_27/0.08)] dark:in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]"
       >
-        <div className="tf-row">
-          <span className="tf-copy">
+        <div className="flex items-center gap-3.5 py-3.5 not-first:shadow-[0_-1px_0_var(--tf-line)]">
+          <span className="grid min-w-0 flex-1 gap-0.5 [&>strong]:text-[13.5px] [&>strong]:font-semibold">
             <strong>Two-factor authentication</strong>
             {state.phase === "on" ? (
-              <span key="on" className="tf-on">
+              <span key="on" className="inline-flex items-center gap-[5px] text-[12.5px] font-medium text-(--tf-good) [&_svg]:size-[13px]">
                 <HugeiconsIcon icon={CheckIcon} aria-hidden="true" strokeWidth={2.75} />
                 On · Authenticator app
               </span>
             ) : (
-              <span key="off">Ask for a code when signing in</span>
+              <span key="off" className="text-[12.5px] text-(--tf-muted)">Ask for a code when signing in</span>
             )}
           </span>
           <Switch
@@ -188,9 +188,9 @@ export function TwoFactorDemo({ framed = true, playing }: TwoFactorDemoProps) {
             label="Two-factor authentication"
             onToggle={() => {
               clearTimeout(accepting.current);
-              take((s) => ({
-                ...s,
-                phase: s.phase === "off" ? "setup" : "off",
+              take((current) => ({
+                ...current,
+                phase: current.phase === "off" ? "setup" : "off",
                 code: "",
               }));
             }}
@@ -198,18 +198,18 @@ export function TwoFactorDemo({ framed = true, playing }: TwoFactorDemoProps) {
         </div>
 
         {state.phase === "setup" && (
-          <div className="tf-setup">
-            <div className="tf-scan">
-              <span className="tf-qr-frame">
+          <div className="grid gap-3.5 pt-0.5 pb-[18px]">
+            <div className="flex items-center gap-3.5">
+              <span className="grid size-[76px] flex-none place-items-center rounded-xl bg-(--tf-fill) dark:bg-white">
                 <Qr />
               </span>
-              <span className="tf-hint" id="tf-hint">
+              <span className="text-[12.5px] leading-[1.45] text-pretty text-(--tf-muted)" id="tf-hint">
                 Scan with your authenticator app, then enter the 6-digit code
                 it shows.
               </span>
             </div>
             <CodeField
-              className="tf-code"
+              className="justify-self-center [--cf-cell:var(--tf-fill)]! [--cf-ink:var(--tf-ink)]!"
               value={state.code}
               onChange={enter}
               inputRef={input}
@@ -218,15 +218,15 @@ export function TwoFactorDemo({ framed = true, playing }: TwoFactorDemoProps) {
           </div>
         )}
 
-        <div className="tf-row">
-          <span className="tf-copy">
+        <div className="flex items-center gap-3.5 py-3.5 not-first:shadow-[0_-1px_0_var(--tf-line)]">
+          <span className="grid min-w-0 flex-1 gap-0.5 [&>strong]:text-[13.5px] [&>strong]:font-semibold">
             <strong>Sign-in alerts</strong>
-            <span>Email me about new devices</span>
+            <span className="text-[12.5px] text-(--tf-muted)">Email me about new devices</span>
           </span>
           <Switch
             on={state.alerts}
             label="Sign-in alerts"
-            onToggle={() => take((s) => ({ ...s, alerts: !s.alerts }))}
+            onToggle={() => take((current) => ({ ...current, alerts: !current.alerts }))}
           />
         </div>
       </Remold.Layout>

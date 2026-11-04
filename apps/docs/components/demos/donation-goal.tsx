@@ -32,7 +32,7 @@ function seeded(i: number) {
 }
 
 const PICTURE: CloudPoint[] = samplePath(DROP, { count: DOTS })
-  .map((p, i) => ({ ...p, order: p.y - Math.sin(p.x * 0.18) * 2.2 + seeded(i) * 1.5 }))
+  .map((p, index) => ({ ...p, order: p.y - Math.sin(p.x * 0.18) * 2.2 + seeded(index) * 1.5 }))
   .sort((a, b) => b.order - a.order)
   .map(({ x, y }) => ({ x, y }));
 
@@ -40,10 +40,10 @@ const LOVE: CloudPoint[] = samplePath(HEART, { spacing: 2.3 }).map((p) => ({ ...
 
 function frame(filled: number, from: number): CloudPoint[] {
   const ghost = PICTURE.map((p) => ({ ...p, tone: TONE.ghost }));
-  const fill = PICTURE.map((p, i) =>
-    i < filled
+  const fill = PICTURE.map((p, index) =>
+    index < filled
       ? { ...p, tone: TONE.water }
-      : { x: from * 100 + (seeded(i) - 0.5) * 18, y: 105 + seeded(i + 3) * 2, tone: TONE.hidden },
+      : { x: from * 100 + (seeded(index) - 0.5) * 18, y: 105 + seeded(index + 3) * 2, tone: TONE.hidden },
   );
   return [...ghost, ...fill];
 }
@@ -113,9 +113,9 @@ export function DonationGoalDemo({ playing }: { playing?: boolean } = {}) {
   const percent = Math.min(100, (state.raised / GOAL) * 100);
 
   const donate = () =>
-    take((s) => ({
-      raised: Math.min(GOAL, s.raised + AMOUNTS[choice]!),
-      backers: s.backers + 1,
+    take((current) => ({
+      raised: Math.min(GOAL, current.raised + AMOUNTS[choice]!),
+      backers: current.backers + 1,
       from: [0.2, 0.5, 0.8][choice] ?? 0.5,
     }));
 

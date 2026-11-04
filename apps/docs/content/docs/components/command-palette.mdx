@@ -2,7 +2,7 @@
 title: "Command palette"
 description: "A command palette that grows out of its search pill, keeps results in place as you type, turns a scope into a chip in the field, and folds back into a pill that says what you did."
 status: "new"
-tags: ["Layout", "Text"]
+tags: ["Motion", "Text"]
 ---
 
 <Stage name="command-palette" code={<Source demo="command-palette" />}>
@@ -27,9 +27,9 @@ tags: ["Layout", "Text"]
 
 ## How it works
 
-- **One box is both the pill and the palette.** It stays on the page while its contents change. A [Layout](/docs/primitives/layout) eases it from pill to panel and back, and the search icon travels with it.
-- **Results keep their identity.** The same Layout is triggered by the list of results, so typing moves each remaining row from where it was to where it is now, instead of redrawing the list.
-- **The scope chip is the row it came from.** Layout matches pieces by what they show, so the "Projects" row and the "Projects" chip pair up, and the row's label travels into the field.
+- **One box is both the pill and the palette.** It stays on the page while its contents change, and Motion eases its real width, height and corner radius from pill to panel and back. Nothing is scaled, so the text, the shadow and the rounded corners are drawn as they are at every frame, and the height follows the results as you type.
+- **It plays in beats.** Opening, the field arrives, then the rows blur in one after another from the top, in a quarter of a second at most however many there are. Closing runs the other way: the contents blur out first, then the panel folds back into the pill. Rows that stay as you type don't arrive again, so only what's new moves.
+- **Built on Base UI's Autocomplete.** It handles filtering, the highlight, the keyboard and the groups; each row renders as a Motion element so it can arrive in its turn.
 - **The pill reports back.** It's [Text](/docs/primitives/text), so "Search or jump to…" changes into "Opened Billing" letter by letter, and the same line is announced to screen readers.
 - **It follows the ARIA combobox pattern.** The field is a `combobox` that owns a `listbox` of `option`s, and `aria-activedescendant` tracks the highlight while focus stays in the field. Groups are labelled.
 - **⌘K only fires while the demo has focus,** so it doesn't fight the docs' own search. In your app, listen on `window`.

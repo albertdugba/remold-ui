@@ -337,3 +337,45 @@
   background: var(--iv-bad);
 }
 
+
+/* Invite says what it sent for a moment */
+.iv-send {
+  transition: background-color 0.2s;
+}
+
+.iv-send[data-sent] {
+  background: var(--iv-good);
+}
+
+.dark .iv-send[data-sent] {
+  color: #18181b;
+}
+
+/* Someone who just joined: their new row is tinted for a moment, past its edges so nothing moves */
+.iv-row {
+  position: relative;
+  isolation: isolate;
+}
+
+.iv-row::after {
+  position: absolute;
+  inset: 2px -8px;
+  z-index: -1;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--iv-good) 10%, transparent);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s;
+}
+
+.iv-row[data-joined]::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iv-send,
+  .iv-row::after {
+    transition: none;
+  }
+}

@@ -4,7 +4,8 @@
  * Icons from any set (Lucide, Heroicons, your own SVG files) are made of several shapes: paths,
  * circles, rounded rectangles, lines. `iconToPath` reads them in drawing order, turns each into
  * path data (core `shapesToPath`) and joins them, and reads the icon's look from its `<svg>`:
- * the viewBox and how it's painted (fill, stroke, stroke width, line caps and joins).
+ * the viewBox and how it's painted (fill, stroke, stroke width, line caps and joins). Sets that
+ * paint each shape instead of the `<svg>` (Hugeicons does) have it read from the first shape.
  *
  * It reads attributes only, never layout, so it's cheap and works on hidden elements. Shapes
  * inside `<defs>`, `<clipPath>`, `<mask>`, `<symbol>`, `<pattern>` and `<marker>` aren't drawn,
@@ -13,7 +14,7 @@
  */
 import { shapesToPath, type ShapeNode } from "@remold-ui/core";
 
-/** How the icon is painted, from its `<svg>` element. Only what the icon sets is included. */
+/** How the icon is painted, from its `<svg>` or else its first shape. Only what the icon sets is included. */
 export interface IconLook {
   viewBox?: string;
   fill?: string;
@@ -56,6 +57,7 @@ export function iconToPath(source: Element): IconPath | null {
   const svg = source.localName === "svg" ? source : source.querySelector("svg");
   const root = svg ?? source;
   const nodes: ShapeNode[] = [];
+  let first: Element | null = null;
 
   for (const shape of root.querySelectorAll(SHAPES)) {
     if (shape.closest(NOT_DRAWN)) continue;
@@ -72,15 +74,14 @@ export function iconToPath(source: Element): IconPath | null {
       if (value !== null) attributes[name] = value;
     }
     nodes.push([shape.localName, attributes]);
+    first ??= shape;
   }
   const d = shapesToPath(nodes);
   if (!d) return null;
   const look: IconLook = {};
-  if (svg) {
-    for (const [key, attribute] of LOOK) {
-      const value = svg.getAttribute(attribute);
-      if (value !== null) look[key] = value;
-    }
+  for (const [key, attribute] of LOOK) {
+    const value = svg?.getAttribute(attribute) ?? (key === "viewBox" ? null : first?.getAttribute(attribute));
+    if (value != null) look[key] = value;
   }
   return { d, look };
 }

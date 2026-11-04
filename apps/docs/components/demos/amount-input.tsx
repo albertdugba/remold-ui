@@ -13,7 +13,7 @@
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
-import { useScene } from "./use-scene";
+import { typing, useScene } from "./use-scene";
 import "./amount-input.css";
 
 const DIGIT = { type: "spring" as const, duration: 0.36, bounce: 0.18 };
@@ -57,14 +57,14 @@ function characters(value: string) {
   if (!value) return [{ key: "empty", char: "0", muted: true }];
   const [whole = "", fraction] = value.split(".");
   const out: { key: string; char: string; muted?: boolean }[] = [];
-  [...(whole || "0")].forEach((char, i, all) => {
-    out.push({ key: `w${i}`, char });
-    const place = all.length - i - 1;
+  [...(whole || "0")].forEach((char, index, all) => {
+    out.push({ key: `w${index}`, char });
+    const place = all.length - index - 1;
     if (place > 0 && place % 3 === 0) out.push({ key: `s${place}`, char: "," });
   });
   if (fraction !== undefined) {
     out.push({ key: "point", char: "." });
-    [...fraction].forEach((char, i) => out.push({ key: `f${i}`, char }));
+    [...fraction].forEach((char, index) => out.push({ key: `f${index}`, char }));
   }
   return out;
 }
@@ -127,9 +127,9 @@ export function AmountInput({
 
   return (
     <div className="amt" data-over={over || undefined} data-focused={focused || undefined} data-selected={(focused && selected) || undefined}>
-      <div className="amt-field" onPointerDown={(e) => {
-        if (e.target !== input.current) {
-          e.preventDefault();
+      <div className="amt-field" onPointerDown={(event) => {
+        if (event.target !== input.current) {
+          event.preventDefault();
           input.current?.focus();
         }
       }}>
@@ -141,7 +141,7 @@ export function AmountInput({
             <button
               type="button"
               className="amt-max"
-              onPointerDown={(e) => e.stopPropagation()}
+              onPointerDown={(event) => event.stopPropagation()}
               onClick={() => onValueChange(balance.toFixed(decimals).replace(/\.?0+$/, ""))}
             >
               Max
@@ -186,10 +186,10 @@ export function AmountInput({
               setFocused(false);
               setSelected(false);
             }}
-            onSelect={(e) => track(e.currentTarget)}
-            onChange={(e) => {
+            onSelect={(event) => track(event.currentTarget)}
+            onChange={(event) => {
               setSelected(false);
-              const next = accept(e.target.value, decimals, maxDigits);
+              const next = accept(event.target.value, decimals, maxDigits);
               if (next === null) shake();
               else onValueChange(next);
             }}
@@ -212,15 +212,9 @@ interface State {
 /** Typing an amount, overshooting the balance, and coming back under it. */
 const BEATS: readonly (State & { ms: number })[] = [
   { value: "", ms: 900 },
-  { value: "2", ms: 220 },
-  { value: "24", ms: 220 },
-  { value: "240", ms: 220 },
-  { value: "2400", ms: 420 },
-  { value: "24000", ms: 1500 },
+  ...typing("24000", (value) => ({ value }), { every: 110, hold: 1500 }),
   { value: "2400", ms: 360 },
-  { value: "2400.", ms: 240 },
-  { value: "2400.5", ms: 240 },
-  { value: "2400.50", ms: 2400 },
+  ...typing(".50", (value) => ({ value }), { from: "2400", every: 110, hold: 2400 }),
 ];
 
 const fromBeat = (step: number): State => {

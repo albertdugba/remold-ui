@@ -21,11 +21,12 @@ export { MorphIconsDemo } from "./morph-icons";
 export { CourseOutlineDemo } from "./course-outline";
 export { CommentThreadDemo } from "./comment-thread";
 export { HoldToRecordDemo } from "./hold-to-record";
-export { FlightBookingDemo } from "./flight-booking";
+export { TableBookingDemo } from "./table-booking";
 export { OtpInputDemo } from "./otp-input";
 export { LiveRoomDemo } from "./live-room";
 export { StepProgressDemo } from "./step-progress";
 export { AvatarStackDemo } from "./avatar-stack";
+export { InvitePillDemo } from "./invite-pill";
 export { SaveButtonDemo } from "./save-button";
 export { CommandPaletteDemo } from "./command-palette";
 export { ProductTourDemo } from "./product-tour";
@@ -60,16 +61,30 @@ export { InboxTriageDemo } from "./inbox-triage";
 export { TransactionRoute } from "./transaction-route";
 export { WalletSecurityMap } from "./wallet-security-map";
 export { CareJourney } from "./care-journey";
-export { DomainConnection, DataPrivacyBoundary, SubscriptionUpgrade, UptimeRouting, RealtimeCollaboration, TeamWorkspace } from "./product-systems";
+export {
+  DomainConnection,
+  DataPrivacyBoundary,
+  SubscriptionUpgrade,
+  UptimeRouting,
+  RealtimeCollaboration,
+  TeamWorkspace,
+} from "./product-systems";
 export { AmountInput, AmountInputDemo } from "./amount-input";
 export { PhoneInputDemo } from "./phone-input";
 export { TagInputDemo } from "./tag-input";
 export { AddressAutocompleteDemo } from "./address-autocomplete";
 export { QuantityStepperDemo } from "./quantity-stepper";
 export { PromoCodeDemo } from "./promo-code";
+export { EventRsvpDemo } from "./event-rsvp";
+export { PriceFilterDemo } from "./price-filter";
 export { RangeSliderDemo } from "./range-slider";
 export { UploadRowDemo } from "./upload-row";
 export { SplitAmountDemo } from "./split-amount";
 export { CenterFlow } from "./center-flow";
 export { AppleMusicBadge } from "./apple-music-badge";
-export { NotificationStackCardDemo, PermissionCardDemo, SelectableOptionCardDemo } from "./cards";
+export {
+  NotificationStackCardDemo,
+  PermissionCardDemo,
+  SelectableOptionCardDemo,
+} from "./cards";
+export { FluidPopoverDemo } from "./fluid-popover";

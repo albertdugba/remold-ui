@@ -107,9 +107,9 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
 
         <span className="phn-rule" aria-hidden="true" />
 
-        <span className="phn-number" onPointerDown={(e) => {
-          if (e.target !== input.current) {
-            e.preventDefault();
+        <span className="phn-number" onPointerDown={(event) => {
+          if (event.target !== input.current) {
+            event.preventDefault();
             input.current?.focus();
           }
         }}>
@@ -142,8 +142,8 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
             value={digits}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            onChange={(e) => {
-              let next = e.target.value.replace(/\D/g, "");
+            onChange={(event) => {
+              let next = event.target.value.replace(/\D/g, "");
               // A pasted number with its country code: drop the code.
               const dial = c.dial.slice(1);
               if (next.length > capacity(c.format) && next.startsWith(dial)) next = next.slice(dial.length);
@@ -198,9 +198,9 @@ export function PhoneInputDemo({ playing }: PhoneInputDemoProps = {}) {
     <div ref={ref} className="fk-stage not-prose">
       <PhoneInput
         country={state.country}
-        onCountryChange={(country) => take((s) => ({ ...s, country }))}
+        onCountryChange={(country) => take((current) => ({ ...current, country }))}
         digits={state.digits}
-        onDigitsChange={(digits) => take((s) => ({ ...s, digits }))}
+        onDigitsChange={(digits) => take((current) => ({ ...current, digits }))}
       />
     </div>
   );

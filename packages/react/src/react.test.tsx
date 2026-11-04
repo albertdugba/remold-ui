@@ -479,29 +479,38 @@ describe("Remold.Icon", () => {
 
   it("renders the first icon, then morphs to the next and lands exactly on it", async () => {
     const frames = manualLoop();
-    await render(<Remold.Icon d={LINE} loop={frames.loop} reducedMotion="never" stroke="currentColor" />);
+    await render(<Remold.Icon path={LINE} loop={frames.loop} reducedMotion="never" stroke="currentColor" />);
     const path = container.querySelector("path")!;
     expect(path.getAttribute("d")).toBe(LINE);
     expect(container.querySelector("svg")!.getAttribute("viewBox")).toBe("0 0 24 24");
 
-    await render(<Remold.Icon d={CROSS} loop={frames.loop} reducedMotion="never" stroke="currentColor" />);
+    await render(<Remold.Icon path={CROSS} loop={frames.loop} reducedMotion="never" stroke="currentColor" />);
     expect(container.querySelector("svg")!.hasAttribute("data-rm-animating")).toBe(true);
     await act(async () => frames.run());
     expect(path.getAttribute("d")).toBe(CROSS);
     expect(container.querySelector("svg")!.hasAttribute("data-rm-animating")).toBe(false);
   });
 
+  it("keeps one identity while it reshapes, so a layout transition doesn't fade it in again", async () => {
+    await render(<Remold.Icon path={LINE} reducedMotion="always" />);
+    const identity = container.querySelector("svg")!.getAttribute("data-rm-media");
+    expect(identity).toBeTruthy();
+
+    await render(<Remold.Icon path={CROSS} reducedMotion="always" />);
+    expect(container.querySelector("svg")!.getAttribute("data-rm-media")).toBe(identity);
+  });
+
   it("jumps straight to the new icon with reduced motion", async () => {
-    await render(<Remold.Icon d={LINE} reducedMotion="always" />);
-    await render(<Remold.Icon d={CROSS} reducedMotion="always" />);
+    await render(<Remold.Icon path={LINE} reducedMotion="always" />);
+    await render(<Remold.Icon path={CROSS} reducedMotion="always" />);
     expect(container.querySelector("path")!.getAttribute("d")).toBe(CROSS);
   });
 
   it("stops the previous animation when the icon changes again", async () => {
     const frames = manualLoop();
-    await render(<Remold.Icon d={LINE} loop={frames.loop} reducedMotion="never" />);
-    await render(<Remold.Icon d={CROSS} loop={frames.loop} reducedMotion="never" />);
-    await render(<Remold.Icon d={LINE} loop={frames.loop} reducedMotion="never" />);
+    await render(<Remold.Icon path={LINE} loop={frames.loop} reducedMotion="never" />);
+    await render(<Remold.Icon path={CROSS} loop={frames.loop} reducedMotion="never" />);
+    await render(<Remold.Icon path={LINE} loop={frames.loop} reducedMotion="never" />);
     await act(async () => frames.run());
     expect(container.querySelector("path")!.getAttribute("d")).toBe(LINE);
     expect(container.querySelector("svg")!.hasAttribute("data-rm-animating")).toBe(false);
@@ -555,7 +564,7 @@ describe("Remold.Icon with an icon", () => {
 
   it("asks for an icon or path data", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(render(<Remold.Icon />)).rejects.toThrow(/icon.*or path data/);
+    await expect(render(<Remold.Icon />)).rejects.toThrow(/icon.*or SVG path data/);
   });
 });
 
@@ -567,8 +576,8 @@ describe("Remold.PathGroup", () => {
         viewBox="0 0 24 24"
         loop={frames.loop}
         paths={[
-          { id: "one", d: "M4 12h16", stroke: "currentColor" },
-          { id: "two", d: "M12 4v16", stroke: "currentColor" },
+          { id: "one", path: "M4 12h16", stroke: "currentColor" },
+          { id: "two", path: "M12 4v16", stroke: "currentColor" },
         ]}
       />,
     );
@@ -578,8 +587,8 @@ describe("Remold.PathGroup", () => {
         viewBox="0 0 24 24"
         loop={frames.loop}
         paths={[
-          { id: "one", d: "M5 5l14 14", stroke: "currentColor" },
-          { id: "two", d: "M19 5L5 19", stroke: "currentColor" },
+          { id: "one", path: "M5 5l14 14", stroke: "currentColor" },
+          { id: "two", path: "M19 5L5 19", stroke: "currentColor" },
         ]}
       />,
     );

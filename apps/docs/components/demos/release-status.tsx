@@ -51,10 +51,10 @@ export function ReleaseStatusDemo({ framed = true }: { framed?: boolean }) {
           aria-label={`Release status: ${current.label}`}
           spring={{ duration: 0.46, bounce: 0.16 }}
           paths={[
-            { id: "sheet", d: roundedSheet, className: `fill-[var(--color-fd-card)] ${current.accent}`, strokeWidth: 2.5 },
-            { id: "fold", d: "M78 12V32H98", className: "stroke-[var(--color-fd-muted-foreground)]", fill: "none", strokeWidth: 3 },
-            { id: "lines", d: current.lines, className: "stroke-[var(--color-fd-muted-foreground)]", fill: "none", strokeWidth: 4, strokeLinecap: "round" },
-            { id: "mark", d: current.mark, className: current.accent, fill: "none", strokeWidth: 4.5, strokeLinecap: "round", strokeLinejoin: "round" },
+            { id: "sheet", path: roundedSheet, className: `fill-[var(--color-fd-card)] ${current.accent}`, strokeWidth: 2.5 },
+            { id: "fold", path: "M78 12V32H98", className: "stroke-[var(--color-fd-muted-foreground)]", fill: "none", strokeWidth: 3 },
+            { id: "lines", path: current.lines, className: "stroke-[var(--color-fd-muted-foreground)]", fill: "none", strokeWidth: 4, strokeLinecap: "round" },
+            { id: "mark", path: current.mark, className: current.accent, fill: "none", strokeWidth: 4.5, strokeLinecap: "round", strokeLinejoin: "round" },
           ]}
         />
         <div className="grid min-w-[140px] gap-1">

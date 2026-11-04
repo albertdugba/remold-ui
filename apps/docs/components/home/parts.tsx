@@ -4,13 +4,14 @@
  * few chips to change its state. Every card plays by itself while it's on screen and stops for
  * good as soon as someone touches it.
  */
-import { ArrowDown01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Popover } from "@base-ui/react/popover";
 import { Remold, useAutoplay } from "@remold-ui/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useInPreview, usePortalContainer } from "../demos/portal-container";
+import { motion, useReducedMotion } from "motion/react";
+import { useInPreview } from "../demos/portal-container";
 import { AppleMusicBadge } from "../demos/apple-music-badge";
 import {
   Children,
@@ -44,8 +45,8 @@ const HoldToRecordDemo = dynamic(
   () => import("../demos/hold-to-record").then((m) => m.HoldToRecordDemo),
   { ssr: false },
 );
-const FlightBookingDemo = dynamic(
-  () => import("../demos/flight-booking").then((m) => m.FlightBookingDemo),
+const TableBookingDemo = dynamic(
+  () => import("../demos/table-booking").then((m) => m.TableBookingDemo),
   { ssr: false },
 );
 const OtpInputDemo = dynamic(
@@ -108,8 +109,20 @@ const ApiKeysDemo = dynamic(
   () => import("../demos/api-keys").then((m) => m.ApiKeysDemo),
   { ssr: false },
 );
+const PriceFilterDemo = dynamic(
+  () => import("../demos/price-filter").then((m) => m.PriceFilterDemo),
+  { ssr: false },
+);
+const EventRsvpDemo = dynamic(
+  () => import("../demos/event-rsvp").then((m) => m.EventRsvpDemo),
+  { ssr: false },
+);
 const PromoCodeDemo = dynamic(
   () => import("../demos/promo-code").then((m) => m.PromoCodeDemo),
+  { ssr: false },
+);
+const FluidPopoverDemo = dynamic(
+  () => import("../demos/fluid-popover").then((m) => m.FluidPopoverDemo),
   { ssr: false },
 );
 const SeatCalculatorDemo = dynamic(
@@ -184,11 +197,12 @@ const COMPONENT_NAME_BY_DOC: Record<string, string> = {
   "/docs/primitives/layout": "Layout",
   "/docs/components/particles-story": "Particles story",
   "/docs/components/two-factor": "Two-factor setup",
-  "/docs/components/flight-booking": "Flight booking",
+  "/docs/components/table-booking": "Table booking",
   "/docs/components/invite-team": "Invite teammates",
   "/docs/primitives/icon": "SVG morph",
   "/docs/components/podcast-player": "Podcast",
   "/docs/components/logo-morph": "Logo morph",
+  "/docs/components/fluid-popover": "Fluid popover menu",
 };
 
 /** A card's anchor on the home page, from its title: "Send money" → "send-money". */
@@ -273,7 +287,7 @@ function PartCard({
           aria-label={autoplay.playing ? `Pause ${title}` : `Play ${title}`}
         >
           <Remold.Icon
-            d={autoplay.playing ? PAUSE : PLAY}
+            path={autoplay.playing ? PAUSE : PLAY}
             viewBox="0 0 24 24"
             fill="currentColor"
           />
@@ -300,99 +314,130 @@ function PartCard({
 
 const APPLE_MUSIC_BADGE = <AppleMusicBadge />;
 
-const LOGO = [
-  { brand: 0, form: "text" as const },
-  { brand: 0, form: "logo" as const },
-  { brand: 3, form: "text" as const },
-  { brand: 3, form: "logo" as const },
-];
+const LOGO = [0, 1, 2, 3, 4, 5, 6].map((brand) => ({ brand, form: "logo" as const }));
 
 type Card = ReactElement<Parameters<typeof PartCard>[0]>;
 
 type FilterOption = { value: string; label: string };
 
+const FILTER_SPRING = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
+const FILTER_MENU_WIDTH = 260;
+
+/**
+ * A multi-select filter whose menu grows out from beneath its pill: one shell springs from the
+ * pill's width to the menu's size and back, and the options rise into it once there is room. A pill with a selection
+ * becomes a chip that says what's picked, with its own button to clear it.
+ */
 function GalleryFilter({
   label,
   selected,
   options,
-  portal,
   onSelectedChange,
 }: {
   label: string;
   selected: ReadonlySet<string>;
   options: FilterOption[];
-  portal: HTMLElement | null;
   onSelectedChange: (selected: Set<string>) => void;
 }) {
-  const [query, setQuery] = useState("");
-  const matches = options.filter((option) =>
-    option.label.toLowerCase().includes(query.trim().toLowerCase()),
-  );
+  const [open, setOpen] = useState(false);
+  const [shown, setShown] = useState(false);
+  const [pill, setPill] = useState({ width: 0, height: 44 });
+  const [menuHeight, setMenuHeight] = useState(0);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const shell = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
 
-  const toggle = (value: string) => {
+  const picked = options.filter((option) => selected.has(option.value));
+  const value =
+    picked.length === 0 ? "All" : picked.length === 1 ? picked[0]!.label : `${picked[0]!.label} +${picked.length - 1}`;
+
+  // Base UI mounts the menu after it opens, so it's measured from the moment it's there.
+  const watching = useRef<ResizeObserver | null>(null);
+  const menu = (element: HTMLDivElement | null) => {
+    watching.current?.disconnect();
+    watching.current = null;
+    if (!element) return;
+    watching.current = new ResizeObserver(() => setMenuHeight(element.offsetHeight));
+    watching.current.observe(element);
+  };
+
+  const changeOpen = (next: boolean) => {
+    if (next && trigger.current) {
+      setPill({ width: trigger.current.offsetWidth, height: trigger.current.offsetHeight });
+      setShown(true);
+    }
+    setOpen(next);
+  };
+
+  const toggle = (option: string) => {
     const next = new Set(selected);
-    if (next.has(value)) next.delete(value);
-    else next.add(value);
+    if (next.has(option)) next.delete(option);
+    else next.add(option);
     onSelectedChange(next);
   };
 
   return (
-    <Popover.Root modal={false}>
-      <Popover.Trigger className="hp-filter-select" aria-label={label}>
-        <span className="hp-filter-label">{label}</span>
-        <span className="hp-filter-value">
-          {selected.size === 0
-            ? "All"
-            : selected.size === 1
-              ? options.find((option) => selected.has(option.value))?.label
-              : `${selected.size} selected`}
-        </span>
-        <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" />
-      </Popover.Trigger>
-      <Popover.Portal container={portal}>
-        <Popover.Positioner
-          className="hp-filter-layer"
-          sideOffset={8}
-          align="start"
+    <Popover.Root open={open} onOpenChange={changeOpen} modal={false}>
+      <span className="hp-filter-slot">
+        <Popover.Trigger
+          ref={trigger}
+          className="hp-filter-select"
+          data-picked={picked.length > 0 || undefined}
+          aria-label={picked.length > 0 ? `${label}: ${picked.map((option) => option.label).join(", ")}` : label}
         >
-          <Popover.Popup className="hp-filter-menu" aria-label={label}>
-            <div className="hp-filter-menu-search">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="11" cy="11" r="6" />
-                <path d="m16 16 4 4" />
-              </svg>
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => event.stopPropagation()}
-                placeholder={`Search ${label.toLowerCase()}...`}
-                aria-label={`Search ${label.toLowerCase()}`}
-              />
-            </div>
-            <div className="hp-filter-options">
-              {matches.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className="hp-filter-option"
-                  aria-pressed={selected.has(option.value)}
-                  onClick={() => toggle(option.value)}
-                >
-                  <span className="hp-filter-option-mark" aria-hidden="true">
-                    {selected.has(option.value) && (
-                      <HugeiconsIcon icon={Tick01Icon} aria-hidden="true" />
-                    )}
-                  </span>
-                  {option.label}
-                </button>
-              ))}
-              {matches.length === 0 && (
-                <p className="hp-filter-no-match">No matches found</p>
-              )}
-            </div>
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
+          {picked.length === 0 && <span className="hp-filter-label">{label}</span>}
+          <span className="hp-filter-value">
+            <Remold.Text>{value}</Remold.Text>
+          </span>
+          {picked.length === 0 && <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" />}
+        </Popover.Trigger>
+        {picked.length > 0 && (
+          <button type="button" className="hp-filter-clear" aria-label={`Clear ${label.toLowerCase()}`} onClick={() => onSelectedChange(new Set())}>
+            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={3} aria-hidden="true" />
+          </button>
+        )}
+        <motion.div
+          ref={shell}
+          className="hp-filter-shell"
+          data-shown={shown || undefined}
+          initial={false}
+          animate={
+            open
+              ? { width: FILTER_MENU_WIDTH, height: menuHeight, opacity: 1 }
+              : { width: pill.width, height: 0, opacity: 0 }
+          }
+          transition={reduceMotion ? { duration: 0 } : { ...FILTER_SPRING, delay: open ? 0 : 0.08 }}
+          onAnimationComplete={() => !open && setShown(false)}
+        >
+          <Popover.Portal container={shell}>
+            <Popover.Positioner className="!absolute !inset-0 !transform-none">
+              <Popover.Popup className="hp-filter-menu" aria-label={label} initialFocus={false}>
+                <div ref={menu} className="hp-filter-menu-inner">
+                  <div className="hp-filter-options">
+                    {options.map((option, index) => (
+                      <motion.button
+                        key={option.value}
+                        type="button"
+                        className="hp-filter-option"
+                        aria-pressed={selected.has(option.value)}
+                        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, filter: "blur(4px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        transition={{ duration: 0.22, delay: reduceMotion ? 0 : 0.06 + index * 0.025, ease: [0.23, 1, 0.32, 1] }}
+                        onClick={() => toggle(option.value)}
+                      >
+                        <span className="hp-filter-option-mark" aria-hidden="true">
+                          {selected.has(option.value) && <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.6} aria-hidden="true" />}
+                        </span>
+                        {option.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </motion.div>
+      </span>
     </Popover.Root>
   );
 }
@@ -443,8 +488,6 @@ export function Parts() {
   const [techniquesSelected, setTechniquesSelected] = useState<Set<string>>(
     new Set(),
   );
-  const [query, setQuery] = useState("");
-  const portal = usePortalContainer();
   const cards = Children.toArray(allCards().props.children) as Card[];
   const catalogueCards = cards;
   const techniques: FilterOption[] = [
@@ -454,30 +497,14 @@ export function Parts() {
       .sort()
       .map((value) => ({ value, label: value })),
   ];
-  const normalizedQuery = query.trim().toLowerCase();
   const shown = catalogueCards.filter((card) => {
     if (categories.size > 0 && !categories.has(card.props.category)) return false;
-    if (
-      techniquesSelected.size > 0 &&
-      ![...techniquesSelected].some((technique) =>
-        card.props.kicker.split(" · ").includes(technique),
-      )
-    )
-      return false;
-    if (!normalizedQuery) return true;
-
-    const componentName = card.props.docs
-      ? COMPONENT_NAME_BY_DOC[card.props.docs] ?? card.props.title
-      : card.props.title;
-    return [
-      card.props.title,
-      componentName,
-      card.props.kicker,
-      ...card.props.states,
-    ].some((value) => value.toLowerCase().includes(normalizedQuery));
+    return (
+      techniquesSelected.size === 0 ||
+      [...techniquesSelected].some((technique) => card.props.kicker.split(" · ").includes(technique))
+    );
   });
-  const hasFilters =
-    categories.size > 0 || techniquesSelected.size > 0 || Boolean(query);
+  const hasFilters = categories.size > 0 || techniquesSelected.size > 0;
   const grid = useMasonry(shown.map((card) => card.key).join(","));
   return (
     <>
@@ -488,29 +515,14 @@ export function Parts() {
             label="Category"
             selected={categories}
             options={FILTER_CATEGORIES}
-            portal={portal}
             onSelectedChange={(next) => setCategories(next as Set<Category>)}
           />
           <GalleryFilter
             label="Built with"
             selected={techniquesSelected}
             options={techniques}
-            portal={portal}
             onSelectedChange={setTechniquesSelected}
           />
-          <label className="hp-filter-search">
-            <span className="sr-only">Search examples</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="11" cy="11" r="6" />
-              <path d="m16 16 4 4" />
-            </svg>
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search examples"
-            />
-          </label>
         </div>
         <div className="hp-filter-summary" aria-live="polite">
           <span>{`Showing ${shown.length} of ${catalogueCards.length}`}</span>
@@ -520,7 +532,6 @@ export function Parts() {
               onClick={() => {
                 setCategories(new Set());
                 setTechniquesSelected(new Set());
-                setQuery("");
               }}
             >
               Clear filters
@@ -652,14 +663,13 @@ function allCards() {
         {(_, playing) => <EditorMentionsDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Particles · Motion"
-        category="canvas"
-        title="Donation goal"
-        docs="/docs/components/donation-goal"
-        states={["Give"]}
-        minHeight={520}
+        kicker="Layout · Icon · Text"
+        category="morphing"
+        title="Code to verified"
+        docs="/docs/components/otp-input"
+        states={["Code"]}
       >
-        {(_, playing) => <DonationGoalDemo playing={playing} />}
+        {(_, playing) => <OtpInputDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="SVG · Illustration"
@@ -669,6 +679,15 @@ function allCards() {
         states={["Track"]}
       >
         {(_, playing) => <OrderTrackerDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Motion · Media"
+        category="morphing"
+        title="Stack to live room"
+        docs="/docs/components/live-room"
+        states={["Room"]}
+      >
+        {(_, playing) => <LiveRoomDemo playing={playing} previewOpen />}
       </PartCard>
       <PartCard
         kicker="Motion · Media"
@@ -690,13 +709,15 @@ function allCards() {
         )}
       </PartCard>
       <PartCard
-        kicker="Motion · Media"
-        category="morphing"
-        title="Stack to live room"
-        docs="/docs/components/live-room"
-        states={["Room"]}
+        featured
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Event RSVP"
+        docs="/docs/components/event-rsvp"
+        states={["RSVP"]}
+        minHeight={600}
       >
-        {(_, playing) => <LiveRoomDemo playing={playing} previewOpen />}
+        {(_, playing) => <EventRsvpDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Layout · Connectors"
@@ -711,13 +732,14 @@ function allCards() {
         {(_, playing) => <CommentThread variant="preview" playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Layout · Icon · Text"
-        category="morphing"
-        title="Code to verified"
-        docs="/docs/components/otp-input"
-        states={["Code"]}
+        kicker="Particles · Motion"
+        category="canvas"
+        title="Donation goal"
+        docs="/docs/components/donation-goal"
+        states={["Give"]}
+        minHeight={520}
       >
-        {(_, playing) => <OtpInputDemo playing={playing} />}
+        {(_, playing) => <DonationGoalDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Canvas · States"
@@ -754,14 +776,14 @@ function allCards() {
       </PartCard>
       <PartCard
         featured
-        kicker="Motion · createMorph"
-        category="illustrations"
-        title="Streak"
-        docs="/docs/components/streak"
-        states={["Streak"]}
+        kicker="Layout · Motion"
+        category="payments"
+        title="Currency converter"
+        docs="/docs/components/currency-converter"
+        states={["Convert"]}
         minHeight={560}
       >
-        {(_, playing) => <StreakDemo playing={playing} />}
+        {(_, playing) => <CurrencyConverterDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -798,6 +820,15 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="Base UI · Motion"
+        category="forms"
+        title="Price filter"
+        docs="/docs/components/price-filter"
+        states={["Filter"]}
+      >
+        {(_, playing) => <PriceFilterDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
         category="payments"
         title="Promo code"
         docs="/docs/components/promo-code"
@@ -806,15 +837,24 @@ function allCards() {
         {(_, playing) => <PromoCodeDemo playing={playing} />}
       </PartCard>
       <PartCard
+        kicker="Base UI · Motion"
+        category="morphing"
+        title="Floating menu"
+        docs="/docs/components/fluid-popover"
+        states={["Menu"]}
+      >
+        {(_, playing) => <FluidPopoverDemo playing={playing} />}
+      </PartCard>
+      <PartCard
         featured
-        kicker="Layout · Motion"
-        category="payments"
-        title="Currency converter"
-        docs="/docs/components/currency-converter"
-        states={["Convert"]}
+        kicker="Motion · createMorph"
+        category="illustrations"
+        title="Streak"
+        docs="/docs/components/streak"
+        states={["Streak"]}
         minHeight={560}
       >
-        {(_, playing) => <CurrencyConverterDemo playing={playing} />}
+        {(_, playing) => <StreakDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -839,15 +879,13 @@ function allCards() {
         {(_, playing) => <SeatCalculatorDemo playing={playing} />}
       </PartCard>
       <PartCard
-        featured
-        kicker="Base UI · Motion"
-        category="charts"
-        title="Usage meter"
-        docs="/docs/components/usage-meter"
-        states={["Usage"]}
-        minHeight={680}
+        kicker="Layout · Text"
+        category="morphing"
+        title="Option to booking"
+        docs="/docs/components/table-booking"
+        states={["Booking"]}
       >
-        {(_, playing) => <UsageMeterDemo playing={playing} />}
+        {(_, playing) => <TableBookingDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -936,13 +974,15 @@ function allCards() {
         {(_, playing) => <HoldToRecordDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Layout · Text"
-        category="morphing"
-        title="Result to boarding pass"
-        docs="/docs/components/flight-booking"
-        states={["Booking"]}
+        featured
+        kicker="Base UI · Motion"
+        category="charts"
+        title="Usage meter"
+        docs="/docs/components/usage-meter"
+        states={["Usage"]}
+        minHeight={680}
       >
-        {(_, playing) => <FlightBookingDemo playing={playing} />}
+        {(_, playing) => <UsageMeterDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Layout · Shared"
@@ -968,10 +1008,10 @@ function allCards() {
       <PartCard
         kicker="SVG · Branding"
         category="illustrations"
-        title="Word into logo"
+        title="Logo into logo"
         bare
         docs="/docs/components/logo-morph"
-        states={["Cursor", "Cursor logo", "X", "X logo"]}
+        states={["OpenAI", "Apple", "Cursor", "Mercedes", "X", "Anthropic", "Tesla"]}
         every={2000}
       >
         {(i) => (

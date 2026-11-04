@@ -67,7 +67,7 @@ function Layer({ layer, d }: { layer: StoryLayer; d?: string }) {
   return (
     <Remold.Icon
       className={`ils-frame ils-layer ils-${layer}`}
-      d={d ?? POINT}
+      path={d ?? POINT}
       viewBox={VIEW_BOX}
       fill="currentColor"
       aria-hidden="true"
@@ -137,15 +137,15 @@ export function IllustratedStory({
       </div>
 
       <ol className="ils-steps" style={{ gridTemplateColumns: `repeat(${stages.length}, 40px)` }}>
-        {stages.map((s, i) => (
-          <li key={s.id}>
+        {stages.map((entry, index) => (
+          <li key={entry.id}>
             <button
               type="button"
               className="ils-step"
-              data-state={i < stage ? "done" : i === stage ? "current" : "next"}
-              aria-current={i === stage ? "step" : undefined}
-              aria-label={s.label}
-              onClick={() => onStageChange?.(i)}
+              data-state={index < stage ? "done" : index === stage ? "current" : "next"}
+              aria-current={index === stage ? "step" : undefined}
+              aria-label={entry.label}
+              onClick={() => onStageChange?.(index)}
             />
           </li>
         ))}

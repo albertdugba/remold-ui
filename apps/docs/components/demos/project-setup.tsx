@@ -14,7 +14,6 @@ import {
 } from "./demo-glyphs";
 import { Frame } from "./frame";
 import { useScene } from "./use-scene";
-import "./project-setup.css";
 
 type SceneProps = Remold.Scene.Props;
 
@@ -90,13 +89,13 @@ const LINES: readonly NonNullable<SceneProps["links"]>[number][] = [
   { from: "team", to: "api", arrow: "end" },
 ];
 
-const IDS = STEPS.map((s) => s.id);
+const IDS = STEPS.map((step) => step.id);
 
 const nameOf = (done: ReadonlySet<string>) =>
   IDS.filter((id) => done.has(id)).join("+") || "none";
 
 const SETS: string[][] = Array.from({ length: 1 << IDS.length }, (_, mask) =>
-  IDS.filter((_, i) => mask & (1 << i)),
+  IDS.filter((_, index) => mask & (1 << index)),
 );
 
 const OBJECTS: SceneProps["objects"] = Object.fromEntries(
@@ -198,39 +197,42 @@ export function ProjectSetupDemo({
   }, []);
 
   const toggle = (id: string) =>
-    take((s) => ({
-      done: s.done.includes(id)
-        ? s.done.filter((x) => x !== id)
-        : [...s.done, id],
+    take((current) => ({
+      done: current.done.includes(id)
+        ? current.done.filter((stepId) => stepId !== id)
+        : [...current.done, id],
     }));
 
   const body = (
-    <section ref={scene.ref} className="ps" aria-label="Project setup">
-      <div className="ps-card">
-        <div className="ps-steps">
-          <header className="ps-head">
-            <strong>{finished ? "Lumen is ready" : "Set up Lumen"}</strong>
-            <span>{`${done.size} of ${IDS.length} done`}</span>
+    <section ref={scene.ref} className="grid w-[min(100%,680px)] font-sans text-[13px] text-(--ps-ink) [--ps-faint:#a3a3a3] [--ps-fill:#f4f4f4] [--ps-ink:#111111] [--ps-line:rgb(0_0_0/0.08)] [--ps-muted:#737373] [--ps-surface:#ffffff] dark:[--ps-faint:#6b6b6b] dark:[--ps-fill:#222222] dark:[--ps-ink:#f5f5f5] dark:[--ps-line:rgb(255_255_255/0.1)] dark:[--ps-muted:#a3a3a3] dark:[--ps-surface:#171717]" aria-label="Project setup">
+      <div className="grid grid-cols-[minmax(0,250px)_minmax(0,1fr)] overflow-hidden rounded-[18px] bg-(--ps-surface) in-[.rm-stage]:shadow-[inset_0_0_0_1px_var(--ps-line)] max-[560px]:grid-cols-1">
+        <div className="grid content-start gap-3.5 px-5 py-[22px] shadow-[1px_0_0_var(--ps-line)] max-[560px]:shadow-[0_1px_0_var(--ps-line)]">
+          <header className="grid gap-0.5">
+            <strong className="text-[15px] font-semibold">{finished ? "Lumen is ready" : "Set up Lumen"}</strong>
+            <span className="text-(--ps-muted) tabular-nums">{`${done.size} of ${IDS.length} done`}</span>
           </header>
-          <div className="ps-meter" aria-hidden="true">
-            <span style={{ width: `${(done.size / IDS.length) * 100}%` }} />
+          <div className="h-[3px] overflow-hidden rounded-full bg-(--ps-fill)" aria-hidden="true">
+            <span
+              className="block h-full rounded-[inherit] bg-(--ps-ink) transition-[width] duration-600 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ width: `${(done.size / IDS.length) * 100}%` }}
+            />
           </div>
-          <ol className="ps-list">
+          <ol className="-mx-2 mt-1 mb-0 grid list-none gap-0.5 p-0">
             {STEPS.map((step) => {
               const on = done.has(step.id);
               return (
                 <li key={step.id}>
                   <Checkbox.Root
-                    className="ps-step"
+                    className="group/step flex w-full cursor-pointer items-start gap-3 rounded-[10px] border-0 bg-transparent px-2 py-[9px] text-left text-inherit hover:bg-(--ps-fill) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--ps-ink)"
                     checked={on}
                     onCheckedChange={() => toggle(step.id)}
                   >
-                    <Checkbox.Indicator className="ps-check" keepMounted>
+                    <Checkbox.Indicator className="mt-px grid size-[18px] flex-none place-items-center rounded-full text-(--ps-surface) shadow-[inset_0_0_0_1.5px_var(--ps-faint)] transition-[background-color,box-shadow] duration-250 data-checked:bg-(--ps-ink) data-checked:shadow-none [&_svg]:size-[11px]" keepMounted>
                       <HugeiconsIcon icon={CheckIcon} strokeWidth={3} />
                     </Checkbox.Indicator>
-                    <span className="ps-copy">
-                      <strong>{step.title}</strong>
-                      <span>{step.detail}</span>
+                    <span className="grid gap-px">
+                      <strong className="font-medium transition-colors duration-250 group-data-checked/step:text-(--ps-muted)">{step.title}</strong>
+                      <span className="text-[12px] text-(--ps-muted)">{step.detail}</span>
                     </span>
                   </Checkbox.Root>
                 </li>
@@ -241,7 +243,7 @@ export function ProjectSetupDemo({
 
         <Remold.Scene
           key={dark ? "dark" : "light"}
-          className="ps-scene"
+          className="block size-full min-h-80 max-[560px]:min-h-[260px]"
           label="Your project, as you set it up"
           objects={OBJECTS}
           links={LINKS}

@@ -1,5 +1,7 @@
 "use client";
 
+import { HugeiconsIcon } from "@hugeicons/react";
+import { NextIcon, PauseIcon, PlayIcon, RotateLeft01Icon } from "@hugeicons/core-free-icons";
 import { samplePath, type CloudPoint } from "@remold-ui/core";
 import { Remold } from "@remold-ui/react";
 import { MotionConfig, motion } from "motion/react";
@@ -19,8 +21,6 @@ const FLIP_TICKS = 10;
 const GRAIN_GAP = 1.8;
 const STREAM = 14;
 const FLIP = { type: "spring" as const, duration: 1, bounce: 0.18 };
-const PLAY = "M8 5.5v13l11-6.5z";
-const PAUSE = "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z";
 
 const GLASS =
   "M22 6C22 30 44 40 47 50C44 60 22 70 22 94L78 94C78 70 56 60 53 50C56 40 78 30 78 6Z M12 4L88 4 M12 96L88 96";
@@ -41,7 +41,7 @@ const GLASS_POINTS: CloudPoint[] = samplePath(GLASS, { count: 230, mode: "outlin
 const bezier = (t: number, a: number, b: number, c: number, d: number) =>
   (1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t * t * c + t ** 3 * d;
 
-const WALL = Array.from({ length: 65 }, (_, i) => ({ x: bezier(i / 64, 27, 27, 45, 48.6), y: bezier(i / 64, 9, 29, 40, 48.5) }));
+const WALL = Array.from({ length: 65 }, (_, index) => ({ x: bezier(index / 64, 27, 27, 45, 48.6), y: bezier(index / 64, 9, 29, 40, 48.5) }));
 
 function wallAt(y: number) {
   for (let i = 1; i < WALL.length; i++) {
@@ -71,11 +71,11 @@ const BOTTOM = TOP.map(mirror);
 
 function sand(fallen: number, flowing: boolean, flipped: boolean): CloudPoint[] {
   const surface = BOTTOM[Math.min(fallen, BOTTOM.length - 1)]!.y;
-  const grains = TOP.map((top, i) => {
-    if (i < fallen) return BOTTOM[i]!;
-    const j = i - fallen;
+  const grains = TOP.map((top, index) => {
+    if (index < fallen) return BOTTOM[index]!;
+    const j = index - fallen;
     if (flowing && j < STREAM) {
-      return { x: 50 + (seeded(i) - 0.5) * 1.4, y: surface - (surface - 51) * (j / STREAM) };
+      return { x: 50 + (seeded(index) - 0.5) * 1.4, y: surface - (surface - 51) * (j / STREAM) };
     }
     return top;
   });
@@ -189,14 +189,6 @@ function Hourglass({ timer }: { timer: Timer }) {
   );
 }
 
-function Icon({ d }: { d: string }) {
-  return (
-    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={d} />
-    </svg>
-  );
-}
-
 export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
   const scene = useScene(BEATS, beatAction, playing);
   const [timer, dispatch] = useReducer(reduce, INITIAL);
@@ -214,7 +206,7 @@ export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
   }, [active, timer.rush]);
 
   const act = (action: Action) => {
-    take((a) => a);
+    take((current) => current);
     dispatch(action);
   };
 
@@ -241,7 +233,7 @@ export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
 
         <div className="ft-actions">
           <button type="button" className="ft-icon" aria-label="Reset" onClick={() => act({ type: "reset" })}>
-            <Icon d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" />
+            <HugeiconsIcon icon={RotateLeft01Icon} size={17} strokeWidth={2} aria-hidden="true" />
           </button>
           <motion.button
             type="button"
@@ -251,10 +243,10 @@ export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
             onClick={() => act({ type: "toggle" })}
             whileTap={{ scale: 0.92 }}
           >
-            <Remold.Icon d={timer.running ? PAUSE : PLAY} viewBox="0 0 24 24" fill="currentColor" className="ft-play" aria-hidden="true" />
+            <Remold.Icon icon={<HugeiconsIcon icon={timer.running ? PauseIcon : PlayIcon} />} fill="currentColor" className="ft-play" aria-hidden="true" />
           </motion.button>
           <button type="button" className="ft-icon" aria-label={focus ? "Skip to break" : "Skip break"} onClick={() => act({ type: "skip" })}>
-            <Icon d="M5 5l10 7-10 7V5zM19 5v14" />
+            <HugeiconsIcon icon={NextIcon} size={17} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
       </section>

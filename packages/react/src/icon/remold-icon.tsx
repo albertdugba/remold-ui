@@ -1,13 +1,13 @@
-import { createElement, forwardRef, isValidElement, useRef, useState, type ElementType, type ForwardedRef, type SVGAttributes } from "react";
+import { createElement, forwardRef, isValidElement, useId, useRef, useState, type ElementType, type ForwardedRef, type SVGAttributes } from "react";
 import { createMorph, springs, value } from "@remold-ui/core";
-import { frames, iconToPath, prefersReducedMotion, type IconPath } from "@remold-ui/dom";
+import { frames, iconToPath, MEDIA_ATTRIBUTE, prefersReducedMotion, type IconPath } from "@remold-ui/dom";
 import { useEffectEvent, useIsoLayoutEffect } from "../utils/hooks.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldIconProps, RemoldIconState } from "./types.js";
 
 /**
- * An icon that reshapes into the next one. Pass any icon component or element, or path data as
- * `d`.
+ * An icon that reshapes into the next one. Pass any icon component or element as `icon`, or SVG
+ * path data as `path`.
  *
  * @example
  * ```tsx
@@ -19,7 +19,7 @@ export const RemoldIcon = forwardRef(function RemoldIcon(
   forwardedRef: ForwardedRef<SVGSVGElement>,
 ) {
   const {
-    d: dProp,
+    path: pathProp,
     icon,
     spring = springs.snappy,
     reducedMotion = "user",
@@ -33,25 +33,28 @@ export const RemoldIcon = forwardRef(function RemoldIcon(
 
   const fromIcon = icon !== undefined;
 
-  if (!fromIcon && dProp === undefined) {
-    throw new TypeError("Remold.Icon: pass an `icon` (an icon element or component) or path data as `d`.");
+  if (!fromIcon && pathProp === undefined) {
+    throw new TypeError("Remold.Icon: pass an `icon` (an icon element or component) or SVG path data as `path`.");
   }
 
   const source = useRef<SVGGElement>(null);
   const warned = useRef(false);
   const [read, setRead] = useState<IconPath | null>(null);
 
-  const d = fromIcon ? (read?.d ?? null) : (dProp ?? null);
-  const [initial, setInitial] = useState(d);
+  const pathData = fromIcon ? (read?.d ?? null) : (pathProp ?? null);
+  const [initial, setInitial] = useState(pathData);
   const [animating, setAnimating] = useState(false);
 
-  const path = useRef<SVGPathElement>(null);
-  const shown = useRef(d);
-  const target = useRef(d);
+  const pathElement = useRef<SVGPathElement>(null);
+  const shown = useRef(pathData);
+  // One identity for the life of the icon, so a layout transition sees it as the same element
+  // while it reshapes, and leaves the reshaping to it.
+  const identity = useId();
+  const target = useRef(pathData);
   const run = useRef(0);
   const stop = useRef<(() => void) | null>(null);
 
-  if (initial === null && d !== null) setInitial(d);
+  if (initial === null && pathData !== null) setInitial(pathData);
 
   useIsoLayoutEffect(() => {
     if (!fromIcon || !source.current) return;
@@ -104,10 +107,10 @@ export const RemoldIcon = forwardRef(function RemoldIcon(
     progress.to(1);
     setAnimating(true);
 
-    const step = (dt: number) => {
+    const step = (delta: number) => {
       if (token !== run.current) return false;
 
-      const moving = progress.step(dt);
+      const moving = progress.step(delta);
 
       if (!moving) {
         settle();
@@ -131,24 +134,24 @@ export const RemoldIcon = forwardRef(function RemoldIcon(
   });
 
   useIsoLayoutEffect(() => {
-    const element = path.current;
+    const element = pathElement.current;
 
-    if (!element || d === null) return;
+    if (!element || pathData === null) return;
 
     if (target.current === null) {
-      target.current = d;
-      shown.current = d;
+      target.current = pathData;
+      shown.current = pathData;
       return;
     }
 
-    if (target.current === d) return;
+    if (target.current === pathData) return;
 
     stop.current?.();
     stop.current = null;
-    target.current = d;
+    target.current = pathData;
 
-    return play(element, d);
-  }, [d]);
+    return play(element, pathData);
+  }, [pathData]);
 
   const state: RemoldIcon.State = { animating };
   const look = fromIcon ? paintOf(read?.look) : {};
@@ -161,7 +164,7 @@ export const RemoldIcon = forwardRef(function RemoldIcon(
           {glyph}
         </g>
       )}
-      {initial !== null && <path ref={path} d={initial} />}
+      {initial !== null && <path ref={pathElement} d={initial} />}
     </>
   );
 
@@ -177,16 +180,16 @@ export const RemoldIcon = forwardRef(function RemoldIcon(
         ...svgProps,
         children,
       } as SVGAttributes<SVGSVGElement> & Record<string, unknown>,
-      dataAttributes: { "data-rm-animating": animating ? "" : undefined },
+      dataAttributes: { "data-rm-animating": animating ? "" : undefined, [MEDIA_ATTRIBUTE]: identity },
     },
   );
 });
 
-function sameLook(a: IconPath["look"], b: IconPath["look"]): boolean {
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof IconPath["look"]>;
+function sameLook(previous: IconPath["look"], next: IconPath["look"]): boolean {
+  const keys = new Set([...Object.keys(previous), ...Object.keys(next)]) as Set<keyof IconPath["look"]>;
 
   for (const key of keys) {
-    if (a[key] !== b[key]) return false;
+    if (previous[key] !== next[key]) return false;
   }
 
   return true;

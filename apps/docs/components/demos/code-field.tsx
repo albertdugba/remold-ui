@@ -45,8 +45,8 @@ export function CodeField({
         className="absolute inset-0 z-[1] w-full border-0 bg-transparent text-base text-transparent caret-transparent outline-0"
         value={value}
         disabled={disabled}
-        onChange={(e) =>
-          onChange(e.target.value.replace(/\D/g, "").slice(0, length))
+        onChange={(event) =>
+          onChange(event.target.value.replace(/\D/g, "").slice(0, length))
         }
         onFocus={onFocus}
         inputMode="numeric"
@@ -57,15 +57,15 @@ export function CodeField({
         aria-invalid={invalid || undefined}
         tabIndex={disabled ? -1 : 0}
       />
-      {Array.from({ length }, (_, i) => (
+      {Array.from({ length }, (_, index) => (
         <span
-          key={i}
-          className={`cf-cell grid h-[52px] w-[42px] shrink-0 place-items-center rounded-2xl bg-[var(--cf-cell)] text-[22px] font-semibold tabular-nums transition-[box-shadow,background-color,color] duration-150 first:w-[46px] first:rounded-l-[26px] first:rounded-r-2xl last:w-[46px] last:rounded-r-[26px] last:rounded-l-2xl data-[next]:shadow-[inset_0_0_0_2px_var(--cf-ink)]`}
-          data-filled={i < value.length ? "" : undefined}
-          data-next={!disabled && i === value.length ? "" : undefined}
+          key={index}
+          className={`cf-cell grid h-[52px] w-[42px] shrink-0 place-items-center rounded-2xl bg-[var(--cf-cell)] text-[22px] font-semibold tabular-nums transition-[box-shadow,background-color,color] duration-150 first-of-type:w-[46px] first-of-type:rounded-l-[26px] first-of-type:rounded-r-2xl last-of-type:w-[46px] last-of-type:rounded-l-2xl last-of-type:rounded-r-[26px] data-[next]:shadow-[inset_0_0_0_2px_var(--cf-ink)]`}
+          data-filled={index < value.length ? "" : undefined}
+          data-next={!disabled && index === value.length ? "" : undefined}
           aria-hidden="true"
         >
-          {value[i] ?? ""}
+          {value[index] ?? ""}
         </span>
       ))}
     </label>

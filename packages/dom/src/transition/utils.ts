@@ -31,6 +31,8 @@ export interface MotionRecord {
    */
   shadow: ShadowTemplate | null;
   marks: string[];
+  /** Seconds this element holds where it starts before it moves, when the change is choreographed. */
+  delay: number;
 }
 
 /** A box-shadow as text pieces and the pixel lengths between them: `[text, px, text, px, …, text]`. */

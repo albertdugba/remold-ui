@@ -15,8 +15,8 @@ export function Odometer({ value, className }: { value: string; className?: stri
   return (
     <span className={`inline-flex whitespace-nowrap leading-none tabular-nums ${className ?? ""}`} aria-label={value}>
       <AnimatePresence initial={false} mode="popLayout">
-        {chars.map((char, i) => {
-          const place = chars.length - i;
+        {chars.map((char, index) => {
+          const place = chars.length - index;
           const digit = /\d/.test(char) ? Number(char) : null;
           return (
             <motion.span

@@ -14,6 +14,24 @@ export interface TransitionOptions {
    * across the layout never slides under the things it passes. Default `true`.
    */
   lift?: boolean;
+  /**
+   * Play the change in beats instead of all at once: what leaves goes first, then what moves,
+   * then what arrives, one after another. `true` uses the default timing. Off by default, and
+   * always off with reduced motion.
+   */
+  choreography?: boolean | Choreography;
+}
+
+/** When each part of a change starts, in seconds. */
+export interface Choreography {
+  /** How long moves wait once something starts leaving, so it clears the way first. Default `0.06`. */
+  move?: number;
+  /** How long arrivals wait after moves start, so the space they need has opened. Default `0.1`. */
+  enter?: number;
+  /** The gap between one arrival and the next, in document order. Default `0.03`. */
+  stagger?: number;
+  /** The longest the whole stagger may take, however many arrive. Default `0.24`. */
+  maxStagger?: number;
 }
 
 export interface ChangeSummary {

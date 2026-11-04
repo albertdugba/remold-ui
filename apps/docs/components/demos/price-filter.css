@@ -1,0 +1,261 @@
+.stp-stage {
+  --stp-surface: #ffffff;
+  --stp-well: #f1f1f3;
+  --stp-line: rgb(24 24 27 / 0.1);
+  --stp-ink: #18181b;
+  --stp-muted: #71717a;
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 340px;
+  color: var(--stp-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+}
+
+.dark .stp-stage {
+  --stp-surface: #232327;
+  --stp-well: #2e2e33;
+  --stp-line: rgb(255 255 255 / 0.1);
+  --stp-ink: #fafafa;
+  --stp-muted: #a1a1aa;
+}
+
+.stp-field {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.stp-label {
+  color: var(--stp-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.stp {
+  position: relative;
+  height: 48px;
+  overflow: clip;
+  border-radius: 999px;
+  background: var(--stp-surface);
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.stp-face {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.stp-face > * {
+  flex: 1;
+}
+
+.stp-group {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 4px;
+}
+
+.stp-step {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--stp-ink);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.stp-step:hover:not([data-disabled]) {
+  background: var(--stp-well);
+}
+
+.stp-step[data-disabled] {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.stp-step svg {
+  width: 16px;
+  height: 16px;
+}
+
+.stp-number {
+  position: relative;
+  display: grid;
+  flex: 1;
+  place-items: center;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.stp-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--stp-ink);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 650;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  cursor: ew-resize;
+}
+
+.stp-input:focus {
+  color: var(--stp-ink);
+  cursor: text;
+}
+
+.stp:has(.stp-input:focus) .stp-value {
+  visibility: hidden;
+}
+
+/* The value, laid over both shapes: plain text in the stepper, the thumb's dark pill in the range. */
+.stp-value {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--stp-ink);
+  font-size: 17px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  transition:
+    background-color 0.25s,
+    color 0.25s;
+}
+
+.stp-value[data-mode="range"] {
+  background: var(--stp-ink);
+  color: var(--stp-surface);
+}
+
+.stp-unit {
+  color: color-mix(in oklab, currentColor 55%, transparent);
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.stp-slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 14px;
+}
+
+.stp-end {
+  flex: none;
+  width: 34px;
+  color: var(--stp-muted);
+  font-size: 12px;
+  font-weight: 550;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.stp-control {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  height: 48px;
+}
+
+.stp-track {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--stp-well);
+}
+
+.stp-fill {
+  border-radius: 2px;
+  background: var(--stp-ink);
+}
+
+.stp-thumb {
+  width: 56px;
+  height: 32px;
+  border-radius: 999px;
+  outline: none;
+}
+
+.stp:has(.stp-thumb:focus-visible) .stp-value,
+.stp-step:focus-visible,
+.stp-input:focus-visible {
+  outline: 2px solid var(--stp-ink);
+  outline-offset: 2px;
+}
+
+.stp-hint {
+  margin: 0;
+  color: var(--stp-muted);
+  font-size: 12px;
+}
+
+.stp-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 280px;
+  height: 56px;
+  margin-bottom: 4px;
+}
+
+.stp-bar {
+  flex: 1;
+  border-radius: 3px 3px 1px 1px;
+  background: var(--stp-well);
+  transition: background-color 0.2s;
+}
+
+.stp-bar[data-in] {
+  background: var(--stp-ink);
+}
+
+.stp-count {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  color: var(--stp-muted);
+  font-size: 14px;
+}
+
+.stp-count b {
+  color: var(--stp-ink);
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stp-bar {
+    transition: none;
+  }
+}

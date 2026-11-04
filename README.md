@@ -127,7 +127,7 @@ The docs ship copy-in components built on these primitives. Each one solves a sp
 
 | | |
 | --- | --- |
-| **Interface** | Command palette · Product tour · Save button · Step progress · Avatar stack · Bulk selection · Comment thread · Course outline · Filter bar · Flight rebooking · Hold to record · Invite teammates · Label picker · Live room · Logo morph · Mentions · Morph icons · Onboarding checklist · One-time code · Two-factor setup · Usage meter · Wallet and more |
+| **Interface** | Command palette · Product tour · Save button · Step progress · Avatar stack · Bulk selection · Comment thread · Course outline · Filter bar · Flight rebooking · Hold to record · Invite pill · Invite teammates · Label picker · Live room · Logo morph · Mentions · Morph icons · Onboarding checklist · One-time code · Two-factor setup · Usage meter · Wallet and more |
 | **Form elements** | Amount input · Phone input · Tag input · Address autocomplete · Quantity stepper · Promo code · Range slider · Upload row · Split amount |
 | **Particles and canvas** | Inbox triage · Donation goal · Dot grid hero · Focus timer · Live visitors · Unit chart · Voice orb |
 

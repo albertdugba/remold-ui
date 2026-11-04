@@ -25,15 +25,15 @@ const GAP = 14;
 const PERCENTS = [0, 10, 50, 100] as const;
 type Percent = (typeof PERCENTS)[number];
 
-const TILES = Array.from({ length: COLS * ROWS }, (_, i) => ({
-  id: `u${i}`,
-  x: (i % COLS) * (TILE + GAP) - ((COLS * (TILE + GAP) - GAP) / 2),
-  y: Math.floor(i / COLS) * (TILE + GAP) - ((ROWS * (TILE + GAP) - GAP) / 2),
+const TILES = Array.from({ length: COLS * ROWS }, (_, index) => ({
+  id: `u${index}`,
+  x: (index % COLS) * (TILE + GAP) - ((COLS * (TILE + GAP) - GAP) / 2),
+  y: Math.floor(index / COLS) * (TILE + GAP) - ((ROWS * (TILE + GAP) - GAP) / 2),
 }));
 
 /** The order users get the feature: shuffled once, so a rollout looks scattered, not row by row. */
 const ORDER = (() => {
-  const ids = TILES.map((_, i) => i);
+  const ids = TILES.map((_, index) => index);
   let seed = 7;
   for (let i = ids.length - 1; i > 0; i--) {
     seed = (seed * 9301 + 49297) % 233280;
@@ -66,8 +66,8 @@ function layoutFor(percent: Percent): SceneProps["layouts"][string] {
     objects: {
       base: { x: -190, y: -165, z: 0, width: 380, depth: 330, height: 14 },
       ...Object.fromEntries(
-        TILES.map((t, i) => {
-          const on = ORDER[i]! < reached;
+        TILES.map((t, index) => {
+          const on = ORDER[index]! < reached;
           return [
             t.id,
             {
@@ -80,7 +80,7 @@ function layoutFor(percent: Percent): SceneProps["layouts"][string] {
               ghost: on ? 0 : 0.8,
               fill: on ? 1 : 0,
               color: VIOLET,
-              delay: on ? ORDER[i]! * 0.025 : (TILES.length - ORDER[i]!) * 0.012,
+              delay: on ? ORDER[index]! * 0.025 : (TILES.length - ORDER[index]!) * 0.012,
             },
           ];
         }),

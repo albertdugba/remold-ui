@@ -109,7 +109,7 @@ export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
   const shown = Math.min(seats, 4);
   const more = seats - shown;
 
-  const setSeats = (n: number) => take((s) => ({ ...s, seats: Math.max(1, Math.min(999, Math.round(n))) }));
+  const setSeats = (n: number) => take((current) => ({ ...current, seats: Math.max(1, Math.min(999, Math.round(n))) }));
 
   return (
     <section ref={scene.ref} className="sc not-prose" aria-label="Pricing calculator">
@@ -160,12 +160,12 @@ export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
         </Slider.Control>
       </Slider.Root>
       <div className="sc-tiers" aria-hidden="true">
-        {TIERS.map((t, i) => (
+        {TIERS.map((t, index) => (
           <span
             key={t.name}
             data-active={t === tier || undefined}
             style={{ left: percentOf(t.from) }}
-            data-first={i === 0 || undefined}
+            data-first={index === 0 || undefined}
           >
             {t.name}
           </span>
@@ -175,7 +175,7 @@ export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
       <div className="sc-team" aria-label={`${seats} people`}>
         <span className="sc-faces">
           <AnimatePresence initial={false} mode="popLayout">
-            {FACES.slice(0, shown).map((name, i) => (
+            {FACES.slice(0, shown).map((name, index) => (
               <motion.img
                 key={name}
                 src={face(name)}
@@ -184,7 +184,7 @@ export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
                 height={28}
                 draggable={false}
                 layout="position"
-                style={{ zIndex: FACES.length - i }}
+                style={{ zIndex: FACES.length - index }}
                 initial={{ opacity: 0, scale: 0.4, x: -8 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.15 } }}
@@ -210,7 +210,7 @@ export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
           <ToggleGroup
             className="sc-billing"
             value={[yearly ? "yearly" : "monthly"]}
-            onValueChange={(v) => v.length && take((s) => ({ ...s, yearly: v[0] === "yearly" }))}
+            onValueChange={(v) => v.length && take((current) => ({ ...current, yearly: v[0] === "yearly" }))}
             aria-label="Billing"
           >
             {(["monthly", "yearly"] as const).map((b) => (

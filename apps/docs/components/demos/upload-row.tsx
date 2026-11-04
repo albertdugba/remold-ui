@@ -13,11 +13,10 @@
 import { Field } from "@base-ui/react/field";
 import { Progress } from "@base-ui/react/progress";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { ArrowUp02Icon, Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { MorphIcon } from "./morph-icon";
 import { Odometer } from "./odometer";
 import { useScene } from "./use-scene";
 import "./form-kit.css";
@@ -29,8 +28,6 @@ export interface UploadFile {
 }
 
 /** Two strokes each, so one reshapes into the other: an upward arrow, then a check. */
-const ARROW = "M12 17V7M7.5 11.5L12 7l4.5 4.5";
-const CHECK = "M6.5 12.5l3.5 3.5M10 16l7.5-8";
 
 const BOX = { type: "spring" as const, duration: 0.45, bounce: 0.1 };
 const SWAP = { duration: 0.18 };
@@ -72,31 +69,31 @@ export function UploadRow({ file, progress, onChoose, onRemove }: UploadRowProps
         role={file ? undefined : "button"}
         tabIndex={file ? undefined : 0}
         aria-label={file ? undefined : "Choose a file to upload"}
-        onClick={(e) => {
+        onClick={(event) => {
           // The input's own click bubbles back up here: don't open the picker twice.
-          if (!file && e.target !== input.current) input.current?.click();
+          if (!file && event.target !== input.current) input.current?.click();
         }}
-        onKeyDown={(e) => {
-          if (!file && (e.key === "Enter" || e.key === " ")) {
-            e.preventDefault();
+        onKeyDown={(event) => {
+          if (!file && (event.key === "Enter" || event.key === " ")) {
+            event.preventDefault();
             input.current?.click();
           }
         }}
-        onDragOver={(e) => {
+        onDragOver={(event) => {
           if (file) return;
-          e.preventDefault();
+          event.preventDefault();
           setDragging(true);
         }}
         onDragLeave={() => setDragging(false)}
-        onDrop={(e) => {
+        onDrop={(event) => {
           if (file) return;
-          e.preventDefault();
+          event.preventDefault();
           setDragging(false);
-          take(e.dataTransfer.files[0]);
+          take(event.dataTransfer.files[0]);
         }}
       >
         <span className="upl-icon" data-state={state}>
-          <MorphIcon d={done ? CHECK : ARROW} strokeWidth={2} />
+          <Remold.Icon icon={<HugeiconsIcon icon={done ? Tick02Icon : ArrowUp02Icon} />} strokeWidth={2} />
           <AnimatePresence initial={false}>
             {file && !done && (
               <motion.span key="kind" className="upl-kind" initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={SWAP}>
@@ -146,8 +143,8 @@ export function UploadRow({ file, progress, onChoose, onRemove }: UploadRowProps
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85 }}
               transition={SWAP}
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={(event) => {
+                event.stopPropagation();
                 onRemove();
               }}
             >
@@ -169,9 +166,9 @@ export function UploadRow({ file, progress, onChoose, onRemove }: UploadRowProps
           accept=".pdf,.png,.jpg,.jpeg"
           tabIndex={-1}
           aria-hidden="true"
-          onChange={(e) => {
-            take((e.target as HTMLInputElement).files?.[0]);
-            (e.target as HTMLInputElement).value = "";
+          onChange={(event) => {
+            take((event.target as HTMLInputElement).files?.[0]);
+            (event.target as HTMLInputElement).value = "";
           }}
         />
       </motion.div>
@@ -212,7 +209,7 @@ export function UploadRowDemo({ playing }: UploadRowDemoProps = {}) {
   // Once it's yours, a chosen file uploads at a believable pace.
   useEffect(() => {
     if (live || !state.file || state.progress >= 100) return;
-    const t = setTimeout(() => take((s) => ({ ...s, progress: Math.min(100, s.progress + 8 + Math.random() * 12) })), 200);
+    const t = setTimeout(() => take((current) => ({ ...current, progress: Math.min(100, current.progress + 8 + Math.random() * 12) })), 200);
     return () => clearTimeout(t);
   }, [live, state.file, state.progress, take]);
 

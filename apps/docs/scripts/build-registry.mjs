@@ -31,6 +31,16 @@ const ITEMS = [
     "A price range slider whose price rides above the handle while you drag and flies back into the label when you let go. Built on Base UI's Slider.",
   ],
   [
+    "price-filter",
+    "Price filter",
+    "A max-price filter: a stepper that stretches into a slider while you drag the price sideways, over a price histogram and a rolling count of what matches. Built on Base UI's Number Field and Slider.",
+  ],
+  [
+    "event-rsvp",
+    "Event RSVP",
+    "An RSVP button that grows into a sheet for your answer, saves with a progress bar, and becomes your spot. Built on Base UI's Button, Radio Group, Checkbox, Progress, Tooltip and Separator.",
+  ],
+  [
     "promo-code",
     "Promo code",
     "A promo code field that shrinks into a chip when applied, slides in the discount and rolls the total; refused codes shake and say why. Built on Base UI's Field.",
@@ -76,9 +86,9 @@ const ITEMS = [
     "One pill you hold to record: the mic morphs into the record dot, the words into the time, and the waveform grows out of the pill, then it all folds back.",
   ],
   [
-    "flight-booking",
-    "Flight booking",
-    "A delayed flight becomes two alternatives, an updated boarding pass and an optional compact seat picker.",
+    "table-booking",
+    "Table booking",
+    "A restaurant booking that fell through offers two other times; the one you pick grows into the updated booking, whose party size opens a compact picker. Built on Base UI's Button, Toggle Group and Tooltip.",
   ],
   [
     "otp-input",
@@ -109,6 +119,11 @@ const ITEMS = [
     "avatar-stack",
     "Avatar stack",
     "Overlapping faces with a +3 for the rest: opening it loosens the stack and the three faces it stood for join the row, then fold back on close.",
+  ],
+  [
+    "invite-pill",
+    "Invite pill",
+    "The faces on a file and an Invite button in one pill: it opens into an email field, and sending folds it back as the person you invited joins the front of the stack.",
   ],
   [
     "save-button",
@@ -203,7 +218,7 @@ const ITEMS = [
   [
     "currency-converter",
     "Currency converter",
-    "A transfer quote whose amounts roll as you type, and whose currencies Layout carries to the other side when you swap them.",
+    "A converter at today's real exchange rates that springs into a searchable currency list, and whose Send button says what it did.",
   ],
   [
     "donation-goal",
@@ -238,7 +253,7 @@ const ITEMS = [
   [
     "api-keys",
     "API keys",
-    "Creating an API key: the secret decodes once in a panel that folds into the newest row, scrambling into its masked form.",
+    "Creating an API key in one springing card: the secret decodes once, then travels into the newest row and scrambles into its masked form.",
   ],
   [
     "seat-calculator",

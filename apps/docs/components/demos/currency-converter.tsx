@@ -1,447 +1,399 @@
 "use client";
 
+import { Autocomplete } from "@base-ui/react/autocomplete";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, ArrowUpDownIcon, Search01Icon } from "@hugeicons/core-free-icons";
-import { Combobox } from "@base-ui/react/combobox";
-import { Remold } from "@remold-ui/react";
-import { AnimatePresence, LayoutGroup, motion, useAnimate } from "motion/react";
-import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { useScene } from "./use-scene";
+import { ArrowDown01Icon, ArrowUpDownIcon, Cancel01Icon, Loading03Icon, Search01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useScript } from "./use-script";
 import "./currency-converter.css";
 
-const CURRENCIES = {
-  GBP: { name: "British Pound", flag: "🇬🇧", decimals: 2, perUsd: 0.7848 },
-  USD: { name: "US Dollar", flag: "🇺🇸", decimals: 2, perUsd: 1 },
-  EUR: { name: "Euro", flag: "🇪🇺", decimals: 2, perUsd: 0.921 },
-  GHS: { name: "Ghanaian Cedi", flag: "🇬🇭", decimals: 2, perUsd: 15.36 },
-  JPY: { name: "Japanese Yen", flag: "🇯🇵", decimals: 0, perUsd: 149.3 },
-  NGN: { name: "Nigerian Naira", flag: "🇳🇬", decimals: 2, perUsd: 1540 },
-} as const;
+/*
+ * Converts between any two currencies at today's rate. Tapping a currency morphs the card into a
+ * searchable list: the card springs to its new size, the currency's label and pill travel up to
+ * become the list's header, and everything else scales away while the rows scale in. Rates are live
+ * from ExchangeRate-API; names, flags and decimal places come from the browser's Intl data.
+ */
 
-type Code = keyof typeof CURRENCIES;
+const RATES_URL = "https://open.er-api.com/v6/latest/USD";
+
 type Side = "send" | "get";
-type Key = "back" | "." | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-
-const CODES = Object.keys(CURRENCIES) as Code[];
-const SIDES = [
-  { side: "send", label: "You send", prompt: "Currency you are converting from" },
-  { side: "get", label: "Recipient gets", prompt: "Currency you are converting to" },
-] as const;
-
-const FEE = 0.0045;
-const INSTANT = new Set<Code>(["GBP", "USD", "EUR", "JPY"]);
-
-const LAYOUT_SPRING = { duration: 0.6, bounce: 0.14 };
-const DIGIT_SPRING = { type: "spring" as const, duration: 0.38, bounce: 0.16 };
-const SWAP_SPRING = { type: "spring" as const, duration: 0.55, bounce: 0.15 };
-const HIGHLIGHT_SPRING = { type: "spring" as const, duration: 0.28, bounce: 0.12 };
-const FADE = { duration: 0.18 };
-
-interface State {
-  from: Code;
-  to: Code;
-  raw: string;
-  side: Side;
-  refused: number;
+type Status = "idle" | "sending" | "sent";
+interface Rates {
+  /** Units of each currency per US dollar. */
+  perUsd: Record<string, number>;
+  updated: Date;
 }
 
-interface Quote {
-  send: number;
-  get: number;
-  fee: number;
-  rate: number;
-}
+const LABELS: Record<Side, string> = { send: "You send", get: "Recipient gets" };
+const names = new Intl.DisplayNames(["en"], { type: "currency" });
+const nameOf = (code: string) => names.of(code) ?? code;
+/** Codes whose first two letters aren't a country with a flag: the Antillean guilder is Curaçao's. */
+const FLAG_REGIONS: Record<string, string> = { ANG: "CW" };
+/** A currency's flag, from the country letters at the start of its code (EUR gives the EU's). */
+const flagOf = (code: string) =>
+  String.fromCodePoint(...[...(FLAG_REGIONS[code] ?? code.slice(0, 2))].map((letter) => 0x1f1e6 + letter.charCodeAt(0) - 65));
+const decimalsOf = (code: string) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: code }).resolvedOptions().maximumFractionDigits ?? 2;
+const format = (value: number, code: string) =>
+  value.toLocaleString("en-US", { minimumFractionDigits: decimalsOf(code), maximumFractionDigits: decimalsOf(code) });
 
-const BEATS: readonly (State & { ms: number })[] = [
-  { from: "GBP", to: "USD", raw: "1000", side: "send", refused: 0, ms: 1600 },
-  { from: "GBP", to: "USD", raw: "2500", side: "send", refused: 0, ms: 1700 },
-  { from: "USD", to: "GBP", raw: "2500", side: "send", refused: 0, ms: 2000 },
-  { from: "USD", to: "EUR", raw: "2500", side: "send", refused: 0, ms: 2200 },
-];
+let ratesRequest: Promise<Rates> | null = null;
 
-function fromBeat(step: number): State {
-  const { ms: _, ...state } = BEATS[step]!;
-  return state;
-}
-
-const codeOf = (s: State, side: Side) => (side === "send" ? s.from : s.to);
-const amountOf = (q: Quote, side: Side) => (side === "send" ? q.send : q.get);
-const otherSide = (side: Side): Side => (side === "send" ? "get" : "send");
-
-function roundTo(n: number, decimals: number) {
-  const factor = 10 ** decimals;
-  return Math.round(n * factor) / factor;
-}
-
-function quote(s: State): Quote {
-  const from = CURRENCIES[s.from];
-  const to = CURRENCIES[s.to];
-  const rate = to.perUsd / from.perUsd;
-  const typed = Number(s.raw || 0);
-  const send = s.side === "send" ? typed : typed / ((1 - FEE) * rate);
-  const fee = send * FEE;
-  const get = s.side === "send" ? (send - fee) * rate : typed;
-  return {
-    send: roundTo(Math.max(0, send), from.decimals),
-    get: roundTo(Math.max(0, get), to.decimals),
-    fee: roundTo(Math.max(0, fee), from.decimals),
-    rate,
+/** Today's rates, fetched once and shared by every converter on the page. */
+function useRates() {
+  const [rates, setRates] = useState<Rates | null>(null);
+  const [failed, setFailed] = useState(false);
+  const load = () => {
+    setFailed(false);
+    ratesRequest ??= fetch(RATES_URL)
+      .then((response) => response.json())
+      .then((body) => ({ perUsd: body.rates, updated: new Date(body.time_last_update_utc) }));
+    ratesRequest.then(setRates, () => {
+      ratesRequest = null;
+      setFailed(true);
+    });
   };
+  useEffect(load, []);
+  return { rates, failed, retry: load };
 }
 
-function asRaw(n: number, decimals: number) {
-  if (!Number.isFinite(n) || n <= 0) return "";
-  return decimals === 0 ? String(Math.round(n)) : n.toFixed(decimals);
-}
+/** Everything that moves rides one bouncy spring, so the parts arrive together. */
+const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.18 };
+const FADE = { duration: 0.18 };
+/** A part that isn't travelling: it scales in from just below its size, blurred, and back out. */
+const PART = {
+  initial: { opacity: 0, scale: 0.94, filter: "blur(6px)" },
+  animate: { opacity: 1, scale: 1, filter: "blur(0px)" },
+  exit: { opacity: 0, scale: 0.94, filter: "blur(6px)", transition: { duration: 0.16 } },
+};
+/** A part that travels to its new place blurs a little on the way, like a fast-moving thing. */
+const TRAVEL = { initial: { filter: "blur(3px)" }, animate: { filter: "blur(0px)" } };
+/** The card's padding, which its measured height doesn't include. */
+const CARD_PADDING = 12;
+const SENDING_FOR = 1100;
+const SENT_FOR = 2400;
 
-function press(raw: string, key: Key, decimals: number): string | false | null {
-  if (key === "back") return raw.slice(0, -1);
-  if (key === ".") {
-    if (decimals === 0) return false;
-    if (raw.includes(".")) return null;
-    return raw ? `${raw}.` : "0.";
-  }
-  const [whole = "", cents] = raw.split(".");
-  if (cents !== undefined && cents.length >= decimals) return false;
-  if (cents === undefined && whole.replace(/^0+/, "").length >= 7) return false;
-  return raw === "0" ? key : raw + key;
-}
-
-function sanitize(text: string, decimals: number) {
-  const [whole = "", ...rest] = text.replace(/[^\d.]/g, "").split(".");
-  const head = whole.replace(/^0+(?=\d)/, "").slice(0, 7);
-  if (decimals === 0 || rest.length === 0) return head;
-  return `${head || "0"}.${rest.join("").slice(0, decimals)}`;
-}
-
-function retarget(s: State, side: Side): State {
-  if (s.side === side) return s;
-  const decimals = CURRENCIES[codeOf(s, side)].decimals;
-  return { ...s, side, raw: asRaw(amountOf(quote(s), side), decimals) };
-}
-
-function swap(s: State): State {
-  return { ...s, from: s.to, to: s.from };
-}
-
-function choose(s: State, side: Side, code: Code): State {
-  if (code === codeOf(s, otherSide(side))) return swap(s);
-  const raw = s.side === side && CURRENCIES[code].decimals === 0 ? (s.raw.split(".")[0] ?? "") : s.raw;
-  return { ...s, [side === "send" ? "from" : "to"]: code, raw };
-}
-
-function characters(raw: string, decimals: number | null) {
-  const source = decimals === null ? raw : Number(raw || 0).toFixed(decimals);
-  if (!source) return [{ key: "zero", char: "0", muted: true }];
-  const [whole = "", cents] = source.split(".");
-  const body = whole.replace(/^0+(?=\d)/, "") || "0";
-  const out: { key: string; char: string; muted?: boolean }[] = [];
-  [...body].forEach((char, i) => {
-    const place = body.length - i - 1;
-    out.push({ key: `d${place}-${char}`, char });
-    if (place > 0 && place % 3 === 0) out.push({ key: `c${place}`, char: "," });
-  });
-  if (cents !== undefined) {
-    out.push({ key: "dot", char: "." });
-    [...cents].forEach((char, i) => out.push({ key: `f${i}-${char}`, char }));
-  }
-  return out;
-}
-
-function rateLabel(rate: number) {
-  const digits = rate >= 10 ? rate.toFixed(2) : rate.toFixed(4);
-  const [whole = "0", frac = ""] = digits.split(".");
-  return `${Number(whole).toLocaleString("en-US")}.${frac}`;
-}
-
-function arrives(from: Code, to: Code) {
-  return INSTANT.has(from) && INSTANT.has(to) ? "in seconds" : "by tomorrow";
-}
-
-function matches(code: Code, query: string) {
-  const q = query.trim().toLowerCase();
-  return !q || code.toLowerCase().includes(q) || CURRENCIES[code].name.toLowerCase().includes(q);
-}
-
-function keyOf(event: KeyboardEvent): Key | null {
-  if (event.key === "Backspace") return "back";
-  return /^[0-9.]$/.test(event.key) ? (event.key as Key) : null;
-}
-
-function Digits({ raw, decimals, caret, size = "lg" }: { raw: string; decimals: number | null; caret?: boolean; size?: "lg" | "sm" }) {
-  const large = size === "lg";
+/** A number whose digits roll into place by their position, so 1,268 → 1,284 turns only what changed. */
+function Digits({ text }: { text: string }) {
+  const characters = [...text];
   return (
-    <span className="fx-digits" data-size={size}>
+    <span className="fx-digits" aria-label={text}>
       <AnimatePresence initial={false} mode="popLayout">
-        {characters(raw, decimals).map(({ key, char, muted }) => (
+        {characters.map((character, index) => (
           <motion.span
-            key={key}
+            key={`${characters.length - index}-${character}`}
             layout="position"
-            className="fx-char"
-            data-muted={muted || undefined}
-            initial={large ? { y: "55%", opacity: 0, filter: "blur(4px)" } : { y: "80%", opacity: 0 }}
+            aria-hidden="true"
+            initial={{ y: "55%", opacity: 0, filter: "blur(4px)" }}
             animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-            exit={large ? { y: "-45%", opacity: 0, filter: "blur(4px)", transition: FADE } : { y: "-70%", opacity: 0, transition: FADE }}
-            transition={DIGIT_SPRING}
+            exit={{ y: "-45%", opacity: 0, filter: "blur(4px)", transition: FADE }}
+            transition={{ type: "spring", duration: 0.38, bounce: 0.16 }}
           >
-            {char}
+            {character}
           </motion.span>
         ))}
       </AnimatePresence>
-      {caret && <span className="fx-caret" aria-hidden="true" />}
     </span>
   );
 }
 
-function Fade({ id, children }: { id: string; children: ReactNode }) {
-  return (
-    <span className="fx-stack">
-      <AnimatePresence initial={false} mode="popLayout">
-        <motion.span key={id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={FADE}>
-          {children}
-        </motion.span>
-      </AnimatePresence>
-    </span>
-  );
-}
-
-function Flag({ code }: { code: Code }) {
+function Flag({ code }: { code: string }) {
   return (
     <span className="fx-flag" aria-hidden="true">
-      {CURRENCIES[code].flag}
+      {flagOf(code)}
     </span>
   );
 }
 
-interface AmountProps {
+interface ListProps {
   side: Side;
-  label: string;
-  text: string;
-  decimals: number | null;
-  field: string;
-  caret: boolean;
-  refused: number;
-  onKey: (key: Key) => void;
-  onPaste: (text: string) => void;
-  onFocus: () => void;
-  onBlur: () => void;
+  code: string;
+  codes: string[];
+  query: string;
+  onQueryChange: (query: string) => void;
+  /** False while the home page plays it, so opening the list doesn't pull focus into the card. */
+  focus: boolean;
+  onPick: (code: string) => void;
+  onClose: () => void;
 }
 
-function Amount({ side, label, text, decimals, field, caret, refused, onKey, onPaste, onFocus, onBlur }: AmountProps) {
-  const labelId = useId();
-  const [shaker, shake] = useAnimate<HTMLDivElement>();
-  const box = useRef<HTMLDivElement>(null);
-  const digits = useRef<HTMLSpanElement>(null);
-  const [scale, setScale] = useState(1);
+/** The card as a list: the label and pill as its header, a search, and every currency. */
+function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, onClose }: ListProps) {
+  const typed = query.trim().toLowerCase();
+  const shown = codes.filter((other) => !typed || other.toLowerCase().includes(typed) || nameOf(other).toLowerCase().includes(typed));
 
-  useEffect(() => {
-    if (!refused || !shaker.current) return;
-    shake(shaker.current, { x: [0, -7, 6, -3, 0] }, { duration: 0.36, ease: "easeOut" });
-  }, [refused, shaker, shake]);
-
-  useLayoutEffect(() => {
-    if (!box.current || !digits.current) return;
-    setScale(Math.min(1, box.current.clientWidth / digits.current.scrollWidth));
-  }, [text, decimals]);
-
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.metaKey || event.ctrlKey || event.altKey || event.key === "Tab") return;
-    const key = keyOf(event);
-    if (event.key.length === 1 || key) event.preventDefault();
-    if (key) onKey(key);
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape") onClose();
   };
 
   return (
-    <div className="fx-well" data-side={side}>
-      <span className="fx-label" id={labelId}>
-        {label}
-      </span>
-      <div ref={box} className="fx-fit" data-rm-ignore="">
-        <input
-          className="fx-input"
-          inputMode="decimal"
-          autoComplete="off"
-          spellCheck={false}
-          aria-labelledby={labelId}
-          value={field}
-          onChange={() => {}}
-          onKeyDown={onKeyDown}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          onPaste={(event) => {
-            event.preventDefault();
-            onPaste(event.clipboardData.getData("text"));
-          }}
-        />
-        <motion.div ref={shaker} className="fx-scale" animate={{ scale }} transition={DIGIT_SPRING}>
-          <span ref={digits}>
-            <Digits raw={text} decimals={decimals} caret={caret} />
-          </span>
-        </motion.div>
+    <div role="dialog" aria-label={`Choose the currency ${side === "send" ? "you send" : "they get"}`}>
+      <div className="fx-head">
+        <motion.span layoutId={`fx-label-${side}`} className="fx-label" {...TRAVEL}>
+          {LABELS[side]}
+        </motion.span>
+        <motion.button layoutId={`fx-pill-${side}`} type="button" className="fx-trigger" onClick={onClose} aria-label={`Keep ${code}`} {...TRAVEL}>
+          <Flag code={code} />
+          {code}
+          <HugeiconsIcon icon={Cancel01Icon} className="fx-chevron" strokeWidth={2} aria-hidden="true" />
+        </motion.button>
       </div>
+      <Autocomplete.Root
+        open
+        inline
+        items={shown}
+        filter={null}
+        value={query}
+        autoHighlight="always"
+        itemToStringValue={(item: string) => `${item} ${nameOf(item)}`}
+        onValueChange={(next, details) => details.reason !== "item-press" && details.reason !== "list-navigation" && onQueryChange(next)}
+      >
+        <motion.label className="fx-search" {...PART} transition={{ ...SPRING, delay: 0.04 }}>
+          <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
+          <Autocomplete.Input autoFocus={focus} placeholder="Search currencies" aria-label="Search currencies" onKeyDown={handleKeyDown} />
+        </motion.label>
+        <Autocomplete.Empty className="fx-empty">No currencies match</Autocomplete.Empty>
+        <Autocomplete.List className="fx-list">
+          {(item: string, index: number) => (
+            <Autocomplete.Item
+              key={item}
+              value={item}
+              className="fx-option"
+              onClick={() => onPick(item)}
+              render={<motion.div {...PART} transition={{ ...SPRING, delay: 0.06 + Math.min(index, 6) * 0.025 }} />}
+            >
+              <Flag code={item} />
+              <span className="fx-option-code">{item}</span>
+              <span className="fx-option-name">{nameOf(item)}</span>
+              {item === code && <HugeiconsIcon icon={Tick02Icon} className="fx-option-check" strokeWidth={2.2} aria-label="Current" />}
+            </Autocomplete.Item>
+          )}
+        </Autocomplete.List>
+      </Autocomplete.Root>
     </div>
   );
 }
 
-function CurrencyOption({ code }: { code: Code }) {
-  return (
-    <Combobox.Item
-      value={code}
-      className="fx-option"
-      render={(props, state) => (
-        <div {...props}>
-          {state.highlighted && <motion.span layoutId="fx-highlight" className="fx-highlight" transition={HIGHLIGHT_SPRING} />}
-          {props.children}
-        </div>
-      )}
-    >
-      <Flag code={code} />
-      <span className="fx-option-text">
-        <span className="fx-option-name">{CURRENCIES[code].name}</span>
-        <span className="fx-option-code">{code}</span>
-      </span>
-    </Combobox.Item>
-  );
-}
-
-function CurrencyPicker({ side, code, prompt, onPick }: { side: Side; code: Code; prompt: string; onPick: (code: Code) => void }) {
-  const listId = useId();
-
-  return (
-    <Combobox.Root
-      items={CODES}
-      value={code}
-      autoHighlight
-      filter={matches}
-      onValueChange={(next) => {
-        if (next && next !== code) onPick(next);
-      }}
-    >
-      <Combobox.Trigger className="fx-trigger" data-side={side} aria-label={`${code}: ${CURRENCIES[code].name}`}>
-        <Flag code={code} />
-        {code}
-        <span className="fx-chevron" data-rm-ignore="">
-          <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" />
-        </span>
-      </Combobox.Trigger>
-      <Combobox.Portal>
-        <Combobox.Positioner className="fx-positioner" align="end" sideOffset={8}>
-          <Combobox.Popup className="fx-popup" aria-label={prompt}>
-            <div className="fx-search">
-              <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
-              <Combobox.Input aria-label={prompt} placeholder="Search" />
-            </div>
-            <Combobox.Empty className="fx-empty">No matches</Combobox.Empty>
-            <LayoutGroup id={listId}>
-              <Combobox.List className="fx-list">{(item: Code) => <CurrencyOption key={item} code={item} />}</Combobox.List>
-            </LayoutGroup>
-          </Combobox.Popup>
-        </Combobox.Positioner>
-      </Combobox.Portal>
-    </Combobox.Root>
-  );
-}
-
-function useSwapTurns(from: Code, to: Code) {
+export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
+  const { rates, failed, retry } = useRates();
+  const [from, setFrom] = useState("GBP");
+  const [to, setTo] = useState("USD");
+  const [amount, setAmount] = useState("1000");
+  const [picking, setPicking] = useState<Side | null>(null);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<Status>("idle");
   const [turns, setTurns] = useState(0);
-  const last = useRef({ from, to });
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const returnFocus = useRef<Side | null>(null);
+  const card = useRef<HTMLElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | null>(null);
+  const busy = status !== "idle";
 
+  // The card springs to the height of whichever face is showing, and clips what's inside it, so its
+  // contents never move with it: the edge bounces while the rows and amounts stay where they are.
   useEffect(() => {
-    const prev = last.current;
-    if (from === prev.to && to === prev.from && from !== prev.from) setTurns((n) => n + 1);
-    last.current = { from, to };
-  }, [from, to]);
+    const element = content.current;
+    if (!element) return;
+    const observer = new ResizeObserver(() => setHeight(element.offsetHeight));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
-  return turns;
-}
+  const codes = rates ? Object.keys(rates.perUsd).filter((code) => !code.startsWith("X")).sort() : [from, to];
+  const rate = rates ? rates.perUsd[to]! / rates.perUsd[from]! : null;
+  const sent = Number(amount) || 0;
+  const gets = rate === null ? null : sent * rate;
 
-export function CurrencyConverterDemo({ playing }: { playing?: boolean } = {}) {
-  const scene = useScene(BEATS, fromBeat, playing);
-  const { state, take, live } = scene;
-  const [focus, setFocus] = useState<Side | null>(null);
-  const turns = useSwapTurns(state.from, state.to);
-  const q = quote(state);
-  const arrival = arrives(state.from, state.to);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  const type = (side: Side, key: Key) =>
-    take((s) => {
-      const base = retarget(s, side);
-      const next = press(base.raw, key, CURRENCIES[codeOf(base, side)].decimals);
-      if (next === null) return base;
-      return next === false ? { ...base, refused: base.refused + 1 } : { ...base, raw: next };
-    });
+  // Closing the list puts focus back on the pill it was opened from.
+  useEffect(() => {
+    if (picking || !returnFocus.current) return;
+    card.current?.querySelector<HTMLElement>(`.fx-well[data-side="${returnFocus.current}"] .fx-trigger`)?.focus({ preventScroll: true });
+    returnFocus.current = null;
+  }, [picking]);
 
-  const paste = (side: Side, text: string) =>
-    take((s) => {
-      const base = retarget(s, side);
-      return { ...base, raw: sanitize(text, CURRENCIES[codeOf(base, side)].decimals) };
-    });
+  const open = (side: Side) => {
+    setQuery("");
+    setPicking(side);
+  };
+
+  const close = () => {
+    if (!live) returnFocus.current = picking;
+    setPicking(null);
+  };
+
+  const swap = () => {
+    setFrom(to);
+    setTo(from);
+    setTurns((count) => count + 1);
+  };
+
+  const pick = (code: string) => {
+    // Picking the currency already on the other side swaps them.
+    if (code === (picking === "send" ? to : from)) swap();
+    else if (picking === "send") setFrom(code);
+    else setTo(code);
+    close();
+  };
+
+  const send = () => {
+    setStatus("sending");
+    timers.current = [
+      setTimeout(() => setStatus("sent"), SENDING_FOR),
+      setTimeout(() => setStatus("idle"), SENDING_FOR + SENT_FOR),
+    ];
+  };
+
+  const live = useScript(card, playing, [
+    ...["2", "25", "250", "2500"].map((typed) => [110, () => setAmount(typed)] as const),
+    [1300, () => open("get")],
+    ...["e", "eu", "eur"].map((typed) => [120, () => setQuery(typed)] as const),
+    [900, () => {}],
+    [1500, () => pick("EUR")],
+    [1600, swap],
+    [SENDING_FOR + SENT_FOR + 600, send],
+    [1400, () => {
+      setFrom("GBP");
+      setTo("USD");
+      setAmount("1000");
+    }],
+  ]);
+
+  const well = (side: Side) => {
+    const code = side === "send" ? from : to;
+    return (
+      <motion.div className="fx-well" data-side={side} {...PART}>
+        <motion.label layoutId={`fx-label-${side}`} className="fx-label" htmlFor={side === "send" ? "fx-amount" : undefined} {...TRAVEL}>
+          {LABELS[side]}
+        </motion.label>
+        {side === "send" ? (
+          <input
+            id="fx-amount"
+            className="fx-amount"
+            inputMode="decimal"
+            autoComplete="off"
+            value={amount}
+            disabled={busy}
+            onChange={(event) => {
+              const [whole = "", ...rest] = event.target.value.replace(/[^\d.]/g, "").split(".");
+              const decimals = decimalsOf(from);
+              setAmount(rest.length && decimals ? `${whole.slice(0, 9)}.${rest.join("").slice(0, decimals)}` : whole.slice(0, 9));
+            }}
+          />
+        ) : (
+          <span className="fx-amount" aria-live="polite">
+            {gets === null ? <span className="fx-quiet">{failed ? "—" : "…"}</span> : <Digits text={format(gets, to)} />}
+          </span>
+        )}
+        <motion.button
+          layoutId={`fx-pill-${side}`}
+          type="button"
+          className="fx-trigger"
+          disabled={busy || !rates}
+          aria-label={`${code}: ${nameOf(code)}. Change currency`}
+          aria-haspopup="dialog"
+          whileTap={{ scale: 1.06 }}
+          onClick={() => open(side)}
+          {...TRAVEL}
+        >
+          <Flag code={code} />
+          {code}
+          <HugeiconsIcon icon={ArrowDown01Icon} className="fx-chevron" strokeWidth={2} aria-hidden="true" />
+        </motion.button>
+      </motion.div>
+    );
+  };
 
   return (
-    <section ref={scene.ref} className="fx not-prose" aria-label="Currency converter">
-      <Remold.Layout trigger={[state.from, state.to]} spring={LAYOUT_SPRING} className="fx-wells">
-        {SIDES.map(({ side, label, prompt }) => {
-          const active = state.side === side;
-          const code = codeOf(state, side);
-          const decimals = CURRENCIES[code].decimals;
-          const amount = amountOf(q, side);
-          return (
-            <Fragment key={side}>
-              <Amount
-                side={side}
-                label={label}
-                text={active ? state.raw : String(amount)}
-                decimals={active ? null : decimals}
-                field={active ? state.raw : asRaw(amount, decimals)}
-                refused={active ? state.refused : 0}
-                caret={focus === side || (live && active)}
-                onKey={(key) => type(side, key)}
-                onPaste={(text) => paste(side, text)}
-                onFocus={() => setFocus(side)}
-                onBlur={() => setFocus((current) => (current === side ? null : current))}
-              />
-              <CurrencyPicker side={side} code={code} prompt={prompt} onPick={(next) => take((s) => choose(s, side, next))} />
-            </Fragment>
-          );
-        })}
-        <motion.button
-          type="button"
-          className="fx-swap"
-          data-rm-ignore=""
-          aria-label={`Swap. Send ${CURRENCIES[state.to].name}, receive ${CURRENCIES[state.from].name}`}
-          animate={{ rotate: turns * 180 }}
-          transition={SWAP_SPRING}
-          whileTap={{ scale: 0.92 }}
-          onClick={() => take(swap)}
+    <MotionConfig transition={SPRING} reducedMotion="user">
+      <LayoutGroup>
+        <motion.section
+          ref={card}
+          className="fx not-prose"
+          aria-label="Currency converter"
+          data-picking={picking ?? undefined}
+          initial={false}
+          animate={{ height: height === null ? "auto" : height + CARD_PADDING * 2 }}
         >
-          <HugeiconsIcon icon={ArrowUpDownIcon} aria-hidden="true" />
-        </motion.button>
-      </Remold.Layout>
+          <div ref={content} className="fx-content">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {picking ? (
+                // A motion element, so the list can be lifted out of the layout while it leaves.
+                <motion.div key="list" className="fx-view">
+                  <CurrencyList side={picking} code={picking === "send" ? from : to} codes={codes} query={query} onQueryChange={setQuery} focus={!live} onPick={pick} onClose={close} />
+                </motion.div>
+              ) : (
+                <motion.div key="converter" className="fx-view">
+                  <div className="fx-wells">
+                    {well("send")}
+                    {well("get")}
+                    <motion.button
+                      type="button"
+                      className="fx-swap"
+                      disabled={busy || !rates}
+                      aria-label={`Swap: send ${to}, receive ${from}`}
+                      {...PART}
+                      animate={{ ...PART.animate, rotate: turns * 180 }}
+                      whileTap={{ scale: 1.08 }}
+                      onClick={swap}
+                    >
+                      <HugeiconsIcon icon={ArrowUpDownIcon} aria-hidden="true" />
+                    </motion.button>
+                  </div>
 
-      <dl className="fx-meta">
-        <div>
-          <dt>Rate</dt>
-          <dd>
-            <Fade id={`${state.from}-${state.to}`}>
-              1 {state.from} = {rateLabel(q.rate)} {state.to}
-            </Fade>
-          </dd>
-        </div>
-        <div>
-          <dt>Fee</dt>
-          <dd className="fx-fee">
-            <Digits raw={q.fee.toFixed(CURRENCIES[state.from].decimals)} decimals={null} size="sm" />
-            <Fade id={state.from}>{state.from}</Fade>
-            <span className="fx-quiet">included</span>
-          </dd>
-        </div>
-        <div>
-          <dt>Arrives</dt>
-          <dd>
-            <Fade id={arrival}>{arrival}</Fade>
-          </dd>
-        </div>
-      </dl>
-    </section>
+                  <motion.p className="fx-rate" {...PART}>
+                    {failed ? (
+                      <>
+                        Couldn't load today's rates.{" "}
+                        <button type="button" className="fx-retry" onClick={retry}>
+                          Try again
+                        </button>
+                      </>
+                    ) : rate === null ? (
+                      "Loading today's rates…"
+                    ) : (
+                      <>
+                        1 {from} = <Digits text={rate >= 10 ? rate.toFixed(2) : rate.toFixed(4)} /> {to}
+                      </>
+                    )}
+                  </motion.p>
+
+                  <motion.button
+                    type="button"
+                    className="fx-send"
+                    data-status={status}
+                    disabled={!sent || !rates}
+                    aria-busy={status === "sending" || undefined}
+                    whileTap={{ scale: 1.03 }}
+                    onClick={() => status === "idle" && send()}
+                    {...PART}
+                  >
+                    <AnimatePresence initial={false} mode="popLayout">
+                      <motion.span key={status} className="fx-send-label" initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }} exit={{ opacity: 0, filter: "blur(4px)" }} transition={FADE}>
+                        {status === "sending" && <HugeiconsIcon icon={Loading03Icon} className="fx-spin" strokeWidth={2} aria-hidden="true" />}
+                        {status === "sent" && <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.4} aria-hidden="true" />}
+                        {status === "sending" ? "Sending" : `${status === "sent" ? "Sent" : "Send"} ${format(sent, from)} ${from}`}
+                      </motion.span>
+                    </AnimatePresence>
+                  </motion.button>
+
+                  {rates && (
+                    <motion.p className="fx-credit" {...PART}>
+                      <a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">
+                        Rates by ExchangeRate-API
+                      </a>{" "}
+                      · {rates.updated.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </motion.p>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.section>
+      </LayoutGroup>
+    </MotionConfig>
   );
 }

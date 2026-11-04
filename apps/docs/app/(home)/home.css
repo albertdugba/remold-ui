@@ -1607,11 +1607,15 @@
   gap: 8px;
 }
 
-.hp-filter-select,
-.hp-filter-search {
+.hp-filter-slot {
+  position: relative;
+  display: inline-flex;
+}
+
+.hp-filter-select {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 36px;
   border: 1px solid var(--hm-line);
   border-radius: 999px;
   background: var(--color-fd-card);
@@ -1619,12 +1623,15 @@
 }
 
 .hp-filter-select {
-  gap: 8px;
-  padding: 0 12px 0 14px;
+  gap: 6px;
+  padding: 0 10px 0 13px;
+  font: inherit;
   font-size: 13px;
   font-weight: 500;
-  font: inherit;
   cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .hp-filter-label {
@@ -1637,9 +1644,8 @@
 }
 
 .hp-filter-select svg {
-  width: 15px;
-  height: 15px;
-  margin-left: 2px;
+  width: 13px;
+  height: 13px;
   color: var(--hm-muted);
   transition: transform 160ms ease;
 }
@@ -1648,158 +1654,140 @@
   transform: rotate(180deg);
 }
 
-.hp-filter-layer {
-  z-index: 100;
-  pointer-events: auto;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
-    system-ui, sans-serif;
+
+/* With something picked the pill becomes a chip: the choice in bold, a firm outline, and room
+   for the clear button inside its right end. */
+.hp-filter-select[data-picked] {
+  padding-right: 36px;
+  border: 1.5px solid var(--hm-ink);
 }
 
-.hp-filter-menu {
-  width: min(360px, calc(100vw - 32px));
-  max-height: min(520px, calc(100vh - 120px));
-  overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 0.08);
+.hp-filter-clear {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--hm-ink);
+  color: var(--color-fd-background);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.hp-filter-clear:active {
+  transform: scale(0.9);
+}
+
+.hp-filter-clear svg {
+  width: 10px;
+  height: 10px;
+}
+
+.hp-filter-clear:focus-visible {
+  outline: 2px solid var(--hm-ink);
+  outline-offset: 2px;
+}
+
+/* The pill's menu: one shell just beneath the pill that springs out to the menu and back. */
+.hp-filter-shell {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
   border-radius: 22px;
+  z-index: 40;
+  display: none;
+  overflow: clip;
+  border: 1px solid rgb(255 255 255 / 0.08);
   background: #393939;
   color: #f5f5f5;
   box-shadow: 0 24px 56px -18px rgb(0 0 0 / 0.48);
-  transform-origin: var(--transform-origin);
-  transition: opacity 140ms ease, transform 140ms ease;
 }
 
-.hp-filter-menu[data-starting-style],
+.hp-filter-shell[data-shown] {
+  display: block;
+}
+
+.hp-filter-menu {
+  outline: none;
+  transition:
+    opacity 100ms ease-out,
+    filter 100ms ease-out;
+}
+
 .hp-filter-menu[data-ending-style] {
   opacity: 0;
-  transform: scale(0.96) translateY(-3px);
+  filter: blur(3px);
 }
 
-.hp-filter-menu-search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 68px;
-  padding: 0 24px;
-  border-bottom: 1px solid rgb(255 255 255 / 0.1);
-}
-
-.hp-filter-menu-search svg {
-  flex: none;
-  width: 25px;
-  height: 25px;
-  fill: none;
-  stroke: #fff;
-  stroke-linecap: round;
-  stroke-width: 2.4;
-}
-
-.hp-filter-menu-search input {
-  min-width: 0;
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #fff;
-  font: inherit;
-  font-size: 18px;
-}
-
-.hp-filter-menu-search input::placeholder {
-  color: rgb(255 255 255 / 0.42);
+.hp-filter-menu-inner {
+  width: 260px;
+  padding: 6px;
+  box-sizing: border-box;
 }
 
 .hp-filter-options {
-  max-height: 410px;
-  padding: 10px 14px 14px;
+  display: grid;
+  gap: 2px;
+  max-height: 360px;
   overflow-y: auto;
-  scrollbar-color: rgb(255 255 255 / 0.22) transparent;
   scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.22) transparent;
 }
 
 .hp-filter-option {
   display: flex;
   align-items: center;
-  gap: 13px;
-  min-height: 52px;
+  gap: 11px;
+  min-height: 40px;
   width: 100%;
-  padding: 0 18px;
+  padding: 0 10px;
   border: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   outline: 0;
   background: transparent;
   color: #f5f5f5;
   font: inherit;
-  font-size: 16px;
-  font-weight: 550;
+  font-size: 14px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
 }
 
 .hp-filter-option:hover,
-.hp-filter-option[aria-pressed="true"] {
-  background: rgb(255 255 255 / 0.1);
-}
-
-.hp-filter-option svg {
-  width: 15px;
-  height: 15px;
+.hp-filter-option:focus-visible {
+  background: rgb(255 255 255 / 0.08);
 }
 
 .hp-filter-option-mark {
+  display: grid;
   flex: none;
-  width: 17px;
-  height: 17px;
-  border-radius: 4px;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
   background: rgb(255 255 255 / 0.14);
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .hp-filter-option[aria-pressed="true"] .hp-filter-option-mark {
-  display: grid;
-  place-items: center;
   background: #f5f5f5;
   color: #252525;
 }
 
-.hp-filter-no-match {
-  margin: 16px 10px;
-  color: rgb(255 255 255 / 0.52);
-  font-size: 14px;
+.hp-filter-option-mark svg {
+  width: 12px;
+  height: 12px;
 }
 
-.hp-filter-search {
-  gap: 8px;
-  width: min(100%, 280px);
-  padding: 0 14px;
-}
-
-.hp-filter-search svg {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: var(--hm-muted);
-  stroke-linecap: round;
-  stroke-width: 2;
-}
-
-.hp-filter-search input {
-  min-width: 0;
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--hm-ink);
-  font: inherit;
-  font-size: 13px;
-}
-
-.hp-filter-search input::placeholder {
-  color: var(--hm-muted);
-}
-
-.hp-filter-select:focus-within,
-.hp-filter-select:focus-visible,
-.hp-filter-search:focus-within {
+.hp-filter-select:focus-visible {
   border-color: color-mix(in oklab, var(--hm-ink) 45%, var(--hm-line));
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--hm-ink) 10%, transparent);
 }
@@ -2080,8 +2068,8 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
   }
-  .hp-filter-select,
-  .hp-filter-search {
+  .hp-filter-slot,
+  .hp-filter-select {
     width: 100%;
   }
   .hp-filter-select svg {

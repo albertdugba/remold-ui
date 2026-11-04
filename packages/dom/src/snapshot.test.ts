@@ -47,6 +47,16 @@ describe("readNodes", () => {
     expect(nodes[3]!.media).toBe(fingerprint((elements[3] as HTMLImageElement).src));
   });
 
+  it("lets an icon that reshapes itself keep one identity while its drawing changes", () => {
+    const root = mount(`<svg data-box="0 0 24 24" data-rm-media="menu-icon"><path d="M4 6h16"></path></svg>`);
+    const before = readNodes(root).nodes[0]!.media;
+    root.querySelector("path")!.setAttribute("d", "M6 6l12 12");
+    expect(readNodes(root).nodes[0]!.media).toBe(before);
+
+    root.querySelector("svg")!.removeAttribute("data-rm-media");
+    expect(readNodes(root).nodes[0]!.media).not.toBe(before);
+  });
+
   it("skips invisible wrappers and attaches their children to the nearest kept ancestor", () => {
     const root = mount(`
       <section data-box="0 0 500 500" style="background-color: rgb(240, 240, 240)">

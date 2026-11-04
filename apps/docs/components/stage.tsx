@@ -1,6 +1,12 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CodeIcon, Copy01Icon, RotateLeft01Icon, CheckIcon, ViewIcon } from "@hugeicons/core-free-icons";
+import {
+  CodeIcon,
+  Copy01Icon,
+  RotateLeft01Icon,
+  CheckIcon,
+  ViewIcon,
+} from "@hugeicons/core-free-icons";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 export interface StageProps {
@@ -22,26 +28,59 @@ const tab =
 const iconButton =
   "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-foreground focus-visible:outline-2 focus-visible:outline-fd-ring";
 
-export function Stage({ children, code, name, width = 900, minHeight = 480, wide = false }: StageProps) {
+export function Stage({
+  children,
+  code,
+  name,
+  width = 900,
+  minHeight = 480,
+  wide = false,
+}: StageProps) {
   const [view, setView] = useState<"preview" | "code">("preview");
   const [run, setRun] = useState(0);
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
-  const install = name ? `npx shadcn@latest add ${origin}/r/${name}.json` : null;
+  const install = name
+    ? `npx shadcn@latest add ${origin}/r/${name}.json`
+    : null;
 
   return (
     <div className="rm-stage not-prose my-6 overflow-hidden rounded-2xl border border-fd-border bg-fd-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-fd-border px-2 py-1.5">
         <div className="flex items-center gap-2">
-          <div role="tablist" aria-label="View" className="flex gap-0.5 rounded-lg bg-fd-muted p-0.5">
-            <button type="button" role="tab" aria-selected={view === "preview"} onClick={() => setView("preview")} className={tab}>
-              <HugeiconsIcon icon={ViewIcon} className="size-3.5" aria-hidden="true" />
+          <div
+            role="tablist"
+            aria-label="View"
+            className="flex gap-0.5 rounded-lg bg-fd-muted p-0.5"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === "preview"}
+              onClick={() => setView("preview")}
+              className={tab}
+            >
+              <HugeiconsIcon
+                icon={ViewIcon}
+                className="size-3.5"
+                aria-hidden="true"
+              />
               Preview
             </button>
             {code && (
-              <button type="button" role="tab" aria-selected={view === "code"} onClick={() => setView("code")} className={tab}>
-                <HugeiconsIcon icon={CodeIcon} className="size-3.5" aria-hidden="true" />
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === "code"}
+                onClick={() => setView("code")}
+                className={tab}
+              >
+                <HugeiconsIcon
+                  icon={CodeIcon}
+                  className="size-3.5"
+                  aria-hidden="true"
+                />
                 Code
               </button>
             )}
@@ -63,16 +102,33 @@ export function Stage({ children, code, name, width = 900, minHeight = 480, wide
             >
               {name}
               {copied ? (
-                <HugeiconsIcon icon={CheckIcon} className="size-3.5" aria-label="Install command copied" />
+                <HugeiconsIcon
+                  icon={CheckIcon}
+                  className="size-3.5"
+                  aria-label="Install command copied"
+                />
               ) : (
-                <HugeiconsIcon icon={Copy01Icon} className="size-3.5" aria-label="Copy install command" />
+                <HugeiconsIcon
+                  icon={Copy01Icon}
+                  className="size-3.5"
+                  aria-label="Copy install command"
+                />
               )}
             </button>
           )}
         </div>
         {view === "preview" && (
-          <button type="button" onClick={() => setRun((r) => r + 1)} className={iconButton} aria-label="Replay the demo">
-            <HugeiconsIcon icon={RotateLeft01Icon} className="size-3.5" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={() => setRun((r) => r + 1)}
+            className={iconButton}
+            aria-label="Replay the demo"
+          >
+            <HugeiconsIcon
+              icon={RotateLeft01Icon}
+              className="size-3.5"
+              aria-hidden="true"
+            />
             <span className="hidden sm:inline">Replay</span>
           </button>
         )}
@@ -83,7 +139,11 @@ export function Stage({ children, code, name, width = 900, minHeight = 480, wide
           className="rm-stage-preview relative grid place-items-center px-4 py-10 sm:px-8 sm:py-16"
           style={{ minHeight } as CSSProperties}
         >
-          <div key={run} className="rm-stage-demo relative grid w-full place-items-center [&>*]:!my-0" style={wide ? undefined : { maxWidth: width }}>
+          <div
+            key={run}
+            className="rm-stage-demo relative grid w-full place-items-center [&>*]:!my-0"
+            style={wide ? undefined : { maxWidth: width }}
+          >
             {children}
           </div>
         </div>

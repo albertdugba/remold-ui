@@ -154,7 +154,7 @@ const COS_LAT = Float64Array.from(DOTS, (d) => Math.cos(d.lat * RADIANS));
 
 const SHADES = Array.from(
   { length: 12 },
-  (_, i) => `rgba(140, 200, 255, ${(i / 11).toFixed(3)})`,
+  (_, index) => `rgba(140, 200, 255, ${(index / 11).toFixed(3)})`,
 );
 
 const VIEWS: [string, number | null][] = [
@@ -261,8 +261,8 @@ export function WorldDemo({
       path.moveTo(x + size, y);
       path.arc(x, y, size, 0, Math.PI * 2);
     }
-    groups.forEach((path, i) => {
-      ctx.fillStyle = SHADES[i]!;
+    groups.forEach((path, index) => {
+      ctx.fillStyle = SHADES[index]!;
       ctx.fill(path);
     });
   };
@@ -270,26 +270,26 @@ export function WorldDemo({
   const tracker = useRef(velocityTracker());
   const drag = useRef<{ x: number; turn: number; moved: boolean } | null>(null);
   const swallow = useRef(false);
-  const down = (e: PointerEvent<HTMLCanvasElement>) => {
+  const down = (event: PointerEvent<HTMLCanvasElement>) => {
     const from = actions.current?.values.turn ?? aim.current;
-    drag.current = { x: e.clientX, turn: from, moved: false };
+    drag.current = { x: event.clientX, turn: from, moved: false };
     tracker.current = velocityTracker();
-    tracker.current.add(e.timeStamp, from);
+    tracker.current.add(event.timeStamp, from);
   };
-  const move = (e: PointerEvent<HTMLCanvasElement>) => {
+  const move = (event: PointerEvent<HTMLCanvasElement>) => {
     const d = drag.current;
     if (!d) return;
-    const dx = e.clientX - d.x;
+    const dx = event.clientX - d.x;
     if (!d.moved) {
       if (Math.abs(dx) < DRAG) return;
       d.moved = true;
-      e.currentTarget.setPointerCapture?.(e.pointerId);
+      event.currentTarget.setPointerCapture?.(event.pointerId);
       setDragging(true);
       onInteract?.();
     }
     const next = d.turn - dx * DEGREES_PER_PIXEL;
     actions.current?.set({ turn: next });
-    tracker.current.add(e.timeStamp, next);
+    tracker.current.add(event.timeStamp, next);
   };
   const up = () => {
     const d = drag.current;
@@ -320,10 +320,10 @@ export function WorldDemo({
           up();
         }}
         onPointerCancel={up}
-        onClickCapture={(e) => {
+        onClickCapture={(event) => {
           if (!swallow.current) return;
           swallow.current = false;
-          e.stopPropagation();
+          event.stopPropagation();
         }}
       />
       <span className="text-[13px] font-semibold text-white/70">{name}</span>

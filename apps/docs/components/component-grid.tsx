@@ -20,7 +20,7 @@ const ORDER = [
   "task-list",
   "comment-thread",
   "hold-to-record",
-  "flight-booking",
+  "table-booking",
   "otp-input",
   "live-room",
   "course-outline",

@@ -174,7 +174,7 @@ export function RemoldPerson() {
             aria-label={autoplay.playing ? "Pause" : "Play"}
           >
             <Remold.Icon
-              d={autoplay.playing ? PAUSE : PLAY}
+              path={autoplay.playing ? PAUSE : PLAY}
               viewBox="0 0 24 24"
               fill="currentColor"
             />

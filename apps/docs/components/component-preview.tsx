@@ -9,6 +9,9 @@ import dynamic from "next/dynamic";
 import { PreviewScope } from "./demos/portal-container";
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 
+/** The most a fitted preview is enlarged. */
+const MAX_ZOOM = 1.5;
+
 interface Preview {
   Component: ComponentType<Record<string, unknown>>;
   /** The width it's drawn at before scaling. Default 760. */
@@ -52,12 +55,11 @@ const PREVIEWS: Record<string, Preview> = {
     ),
     width: 420,
   },
-  "flight-booking": {
+  "table-booking": {
     Component: load(() =>
-      import("./demos/flight-booking").then((m) => m.FlightBookingDemo),
+      import("./demos/table-booking").then((m) => m.TableBookingDemo),
     ),
-    width: 440,
-    surface: true,
+    width: 400,
   },
   "otp-input": {
     Component: load(() =>
@@ -99,6 +101,13 @@ const PREVIEWS: Record<string, Preview> = {
       import("./demos/avatar-stack").then((m) => m.AvatarStackDemo),
     ),
     width: 380,
+    surface: true,
+  },
+  "invite-pill": {
+    Component: load(() =>
+      import("./demos/invite-pill").then((m) => m.InvitePillDemo),
+    ),
+    width: 420,
     surface: true,
   },
   "save-button": {
@@ -353,7 +362,7 @@ export function ComponentPreview({
   interactive?: boolean;
   /** Render this instead of the preview registered under `id`. */
   custom?: CustomPreview;
-  /** Catalogue previews stay on their first frame until their card is hovered or focused. */
+  /** Catalogue previews are still pictures of their first state: nothing plays until you open the component. */
   playing?: boolean;
 }) {
   // A landing card is shown as it is on the landing page: its own frame, no extra card around it.
@@ -451,7 +460,8 @@ export function ComponentPreview({
         const w = box.right - box.left;
         const h = box.bottom - box.top;
         if (!w || !h) return;
-        setScale(Math.min(roomX / w, roomY / h));
+        // A small control is enlarged only so far, so a lone button doesn't fill its card.
+        setScale(Math.min(roomX / w, roomY / h, MAX_ZOOM));
         setShift({ x: (box.left + box.right) / 2 - now.frameWidth / 2, y: (box.top + box.bottom) / 2 - now.frameHeight / 2 });
         return;
       }

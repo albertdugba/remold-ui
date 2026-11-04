@@ -123,18 +123,18 @@ function typed(name: string): string {
   if (!text.length) return "";
   let width = 0;
   const at: number[] = [];
-  text.forEach((ch, i) => {
+  text.forEach((ch, index) => {
     at.push(width);
     width +=
       glyphs[ch]!.adv +
-      (i < text.length - 1 ? kerning[ch + text[i + 1]] ?? 0 : 0);
+      (index < text.length - 1 ? kerning[ch + text[index + 1]] ?? 0 : 0);
   });
   const scale = Math.min(0.068, (W - 48) / width);
   const dx = (W - width * scale) / 2;
   return text
-    .map((ch, i) =>
+    .map((ch, index) =>
       glyphs[ch]!.d
-        ? place(glyphs[ch]!.d, scale, dx + at[i]! * scale, BASELINE)
+        ? place(glyphs[ch]!.d, scale, dx + at[index]! * scale, BASELINE)
         : "",
     )
     .join("");
@@ -265,10 +265,10 @@ function signed(): Point[][] {
     }
     line.push(points[points.length - 1]!);
     let t = 0;
-    return line.map(([x, y], i) => {
-      if (i > 0) {
-        const [px, py] = line[i - 1]!;
-        const [nx, ny] = line[Math.min(line.length - 1, i + 1)]!;
+    return line.map(([x, y], index) => {
+      if (index > 0) {
+        const [px, py] = line[index - 1]!;
+        const [nx, ny] = line[Math.min(line.length - 1, index + 1)]!;
         const turn =
           1 -
           Math.abs(
@@ -339,7 +339,7 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
 
     if (scene.live) {
       setInkKey((k) => k + 1);
-      take((s) => ({ ...s, strokes: [] }));
+      take((current) => ({ ...current, strokes: [] }));
     }
   };
   const move = (event: PointerEvent<SVGSVGElement>) => {
@@ -350,7 +350,7 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
     const stroke = live;
     setLive(null);
     setInkKey((k) => k + 1);
-    take((s) => ({ ...s, strokes: [...s.strokes, stroke] }));
+    take((current) => ({ ...current, strokes: [...current.strokes, stroke] }));
   };
 
   const body = (
@@ -369,7 +369,7 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
             autoComplete="name"
             onChange={(event) => {
               setAdopted(false);
-              take((s) => ({ ...s, name: event.target.value }));
+              take((current) => ({ ...current, name: event.target.value }));
             }}
           />
         </label>
@@ -383,7 +383,7 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
             const mode = values[0] as Mode | undefined;
             if (!mode) return;
             setAdopted(false);
-            take((s) => ({ ...s, mode }));
+            take((current) => ({ ...current, mode }));
           }}
         >
           {(["draw", "type"] as const).map((mode) => (
@@ -426,7 +426,7 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
           <Remold.Icon
             key={inkKey}
             className="sg-ink"
-            d={ink || "M0 0"}
+            path={ink || "M0 0"}
             viewBox={`0 0 ${W} ${H}`}
             fill="currentColor"
             stroke="none"
@@ -457,8 +457,8 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
             onClick={() => {
               setAdopted(false);
               setInkKey((k) => k + 1);
-              take((s) =>
-                s.mode === "draw" ? { ...s, strokes: [] } : { ...s, name: "" },
+              take((current) =>
+                current.mode === "draw" ? { ...current, strokes: [] } : { ...current, name: "" },
               );
             }}
           >

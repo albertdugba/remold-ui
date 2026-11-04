@@ -30,6 +30,6 @@ The install command adds these for you. If you copy the code by hand, install th
 
 - **One box.** Nothing is swapped for something else: the drop area, the upload and the finished file are the same element, so the dashed edge simply turns solid.
 - **Built on Base UI.** `Field` holds a real file input, and `Progress` gives the upload its value for screen readers.
-- **Remold for the two changes that matter.** The icon's arrow reshapes into a check with Remold's `createMorph`, and `Remold.Text` turns “Uploading” into “Uploaded”, keeping the letters they share. The percentage rolls with the Odometer instead, so it doesn't re-morph on every tick.
+- **Remold for the two changes that matter.** The icon's arrow reshapes into a check with `Remold.Icon`, and `Remold.Text` turns “Uploading” into “Uploaded”, keeping the letters they share. The percentage rolls with the Odometer instead, so it doesn't re-morph on every tick.
 
 <Callout>The upload is simulated; nothing leaves your device.</Callout>

@@ -6,12 +6,14 @@
  * which reshape into each other. Each change lands on the line below.
  *
  * Built on the shared `Picker` (Base UI's Select, with Motion on top), used again for for-here or
- * to-go. The check and cross reshape with Remold's `createMorph`. It plays a short scene while
+ * to-go. The check and cross reshape with `Remold.Icon`. It plays a short scene while
  * it's on screen. Touch it and it's yours. The order and the people are made up.
  */
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Remold } from "@remold-ui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef } from "react";
-import { MorphIcon } from "./morph-icon";
 import { Picker } from "./picker";
 import { useScene } from "./use-scene";
 import "./kitchen-ticket.css";
@@ -25,10 +27,8 @@ const STATUSES = [
 ] as const;
 type Status = (typeof STATUSES)[number]["id"];
 
-const of = (id: Status) => STATUSES.find((s) => s.id === id)!;
+const of = (id: Status) => STATUSES.find((status) => status.id === id)!;
 
-const CHECK = "M8.2 12.4l2.4 2.4M10.6 14.8l5.2-5.4";
-const CROSS = "M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6";
 
 const SPRING = { type: "spring" as const, duration: 0.4, bounce: 0.15 };
 
@@ -69,7 +69,7 @@ function StatusIcon({ status, size = 16 }: { status: Status; size?: number }) {
         style={{ transformOrigin: "12px 12px" }}
         transition={SPRING}
       >
-        <MorphIcon d={status === "canceled" ? CROSS : CHECK} strokeWidth={2.4} width={24} height={24} />
+        <Remold.Icon icon={<HugeiconsIcon icon={status === "canceled" ? Cancel01Icon : Tick02Icon} />} strokeWidth={2.4} width={24} height={24} />
       </motion.g>
     </svg>
   );
@@ -86,7 +86,7 @@ function ServiceIcon({ service }: { service: Service }) {
   return service === "here" ? <span className="kt-plate" aria-hidden="true" /> : <span className="kt-bag" aria-hidden="true" />;
 }
 
-const STATUS_OPTIONS = STATUSES.map((s) => ({ value: s.id, label: s.label }));
+const STATUS_OPTIONS = STATUSES.map((status) => ({ value: status.id, label: status.label }));
 
 interface Entry {
   key: string;
@@ -110,7 +110,7 @@ const GRILL: Entry = { key: "grill", who: "You", line: "On the grill", to: "prep
 const PASS: Entry = { key: "pass", who: "You", line: "At the pass", to: "ready", ago: "now" };
 const OUT: Entry = { key: "out", who: "You", line: "Picked up", to: "picked", ago: "now" };
 
-const index = (id: Status) => STATUSES.findIndex((s) => s.id === id);
+const index = (id: Status) => STATUSES.findIndex((status) => status.id === id);
 
 const BEATS: readonly (State & { ms: number })[] = [
   { status: "received", open: false, hover: 0, log: START, service: "here", ms: 1300 },
@@ -141,10 +141,10 @@ export function KitchenTicketDemo({ playing }: KitchenTicketDemoProps = {}) {
   const counter = useRef(2);
 
   const choose = (next: Status) =>
-    take((s) => {
-      if (next === s.status) return { ...s, open: false };
+    take((current) => {
+      if (next === current.status) return { ...current, open: false };
       const entry = { key: `u${counter.current++}`, who: "You", line: of(next).label, to: next, ago: "now" };
-      return { ...s, status: next, open: false, log: [...s.log, entry].slice(-4) };
+      return { ...current, status: next, open: false, log: [...current.log, entry].slice(-4) };
     });
 
   return (
@@ -171,7 +171,7 @@ export function KitchenTicketDemo({ playing }: KitchenTicketDemoProps = {}) {
           onValueChange={choose}
           icon={(status) => <StatusIcon status={status} size={15} />}
           open={state.open}
-          onOpenChange={(open) => take((s) => ({ ...s, open, hover: index(s.status) }))}
+          onOpenChange={(open) => take((current) => ({ ...current, open, hover: index(current.status) }))}
           preview={scene.live && state.open ? STATUSES[state.hover]!.id : null}
           layerClassName="kt-tokens"
         />
@@ -180,7 +180,7 @@ export function KitchenTicketDemo({ playing }: KitchenTicketDemoProps = {}) {
           heading="For here or to-go…"
           options={SERVICE}
           value={state.service}
-          onValueChange={(service) => take((s) => ({ ...s, service }))}
+          onValueChange={(service) => take((current) => ({ ...current, service }))}
           icon={(service) => <ServiceIcon service={service} />}
           layerClassName="kt-tokens"
         />

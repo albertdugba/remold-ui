@@ -1,25 +1,24 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, GoBackward15SecIcon, GoForward30SecIcon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, GoBackward15SecIcon, GoForward30SecIcon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { animate, AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import {
   formatClock,
   usePodcastPlayer,
   type Episode,
 } from "./podcast-player.model";
-import "./podcast-player.css";
 
 /** How many bars the waveform has: thin ones, so it reads as a sound rather than as blocks. */
 const BARS = 56;
 
 /** Each bar's resting height, 0 to 1: a smooth envelope like a real waveform, the same every time. */
-const WAVE = Array.from({ length: BARS }, (_, i) => {
-  const x = i / (BARS - 1);
+const WAVE = Array.from({ length: BARS }, (_, index) => {
+  const x = index / (BARS - 1);
   const envelope = 0.55 * Math.abs(Math.sin(x * Math.PI * 2.3 + 0.4)) + 0.45 * Math.abs(Math.sin(x * Math.PI * 5.1 + 1.2));
-  const grain = 0.12 * Math.sin(i * 1.7);
+  const grain = 0.12 * Math.sin(index * 1.7);
   return Math.min(1, Math.max(0.14, envelope * 0.85 + grain + 0.1));
 });
 
@@ -43,9 +42,9 @@ function Waves({ playing, progress }: { playing: boolean; progress: number }) {
       const t = (now - start) / 1000;
       // A slow swell over the whole song, so loud and quiet passages come and go.
       const energy = 0.75 + 0.25 * Math.sin(t * 0.9) * Math.sin(t * 0.37 + 1);
-      els.forEach((el, i) => {
+      els.forEach((el, index) => {
         if (!el) return;
-        const wave = 0.5 + 0.5 * Math.sin(t * 5.2 - i * 0.32) * Math.cos(t * 2.1 + i * 0.11);
+        const wave = 0.5 + 0.5 * Math.sin(t * 5.2 - index * 0.32) * Math.cos(t * 2.1 + index * 0.11);
         el.style.transform = `scaleY(${(0.35 + 0.75 * wave) * energy})`;
       });
       frame = requestAnimationFrame(tick);
@@ -55,16 +54,17 @@ function Waves({ playing, progress }: { playing: boolean; progress: number }) {
   }, [playing]);
 
   return (
-    <div className="ppw" data-playing={playing || undefined} aria-hidden="true">
-      {WAVE.map((h, i) => (
+    <div className="group/wave mb-2 flex h-10 items-center justify-between" data-playing={playing || undefined} aria-hidden="true">
+      {WAVE.map((h, index) => (
         <span
-          key={i}
+          key={index}
           ref={(el) => {
-            bars.current[i] = el;
+            bars.current[index] = el;
           }}
-          className="ppw-bar"
-          data-played={i / BARS < progress || undefined}
-          style={{ "--h": h } as CSSProperties}
+          // Paused, a bar eases back to rest; playing, the frame loop moves it, so only its colour transitions.
+          className="min-h-1 w-[3px] flex-none origin-center rounded-full bg-zinc-900/18 transition-[background-color,transform] duration-[250ms,500ms] ease-[ease,cubic-bezier(0.32,0.72,0,1)] will-change-transform group-data-playing/wave:transition-[background-color] group-data-playing/wave:duration-250 data-played:bg-zinc-900 dark:bg-zinc-50/22 dark:data-played:bg-zinc-50"
+          data-played={index / BARS < progress || undefined}
+          style={{ height: `${h * 100}%` }}
         />
       ))}
     </div>
@@ -73,10 +73,32 @@ function Waves({ playing, progress }: { playing: boolean; progress: number }) {
 
 /** Four little bars beside the title in the mini player, only while it plays. */
 function Equalizer() {
+  const reduced = useReducedMotion();
+  const bars = useRef<(HTMLSpanElement | null)[]>([]);
+
+  // Started here rather than with `animate` props: the player sits in an AnimatePresence that skips
+  // mount animations, which would leave a looping animation that never starts.
+  useEffect(() => {
+    if (reduced) return;
+    // Each bar bounces at its own pace and phase, so the four never move as one.
+    const loops = bars.current.map((el, index) =>
+      el
+        ? animate(el, { scaleY: [0.25, 1] }, { duration: 0.55 + index * 0.13, delay: index * 0.21, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" })
+        : null,
+    );
+    return () => loops.forEach((loop) => loop?.stop());
+  }, [reduced]);
+
   return (
-    <span className="ppw-eq" aria-hidden="true">
-      {[0, 1, 2, 3].map((i) => (
-        <span key={i} style={{ "--d": `${0.55 + i * 0.13}s`, "--o": `${-i * 0.21}s` } as CSSProperties} />
+    <span className="inline-flex h-3 items-end gap-0.5" aria-hidden="true">
+      {[0, 1, 2, 3].map((index) => (
+        <span
+          key={index}
+          ref={(el) => {
+            bars.current[index] = el;
+          }}
+          className="h-full w-[2.5px] origin-bottom rounded-full bg-current"
+        />
       ))}
     </span>
   );
@@ -115,9 +137,6 @@ export interface PodcastPlayerProps {
 
 const SPRING = { type: "spring" as const, duration: 0.42, bounce: 0.12 };
 
-const PLAY = "M7 5L12.5 8.5L12.5 15.5L7 19ZM12.5 8.5L19 12L19 12L12.5 15.5Z";
-const PAUSE = "M6 5L10 5L10 19L6 19ZM14 5L18 5L18 19L14 19Z";
-
 function PlayButton({
   playing,
   onClick,
@@ -140,8 +159,7 @@ function PlayButton({
       className={className}
     >
       <Remold.Icon
-        d={playing ? PAUSE : PLAY}
-        viewBox="0 0 24 24"
+        icon={<HugeiconsIcon icon={playing ? PauseIcon : PlayIcon} />}
         className="size-[23px]"
         fill="currentColor"
         aria-hidden="true"
@@ -197,7 +215,7 @@ export function PodcastPlayer({
           ref={audio}
           src={episode.audio}
           preload="none"
-          onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
+          onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)}
           onEnded={() => setPlaying(false)}
         />
       )}
@@ -263,7 +281,7 @@ export function PodcastPlayer({
                 min={0}
                 max={Math.max(1, episode.seconds)}
                 value={Math.min(time, episode.seconds)}
-                onChange={(e) => seek(Number(e.target.value))}
+                onChange={(event) => seek(Number(event.target.value))}
                 aria-label="Position"
                 style={{ "--p": `${progress * 100}%` } as CSSProperties}
                 className="h-4 w-full cursor-pointer appearance-none bg-transparent [&::-webkit-slider-runnable-track]:h-[4px] [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#18181b_var(--p),rgb(24_24_27/0.14)_var(--p))] dark:[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#fafafa_var(--p),rgb(250_250_250/0.2)_var(--p))] [&::-webkit-slider-thumb]:-mt-[4px] [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-900 dark:[&::-webkit-slider-thumb]:bg-white [&::-moz-range-progress]:h-[4px] [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-zinc-900 dark:[&::-moz-range-progress]:bg-white [&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-zinc-900 dark:[&::-moz-range-thumb]:bg-white [&::-moz-range-track]:h-[4px] [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-zinc-900/15 dark:[&::-moz-range-track]:bg-white/20"

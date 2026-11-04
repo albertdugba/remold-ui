@@ -6,20 +6,18 @@
  *
  * Built on Base UI's NumberField (Group, Decrement, Input, Increment), so the arrow keys, typing a
  * number and the min and max all behave as a number field should. Motion stretches the button; the
- * minus reshapes into the bin with Remold's `createMorph`; the count rolls with the Odometer.
+ * minus reshapes into the bin with `Remold.Icon`; the count rolls with the Odometer.
  */
 import { NumberField } from "@base-ui/react/number-field";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Delete02Icon, MinusSignIcon } from "@hugeicons/core-free-icons";
+import { Remold } from "@remold-ui/react";
 import { AnimatePresence, motion } from "motion/react";
-import { MorphIcon } from "./morph-icon";
 import { Odometer } from "./odometer";
 import { useScene } from "./use-scene";
 import "./form-kit.css";
 import "./quantity-stepper.css";
 
-const MINUS = "M6 12h12";
-const BIN = "M5 7h14M10 4.5h4M7 7l.8 11.5c.1.8.7 1.5 1.5 1.5h5.4c.8 0 1.4-.7 1.5-1.5L17 7";
 
 const STRETCH = { type: "spring" as const, duration: 0.45, bounce: 0.16 };
 
@@ -57,7 +55,7 @@ export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepp
         >
           <NumberField.Group className="stq-group">
             <NumberField.Decrement className="stq-btn" aria-label={value === 1 ? "Remove from cart" : "Decrease quantity"} data-remove={value === 1 || undefined}>
-              <MorphIcon d={value === 1 ? BIN : MINUS} strokeWidth={2} />
+              <Remold.Icon icon={<HugeiconsIcon icon={value === 1 ? Delete02Icon : MinusSignIcon} />} strokeWidth={2} />
             </NumberField.Decrement>
             <span className="stq-count">
               <Odometer value={String(value)} />

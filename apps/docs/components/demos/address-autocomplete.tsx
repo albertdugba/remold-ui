@@ -16,7 +16,7 @@ import { Location01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePortalContainer } from "./portal-container";
-import { useScene } from "./use-scene";
+import { typing, useScene } from "./use-scene";
 import "./form-kit.css";
 import "./address-autocomplete.css";
 
@@ -96,7 +96,7 @@ export function AddressAutocomplete({ query, onQueryChange, address, onAddressCh
                   <Field.Label className="fk-label">Street</Field.Label>
                   <motion.div layoutId="adr-box" className="fk-box" transition={MOVE}>
                     <span className="adr-slot">
-                      <Field.Control className="fk-input" value={address.street} onChange={(e) => edit("street", e.target.value)} />
+                      <Field.Control className="fk-input" value={address.street} onChange={(event) => edit("street", event.target.value)} />
                       {settling && <Words id="street">{address.street}</Words>}
                     </span>
                   </motion.div>
@@ -128,7 +128,7 @@ export function AddressAutocomplete({ query, onQueryChange, address, onAddressCh
                         transition={{ ...UNFOLD, delay }}
                       >
                         <span className="adr-slot">
-                          <Field.Control className="fk-input" value={address[part]} onChange={(e) => edit(part, e.target.value)} />
+                          <Field.Control className="fk-input" value={address[part]} onChange={(event) => edit(part, event.target.value)} />
                           {settling &&
                             (part === "area" ? (
                               <Words id="area">{address.area}</Words>
@@ -237,7 +237,7 @@ interface State {
 
 const BEATS: readonly (State & { ms: number })[] = [
   { query: "", address: null, ms: 900 },
-  { query: "12 Ox", address: null, ms: 1000 },
+  ...typing("12 Ox", (query) => ({ query, address: null }), { every: 90, hold: 1000 }),
   { query: line(ADDRESSES[0]!), address: null, ms: 650 },
   { query: line(ADDRESSES[0]!), address: ADDRESSES[0]!, ms: 3200 },
 ];
@@ -258,9 +258,9 @@ export function AddressAutocompleteDemo({ playing }: AddressAutocompleteDemoProp
     <div ref={ref} className="fk-stage not-prose">
       <AddressAutocomplete
         query={state.query}
-        onQueryChange={(query) => take((s) => ({ ...s, query }))}
+        onQueryChange={(query) => take((current) => ({ ...current, query }))}
         address={state.address}
-        onAddressChange={(address) => take((s) => ({ ...s, address }))}
+        onAddressChange={(address) => take((current) => ({ ...current, address }))}
       />
     </div>
   );

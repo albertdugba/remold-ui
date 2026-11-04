@@ -18,7 +18,7 @@ export function useRemoldLayout<E extends HTMLElement = HTMLDivElement>(
   trigger: unknown,
   options: UseRemoldLayoutOptions = {},
 ): useRemoldLayout.ReturnValue<E> {
-  const { disabled = false, onTransition, spring, match, reducedMotion, announce, loop, lift } = options;
+  const { disabled = false, onTransition, spring, match, reducedMotion, announce, loop, lift, choreography } = options;
 
   const [element, setElement] = useState<E | null>(null);
   const [committedTrigger, setCommittedTrigger] = useState(trigger);
@@ -29,7 +29,7 @@ export function useRemoldLayout<E extends HTMLElement = HTMLDivElement>(
   // Read the old page now, during the render that changes it, before React commits the new one.
   if (!sameTrigger(committedTrigger, trigger)) {
     setCommittedTrigger(trigger);
-    setPending(!disabled && element ? prepareTransition(element, { spring, match, reducedMotion, announce, loop, lift }) : null);
+    setPending(!disabled && element ? prepareTransition(element, { spring, match, reducedMotion, announce, loop, lift, choreography }) : null);
   }
 
   useIsoLayoutEffect(() => {

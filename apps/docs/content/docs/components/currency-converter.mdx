@@ -1,8 +1,8 @@
 ---
 title: "Currency converter"
-description: "A transfer quote: the amount you type rolls into what they receive, and swapping carries the two currencies across."
+description: "A converter at today's real exchange rates: type what you send and what they get rolls with it, tap a currency and the whole card springs into a searchable list, and Send says what it did."
 status: "new"
-tags: ["Layout", "Motion", "Base UI"]
+tags: ["Motion", "Base UI"]
 ---
 
 <Stage name="currency-converter" code={<Source demo="currency-converter" />} minHeight={560}>
@@ -11,10 +11,10 @@ tags: ["Layout", "Motion", "Base UI"]
 
 ## Things to try
 
-- **Type what you send.** What they get rolls with it, and so does the fee. You can also click their amount and type that instead: the amount you send follows.
-- **Swap.** The two currencies trade places, and the quote is worked out again.
-- **Change a currency.** Search by name or code. The rate and the arrival move with the pair. Picking the currency already on the other side swaps them.
-- **A longer route.** Pounds, dollars and euros arrive in seconds. Cedis and naira arrive by tomorrow.
+- **Type what you send.** What they get rolls with it, at today's rate.
+- **Change a currency.** Tap either currency and the card turns into a list of every currency, with a search at the top. Type a code or a name (try "ced"), then pick one with a click or Enter. Picking the currency already on the other side swaps them.
+- **Swap.** The two currencies trade places and the swap button turns.
+- **Press Send.** It turns into Sending, then Sent, and goes back.
 
 ## Install
 
@@ -28,8 +28,11 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **The currencies travel.** `Layout` wraps the quote and pairs each pill by the currency it shows, so a swap carries it to the other row. Nothing is given an id.
-- **The figures roll.** The amounts and the fee are digits that enter and leave by their place, the same treatment as Send money. The rate is one line, so it crossfades when the pair changes.
-- **A currency list.** Each pill opens Base UI's Combobox in a plain popup. The list narrows as you type, and a pick moves the pills like any other change.
+- **Real data, nothing made up.** The rates come from [ExchangeRate-API](https://www.exchangerate-api.com)'s free endpoint, fetched once and shared by every converter on the page. Currency names come from the browser's `Intl.DisplayNames`, decimal places from `Intl.NumberFormat`, and each flag is built from the country letters at the start of the currency's code. While the rates load the card says so, and if they can't be reached it offers to try again.
+- **One tray that springs.** The card animates its real height to whichever face is showing and clips what's inside, so its edge bounces while text never stretches.
+- **The label and pill travel.** "You send" and the currency pill fly up to become the list's header (`layoutId`), blurring slightly on the way; the pill turns into the close button.
+- **Everything else scales in place.** The other parts wait at 94% size, blurred and transparent, and spring in with the rows a beat behind each other. Leaving is quicker than arriving. Pressing a pill grows it a little.
+- **Built on Base UI.** Autocomplete handles the search, the keyboard and the list; Escape or the pill closes it and focus returns to where you were.
+- **Motion does every animation:** the tray, the travelling header, the rows, the rolling digits and Send's label.
 
-<Callout>The rates are made up, and they don't move with the market. The fee is a flat 0.45%, taken off before the exchange.</Callout>
+<Callout>Send is pretend. Wire your transfer up in `send`. ExchangeRate-API's free tier updates daily and asks for the credit shown under the card.</Callout>

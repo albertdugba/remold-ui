@@ -1,6 +1,6 @@
 ---
 title: "API keys"
-description: "Creating an API key, where you see the secret once: it decodes a character at a time in a dark panel, then the panel folds down into the newest row and the secret scrambles into its masked form."
+description: "Creating an API key in one card that springs between its list, a name form and the secret: the secret decodes once in a dark panel, then travels into the newest row and scrambles into its masked form. Revoke turns into Confirm in its row."
 status: "new"
 tags: ["Motion", "Base UI"]
 ---
@@ -11,10 +11,11 @@ tags: ["Motion", "Base UI"]
 
 ## Things to try
 
-- **Create a key.** "Create key" unfolds a row where you name it.
-- **Reveal the secret.** Create opens a dark panel where the secret decodes a character at a time.
+- **Create a key.** The card springs into a name form, and "Create key" travels down to become its submit button.
+- **Reveal the secret.** Create turns the card into a dark panel where the secret decodes a character at a time.
 - **Copy it.** The copy icon turns into a check.
-- **Press Done.** The panel folds down into the newest row of the list, and the secret scrambles itself into its masked form as it lands.
+- **Press Done.** The card springs back to the list, the secret slides into the newest row, and scrambles itself into its masked form.
+- **Revoke a key.** Hover a row (or tab to it) and press Revoke. It turns into a red Confirm; press it and the row folds out of the list while the header says it's gone. Escape or tabbing away takes it back.
 
 ## Install
 
@@ -28,8 +29,10 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **The panel becomes the row.** The secret panel and the new list row are a shared layout in Motion, so the panel folds into its place in the list instead of closing.
-- **Decode and mask.** Revealing and hiding the secret use the same scramble hook, run in opposite directions.
-- **Copy to check.** The icon reshapes with Remold's `createMorph`. The filter above the list is Base UI's Toggle Group.
+- **One card, three faces.** The list, the name form and the secret are faces of one card. It springs its real height between them and clips what's inside, so nothing is scaled; each face's parts blur and scale in from just below their size.
+- **Things that travel.** "Create key" and the secret move with Motion's `layoutId`: the button into the form, the secret from the panel into its row.
+- **Decode and mask.** Revealing and hiding the secret use the same scramble hook, run in opposite directions. The subtitle reshapes with `Remold.Text` to say what each step wants.
+- **Revoking asks in place.** The first press only arms it: Revoke turns into a red Confirm. Once it's gone the row folds away by height, and the card follows it exactly.
+- **Built on Base UI.** The Live and Test switch is Base UI's Toggle Group.
 
 <Callout>The keys are made up.</Callout>

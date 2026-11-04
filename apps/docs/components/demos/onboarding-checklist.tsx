@@ -32,8 +32,8 @@ const BEATS: readonly (State & { ms: number })[] = [
   { done: ["project", "team"], collapsed: false, ms: 1900 },
   { done: ["project", "team", "domain"], collapsed: false, ms: 1500 },
   { done: ["project", "team", "domain", "billing"], collapsed: false, ms: 1500 },
-  { done: STEPS.map((s) => s.id), collapsed: false, ms: 1000 },
-  { done: STEPS.map((s) => s.id), collapsed: true, ms: 2800 },
+  { done: STEPS.map((step) => step.id), collapsed: false, ms: 1000 },
+  { done: STEPS.map((step) => step.id), collapsed: true, ms: 2800 },
 ];
 
 const fromBeat = (step: number): State => ({ done: BEATS[step]!.done, collapsed: BEATS[step]!.collapsed });
@@ -71,12 +71,12 @@ export function OnboardingChecklistDemo({ playing }: OnboardingChecklistDemoProp
   const { state, take } = scene;
   const count = state.done.length;
   const all = count === STEPS.length;
-  const active = STEPS.find((s) => !state.done.includes(s.id));
+  const active = STEPS.find((step) => !state.done.includes(step.id));
 
   const toggle = (id: string, on: boolean) =>
-    take((s) => {
-      const done = on ? [...s.done, id] : s.done.filter((d) => d !== id);
-      return { ...s, done };
+    take((current) => {
+      const done = on ? [...current.done, id] : current.done.filter((d) => d !== id);
+      return { ...current, done };
     });
 
   // Finishing the last step folds the card away a moment later. Only on that step: reopening the
@@ -86,7 +86,7 @@ export function OnboardingChecklistDemo({ playing }: OnboardingChecklistDemoProp
     const finished = before.current < STEPS.length && count === STEPS.length;
     before.current = count;
     if (!finished || scene.live) return;
-    const timer = setTimeout(() => take((s) => ({ ...s, collapsed: true })), 1400);
+    const timer = setTimeout(() => take((current) => ({ ...current, collapsed: true })), 1400);
     return () => clearTimeout(timer);
   }, [count, scene.live, take]);
 
@@ -104,7 +104,7 @@ export function OnboardingChecklistDemo({ playing }: OnboardingChecklistDemoProp
               type="button"
               className="ob-show"
               aria-label="Show the checklist"
-              onClick={() => take((s) => ({ ...s, collapsed: false }))}
+              onClick={() => take((current) => ({ ...current, collapsed: false }))}
             >
               <HugeiconsIcon icon={ArrowUp01Icon} aria-hidden="true" />
             </button>
@@ -117,7 +117,7 @@ export function OnboardingChecklistDemo({ playing }: OnboardingChecklistDemoProp
                 <b className="ob-title">{all ? "You're all set" : "Get started"}</b>
                 <span className="ob-count">{`${count} of ${STEPS.length} done`}</span>
               </span>
-              <button type="button" className="ob-hide" aria-label="Hide the checklist" onClick={() => take((s) => ({ ...s, collapsed: true }))}>
+              <button type="button" className="ob-hide" aria-label="Hide the checklist" onClick={() => take((current) => ({ ...current, collapsed: true }))}>
                 <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
               </button>
             </header>
@@ -170,7 +170,7 @@ export function OnboardingChecklistDemo({ playing }: OnboardingChecklistDemoProp
             </ol>
 
             {all && (
-              <button type="button" className="ob-done" onClick={() => take((s) => ({ ...s, collapsed: true }))}>
+              <button type="button" className="ob-done" onClick={() => take((current) => ({ ...current, collapsed: true }))}>
                 Done, tuck it away
               </button>
             )}

@@ -35,7 +35,7 @@ function shares(count: number): number[] {
   if (!count) return [];
   const base = Math.floor(BILL / count);
   const extra = BILL - base * count;
-  return Array.from({ length: count }, (_, i) => base + (i < extra ? 1 : 0));
+  return Array.from({ length: count }, (_, index) => base + (index < extra ? 1 : 0));
 }
 
 export interface SplitAmountProps {
@@ -86,7 +86,7 @@ export function SplitAmount({ value, onValueChange }: SplitAmountProps) {
 
         <ul className="spl-shares">
           <AnimatePresence initial={false}>
-            {included.map((p, i) => (
+            {included.map((p, index) => (
               <motion.li
                 key={p.id}
                 layout="position"
@@ -99,7 +99,7 @@ export function SplitAmount({ value, onValueChange }: SplitAmountProps) {
                 <i style={{ ["--spl-face" as string]: p.face }} />
                 <span>{p.name === "You" ? "You pay" : `${p.name} pays`}</span>
                 <b>
-                  <Odometer value={money(each[i]!)} />
+                  <Odometer value={money(each[index]!)} />
                 </b>
               </motion.li>
             ))}

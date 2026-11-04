@@ -27,10 +27,10 @@ function bucket(i: number, salt: number, cuts: number[]) {
 }
 
 /** 240 made-up customers, each one dot. Every grouping lays out this same list, so dot `i` is always customer `i`. */
-const CUSTOMERS = Array.from({ length: 240 }, (_, i) => ({
-  plan: bucket(i, 1, [50, 82, 100]),
-  region: bucket(i, 2, [34, 62, 86, 100]),
-  channel: bucket(i, 3, [40, 64, 88, 100]),
+const CUSTOMERS = Array.from({ length: 240 }, (_, index) => ({
+  plan: bucket(index, 1, [50, 82, 100]),
+  region: bucket(index, 2, [34, 62, 86, 100]),
+  channel: bucket(index, 3, [40, 64, 88, 100]),
 }));
 
 /** The chart's frame. Fitting it, rather than each layout's bounds, keeps columns growing in place. */
@@ -40,7 +40,7 @@ const FRAME = { width: 100, height: 42 };
 function layout(view: View) {
   const slot = 100 / VIEWS[view].length;
   const seen = VIEWS[view].map(() => 0);
-  const order = CUSTOMERS.map((c, i) => ({ c, i })).sort((a, b) => b.c.plan - a.c.plan);
+  const order = CUSTOMERS.map((c, index) => ({ c, i: index })).sort((a, b) => b.c.plan - a.c.plan);
   const points = new Array(CUSTOMERS.length);
   for (const { c, i } of order) {
     const k = seen[c[view]]++;
@@ -111,8 +111,8 @@ export function UnitChartDemo({ playing }: { playing?: boolean } = {}) {
         </ol>
 
         <div className="uc-legend">
-          {PLANS.map((plan, i) => (
-            <span key={plan} data-plan={i}>
+          {PLANS.map((plan, index) => (
+            <span key={plan} data-plan={index}>
               {plan}
             </span>
           ))}
