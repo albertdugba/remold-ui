@@ -16,21 +16,45 @@
 
 **Change you can follow.**
 
-Animated components for your UI, and the primitives to compose your own:<br />
-layout, text and icon morphs, connectors, canvas scenes and particles.
+Morphing for the web: text, icons, SVG paths and layouts that reshape into what comes next,<br />
+lines that stay attached while things move, and particles that re-form from one shape into another.
 
 </div>
 
 ---
 
-## Why Remold
+## What Remold is
 
-Most interfaces change by swapping one thing for another. A list re-sorts, "Save" becomes "Saved", a menu icon becomes a close icon, a pill grows into a palette. When that happens all at once, people lose track of what went where. Remold closes that gap.
+Two things, kept apart on purpose:
 
-- **It works out what became what.** You don't give elements ids or wrap them in keyed motion components. Remold reads what's on the page before and after a change and pairs things up by what they show.
-- **It moves only what changed.** Shared letters slide while the others fade. Strokes reshape from one icon into the next. Elements that moved travel from where they were to where they are now.
-- **It works with any framework.** The core is plain TypeScript with no browser code. On top of it there are React bindings, and a plain-JavaScript API for everything else: Vue, Svelte, Angular, Solid, or no framework at all. It reads what's already been rendered, so it works with Base UI, React Aria, Radix, MUI, or your own components.
-- **It's accessible by default.** It follows `prefers-reduced-motion`. Morphing text stays real, selectable text for screen readers. Focus survives elements being replaced, and changes can be announced.
+- **A library** (`@remold-ui/*`) for morphing and for following changes on a page. The core is plain TypeScript, with React bindings and a plain-JavaScript API for everything else.
+- **Copy-in components** on the docs site. They're ordinary React components and they use more than Remold: [Base UI](https://base-ui.com) for behaviour and accessibility, [Motion](https://motion.dev) for most of the springs, enter and exit animations and shared-element moves, and Remold for the morphing, the connector lines and the particles.
+
+If you need springs and enter and exit animations, Motion on its own is the right tool. Remold is for the moments when one thing turns into another.
+
+## What it does
+
+### Morphing
+
+When a change swaps one thing for another, Remold reshapes the old one into the new one, so people can see what became what.
+
+- **Text.** `Remold.Text` and `morphText()` turn "Saving" into "Saved" letter by letter: shared letters slide into place and the rest fade. It stays real, selectable text for screen readers.
+- **Icons.** `Remold.Icon` reshapes the strokes of one icon into the next, from any icon set (Hugeicons, Lucide, your own) or from path data, and keeps the icon's own fill and stroke.
+- **SVG paths and illustrations.** `createMorph()` and `Remold.PathGroup` pair up the subpaths of two shapes on their own, so a logo can become another logo, or a cooking pot a delivery bag. `@remold-ui/morph` is the same engine on its own, for Motion, GSAP or your own clock.
+- **Layouts.** `Remold.Layout` and `transition()` read the page before and after a change and pair elements by what they show, with no ids to add. Only what changed moves.
+
+### Connectors
+
+`Remold.Connectors` and `Remold.Anchor` draw lines between elements that stay attached while those elements move. Lines draw in and out and can carry pulses, for comment threads, course outlines, product tours and step progress.
+
+### Particles and canvas
+
+`Remold.Particles`, `Remold.DotGrid`, `Remold.Globe` and `Remold.Scene` are live canvas pieces: point clouds that re-form from one shape into the next with no keys to match, dot grids that answer the cursor, a dotted globe, and isometric scenes whose layouts spring between each other.
+
+### Around all of it
+
+- **Any framework.** The core has no browser code. On top of it are React bindings and a DOM API for Vue, Svelte, Angular, Solid or no framework at all. It reads what's already rendered, so it sits alongside Base UI, React Aria, Radix, MUI or your own components.
+- **Reduced motion and assistive tech.** It follows `prefers-reduced-motion`, morphing text stays real text, and focus survives elements being replaced.
 
 ## Quick start
 
@@ -123,13 +147,14 @@ React hooks: `useRemold()` for interactive changes that may be interrupted, `use
 
 ## Components
 
-The docs ship copy-in components built on these primitives. Each one solves a specific product problem, with motion only on the change that matters. Every component page has an install command for the shadcn registry, which copies its code and CSS into your project.
+The docs site has around 55 copy-in components. Each one solves a specific product problem and animates only the change that matters. They're React components that depend on `motion` and `@base-ui/react` as well as Remold; every page has a shadcn registry install command that copies the code and CSS into your project and adds what it needs.
 
 | | |
 | --- | --- |
-| **Interface** | Command palette · Product tour · Save button · Step progress · Avatar stack · Bulk selection · Comment thread · Course outline · Filter bar · Flight rebooking · Hold to record · Invite pill · Invite teammates · Label picker · Live room · Logo morph · Mentions · Morph icons · Onboarding checklist · One-time code · Two-factor setup · Usage meter · Wallet and more |
-| **Form elements** | Amount input · Phone input · Tag input · Address autocomplete · Quantity stepper · Promo code · Range slider · Upload row · Split amount |
-| **Particles and canvas** | Inbox triage · Donation goal · Dot grid hero · Focus timer · Live visitors · Unit chart · Voice orb |
+| **Interface** | API keys · Bulk selection · Cards · Command palette · Comment thread · Course outline · Currency converter · Event RSVP · Filter bar · Fluid popover menu · Hold to record · Invite teammates · Kitchen ticket · Label picker · Live room · Logo morph · Mentions · Morph icons · Music player · Onboarding checklist · One-time code · Price filter · Product tour · Project setup · Revenue · Save button · Seat calculator · Send a message · Send money · Share link · Signature · Step progress · Streak · Table booking · Task list · Two-factor setup · Usage meter · Wallet |
+| **Form elements** | Address autocomplete · Amount input · Phone input · Promo code · Quantity stepper · Range slider · Split amount · Tag input · Upload row |
+| **Illustrations** | Order tracker |
+| **Particles and canvas** | Donation goal · Dot grid hero · Focus timer · Inbox triage · Live visitors · Particles story · Unit chart · Voice orb |
 
 ## Packages
 
@@ -198,8 +223,10 @@ Issues and pull requests are welcome.
 - **Run the checks before you push:** `pnpm lint && pnpm typecheck && pnpm test`. Husky lints your staged files on commit.
 - **Components solve a specific problem.** Animate the one change that matters, and leave the rest still.
 
+## Built with
+
+The components lean on [Base UI](https://base-ui.com) for behaviour and accessibility, [Motion](https://motion.dev) for springs and shared-element animation, and [Hugeicons](https://hugeicons.com) for icons. The currency converter's rates come from [ExchangeRate-API](https://www.exchangerate-api.com).
+
 ## License
 
 [MIT](LICENSE) © Albert Dugba
-
-<sub>The README hero is drawn by [`scripts/readme-hero.py`](scripts/readme-hero.py). Run it from the repo root after changing it: `python3 scripts/readme-hero.py`.</sub>
