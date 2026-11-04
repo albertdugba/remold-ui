@@ -96,13 +96,6 @@ const PREVIEWS: Record<string, Preview> = {
     width: 460,
     surface: true,
   },
-  "avatar-stack": {
-    Component: load(() =>
-      import("./demos/avatar-stack").then((m) => m.AvatarStackDemo),
-    ),
-    width: 380,
-    surface: true,
-  },
   "invite-pill": {
     Component: load(() =>
       import("./demos/invite-pill").then((m) => m.InvitePillDemo),

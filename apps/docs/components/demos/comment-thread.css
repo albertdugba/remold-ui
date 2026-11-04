@@ -8,6 +8,8 @@
   --cx-line: #dcdce0;
   --cx-ink: #18181b;
   --cx-mention: #2563eb;
+  /* Its size comes from where it's placed, not its contents (it's a size container), so it fills it. */
+  width: 100%;
   margin: 1.5rem 0;
   border: 1px solid var(--cx-border);
   border-radius: 14px;

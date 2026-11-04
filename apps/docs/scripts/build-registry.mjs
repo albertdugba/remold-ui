@@ -116,11 +116,6 @@ const ITEMS = [
     "Checkout steps joined by lines: finishing a step turns its dot into a check and fills the line to the next, and going back undoes both.",
   ],
   [
-    "avatar-stack",
-    "Avatar stack",
-    "Overlapping faces with a +3 for the rest: opening it loosens the stack and the three faces it stood for join the row, then fold back on close.",
-  ],
-  [
     "invite-pill",
     "Invite pill",
     "The faces on a file and an Invite button in one pill: it opens into an email field, and sending folds it back as the person you invited joins the front of the stack.",

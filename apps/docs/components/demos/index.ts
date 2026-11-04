@@ -25,7 +25,6 @@ export { TableBookingDemo } from "./table-booking";
 export { OtpInputDemo } from "./otp-input";
 export { LiveRoomDemo } from "./live-room";
 export { StepProgressDemo } from "./step-progress";
-export { AvatarStackDemo } from "./avatar-stack";
 export { InvitePillDemo } from "./invite-pill";
 export { SaveButtonDemo } from "./save-button";
 export { CommandPaletteDemo } from "./command-palette";
