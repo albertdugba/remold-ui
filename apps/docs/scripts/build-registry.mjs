@@ -116,9 +116,9 @@ const ITEMS = [
     "Checkout steps joined by lines: finishing a step turns its dot into a check and fills the line to the next, and going back undoes both.",
   ],
   [
-    "invite-pill",
-    "Invite pill",
-    "The faces on a file and an Invite button in one pill: it opens into an email field, and sending folds it back as the person you invited joins the front of the stack.",
+    "share-link",
+    "Share link",
+    "A Share pill that opens into the link, who it lets in and a Copy button; copying says so, then folds back into the pill. Built on Base UI's Button and Toggle Group.",
   ],
   [
     "save-button",

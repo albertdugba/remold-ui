@@ -96,11 +96,11 @@ const PREVIEWS: Record<string, Preview> = {
     width: 460,
     surface: true,
   },
-  "invite-pill": {
+  "share-link": {
     Component: load(() =>
-      import("./demos/invite-pill").then((m) => m.InvitePillDemo),
+      import("./demos/share-link").then((m) => m.ShareLinkDemo),
     ),
-    width: 420,
+    width: 520,
     surface: true,
   },
   "save-button": {

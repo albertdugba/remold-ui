@@ -3,6 +3,7 @@
   "pages": [
     "!index",
     "---Interface---",
+    "share-link",
     "signature",
     "cards",
     "api-keys",
@@ -14,7 +15,6 @@
     "filter-bar",
     "fluid-popover",
     "hold-to-record",
-    "invite-pill",
     "invite-team",
     "kitchen-ticket",
     "label-picker",
