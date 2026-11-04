@@ -118,7 +118,7 @@ const ITEMS = [
   [
     "share-link",
     "Share link",
-    "A Share pill that opens into the link, who it lets in and a Copy button; copying says so, then folds back into the pill. Built on Base UI's Button and Toggle Group.",
+    "A Share pill with the faces of who can already open the file: it opens into the link, who it lets in and a Copy button, and copying folds it back. Built on Base UI's Button, Toggle Group and Tooltip.",
   ],
   [
     "save-button",
