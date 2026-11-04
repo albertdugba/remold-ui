@@ -6,7 +6,6 @@
  * the front.
  */
 import { AnimatePresence, motion } from "motion/react";
-import "./odometer.css";
 
 const DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const SPIN = { type: "spring" as const, duration: 0.7, bounce: 0.12 };
@@ -14,16 +13,16 @@ const SPIN = { type: "spring" as const, duration: 0.7, bounce: 0.12 };
 export function Odometer({ value, className }: { value: string; className?: string }) {
   const chars = value.split("");
   return (
-    <span className={`odo ${className ?? ""}`} aria-label={value}>
+    <span className={`inline-flex whitespace-nowrap leading-none tabular-nums ${className ?? ""}`} aria-label={value}>
       <AnimatePresence initial={false} mode="popLayout">
-        {chars.map((char, i) => {
-          const place = chars.length - i;
+        {chars.map((char, index) => {
+          const place = chars.length - index;
           const digit = /\d/.test(char) ? Number(char) : null;
           return (
             <motion.span
               key={digit === null ? `s${place}${char}` : `d${place}`}
               layout="position"
-              className="odo-col"
+              className="inline-block"
               aria-hidden="true"
               initial={{ opacity: 0, y: "-40%" }}
               animate={{ opacity: 1, y: 0 }}
@@ -33,12 +32,12 @@ export function Odometer({ value, className }: { value: string; className?: stri
               {digit === null ? (
                 char
               ) : (
-                <span className="odo-window">
+                <span className="relative inline-block align-top overflow-hidden">
                   {/* Sized by a hidden digit, so the column is exactly one character tall. */}
-                  <span className="odo-sizer">0</span>
-                  <motion.span className="odo-strip" initial={false} animate={{ y: `${-digit * 10}%` }} transition={SPIN}>
+                  <span className="invisible">0</span>
+                  <motion.span className="absolute top-0 left-0 flex w-full flex-col" initial={false} animate={{ y: `${-digit * 10}%` }} transition={SPIN}>
                     {DIGITS.map((d) => (
-                      <span key={d}>{d}</span>
+                      <span key={d} className="block h-[1em] text-center leading-none">{d}</span>
                     ))}
                   </motion.span>
                 </span>

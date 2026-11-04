@@ -1,17 +1,19 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Remold } from "@remold-ui/react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import {
   useEffect,
   useRef,
+  useState,
   type ClipboardEvent,
   type CSSProperties,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
 import { Frame } from "./frame";
-import { useScene } from "./use-scene";
+import { typing, useScene } from "./use-scene";
 import "./invite-team.css";
 
 interface Person {
@@ -75,9 +77,9 @@ const REST: State = {
 
 const BEATS: readonly (State & { ms: number })[] = [
   { ...REST, ms: 1400 },
-  { ...REST, draft: MAYA.email, ms: 650 },
+  ...typing(MAYA.email, (draft) => ({ ...REST, draft }), { every: 40, hold: 650 }),
   { ...REST, chips: [MAYA], ms: 650 },
-  { ...REST, chips: [MAYA], draft: SAM.email, ms: 650 },
+  ...typing(SAM.email, (draft) => ({ ...REST, chips: [MAYA], draft }), { every: 40, hold: 650 }),
   { ...REST, chips: [MAYA, SAM], ms: 1000 },
   {
     ...REST,
@@ -114,6 +116,9 @@ const TRAVEL = { type: "spring" as const, duration: 0.55, bounce: 0.14 };
 
 const WAIT = 1500;
 const APART = 1100;
+/** How long Invite says what it sent, and how long someone who just joined stays picked out. */
+const SENT_FOR = 1400;
+const JOINED_FOR = 1600;
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -168,47 +173,71 @@ export function InviteTeamDemo({
     return () => all.forEach(clearTimeout);
   }, []);
 
+  // Invite says what it just sent for a moment, then goes back to "Invite".
+  const [sentCount, setSentCount] = useState(0);
+  const pendingBefore = useRef(state.pending.length);
+  useEffect(() => {
+    const added = state.pending.length - pendingBefore.current;
+    pendingBefore.current = state.pending.length;
+    if (added <= 0) return;
+    setSentCount(added);
+    const t = setTimeout(() => setSentCount(0), SENT_FOR);
+    return () => clearTimeout(t);
+  }, [state.pending.length]);
+
+  // Someone who just joined is picked out in their new row, then settles in with the rest.
+  const [joined, setJoined] = useState<string | null>(null);
+  const teamBefore = useRef(new Set(state.team.map((who) => who.email)));
+  useEffect(() => {
+    const newcomer = state.team.find((who) => !teamBefore.current.has(who.email));
+    teamBefore.current = new Set(state.team.map((who) => who.email));
+    if (!newcomer) return;
+    setJoined(newcomer.email);
+    const t = setTimeout(() => setJoined(null), JOINED_FOR);
+    return () => clearTimeout(t);
+  }, [state.team]);
+
   const add = (text: string) => {
     const found = text
       .split(/[\s,;]+/)
-      .map((e) => e.trim().toLowerCase())
+      .map((email) => email.trim().toLowerCase())
       .filter(Boolean);
     if (!found.length) return true;
-    const bad = found.find((e) => !EMAIL.test(e));
+    const bad = found.find((email) => !EMAIL.test(email));
     if (bad) {
-      take((s) => ({
-        ...s,
+      take((current) => ({
+        ...current,
         note: `${bad} doesn't look like an email`,
         tone: "bad",
       }));
       return false;
     }
-    take((s) => {
+    take((current) => {
       const taken = new Set(
-        [...s.team, ...s.pending, ...s.chips].map((p) => p.email),
+        [...current.team, ...current.pending, ...current.chips].map((person) => person.email),
       );
-      const fresh = [...new Set(found)].filter((e) => !taken.has(e));
+      const fresh = [...new Set(found)].filter((email) => !taken.has(email));
       const already = found.length - fresh.length;
-      const chips = [...s.chips, ...fresh.map((e) => person(e))];
-      if (!already) return { ...s, draft: "", chips };
+      const chips = [...current.chips, ...fresh.map(person)];
+      if (!already) return { ...current, draft: "", chips };
       const note =
         found.length === 1
           ? "They're already on the team or invited"
           : `${already} already on the team or invited`;
-      return { ...s, draft: "", chips, note, tone: "bad" };
+      return { ...current, draft: "", chips, note, tone: "bad" };
     });
     return true;
   };
 
   const join = (email: string) => {
     timers.current.delete(email);
-    take((s) => {
-      const who = s.pending.find((p) => p.email === email);
-      if (!who) return s;
+    take((current) => {
+      const who = current.pending.find((p) => p.email === email);
+      if (!who) return current;
       return {
-        ...s,
-        pending: s.pending.filter((p) => p !== who),
-        team: [...s.team, who],
+        ...current,
+        pending: current.pending.filter((p) => p !== who),
+        team: [...current.team, who],
         note: `${who.first} joined the team`,
         tone: "good",
       };
@@ -217,35 +246,37 @@ export function InviteTeamDemo({
 
   useEffect(() => {
     if (scene.live) return;
-    state.pending.forEach((p, i) => {
+    state.pending.forEach((p, index) => {
       if (!timers.current.has(p.email))
         timers.current.set(
           p.email,
-          setTimeout(() => join(p.email), WAIT + i * APART),
+          setTimeout(() => join(p.email), WAIT + index * APART),
         );
     });
   });
 
   const send = (event: FormEvent) => {
     event.preventDefault();
+    // While it still says "Sent", pressing it with nothing new to send does nothing.
+    if (sentCount && !state.chips.length && !state.draft.trim()) return;
     if (!add(state.draft)) return;
-    take((s) => {
-      if (!s.chips.length)
-        return { ...s, note: "Add an email to invite", tone: "bad" };
-      const sent = s.chips;
-      sent.forEach((p, i) =>
+    take((current) => {
+      if (!current.chips.length)
+        return { ...current, note: "Add an email to invite", tone: "bad" };
+      const sent = current.chips;
+      sent.forEach((p, index) =>
         timers.current.set(
           p.email,
           setTimeout(
             () => join(p.email),
-            WAIT + (s.pending.length + i) * APART,
+            WAIT + (current.pending.length + index) * APART,
           ),
         ),
       );
       return {
-        ...s,
+        ...current,
         chips: [],
-        pending: [...s.pending, ...sent],
+        pending: [...current.pending, ...sent],
         note:
           sent.length === 1
             ? `Invite sent to ${sent[0]!.email}`
@@ -259,9 +290,9 @@ export function InviteTeamDemo({
   const revoke = (who: Person) => {
     clearTimeout(timers.current.get(who.email));
     timers.current.delete(who.email);
-    take((s) => ({
-      ...s,
-      pending: s.pending.filter((p) => p !== who),
+    take((current) => ({
+      ...current,
+      pending: current.pending.filter((p) => p !== who),
       note: `Invite to ${who.email} revoked`,
       tone: undefined,
     }));
@@ -279,7 +310,7 @@ export function InviteTeamDemo({
       !state.draft &&
       state.chips.length
     ) {
-      take((s) => ({ ...s, chips: s.chips.slice(0, -1) }));
+      take((current) => ({ ...current, chips: current.chips.slice(0, -1) }));
     }
   };
 
@@ -303,8 +334,8 @@ export function InviteTeamDemo({
           <div
             className="iv-field"
             data-invalid={state.tone === "bad" ? "" : undefined}
-            onPointerDown={(e) =>
-              e.target === e.currentTarget && input.current?.focus()
+            onPointerDown={(event) =>
+              event.target === event.currentTarget && input.current?.focus()
             }
           >
             <AnimatePresence initial={false}>
@@ -317,9 +348,9 @@ export function InviteTeamDemo({
                   className="iv-chip-remove"
                   aria-label={`Remove ${chip.email}`}
                   onClick={() =>
-                    take((s) => ({
-                      ...s,
-                      chips: s.chips.filter((c) => c !== chip),
+                    take((current) => ({
+                      ...current,
+                      chips: current.chips.filter((c) => c !== chip),
                     }))
                   }
                 >
@@ -342,22 +373,29 @@ export function InviteTeamDemo({
                 autoComplete="off"
                 spellCheck={false}
                 onChange={(event) =>
-                  take((s) => ({
-                    ...s,
+                  take((current) => ({
+                    ...current,
                     draft: event.target.value,
-                    tone: s.tone === "bad" ? undefined : s.tone,
+                    tone: current.tone === "bad" ? undefined : current.tone,
                   }))
                 }
                 onKeyDown={onKeyDown}
                 onPaste={onPaste}
               />
-              <button
+              <motion.button
+                layout
+                transition={SPRING}
                 type="submit"
                 className="iv-send"
-                disabled={!state.chips.length && !state.draft.trim()}
+                data-sent={sentCount > 0 || undefined}
+                disabled={!sentCount && !state.chips.length && !state.draft.trim()}
               >
-                Invite
-              </button>
+                <motion.span layout="position" className="inline-block">
+                  <Remold.Text>
+                    {sentCount === 0 ? "Invite" : sentCount === 1 ? "Sent" : `Sent to ${sentCount}`}
+                  </Remold.Text>
+                </motion.span>
+              </motion.button>
             </span>
           </div>
         </form>
@@ -383,7 +421,14 @@ export function InviteTeamDemo({
             </motion.li>
           ))}
           {byName(state.team).map((who) => (
-            <motion.li layout transition={SPRING} {...ROW} key={`team:${who.email}`} className="iv-row">
+            <motion.li
+              layout
+              transition={SPRING}
+              {...ROW}
+              key={`team:${who.email}`}
+              className="iv-row"
+              data-joined={who.email === joined || undefined}
+            >
               <Avatar person={who} className="iv-row-avatar" />
               <span className="iv-row-copy">
                 <span className="iv-name">{who.name}</span>

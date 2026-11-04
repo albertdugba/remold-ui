@@ -9,8 +9,6 @@ tags: ["Morph", "Base UI"]
   <RevenueCardDemo />
 </Stage>
 
-It plays a short scene while it's on screen. Touch it and it's yours.
-
 ## Things to try
 
 - **Switch between 7, 30 and 90 days.** The chart line doesn't redraw: it reshapes into the new range.
@@ -29,7 +27,7 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **One line, reshaped.** The chart line and the badge's arrow are paths morphed with Remold's [`createMorph`](/docs/core/shapes), so a new range is the same line moving into new points, and up and down are the same arrow turning.
+- **One line, reshaped.** The chart line is a path morphed with Remold's [`createMorph`](/docs/core/shapes) and the badge's arrow is a `Remold.Icon`, so a new range is the same line moving into new points, and up and down are the same arrow turning.
 - The range switch is Base UI's Toggle Group; the figures roll with a small odometer built on Motion.
 
 <Callout>The numbers are made up.</Callout>

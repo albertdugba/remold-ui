@@ -9,8 +9,6 @@ tags: ["Motion"]
   <HoldToRecordDemo />
 </Stage>
 
-It plays a short scene while it's on screen. Touch it and it's yours.
-
 ## Things to try
 
 - **Hold it.** The mic morphs into a red record dot, "Hold to record" rewrites itself into the time, and the waveform grows out of the pill as you speak.
@@ -32,7 +30,7 @@ The install command adds these for you. If you copy the code by hand, install th
 ## How it works
 
 - **Nothing is swapped.** The pill has the same four parts in every phase: the icon, the words, the waveform and the ×. Phases only change what they show and how wide they are, so each part reshapes instead of fading out while a new one fades in.
-- Motion lays out the pill and controls across phases; the waveform and clock are ordinary updates.
+- **The pill springs its real width.** It measures what it holds and springs to that width with Motion, clipping what's inside, so the icon, words and waveform are never stretched while it grows or shrinks. The waveform and clock are ordinary updates.
 - **Holding** uses pointer capture, so the gesture survives a finger drifting off the pill.
 
 The levels are generated so the demo needs no microphone. In an app, read them from an `AnalyserNode` on the `MediaRecorder`'s stream; nothing else changes.

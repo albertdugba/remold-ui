@@ -2,7 +2,6 @@
 import { Remold } from "@remold-ui/react";
 import { useState } from "react";
 import { Frame, Segmented } from "./frame";
-import "./text.css";
 
 const STATUSES = [
   "Uploading 3 files",
@@ -16,8 +15,8 @@ export function StatusDemo() {
 
   return (
     <Frame>
-      <div className="rm-status">
-        <Remold.Text className="rm-status-text">{STATUSES[index]!}</Remold.Text>
+      <div className="grid justify-items-center gap-4">
+        <Remold.Text className="text-[22px] font-semibold tracking-[-0.02em]">{STATUSES[index]!}</Remold.Text>
         <button
           type="button"
           className="rm-button"
@@ -48,7 +47,7 @@ export function PriceDemo({
   const plan = PLANS[billing];
 
   const body = (
-    <div className="rm-price">
+    <div className="grid justify-items-center gap-1.5 text-center">
       {index === undefined && (
         <Segmented
           label="Billing"
@@ -57,12 +56,12 @@ export function PriceDemo({
           options={["Monthly", "Yearly"] as const}
         />
       )}
-      <p className="rm-price-name">Team</p>
-      <p className="rm-price-amount">
+      <p className="mt-2.5 text-[13px] font-semibold text-[var(--color-fd-muted-foreground)]">Team</p>
+      <p className="flex items-baseline gap-2 text-[44px] font-bold tracking-[-0.03em] tabular-nums">
         <Remold.Text>{plan.price}</Remold.Text>
-        <Remold.Text className="rm-price-per">{plan.per}</Remold.Text>
+        <Remold.Text className="text-[15px] font-medium tracking-normal text-[var(--color-fd-muted-foreground)]">{plan.per}</Remold.Text>
       </p>
-      <Remold.Text className="rm-price-note">{plan.note}</Remold.Text>
+      <Remold.Text className="text-[13px] text-[var(--color-fd-muted-foreground)]">{plan.note}</Remold.Text>
     </div>
   );
 

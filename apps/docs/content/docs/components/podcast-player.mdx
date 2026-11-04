@@ -1,20 +1,20 @@
 ---
-title: "Podcast"
-description: "A mini now-playing bar that opens into the full player: the artwork grows from a thumbnail into the cover, and the title, show and play button settle into place, matched with no ids."
+title: "Music player"
+description: "A mini now-playing bar that opens into the full player: the artwork grows from a thumbnail into the cover, the title, artist and play button settle into place, and sound waves move while it plays."
 status: "new"
 tags: ["Motion", "Icon", "Real audio"]
 ---
 
 <Stage name="podcast-player" code={<Source demo="podcast-player" />}>
-  <PodcastPlayerDemo source="/api/podcasts" credit="Episode from Apple Podcasts." />
+  <PodcastPlayerDemo source="/api/music" credit={<AppleMusicBadge />} />
 </Stage>
 
 Press play, or tap the bar, to open the player; the chevron folds it back.
 
 ## Things to try
 
-- **Open the player.** The thumbnail grows into the cover, the title and show lift into place under it, and the play button settles into the middle of the controls.
-- **Press play.** The player has a scrubber, skip back 15 and forward 30, and on this page it plays the real episode.
+- **Open the player.** The thumbnail grows into the cover, the title and artist lift into place under it, and the play button settles into the middle of the controls.
+- **Press play.** The sound waves start to move, and the part already played darkens. The player has a scrubber, skip back 15 and forward 30, and on this page it plays the real song preview.
 - **Fold it back** with the chevron. The cover shrinks back into exactly the thumbnail it came from.
 - **Open it halfway through closing.** Every change starts from where things are on screen, so it just turns around.
 
@@ -33,6 +33,6 @@ Press play, or tap the bar, to open the player; the chevron folds it back.
 - `episodes` takes `{ id, show, title, artwork, colors, audio, seconds }`, and the first one plays. With `audio` the player plays the file; without it, play just runs the clock.
 
 <Callout>
-  On this page the episode is the newest design podcast from Apple Podcasts, through a small cached server route; the show and artwork
-  belong to their creators. Installed, the component shows a made-up show with drawn artwork.
+  On this page the songs are Kofi Kinaata's 30-second previews from Apple Music, through a small cached server route; the music and
+  artwork belong to their creators. Installed, the component shows a made-up show with drawn artwork.
 </Callout>

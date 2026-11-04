@@ -27,7 +27,7 @@ export function useScramble(target: string, { duration = 0.7, steady = "•·_-"
     if (from === target) return;
     const length = Math.max(from.length, target.length);
     // Each character settles at its own moment: left to right, with a little jitter.
-    const settle = Array.from({ length }, (_, i) => 0.15 + (i / length) * 0.65 + Math.random() * 0.2);
+    const settle = Array.from({ length }, (_, index) => 0.15 + (index / length) * 0.65 + Math.random() * 0.2);
     const controls = animate(0, 1, {
       duration,
       ease: "linear",

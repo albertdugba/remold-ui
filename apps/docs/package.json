@@ -20,6 +20,7 @@
     "@remold-ui/core": "workspace:*",
     "@remold-ui/dom": "workspace:*",
     "@remold-ui/react": "workspace:*",
+    "@tanstack/react-table": "8.21.3",
     "fumadocs-core": "16.17.2",
     "fumadocs-mdx": "15.4.7",
     "fumadocs-ui": "npm:@fumadocs/base-ui@16.17.2",

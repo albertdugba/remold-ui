@@ -31,6 +31,12 @@ export interface PageSnapshot {
 export const IGNORE_ATTRIBUTE = "data-rm-ignore";
 
 /**
+ * An element's media identity, in place of one read from its content. An icon that reshapes
+ * itself (as `Remold.Icon` does) sets it, so it stays the same element while its drawing changes.
+ */
+export const MEDIA_ATTRIBUTE = "data-rm-media";
+
+/**
  * Elements whose letters `morphText` animates, mapped to the hidden span holding their current text.
  * They're read as one piece of text, and their letter spans are left to the morph.
  */
@@ -73,6 +79,9 @@ export function fingerprint(value: string): string {
 const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
 
 function mediaIdentity(el: Element, style: CSSStyleDeclaration): string {
+  const own = el.getAttribute(MEDIA_ATTRIBUTE);
+  if (own) return fingerprint(own);
+
   const tag = el.tagName.toUpperCase();
 
   if (tag === "IMG") {

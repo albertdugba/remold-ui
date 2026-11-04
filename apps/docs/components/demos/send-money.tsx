@@ -1,9 +1,9 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Eraser01Icon, CheckIcon } from "@hugeicons/core-free-icons";
+import { ArrowRight02Icon, CheckIcon, Eraser01Icon, Loading03Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Remold } from "@remold-ui/react";
 import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
-import { MorphIcon } from "./morph-icon";
 import { useScene } from "./use-scene";
 import "./send-money.css";
 
@@ -44,9 +44,6 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "back"] as 
 type Key = (typeof KEYS)[number];
 
 /** Arrow, then two arcs that spin while it sends, then a check: two strokes each, so they morph cleanly. */
-const ARROW = "M5 12h14M13 6l6 6-6 6";
-const SPINNER = "M12 3a9 9 0 0 1 9 9M12 21a9 9 0 0 1-9-9";
-const CHECK = "M5 12.5l4.5 4.5M9.5 17L19 7";
 
 const ROLL = { type: "spring" as const, duration: 0.38, bounce: 0.18 };
 
@@ -57,15 +54,15 @@ function characters(raw: string) {
   if (!raw) return [{ key: "zero", char: "0", muted: true }];
   const [whole = "", cents] = raw.split(".");
   const out: { key: string; char: string; muted?: boolean }[] = [];
-  [...whole].forEach((char, i) => {
-    const after = whole.length - i - 1;
-    out.push({ key: `d${i}${char}`, char });
+  [...whole].forEach((char, index) => {
+    const after = whole.length - index - 1;
+    out.push({ key: `d${index}${char}`, char });
     // A comma is named by how many digits follow it, so it keeps its identity as it slides left.
     if (after > 0 && after % 3 === 0) out.push({ key: `c${after}`, char: "," });
   });
   if (cents !== undefined) {
     out.push({ key: "dot", char: "." });
-    [...cents].forEach((char, i) => out.push({ key: `f${i}${char}`, char }));
+    [...cents].forEach((char, index) => out.push({ key: `f${index}${char}`, char }));
   }
   return out;
 }
@@ -114,17 +111,17 @@ export function SendMoneyDemo({ playing }: SendMoneyDemoProps = {}) {
   // Sending takes a moment, then it's sent.
   useEffect(() => {
     if (scene.live || state.phase !== "sending") return;
-    const timer = setTimeout(() => take((s) => ({ ...s, phase: "sent" })), 1100);
+    const timer = setTimeout(() => take((current) => ({ ...current, phase: "sent" })), 1100);
     return () => clearTimeout(timer);
   }, [scene.live, state.phase, take]);
 
   const onKey = (key: Key) =>
-    take((s) => {
-      if (s.phase !== "edit") return s;
-      const next = press(s.raw, key);
-      if (!next) return s;
-      if ("refused" in next) return { ...s, refused: s.refused + 1, note: next.refused };
-      return { ...s, raw: next.raw, note: undefined };
+    take((current) => {
+      if (current.phase !== "edit") return current;
+      const next = press(current.raw, key);
+      if (!next) return current;
+      if ("refused" in next) return { ...current, refused: current.refused + 1, note: next.refused };
+      return { ...current, raw: next.raw, note: undefined };
     });
 
   // Typing goes through the same rules as the keypad; anything else the field would insert is ignored.
@@ -141,12 +138,12 @@ export function SendMoneyDemo({ playing }: SendMoneyDemoProps = {}) {
   };
 
   const onSend = () =>
-    take((s) => {
-      if (s.phase === "sent") return { raw: "", phase: "edit", refused: s.refused };
-      return Number(s.raw || 0) > 0 ? { ...s, phase: "sending", note: undefined } : s;
+    take((current) => {
+      if (current.phase === "sent") return { raw: "", phase: "edit", refused: current.refused };
+      return Number(current.raw || 0) > 0 ? { ...current, phase: "sending", note: undefined } : current;
     });
 
-  const icon = state.phase === "sending" ? SPINNER : state.phase === "sent" ? CHECK : ARROW;
+  const icon = state.phase === "sending" ? Loading03Icon : state.phase === "sent" ? Tick02Icon : ArrowRight02Icon;
   const hint =
     state.phase === "sent"
       ? { key: "sent", text: `Sent to ${TO.name.split(" ")[0]}`, tone: "good" }
@@ -290,7 +287,7 @@ export function SendMoneyDemo({ playing }: SendMoneyDemoProps = {}) {
           </AnimatePresence>
         </span>
         <span className="sm-send-icon" data-spinning={state.phase === "sending" || undefined}>
-          <MorphIcon d={icon} />
+          <Remold.Icon icon={<HugeiconsIcon icon={icon} />} strokeWidth={2} />
         </span>
       </motion.button>
     </section>

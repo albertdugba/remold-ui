@@ -1,0 +1,73 @@
+/* Tag input. Styling only: Motion grows each chip's fill and padding around the typed word. */
+.tag {
+  --fk-width: 360px;
+}
+
+.tag-box {
+  align-items: flex-start;
+  padding: 7px 8px;
+  cursor: text;
+}
+
+.tag-chips {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tag-chip {
+  --tag-fill: 1;
+  background: color-mix(in oklab, var(--fk-well) calc(var(--tag-fill) * 100%), transparent);
+  outline: none;
+}
+
+.tag-chip button {
+  max-width: calc(var(--tag-fill) * 20px);
+  overflow: hidden;
+  opacity: var(--tag-fill);
+}
+
+.tag-chip:focus-within,
+.tag-chip[data-highlighted] {
+  background: var(--fk-ink);
+  color: var(--fk-surface);
+}
+
+.tag-chip:focus-within .tag-hash,
+.tag-chip[data-highlighted] .tag-hash,
+.tag-chip:focus-within button,
+.tag-chip[data-highlighted] button {
+  color: inherit;
+}
+
+.tag-hash {
+  color: var(--fk-faint);
+  font-weight: 500;
+}
+
+.tag-input {
+  flex: 1 0 80px;
+  height: 28px;
+  font-size: 14px;
+}
+
+.tag-popup {
+  min-width: 220px;
+}
+
+.tag-check {
+  display: grid;
+  margin-left: auto;
+}
+
+.tag-check svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tag-popup .fk-option-note + .tag-check {
+  margin-left: 6px;
+}

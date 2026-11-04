@@ -4,14 +4,13 @@
  * grey ember reshapes into a full flame and catches colour, sparks burst out of it, the day count
  * rolls up, and today's dot on the week fills in.
  *
- * Built with Motion; the flame reshapes with Remold's `createMorph`, so the ember genuinely grows
+ * Built with Motion; the flame reshapes with `Remold.Icon`, so the ember genuinely grows
  * into the flame rather than one swapping for the other. It plays a short scene while it's on
  * screen. Touch it and it's yours.
  */
+import { Remold } from "@remold-ui/react";
 import { AnimatePresence, motion } from "motion/react";
-import { MorphIcon } from "./morph-icon";
 import { useScene } from "./use-scene";
-import "./streak.css";
 
 /** Each shape is an outline and its inner core, cut out with even-odd, so they morph part for part. */
 const EMBER =
@@ -28,11 +27,11 @@ const GROW = { type: "spring" as const, duration: 0.7, bounce: 0.35 };
 const ROLL = { type: "spring" as const, duration: 0.45, bounce: 0.2 };
 
 /** Sparks around the flame: angle in degrees, distance, size, colour. */
-const SPARKS = Array.from({ length: 14 }, (_, i) => ({
-  angle: (360 / 14) * i + (i % 2 ? 9 : -6),
-  distance: 62 + (i % 3) * 16,
-  size: 4 + (i % 3) * 2,
-  color: ["#fb923c", "#facc15", "#f472b6", "#f97316"][i % 4]!,
+const SPARKS = Array.from({ length: 14 }, (_, index) => ({
+  angle: (360 / 14) * index + (index % 2 ? 9 : -6),
+  distance: 62 + (index % 3) * 16,
+  size: 4 + (index % 3) * 2,
+  color: ["#fb923c", "#facc15", "#f472b6", "#f97316"][index % 4]!,
 }));
 
 interface State {
@@ -56,18 +55,19 @@ const fromBeat = (step: number): State => {
 function Count({ value }: { value: number }) {
   const digits = String(value).split("");
   return (
-    <span className="st-count" aria-label={String(value)}>
+    <span className="inline-flex text-[40px] font-[750] tracking-[-0.03em] text-(--st-ink) tabular-nums transition-colors duration-450 group-data-lit/streak:text-(--st-fire)" aria-label={String(value)}>
       <AnimatePresence initial={false} mode="popLayout">
-        {digits.map((d, i) => (
+        {digits.map((digit, index) => (
           <motion.span
-            key={`${digits.length - i}-${d}`}
+            key={`${digits.length - index}-${digit}`}
+            className="inline-block"
             initial={{ y: "70%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "-70%", opacity: 0 }}
             transition={ROLL}
             aria-hidden="true"
           >
-            {d}
+            {digit}
           </motion.span>
         ))}
       </AnimatePresence>
@@ -86,29 +86,30 @@ export function StreakDemo({ playing }: StreakDemoProps = {}) {
 
   // Finishing a lesson lights the flame; Continue moves on to the next day, ember again.
   const act = () =>
-    take((s) => (s.lit ? { ...s, lit: false } : { lit: true, days: s.days + 1, burst: s.burst + 1 }));
+    take((current) => (current.lit ? { ...current, lit: false } : { lit: true, days: current.days + 1, burst: current.burst + 1 }));
 
   return (
-    <section ref={scene.ref} className="st not-prose" aria-label="Daily streak" data-lit={state.lit || undefined}>
-      <div className="st-hero">
-        <span className="st-glow" aria-hidden="true" />
+    <section ref={scene.ref} className="not-prose group/streak grid w-[min(100%,340px)] justify-items-center rounded-[28px] bg-(--st-surface) px-[22px] pt-[26px] pb-5 text-center font-sans text-(--st-ink) [--st-fire-soft:#ffedd5] [--st-fire:#f97316] [--st-ink:#18181b] [--st-muted:#71717a] [--st-off:#e4e4e7] [--st-on-ink:#fafafa] [--st-surface:#ffffff] dark:[--st-fire-soft:rgb(251_146_60/0.16)] dark:[--st-fire:#fb923c] dark:[--st-ink:#fafafa] dark:[--st-muted:#a1a1aa] dark:[--st-off:#3a3a40] dark:[--st-on-ink:#18181b] dark:[--st-surface:#232327]" aria-label="Daily streak" data-lit={state.lit || undefined}>
+      <div className="relative grid size-32 place-items-center">
+        <span className="absolute inset-3.5 scale-60 rounded-full bg-[radial-gradient(circle,var(--st-fire-soft)_0%,transparent_70%)] opacity-0 transition-[opacity,scale] duration-[500ms,700ms] ease-[ease,cubic-bezier(0.2,0.8,0.3,1.2)] group-data-lit/streak:scale-125 group-data-lit/streak:opacity-100" aria-hidden="true" />
         <AnimatePresence>
           {state.lit && (
-            <span key={state.burst} className="st-sparks" aria-hidden="true">
-              {SPARKS.map((s, i) => {
-                const a = (s.angle * Math.PI) / 180;
+            <span key={state.burst} className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden="true">
+              {SPARKS.map((spark, index) => {
+                const radians = (spark.angle * Math.PI) / 180;
                 return (
                   <motion.i
-                    key={i}
-                    style={{ width: s.size, height: s.size, background: s.color }}
+                    key={index}
+                    className="absolute rounded-full"
+                    style={{ width: spark.size, height: spark.size, background: spark.color }}
                     initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
                     animate={{
-                      x: Math.cos(a) * s.distance,
-                      y: Math.sin(a) * s.distance - 8,
+                      x: Math.cos(radians) * spark.distance,
+                      y: Math.sin(radians) * spark.distance - 8,
                       scale: [0, 1.2, 0],
                       opacity: [1, 1, 0],
                     }}
-                    transition={{ duration: 0.9, ease: [0.15, 0.8, 0.3, 1], delay: 0.12 + (i % 3) * 0.03 }}
+                    transition={{ duration: 0.9, ease: [0.15, 0.8, 0.3, 1], delay: 0.12 + (index % 3) * 0.03 }}
                   />
                 );
               })}
@@ -116,19 +117,19 @@ export function StreakDemo({ playing }: StreakDemoProps = {}) {
           )}
         </AnimatePresence>
         <motion.span
-          className="st-flame"
+          className="grid origin-[50%_90%] text-(--st-off) transition-colors duration-450 group-data-lit/streak:text-(--st-fire) [&_svg]:size-26"
           animate={{ scale: state.lit ? [1, 1.12, 1] : 1, rotate: state.lit ? [0, -4, 3, 0] : 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <MorphIcon d={state.lit ? FLAME : EMBER} fill="currentColor" stroke="none" fillRule="evenodd" transition={GROW} />
+          <Remold.Icon path={state.lit ? FLAME : EMBER} viewBox="0 0 24 24" fill="currentColor" stroke="none" fillRule="evenodd" spring={{ duration: GROW.duration, bounce: GROW.bounce }} aria-hidden="true" />
         </motion.span>
       </div>
 
-      <p className="st-title">
+      <p className="mt-1.5 mb-0 flex items-baseline gap-2 text-[18px] font-semibold">
         <Count value={state.days} />
         <span>day streak</span>
       </p>
-      <div className="st-sub">
+      <div className="mt-1 grid min-h-10 text-[13.5px] leading-[1.45] text-(--st-muted)">
         <AnimatePresence initial={false} mode="popLayout">
           <motion.span
             key={state.lit ? "lit" : "waiting"}
@@ -142,25 +143,30 @@ export function StreakDemo({ playing }: StreakDemoProps = {}) {
         </AnimatePresence>
       </div>
 
-      <ol className="st-week" aria-label="This week">
-        {DAYS.map((d, i) => {
-          const done = i < TODAY || (i === TODAY && state.lit);
+      <ol className="m-0 mt-4 grid w-full list-none grid-cols-7 gap-1.5 rounded-2xl bg-[color-mix(in_oklab,var(--st-off)_45%,transparent)] px-2.5 py-3" aria-label="This week">
+        {DAYS.map((day, index) => {
+          const done = index < TODAY || (index === TODAY && state.lit);
           return (
-            <li key={i} data-today={i === TODAY || undefined} aria-label={`${d}${done ? ", done" : ""}`}>
-              <span className="st-day">{d}</span>
-              <span className="st-dot">
+            <li
+              key={index}
+              className="group/day grid justify-items-center gap-1.5"
+              data-today={index === TODAY || undefined}
+              aria-label={`${day}${done ? ", done" : ""}`}
+            >
+              <span className="text-[11.5px] font-semibold text-(--st-muted) group-data-today/day:text-(--st-fire)">{day}</span>
+              <span className="grid size-[26px] rounded-full bg-(--st-off) group-data-today/day:shadow-[0_0_0_2px_var(--st-surface),0_0_0_4px_color-mix(in_oklab,var(--st-fire)_45%,transparent)]">
                 <motion.span
-                  className="st-dot-fill"
+                  className="grid place-items-center rounded-full bg-(--st-fire)"
                   initial={false}
                   animate={{ scale: done ? 1 : 0, opacity: done ? 1 : 0 }}
-                  transition={{ ...GROW, delay: i === TODAY && done ? 0.35 : 0 }}
+                  transition={{ ...GROW, delay: index === TODAY && done ? 0.35 : 0 }}
                 >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="size-4 fill-none stroke-white [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:3]" viewBox="0 0 24 24" aria-hidden="true">
                     <motion.path
                       d="M6.5 12.5l3.5 3.5 7.5-8"
                       initial={false}
                       animate={{ pathLength: done ? 1 : 0 }}
-                      transition={{ duration: 0.35, delay: i === TODAY && done ? 0.5 : 0 }}
+                      transition={{ duration: 0.35, delay: index === TODAY && done ? 0.5 : 0 }}
                     />
                   </svg>
                 </motion.span>
@@ -170,7 +176,7 @@ export function StreakDemo({ playing }: StreakDemoProps = {}) {
         })}
       </ol>
 
-      <motion.button type="button" className="st-action" onClick={act} whileTap={{ scale: 0.97 }}>
+      <motion.button type="button" className="mt-4 h-12 w-full cursor-pointer rounded-full border-0 bg-(--st-ink) text-[15px] font-semibold text-(--st-on-ink) transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--st-fire) group-data-lit/streak:bg-(--st-fire) group-data-lit/streak:text-white" onClick={act} whileTap={{ scale: 0.97 }}>
         {state.lit ? "Continue" : "Finish today's lesson"}
       </motion.button>
     </section>

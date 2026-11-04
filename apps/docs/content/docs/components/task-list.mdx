@@ -9,11 +9,9 @@ tags: ["Motion"]
   <TaskListDemo />
 </Stage>
 
-It plays a short scene while it's on screen. Touch it and it's yours.
-
 ## Things to try
 
-- **Click an issue's status to complete it.** The row leaves its group, and its ID travels down into the folded Done row with the latest others.
+- **Click an issue's status to complete it.** The row leaves its group, and its ID travels down into the folded Done row with the latest others. It lands picked out in Done's colour, then settles in, and Done's count rolls up as it arrives.
 - **Open Done.** The IDs spread out of the folded row into rows of their own, newest first.
 - **Reopen a done issue.** It goes back to its own place in Todo or In Progress, and the rows around it make room.
 
@@ -29,5 +27,7 @@ It plays a short scene while it's on screen. Touch it and it's yours.
 
 - An issue's row and its ID in the folded Done row are different markup in different places. Motion gives both the same `layoutId`, so the issue travels between them instead of vanishing.
 - Opening Done is the same shared-layout transition in reverse: each ID in the folded row becomes the ID of a row.
+- **The counts roll.** Each group's count is an `Odometer`, so the number turns over instead of swapping. Done's count waits for the ID to land before it ticks, so the number follows what you see happen.
+- **The newest is picked out for a moment.** Only an issue that just joined Done gets the tint, so reopening one doesn't light up its neighbour.
 - Groups are just filtered from one list of issues and rendered again. Nothing tracks positions, so a reopened issue lands back in its original place.
 - Completing is pretend. Save it in `toggle`, and pass your own `ISSUES`.

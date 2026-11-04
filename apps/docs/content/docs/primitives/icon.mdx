@@ -41,11 +41,11 @@ On the server, and on the first paint in the browser, the icon is rendered exact
 
 ### Path data
 
-If your icons are path data rather than components, pass `d` instead. Several strokes go in one path:
+If your icons are SVG path data rather than components, pass `path` instead. Several strokes go in one path:
 
 ```tsx tab="React" tab-group="lang"
 <Remold.Icon
-  d={open ? "M6 6l12 12M18 6 6 18" : "M4 7h16M4 12h16M4 17h16"}
+  path={open ? "M6 6l12 12M18 6 6 18" : "M4 7h16M4 12h16M4 17h16"}
   fill="none"
   stroke="currentColor"
   strokeWidth={2}
@@ -95,16 +95,16 @@ Without React you drive the morph yourself: `createMorph` pairs the two paths an
           {") or a component ("}
           <code>{"Heart"}</code>
           {"). Give this or "}
-          <code>{"d"}</code>
+          <code>{"path"}</code>
           {"."}
         </>
       ),
     },
-    d: {
+    path: {
       type: "string",
       description: (
         <>
-          {"The icon as path data instead. Several strokes go in one path ("}
+          {"The icon as SVG path data instead of an icon component. Several strokes go in one path ("}
           <code>{'"M4 6h16M4 12h16"'}</code>
           {")."}
         </>

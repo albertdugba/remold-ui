@@ -51,7 +51,7 @@ const OBJECTS: SceneProps["objects"] = {
 const BASE = { x: -230, y: -200, z: 0, width: 400, depth: 360, height: 14 };
 const DB = { x: -40, y: -10, z: 14, width: 130, depth: 130, height: 90 };
 /** Snapshots in a row along the back of the platform, oldest first. */
-const slot = (i: number) => ({ x: -210 + i * 74, y: -180, z: 14, width: 60, depth: 60, height: 8 });
+const slot = (index: number) => ({ x: -210 + index * 74, y: -180, z: 14, width: 60, depth: 60, height: 8 });
 
 function layoutFor(phase: Phase, pick: Day): SceneProps["layouts"][string] {
   const level = phase === "healthy" ? 0.78 : phase === "restored" ? 0.74 : 0.22;
@@ -68,8 +68,8 @@ function layoutFor(phase: Phase, pick: Day): SceneProps["layouts"][string] {
       base: BASE,
       db: { ...DB, fill: level, color, delay: phase === "restored" ? 0.45 : 0 },
       ...Object.fromEntries(
-        DAYS.map((d, i) => {
-          const home = slot(i);
+        DAYS.map((d, index) => {
+          const home = slot(index);
           if (d.id !== pick || phase === "healthy" || phase === "incident") return [d.id, { ...home, ghost: 0.75 }];
           if (phase === "picked") return [d.id, { ...home, z: 70, ghost: 0, fill: 1, color: VIOLET }];
           // Restored: it arcs over and drops into the database, gone once it lands.
@@ -112,7 +112,7 @@ export function BackupRestore({ playing }: BackupRestoreProps = {}) {
   // A snapshot you pick restores itself a moment later.
   useEffect(() => {
     if (scene.live || state.phase !== "picked") return;
-    const t = setTimeout(() => take((s) => ({ ...s, phase: "restored" })), 900);
+    const t = setTimeout(() => take((current) => ({ ...current, phase: "restored" })), 900);
     return () => clearTimeout(t);
   }, [scene.live, state.phase, take]);
 

@@ -16,19 +16,64 @@ const LARGEST_SOURCE_FILE = 40_000;
  * doesn't live in components/demos, the folder under components it does live in. */
 const ITEMS = [
   [
+    "split-amount",
+    "Split amount",
+    "A bill splitter where toggling people re-divides the bar and rolls everyone's share, cents included. Built on Base UI's ToggleGroup.",
+  ],
+  [
+    "upload-row",
+    "Upload row",
+    "A file field whose progress chip grows into the file's row when the upload finishes. Built on Base UI's Field and Progress.",
+  ],
+  [
+    "range-slider",
+    "Range slider",
+    "A price range slider whose price rides above the handle while you drag and flies back into the label when you let go. Built on Base UI's Slider.",
+  ],
+  [
+    "price-filter",
+    "Price filter",
+    "A max-price filter: a stepper that stretches into a slider while you drag the price sideways, over a price histogram and a rolling count of what matches. Built on Base UI's Number Field and Slider.",
+  ],
+  [
+    "event-rsvp",
+    "Event RSVP",
+    "An RSVP button that grows into a sheet for your answer, saves with a progress bar, and becomes your spot. Built on Base UI's Button, Radio Group, Checkbox, Progress, Tooltip and Separator.",
+  ],
+  [
+    "promo-code",
+    "Promo code",
+    "A promo code field that shrinks into a chip when applied, slides in the discount and rolls the total; refused codes shake and say why. Built on Base UI's Field.",
+  ],
+  [
+    "quantity-stepper",
+    "Quantity stepper",
+    "An Add button that stretches into a quantity stepper whose count rolls, with the minus becoming a bin at one. Built on Base UI's NumberField.",
+  ],
+  [
+    "address-autocomplete",
+    "Address autocomplete",
+    "An address search whose chosen suggestion splits into street, area and postcode fields, each part moving into place. Built on Base UI's Autocomplete and Field.",
+  ],
+  [
+    "tag-input",
+    "Tag input",
+    "A tag field where the word you type becomes the chip in place: its fill and remove button grow in around the text. Built on Base UI's Combobox with Chips.",
+  ],
+  [
+    "phone-input",
+    "Phone input",
+    "A phone number field that formats as you type, regrouping the same digits with sliding separators when you change country. Built on Base UI's Field and Select.",
+  ],
+  [
+    "amount-input",
+    "Amount input",
+    "An amount field whose digits rise into place and separators slide, with a shake for refused input and a helper that morphs to say how far over your balance you are.",
+  ],
+  [
     "course-outline",
     "Course outline",
     "Modules and lessons joined by lines that stay attached as modules open and lessons are ticked off.",
-  ],
-  [
-    "integrations-hub",
-    "Integrations hub",
-    "Your product in the middle and its integrations around it, rearranging by category, with data flowing along the lines.",
-  ],
-  [
-    "product-anatomy",
-    "Product anatomy",
-    "Your product drawn as its layers: assembled, exploded with notes, or laid out in the order a request travels.",
   ],
   [
     "comment-thread",
@@ -41,14 +86,9 @@ const ITEMS = [
     "One pill you hold to record: the mic morphs into the record dot, the words into the time, and the waveform grows out of the pill, then it all folds back.",
   ],
   [
-    "flight-booking",
-    "Flight booking",
-    "A delayed flight becomes two alternatives, an updated boarding pass and an optional compact seat picker.",
-  ],
-  [
-    "swap-airports",
-    "Swap airports",
-    "A From and To where ⇄ sends each airport, code and city, into the other's place.",
+    "table-booking",
+    "Table booking",
+    "A restaurant booking that fell through offers two other times; the one you pick grows into the updated booking, whose party size opens a compact picker. Built on Base UI's Button, Toggle Group and Tooltip.",
   ],
   [
     "otp-input",
@@ -69,6 +109,31 @@ const ITEMS = [
     "podcast-player",
     "Podcast",
     "A mini now-playing bar that opens into the full player: the artwork grows from a thumbnail into the cover and the title, show and play button settle into place, matched with no ids.",
+  ],
+  [
+    "step-progress",
+    "Step progress",
+    "Checkout steps joined by lines: finishing a step turns its dot into a check and fills the line to the next, and going back undoes both.",
+  ],
+  [
+    "share-link",
+    "Share link",
+    "A Share pill with the faces of who can already open the file: it opens into the link, who it lets in and a Copy button, and copying folds it back. Built on Base UI's Button, Toggle Group and Tooltip.",
+  ],
+  [
+    "save-button",
+    "Save button",
+    "A save button that says what's happening: Saving with a spinner, Saved with a check, or a visible rollback and Retry when the save fails.",
+  ],
+  [
+    "product-tour",
+    "Product tour",
+    "A product tour where the spotlight springs from one control to the next, a line ties each tip to its target, and the tip grows out of the help button.",
+  ],
+  [
+    "command-palette",
+    "Command palette",
+    "A command palette that grows out of its search pill, keeps results in place as you type, and turns a scope into a chip in the field.",
   ],
   [
     "two-factor",
@@ -99,11 +164,6 @@ const ITEMS = [
     "logo-morph",
     "Logo morph",
     "Text whose glyph outlines flow into the next word or mark: product names by default, or any SVG path data you pass in.",
-  ],
-  [
-    "letters",
-    "Letters as geometry",
-    "Bend a word around the pointer and morph it into a logo.",
   ],
   [
     "voice-orb",
@@ -141,6 +201,11 @@ const ITEMS = [
     "A counter ticket whose ring fills as the order cooks, with a check and a cross that reshape into each other.",
   ],
   [
+    "order-tracker",
+    "Order tracker",
+    "A food order told like a short film: each stage plays live, then its illustration reshapes into the next, from the pot to the bag, the scooter and your front door.",
+  ],
+  [
     "send-money",
     "Send money",
     "A keypad for sending money: digits roll in, an amount over your balance is refused with a shake, and Send becomes a spinner then a check.",
@@ -148,7 +213,7 @@ const ITEMS = [
   [
     "currency-converter",
     "Currency converter",
-    "A transfer quote whose amounts roll as you type, and whose currencies Layout carries to the other side when you swap them.",
+    "A converter at today's real exchange rates that springs into a searchable currency list, and whose Send button says what it did.",
   ],
   [
     "donation-goal",
@@ -181,14 +246,9 @@ const ITEMS = [
     "An inbox where archived and deleted mail breaks into dust and pours into its tab, with multi-select, swipe, hover actions and an undo toast.",
   ],
   [
-    "assistant-answer",
-    "Assistant answer",
-    "An assistant's waiting, thinking and answering shown in one cloud of dots: a breathing orb, a turning ring, then the answer's headline as the reply streams in.",
-  ],
-  [
     "api-keys",
     "API keys",
-    "Creating an API key: the secret decodes once in a panel that folds into the newest row, scrambling into its masked form.",
+    "Creating an API key in one springing card: the secret decodes once, then travels into the newest row and scrambles into its masked form.",
   ],
   [
     "seat-calculator",
@@ -209,11 +269,6 @@ const ITEMS = [
     "bulk-select",
     "Bulk selection",
     "Rows you select by range, joined into bands, with an action bar whose count rolls and rows that fold away on delete.",
-  ],
-  [
-    "connection-banner",
-    "Back online",
-    "An offline banner that keeps your changes on this device and folds into a \"Back online\" pill when the connection returns.",
   ],
   [
     "filter-bar",

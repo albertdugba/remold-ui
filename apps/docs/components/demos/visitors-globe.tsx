@@ -43,7 +43,7 @@ const BEAT_MS = 2400;
 const BEATS = Array.from({ length: 12 }, () => ({ ms: BEAT_MS }));
 const VISITORS = [1284, 1291, 1287, 1302, 1298, 1311, 1306, 1319, 1313, 1301, 1295, 1288];
 const START = -20;
-const ORDER = CITIES.map((city, i) => ({ i, lon: (city.lon - START - 30 + 720) % 360 }))
+const ORDER = CITIES.map((city, index) => ({ i: index, lon: (city.lon - START - 30 + 720) % 360 }))
   .sort((a, b) => a.lon - b.lon)
   .map(({ i }) => i);
 const MARKERS = CITIES.filter((city) => city.now >= 40).map((city) => ({ ...city, size: 1.5, color: "#5b6b99" }));

@@ -1,0 +1,33 @@
+---
+title: "Tag input"
+description: "A tag field where the words you type become the tags: press comma or Enter and the chip forms around the text right where you typed it, with existing tags suggested as you go."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="tag-input" code={<Source demo="tag-input" />} minHeight={380}>
+  <TagInputDemo />
+</Stage>
+
+## Things to try
+
+- **Type a word and press comma.** The chip forms around the word without it moving.
+- **Pick a suggestion.** Existing tags are offered as you type; a new word is offered as a new tag.
+- **Press Backspace in an empty field.** The last tag comes off.
+
+## Install
+
+<AddCommand name="tag-input" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="tag-input" />
+
+## How it works
+
+- **Built on Base UI.** `Combobox` in `multiple` mode gives the chips, the suggestions, keyboard navigation and removal.
+- **The text becomes the chip.** A new chip starts with no padding and no fill, exactly where the typed text sat, then both grow in with Motion.
+
+<Callout>The suggested tags are examples.</Callout>

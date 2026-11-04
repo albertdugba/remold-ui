@@ -1,6 +1,18 @@
 import { source } from "@/lib/source";
 import { CATALOGUE } from "./catalogue";
 import { ComponentBrowser, type BrowserItem } from "./component-browser";
+import meta from "../content/docs/components/meta.json";
+
+/** Each component page's sidebar section ("---Form elements---"), by slug. */
+const SECTION: Record<string, string> = {};
+{
+  let section = "Interface";
+  for (const page of meta.pages) {
+    const header = page.match(/^---(.+)---$/);
+    if (header) section = header[1]!;
+    else SECTION[page] = section;
+  }
+}
 
 const ORDER = [
   "project-setup",
@@ -8,8 +20,7 @@ const ORDER = [
   "task-list",
   "comment-thread",
   "hold-to-record",
-  "flight-booking",
-  "swap-airports",
+  "table-booking",
   "otp-input",
   "live-room",
   "course-outline",
@@ -17,11 +28,8 @@ const ORDER = [
   "two-factor",
   "invite-team",
   "logo-morph",
-  "letters",
   "morph-icons",
   "voice-orb",
-  "integrations-hub",
-  "product-anatomy",
 ];
 
 /**
@@ -41,7 +49,7 @@ export function AllComponents() {
       title: page.data.title,
       description: page.data.description ?? "",
       href: page.url,
-      category: page.data.kind === "canvas" ? "Canvas" : page.data.kind === "particles" ? "Particles" : "Interface",
+      category: SECTION[page.url.split("/").pop()!] ?? "Interface",
       isNew: page.data.status === "new",
     }));
   const rank = (id: string) => {

@@ -19,11 +19,11 @@ PathGroup is React only for now. Without React, morph each part with `createMorp
 <Remold.PathGroup
   viewBox="0 0 200 200"
   paths={[
-    { id: "face", d: face, className: "face" },
-    { id: "extra", d: mood.extra, className: "extra" }, // a tear, or blushing cheeks
-    { id: "brows", d: mood.brows, fill: "none", stroke: "currentColor", strokeWidth: 7 },
-    { id: "eyes", d: mood.eyes, className: "eyes" },
-    { id: "mouth", d: mood.mouth, className: "mouth" },
+    { id: "face", path: face, className: "face" },
+    { id: "extra", path: mood.extra, className: "extra" }, // a tear, or blushing cheeks
+    { id: "brows", path: mood.brows, fill: "none", stroke: "currentColor", strokeWidth: 7 },
+    { id: "eyes", path: mood.eyes, className: "eyes" },
+    { id: "mouth", path: mood.mouth, className: "mouth" },
   ]}
 />
 ```

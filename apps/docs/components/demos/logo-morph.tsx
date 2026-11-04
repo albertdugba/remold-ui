@@ -36,6 +36,8 @@ export const DEFAULT_BRANDS: LogoBrand[] = [
   { name: "Cursor", mark: MARKS.cursor },
   { name: "Mercedes", mark: MARKS.mercedes },
   { name: "X", mark: MARKS.x },
+  { name: "Anthropic", mark: MARKS.anthropic },
+  { name: "Tesla", mark: MARKS.tesla },
 ];
 
 export type Form = "text" | "logo";
@@ -121,21 +123,21 @@ export function LogoMorph({
   color = "currentColor",
   every = 1800,
   bounce = 0.12,
-  autoplay: play = true,
+  autoplay: play = false,
   height = 300,
   selected,
   controls = true,
 }: LogoMorphProps) {
   const scene = useMemo(
     () =>
-      brands.flatMap((b, i): { brand: number; form: Form }[] =>
+      brands.flatMap((b, index): { brand: number; form: Form }[] =>
         b.mark
           ? [
-              { brand: i, form: "text" },
-              { brand: i, form: "logo" },
-              { brand: i, form: "text" },
+              { brand: index, form: "text" },
+              { brand: index, form: "logo" },
+              { brand: index, form: "text" },
             ]
-          : [{ brand: i, form: "text" }],
+          : [{ brand: index, form: "text" }],
       ),
     [brands],
   );
@@ -243,8 +245,8 @@ export function LogoMorph({
               className="flex flex-wrap gap-1"
               activateOnFocus
             >
-              {brands.map((b, i) => (
-                <Tabs.Tab key={b.name} value={i} className={chip}>
+              {brands.map((b, index) => (
+                <Tabs.Tab key={b.name} value={index} className={chip}>
                   {b.name}
                 </Tabs.Tab>
               ))}

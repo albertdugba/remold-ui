@@ -67,15 +67,15 @@ function layoutFor(team: Team): SceneProps["layouts"][string] {
     objects: {
       // Equal x − y keeps each group in an upright column on screen: people left, doors right.
       ...Object.fromEntries(
-        PEOPLE.map((p, i) => {
+        PEOPLE.map((p, index) => {
           const gone = team[p.id] === "removed";
-          const t = (i - 1) * 125;
+          const t = (index - 1) * 125;
           return [p.id, { x: -225 + t, y: -85 + t, z: gone ? 0 : 8, width: 70, depth: 70, height: gone ? 6 : 14, ghost: gone ? 0.9 : 0 }];
         }),
       ),
       ...Object.fromEntries(
-        RESOURCES.map((r, i) => {
-          const t = (i - 1) * 125;
+        RESOURCES.map((r, index) => {
+          const t = (index - 1) * 125;
           return [r.id, { x: 45 + t, y: -155 + t, z: 0, width: 90, depth: 90, height: 22 }];
         }),
       ),
@@ -144,7 +144,7 @@ export function RolesAccess({ playing }: RolesAccessProps = {}) {
             <Select.Root
               items={ROLES}
               value={state.team[p.id]}
-              onValueChange={(value) => value && take((s) => ({ team: { ...s.team, [p.id]: value as Role } }))}
+              onValueChange={(value) => value && take((current) => ({ team: { ...current.team, [p.id]: value as Role } }))}
               modal={false}
             >
               <Select.Trigger className="ra-role" aria-label={`${p.name}'s role`}>

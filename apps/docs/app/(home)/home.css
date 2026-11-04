@@ -17,6 +17,52 @@
   padding: 0 var(--hm-pad);
 }
 
+.ip {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  padding: clamp(72px, 10vw, 128px) var(--hm-pad) 80px;
+}
+
+.ip-head {
+  max-width: 620px;
+  margin-bottom: 40px;
+}
+
+.ip-head .hm-kicker {
+  margin: 0 0 14px;
+}
+
+.ip-head h1 {
+  margin: 0;
+  font-size: clamp(40px, 5vw, 68px);
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.ip-head > p:last-child {
+  margin: 20px 0 0;
+  color: var(--hm-muted);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.ip-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.ip-grid > * {
+  min-width: 0;
+  border-radius: 24px;
+}
+
+@media (max-width: 1000px) {
+  .ip-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Hero: left-aligned, the headline does the work */
 
 .hm-hero {
@@ -894,31 +940,6 @@
   color: var(--color-fd-muted-foreground);
 }
 
-/* Playground page */
-.pg-page {
-  padding-top: 56px;
-  padding-bottom: 72px;
-}
-
-.pg-head {
-  margin-bottom: 28px;
-}
-
-.pg-head h1 {
-  margin: 0;
-  font-size: clamp(32px, 5vw, 52px);
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.035em;
-}
-
-.pg-head p:not(.hm-kicker) {
-  margin: 14px 0 0;
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--color-fd-muted-foreground);
-}
-
 /* ───────────── Landing v3: centred hero, live showcase, galleries, dark band ───────────── */
 
 .hm-hero.center {
@@ -1550,12 +1571,275 @@
   align-items: start;
 }
 
+/* The gallery only exposes filters the examples actually describe: category and search. */
+.hp-filter {
+  margin-top: 28px;
+}
+
+.hp-filter-bar {
+  position: sticky;
+  top: 72px;
+  z-index: 20;
+  isolation: isolate;
+  padding: 18px 0 16px;
+  background: var(--color-fd-background);
+}
+
+.hp-filter-bar::before {
+  position: absolute;
+  z-index: -1;
+  top: -32px;
+  right: 0;
+  left: 0;
+  height: 32px;
+  background: inherit;
+  content: "";
+}
+
+.hp-filter .hp {
+  margin-top: 0;
+}
+
+.hp-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.hp-filter-slot {
+  position: relative;
+  display: inline-flex;
+}
+
+.hp-filter-select {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border: 1px solid var(--hm-line);
+  border-radius: 999px;
+  background: var(--color-fd-card);
+  color: var(--hm-ink);
+}
+
+.hp-filter-select {
+  gap: 6px;
+  padding: 0 10px 0 13px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.hp-filter-label {
+  color: var(--hm-muted);
+}
+
+.hp-filter-value {
+  color: var(--hm-ink);
+  font-weight: 600;
+}
+
+.hp-filter-select svg {
+  width: 13px;
+  height: 13px;
+  color: var(--hm-muted);
+  transition: transform 160ms ease;
+}
+
+.hp-filter-select[data-popup-open] svg {
+  transform: rotate(180deg);
+}
+
+
+/* With something picked the pill becomes a chip: the choice in bold, a firm outline, and room
+   for the clear button inside its right end. */
+.hp-filter-select[data-picked] {
+  padding-right: 36px;
+  border: 1.5px solid var(--hm-ink);
+}
+
+.hp-filter-clear {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--hm-ink);
+  color: var(--color-fd-background);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.hp-filter-clear:active {
+  transform: scale(0.9);
+}
+
+.hp-filter-clear svg {
+  width: 10px;
+  height: 10px;
+}
+
+.hp-filter-clear:focus-visible {
+  outline: 2px solid var(--hm-ink);
+  outline-offset: 2px;
+}
+
+/* The pill's menu: one shell just beneath the pill that springs out to the menu and back. */
+.hp-filter-shell {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  border-radius: 22px;
+  z-index: 40;
+  display: none;
+  overflow: clip;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  background: #393939;
+  color: #f5f5f5;
+  box-shadow: 0 24px 56px -18px rgb(0 0 0 / 0.48);
+}
+
+.hp-filter-shell[data-shown] {
+  display: block;
+}
+
+.hp-filter-menu {
+  outline: none;
+  transition:
+    opacity 100ms ease-out,
+    filter 100ms ease-out;
+}
+
+.hp-filter-menu[data-ending-style] {
+  opacity: 0;
+  filter: blur(3px);
+}
+
+.hp-filter-menu-inner {
+  width: 260px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.hp-filter-options {
+  display: grid;
+  gap: 2px;
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.22) transparent;
+}
+
+.hp-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 40px;
+  width: 100%;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 12px;
+  outline: 0;
+  background: transparent;
+  color: #f5f5f5;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hp-filter-option:hover,
+.hp-filter-option:focus-visible {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.hp-filter-option-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.14);
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.hp-filter-option[aria-pressed="true"] .hp-filter-option-mark {
+  background: #f5f5f5;
+  color: #252525;
+}
+
+.hp-filter-option-mark svg {
+  width: 12px;
+  height: 12px;
+}
+
+.hp-filter-select:focus-visible {
+  border-color: color-mix(in oklab, var(--hm-ink) 45%, var(--hm-line));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--hm-ink) 10%, transparent);
+}
+
+.hp-filter-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: var(--hm-muted);
+  font-size: 12px;
+}
+
+.hp-filter-summary button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--hm-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hp-filter-summary button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hp-filter-empty {
+  grid-column: 1 / -1;
+  margin: 28px 0;
+  color: var(--hm-muted);
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .hp-card {
   display: grid;
   grid-template-rows: 1fr auto;
   min-height: 420px;
   overflow: hidden;
-  border: 1px solid var(--hm-line);
+  border: 1px solid color-mix(in oklab, var(--hm-ink) 3%, transparent);
   border-radius: 24px;
   background: color-mix(in oklab, var(--hm-ink) 3%, var(--color-fd-background));
   container-type: inline-size;
@@ -1780,6 +2064,20 @@
   .hp-card.tall {
     width: min(100%, 560px);
   }
+  .hp-filter-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hp-filter-slot,
+  .hp-filter-select {
+    width: 100%;
+  }
+  .hp-filter-select svg {
+    margin-left: auto;
+  }
+  .hp-card:not(.wide, .full, .tall) {
+    aspect-ratio: auto;
+  }
   .hp-card.wide,
   .hp-card.tall {
     grid-column: auto;
@@ -1788,6 +2086,10 @@
 }
 
 @media (max-width: 640px) {
+  .hp-filter-bar {
+    top: 56px;
+  }
+
   .hm {
     --hm-pad: 12px;
   }
@@ -1841,6 +2143,12 @@
 
 .hp-card.tall .hp-stage {
   padding: 58px 58px 24px;
+}
+
+/* The comment thread across two columns: the post keeps its reading width, centred in the card. */
+.hp-card.wide.tall .hp-stage > .cx {
+  justify-self: center;
+  width: min(100%, 760px);
 }
 
 .hp-card.tall .hp-stage {

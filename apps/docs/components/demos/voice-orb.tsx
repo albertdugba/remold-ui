@@ -42,7 +42,7 @@ const CLOUDS = [
 const SOFT = { duration: 0.7, bounce: 0 };
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 const rgb = (hex: string) =>
-  [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ");
+  [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16)).join(", ");
 
 export interface VoiceOrbProps {
   state?: OrbState;
@@ -280,7 +280,8 @@ type Turn = {
 };
 
 export function VoiceOrbDemo({ index }: { index?: number } = {}) {
-  const auto = useAutoplay(SCENE.length, { every: (i) => SCENE[i]!.ms });
+  // Waits to be tapped on its docs page; the scripted scene only plays when there's no microphone.
+  const auto = useAutoplay(SCENE.length, { every: (index) => SCENE[index]!.ms, autoStart: false });
   const scripted = SCENE[index != null ? index % SCENE.length : auto.step]!;
   const speech = useSpeechRecognition();
   const [turn, setTurn] = useState<Turn | null>(null);

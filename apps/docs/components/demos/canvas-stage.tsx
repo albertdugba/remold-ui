@@ -39,7 +39,8 @@ export function CanvasStage({
   const layouts = Object.keys(scene.layouts);
   const [layout, setLayout] = useState(layouts[0]!);
   const [focused, setFocused] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(true);
+  // Waits for Play: the layouts only cycle on their own once you ask.
+  const [playing, setPlaying] = useState(false);
   const [visible, setVisible] = useState(false);
   const frame = useRef<HTMLDivElement>(null);
 

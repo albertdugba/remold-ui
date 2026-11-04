@@ -5,7 +5,8 @@
  */
 import Link from "next/link";
 import type { ComponentType } from "react";
-import { FilesDemo, IconsDemo, ParticlesDemo, PriceDemo, SceneDemo, FeedbackFaceDemo } from "./demos";
+import { FilesDemo, IconsDemo, ParticlesDemo, PriceDemo, SceneDemo } from "./demos";
+import { ReleaseStatusDemo } from "./demos/release-status";
 
 interface Item {
   title: string;
@@ -33,9 +34,9 @@ const ITEMS: Item[] = [
   { title: "Icon", description: "Icons that reshape from one state into the next.", href: "/docs/primitives/icon", Demo: IconsDemo },
   {
     title: "PathGroup",
-    description: "An illustration whose parts each morph.",
+    description: "A multi-part SVG whose pieces morph together.",
     href: "/docs/primitives/path-group",
-    Demo: FeedbackFaceDemo,
+    Demo: ReleaseStatusDemo,
     wide: true,
   },
   {

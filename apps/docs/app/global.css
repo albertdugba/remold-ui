@@ -644,16 +644,102 @@ html > body[data-scroll-locked] {
 
 .rm-browser-tools {
   display: flex;
-  align-items: end;
+  align-items: center;
+  gap: 10px;
+  margin: 1rem 0 12px;
+}
+
+.rm-browser-filters {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  margin: 1rem 0 2rem;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+/* Category chips, each with its count */
+.rm-browser-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rm-browser-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 9px;
+  background: var(--color-fd-background);
+  color: var(--color-fd-muted-foreground);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.rm-browser-chip span {
+  color: color-mix(in oklab, var(--color-fd-muted-foreground) 65%, transparent);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rm-browser-chip:hover {
+  color: var(--color-fd-foreground);
+}
+
+.rm-browser-chip[data-pressed] {
+  border-color: var(--color-fd-foreground);
+  background: var(--color-fd-foreground);
+  color: var(--color-fd-background);
+}
+
+.rm-browser-chip[data-pressed] span {
+  color: color-mix(in oklab, var(--color-fd-background) 65%, transparent);
+}
+
+/* Featured or A–Z */
+.rm-browser-sort {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  height: 38px;
+  padding: 3px;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 11px;
+  background: var(--color-fd-background);
+}
+
+.rm-browser-sort-item {
+  padding: 0 11px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-fd-muted-foreground);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rm-browser-sort-item[data-pressed] {
+  background: var(--color-fd-muted);
+  color: var(--color-fd-foreground);
+}
+
+.rm-browser-chip:focus-visible,
+.rm-browser-sort-item:focus-visible {
+  outline: 2px solid var(--color-fd-foreground);
+  outline-offset: 2px;
 }
 
 .rm-browser-count {
+  flex: none;
   margin: 0;
   color: var(--color-fd-muted-foreground);
-  font-size: 13px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 .rm-browser-count b {
@@ -663,14 +749,14 @@ html > body[data-scroll-locked] {
 
 .rm-browser-search {
   display: flex;
-  flex: 0 1 270px;
+  flex: 1;
   align-items: center;
   gap: 8px;
   width: 100%;
   height: 38px;
   padding: 0 13px;
   border: 1px solid var(--color-fd-border);
-  border-radius: 999px;
+  border-radius: 11px;
   background: var(--color-fd-background);
   transition: border-color 160ms ease-out, box-shadow 160ms ease-out;
 }
@@ -765,6 +851,19 @@ html > body[data-scroll-locked] {
   background: #fff;
 }
 
+/* Fitted to what's drawn: the tile is the backdrop, so no second white frame inside it, and only a
+   little air at the edges. */
+.rm-card .rm-preview[data-tight] {
+  --rm-preview-inset: 14px;
+}
+
+.rm-card .rm-preview[data-tight][data-surface] .rm-preview-inner,
+.dark .rm-card .rm-preview[data-tight][data-surface] .rm-preview-inner {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .dark .rm-card .rm-preview[data-surface] .rm-preview-inner {
   background: color-mix(in oklab, var(--color-fd-foreground) 9%, var(--color-fd-background));
 }
@@ -795,7 +894,7 @@ html > body[data-scroll-locked] {
 .rm-card-new {
   position: absolute;
   top: 10px;
-  left: 10px;
+  right: 10px;
   padding: 3px 7px;
   border-radius: 999px;
   background: var(--color-fd-background);
@@ -807,7 +906,7 @@ html > body[data-scroll-locked] {
   text-transform: uppercase;
 }
 
-.rm-card-meta { display: grid; gap: 4px; padding: 13px 14px 15px; }
+.rm-card-meta { display: grid; gap: 3px; padding: 11px 14px 13px; }
 
 .rm-card-meta strong {
   font-size: 14px;
@@ -823,11 +922,11 @@ html > body[data-scroll-locked] {
   font-size: 12px;
   line-height: 1.45;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 1;
 }
 
 @container (max-width: 620px) {
-  .rm-browser-tools { display: grid; gap: 14px; }
+  .rm-browser-filters { display: grid; gap: 10px; }
   .rm-browser-search { max-width: none; }
   .rm-browser-grid { grid-template-columns: 1fr; }
 }

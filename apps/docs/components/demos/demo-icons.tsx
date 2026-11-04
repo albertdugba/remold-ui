@@ -62,7 +62,7 @@ export function TaskStatusIcon({
 }: SvgProps & { status: "done" | "progress" | "todo" }) {
   return (
     <svg
-      className="tl-status-icon"
+      className="size-3.5 flex-none text-(--tl-todo) data-[status=done]:text-(--tl-done) data-[status=progress]:text-(--tl-progress)"
       data-status={status}
       viewBox="0 0 14 14"
       aria-hidden="true"

@@ -1,5 +1,6 @@
-/* Bulk selection. Styling only: Base UI draws the checkboxes and tooltips; Motion moves the rows,
-   the bar and the count. Tokens live on .bk-layer too, for the portalled tooltips. */
+/* Bulk selection. Styling only: TanStack Table models the rows and selection, Base UI draws the
+   checkboxes and tooltips, Motion moves the rows, the bar and the count. No outline or shadow
+   around the table. Tokens live on .bk-layer too, for the portalled tooltips. */
 .bk-layer {
   --bk-surface: #ffffff;
   --bk-ink: #18181b;
@@ -41,8 +42,18 @@
   padding: 10px 10px 12px;
   border-radius: 20px;
   background: var(--bk-surface);
-  box-shadow: 0 0 0 1px var(--bk-line), 0 12px 32px -18px rgb(0 0 0 / 0.25);
   color: var(--bk-ink);
+}
+
+/* Each TanStack cell wraps its content; the size and date sit at the right of theirs */
+.bk-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.bk-cell > :is(.bk-size, .bk-date, .bk-col-size, .bk-col-date) {
+  margin-left: auto;
 }
 
 /* Header: select-all, the title and count, the columns */

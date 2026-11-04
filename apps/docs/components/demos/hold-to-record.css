@@ -31,12 +31,10 @@
 }
 
 .rec-pill {
-  display: flex;
+  position: relative;
   flex: none;
-  align-items: center;
   height: 56px;
-  padding: 0 28px 0 10px;
-  overflow: hidden;
+  overflow: clip;
   border-radius: 999px;
   background: var(--rec-pill);
   white-space: nowrap;
@@ -47,12 +45,23 @@
   -webkit-touch-callout: none;
 }
 
-.rec-pill[data-phase="recording"] {
+.rec-inner {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  height: 100%;
+  padding: 0 28px 0 10px;
+}
+
+.rec-pill[data-phase="recording"] .rec-inner {
   padding-right: 22px;
 }
 
-.rec-pill[data-phase="clip"] {
+.rec-pill[data-phase="clip"] .rec-inner {
   padding-right: 10px;
+}
+
+.rec-pill[data-phase="clip"] {
   cursor: default;
 }
 

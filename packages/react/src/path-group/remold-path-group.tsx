@@ -12,9 +12,9 @@ import type { RemoldPathGroupProps, RemoldPathGroupState } from "./types.js";
  * <Remold.PathGroup
  *   viewBox="0 0 200 200"
  *   paths={[
- *     { id: "face", d: face },
- *     { id: "eyes", d: mood.eyes },
- *     { id: "mouth", d: mood.mouth },
+ *     { id: "face", path: face },
+ *     { id: "eyes", path: mood.eyes },
+ *     { id: "mouth", path: mood.mouth },
  *   ]}
  * />
  * ```
@@ -34,16 +34,16 @@ export const RemoldPathGroup = forwardRef(function RemoldPathGroup(
       props: {
         viewBox,
         ...svgProps,
-        children: paths.map(({ id, d, ...path }) => (
+        children: paths.map(({ id, path, ...look }) => (
           <RemoldIcon
             key={id}
-            d={d}
+            path={path}
             spring={spring}
             reducedMotion={reducedMotion}
             loop={loop}
             match={match}
             viewBox={viewBox}
-            {...(path as SVGAttributes<SVGSVGElement>)}
+            {...(look as SVGAttributes<SVGSVGElement>)}
           />
         )),
       } as SVGAttributes<SVGSVGElement> & Record<string, unknown>,

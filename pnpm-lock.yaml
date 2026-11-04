@@ -53,6 +53,9 @@ importers:
       '@remold-ui/react':
         specifier: workspace:*
         version: link:../../packages/react
+      '@tanstack/react-table':
+        specifier: 8.21.3
+        version: 8.21.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       fumadocs-core:
         specifier: 16.17.2
         version: 16.17.2(@mdx-js/mdx@3.1.1)(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.50.0(@types/react@19.3.0)(react@19.3.0))(next@16.3.8(@types/node@24.10.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(zod@4.6.7)
@@ -1476,6 +1479,17 @@ packages:
 
   '@tailwindcss/postcss@4.3.3':
     resolution: {integrity: sha512-JTSZZGQi1AyKirbLN3azmjVzef92tcX7h+iSqPdaeStyFpGpDlKvvpxeOE8njhbUanbRwr3z8DyzhICWnMtQeg==}
+
+  '@tanstack/react-table@8.21.3':
+    resolution: {integrity: sha512-5nNMTSETP4ykGegmVkhjcS8tTLW6Vl4axfEGQN3v0zdHYbK4UfoqfPChclTrJ4EoK9QynqAu9oUf8VEmrpZ5Ww==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+
+  '@tanstack/table-core@8.21.3':
+    resolution: {integrity: sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==}
+    engines: {node: '>=12'}
 
   '@turbo/darwin-64@2.11.7':
     resolution: {integrity: sha512-Z2LFOxwbiJueD1miByXJS/BrW21vv6YaQXZustty5jEX4vQYw6zyh101Sz1QO7WG0mqBzKagZ/DoAeeujI0/Sw==}
@@ -4350,6 +4364,14 @@ snapshots:
       '@tailwindcss/oxide': 4.3.3
       postcss: 8.5.28
       tailwindcss: 4.3.3
+
+  '@tanstack/react-table@8.21.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@tanstack/table-core': 8.21.3
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+
+  '@tanstack/table-core@8.21.3': {}
 
   '@turbo/darwin-64@2.11.7':
     optional: true

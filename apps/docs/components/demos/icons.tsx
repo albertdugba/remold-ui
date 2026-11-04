@@ -4,7 +4,6 @@ import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Add01Icon, Cancel01Icon, Menu01Icon, PauseIcon, PlayIcon, CheckIcon, VolumeHighIcon, VolumeMuteIcon } from "@hugeicons/core-free-icons";
 import { useState } from "react";
 import { Frame } from "./frame";
-import "./icons.css";
 
 interface IconPair {
   label: readonly [string, string];
@@ -38,7 +37,7 @@ export function IconsDemo({
   const on = index === undefined ? own : PAIRS.map((_, pairIndex) => isPairOn(index, pairIndex));
 
   const body = (
-    <div className="rm-icons">
+    <div className="flex flex-wrap justify-center gap-3">
       {PAIRS.map((pair, pairIndex) => {
         const Tag = index === undefined ? "button" : "span";
         const active = on[pairIndex] ?? false;
@@ -57,7 +56,7 @@ export function IconsDemo({
                     ),
                 }
               : { "aria-hidden": true })}
-            className="rm-icon-button"
+            className="grid size-[52px] place-items-center rounded-full border border-[var(--color-fd-border)] bg-[var(--color-fd-background)] text-[var(--color-fd-foreground)] hover:bg-[var(--color-fd-accent)] [&_svg]:size-[22px]"
           >
             <Remold.Icon icon={<HugeiconsIcon icon={Icon} />} strokeWidth={1.75} aria-hidden="true" />
           </Tag>
@@ -76,7 +75,7 @@ export function PlayPauseDemo() {
     <Frame>
       <button
         type="button"
-        className="rm-icon-button large"
+        className="grid size-16 place-items-center rounded-full border border-[var(--color-fd-border)] bg-[var(--color-fd-background)] text-[var(--color-fd-foreground)] hover:bg-[var(--color-fd-accent)] [&_svg]:size-[26px]"
         aria-label={playing ? "Pause" : "Play"}
         onClick={() => setPlaying((current) => !current)}
       >

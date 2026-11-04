@@ -168,7 +168,7 @@ export function CommentThreadDemo({
   const [hover, setHover] = useState<string | null>(null);
   const [replying, setReplying] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [live, setLive] = useState(playing ?? true);
+  const [live, setLive] = useState(playing ?? false);
   const [visible, setVisible] = useState(false);
   const step = useRef(0);
   const frame = useRef<HTMLDivElement>(null);
@@ -228,15 +228,15 @@ export function CommentThreadDemo({
   };
 
   const toggleFold = (key: string) =>
-    setFolded((s) => {
-      const next = new Set(s);
+    setFolded((current) => {
+      const next = new Set(current);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
 
-  const send = (e: FormEvent, parent: string, mention?: string) => {
-    e.preventDefault();
+  const send = (event: FormEvent, parent: string, mention?: string) => {
+    event.preventDefault();
     const text = draft.trim();
     if (!text) return;
     const key = `you-${Date.now()}`;
@@ -247,8 +247,8 @@ export function CommentThreadDemo({
         replies: [...comment.replies, mine],
       })),
     );
-    setFolded((s) => {
-      const next = new Set(s);
+    setFolded((current) => {
+      const next = new Set(current);
       next.delete(parent);
       return next;
     });
@@ -365,7 +365,7 @@ export function CommentThreadDemo({
                 )}
               </div>
               {replying === x.key && (
-                <form className="cx-compose" onSubmit={(e) => send(e, deep ? parent : x.key, replyTo)}>
+                <form className="cx-compose" onSubmit={(event) => send(event, deep ? parent : x.key, replyTo)}>
                   <img
                     className="cx-compose-face"
                     src={avatar("You")}
@@ -379,12 +379,12 @@ export function CommentThreadDemo({
                       ref={input}
                       rows={1}
                       value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") setReplying(null);
-                        else if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          e.currentTarget.form?.requestSubmit();
+                      onChange={(event) => setDraft(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") setReplying(null);
+                        else if (event.key === "Enter" && !event.shiftKey) {
+                          event.preventDefault();
+                          event.currentTarget.form?.requestSubmit();
                         }
                       }}
                       placeholder={replyTo ? "Add a reply…" : `Reply to ${x.author.split(" ")[0]}…`}
@@ -466,7 +466,7 @@ export function CommentThreadDemo({
           className={`cx-live${live ? " on" : ""}`}
           aria-pressed={live}
           aria-label={live ? "Pause autoplay" : "Start autoplay"}
-          onPointerDown={(e) => e.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
           onClick={() => {
             if (!live) restart();
             setLive((v) => !v);
@@ -499,14 +499,14 @@ export function CommentThreadDemo({
               total === 1 ? "comment" : "comments"
             }`}</span>
             <div className="cx-seg small" role="group" aria-label="Sort">
-              {SORTS.map((s) => (
+              {SORTS.map((option) => (
                 <button
-                  key={s}
+                  key={option}
                   type="button"
-                  aria-pressed={sort === s}
-                  onClick={() => setSort(s)}
+                  aria-pressed={sort === option}
+                  onClick={() => setSort(option)}
                 >
-                  {s}
+                  {option}
                 </button>
               ))}
             </div>

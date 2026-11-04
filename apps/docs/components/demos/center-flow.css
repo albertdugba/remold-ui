@@ -1,0 +1,6 @@
+.center-flow { position: relative; grid-column: 1 / -1; min-height: 500px; overflow: hidden; border-radius: 24px; background: radial-gradient(62% 58% at 50% 52%, #effcf6, transparent 72%), #f4efe6; color: #2b2620; }
+.center-flow::before { position: absolute; inset: 0; background-image: radial-gradient(rgb(90 80 65 / .12) 1px, transparent 1.4px); background-size: 22px 22px; content: ""; mask-image: radial-gradient(70% 60% at 50% 50%, #000, transparent); pointer-events: none; }
+.cf-remold-scene { position: relative; display: block; width: 100%; height: 460px; }
+.cf-footer { position: absolute; right: 18px; bottom: 16px; left: 18px; display: flex; align-items: center; justify-content: space-between; color: #8a7f70; font-size: 12px; }
+.cf-footer button { height: 32px; padding: 0 14px; border: 0; border-radius: 9px; background: #2b2620; color: #fffaf1; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+@media (max-width: 700px) { .center-flow { min-height: 430px; } .cf-remold-scene { height: 390px; } }

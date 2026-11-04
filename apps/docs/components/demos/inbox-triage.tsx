@@ -53,8 +53,8 @@ const COLORS = ["var(--ib-ink)", "var(--ib-muted)", "var(--ib-accent)", "#635bff
 const FOLD = { type: "spring" as const, duration: 0.45, bounce: 0 };
 const UNDO_MS = 5000;
 
-const face = (name: string, i: number) =>
-  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=${["e0e7ff", "fce7f3", "d1fae5"][i % 3]}`;
+const face = (name: string, index: number) =>
+  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=${["e0e7ff", "fce7f3", "d1fae5"][index % 3]}`;
 
 type Boxes = Record<string, Box>;
 
@@ -137,8 +137,8 @@ function Inbox({ playing }: { playing?: boolean }) {
   const selected = state.selected.filter((id) => shown.some((m) => m.id === id));
   const count = (box: Box) => MAIL.filter((m) => placed[m.id] === box).length;
   const move = (ids: string[], to: Box) =>
-    take((s) => ({ boxes: { ...s.boxes, ...Object.fromEntries(ids.map((id) => [id, to])) }, selected: s.selected.filter((id) => !ids.includes(id)) }));
-  const select = (id: string, on: boolean) => take((s) => ({ ...s, selected: on ? [...s.selected, id] : s.selected.filter((x) => x !== id) }));
+    take((current) => ({ boxes: { ...current.boxes, ...Object.fromEntries(ids.map((id) => [id, to])) }, selected: current.selected.filter((id) => !ids.includes(id)) }));
+  const select = (id: string, on: boolean) => take((current) => ({ ...current, selected: on ? [...current.selected, id] : current.selected.filter((x) => x !== id) }));
   const empty = BOX[view];
 
   return (
@@ -177,7 +177,7 @@ function Inbox({ playing }: { playing?: boolean }) {
             checked={shown.length > 0 && selected.length === shown.length}
             indeterminate={selected.length > 0 && selected.length < shown.length}
             disabled={shown.length === 0}
-            onCheckedChange={(on) => take((s) => ({ ...s, selected: on ? shown.map((m) => m.id) : [] }))}
+            onCheckedChange={(on) => take((current) => ({ ...current, selected: on ? shown.map((m) => m.id) : [] }))}
             aria-label="Select all"
           >
             <Checkbox.Indicator className="ib-tick" render={(props, st) => (
@@ -208,7 +208,7 @@ function Inbox({ playing }: { playing?: boolean }) {
         </div>
 
         <ul className="ib-list">
-          {MAIL.map((mail, i) => {
+          {MAIL.map((mail, index) => {
             const here = placed[mail.id] === view;
             // Swipe right files it (archive, or back to the inbox); swipe left bins it.
             const swipeRight: Box = view === "inbox" ? "archive" : "inbox";
@@ -254,7 +254,7 @@ function Inbox({ playing }: { playing?: boolean }) {
                     </Checkbox.Indicator>
                   </Checkbox.Root>
                   <Avatar.Root className="ib-avatar" style={mail.brand ? { background: mail.brand } : undefined}>
-                    {mail.face && <Avatar.Image src={face(mail.from, i)} crossOrigin="anonymous" alt="" />}
+                    {mail.face && <Avatar.Image src={face(mail.from, index)} crossOrigin="anonymous" alt="" />}
                     <Avatar.Fallback>{mail.from[0]}</Avatar.Fallback>
                   </Avatar.Root>
                   <span className="ib-text">

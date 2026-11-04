@@ -1,0 +1,36 @@
+---
+title: "Share link"
+description: "A Share pill with the faces of everyone who can already open the file. It opens into the link, who it lets in and a Copy button; copying says so, then folds back into the pill. Built on Base UI's Button, Toggle Group and Tooltip."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="share-link" code={<Source demo="share-link" />}>
+  <ShareLinkDemo />
+</Stage>
+
+## Things to try
+
+- **See who has access.** The faces are the people who can already open the file; hover one to see who it is and what they can do.
+- **Press Share.** The faces tighten to the left as the pill springs open into the link, a Can view / Can edit switch and a Copy button, each arriving a beat after the one before.
+- **Choose who it lets in.** The highlight slides between Can view and Can edit.
+- **Copy it.** The button turns green and says Copied, then the row folds back into the pill, which says "Link copied" for a moment before going back to Share.
+- **Close it** with Escape or by clicking anywhere else.
+
+## Install
+
+<AddCommand name="share-link" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="share-link" />
+
+## How it works
+
+- **One pill.** The closed button and the open row live in the same pill. It springs its real width to whatever it's showing and clips what's inside, so the text and buttons are never stretched.
+- **The label reshapes.** Share becomes Link copied, and Copy becomes Copied, with `Remold.Text`; the icons reshape with `Remold.Icon`.
+- **Built on Base UI.** `Button` for Share and Copy, `ToggleGroup` and `Toggle` for who the link lets in, and `Tooltip` for each face. Screen readers hear "Link copied" and who can use it.
+
+<Callout>Copy writes the link to your clipboard, with the access you chose as a query string. Swap in your own link and permission call.</Callout>

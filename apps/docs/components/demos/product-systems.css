@@ -1,0 +1,18 @@
+.psi { position: relative; display: grid; width: 100%; min-height: 520px; overflow: hidden; background: radial-gradient(70% 55% at 50% 45%, #fffaf1, transparent 75%), #f4efe6; color: #2b2620; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif; }
+.psi[data-dark] { background: radial-gradient(60% 50% at 50% 55%, rgb(124 92 255 / .14), transparent 70%), #101015; color: #ecebf5; }
+.psi-domain { background: radial-gradient(65% 60% at 50% 44%, #f2fbf5, transparent 70%), #f4efe6; }
+.psi-privacy { background: radial-gradient(54% 58% at 50% 48%, #f9f4ea, transparent 72%), #f2ede3; }
+.psi-upgrade { background: radial-gradient(65% 60% at 50% 55%, #fff6df, transparent 70%), #f5efe4; }
+.psi-uptime { background: radial-gradient(62% 58% at 54% 50%, #edf9f3, transparent 70%), #f2ede3; }
+.psi-collaboration { background: radial-gradient(60% 55% at 50% 52%, #f2f8f5, transparent 70%), #f5f0e7; }
+.psi-workspace { background: radial-gradient(66% 62% at 48% 48%, #f5fbf7, transparent 70%), #f3eee5; }
+.psi::before { position: absolute; inset: 0; background-image: radial-gradient(rgb(90 80 65 / .12) 1px, transparent 1.4px); background-size: 22px 22px; content: ""; mask-image: radial-gradient(70% 60% at 50% 50%, #000, transparent); pointer-events: none; }
+.psi[data-dark]::before { background-image: linear-gradient(rgb(255 255 255 / .035) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .035) 1px, transparent 1px); background-size: 32px 32px; }
+.psi-scene { position: relative; display: block; width: 100%; height: 460px; }
+.psi-status { position: absolute; top: 20px; left: 50%; display: inline-flex; align-items: center; gap: 8px; max-width: calc(100% - 32px); padding: 9px 12px; border-radius: 12px; background: rgb(255 255 255 / .86); box-shadow: 0 8px 20px -12px rgb(50 35 15 / .35); font-size: 12.5px; translate: -50% 0; }
+.psi[data-dark] .psi-status { background: rgb(26 24 36 / .86); color: #ecebf5; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .08); }
+.psi-dot { width: 7px; height: 7px; border-radius: 50%; background: #39a97d; box-shadow: 0 0 0 3px rgb(57 169 125 / .16); }
+.psi-foot { position: absolute; right: 18px; bottom: 16px; left: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #8a7f70; font-size: 12px; }
+.psi[data-dark] .psi-foot { color: #8f8ca3; }
+.psi-foot button { height: 32px; padding: 0 14px; border: 0; border-radius: 9px; background: #2b2620; color: #fffaf1; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.psi[data-dark] .psi-foot button { background: rgb(124 92 255 / .16); box-shadow: inset 0 0 0 1px rgb(124 92 255 / .5); color: #e6e0ff; }

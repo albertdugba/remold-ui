@@ -6,7 +6,8 @@ import type { BaseProps } from "../utils/use-render-element.js";
 export interface PathSpec extends Omit<SVGAttributes<SVGPathElement>, "d"> {
   /** Stable identity for an illustrated part or chart series. */
   id: string;
-  d: string;
+  /** The part's SVG path data. It morphs when it changes. */
+  path: string;
 }
 
 export interface RemoldPathGroupState {

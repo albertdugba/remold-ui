@@ -4,14 +4,20 @@
  * few chips to change its state. Every card plays by itself while it's on screen and stops for
  * good as soon as someone touches it.
  */
+import { ArrowDown01Icon, Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Popover } from "@base-ui/react/popover";
 import { Remold, useAutoplay } from "@remold-ui/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
 import { useInPreview } from "../demos/portal-container";
+import { AppleMusicBadge } from "../demos/apple-music-badge";
 import {
   Children,
   useLayoutEffect,
   useRef,
+  useState,
   type ComponentType,
   type ReactElement,
   type ReactNode,
@@ -39,8 +45,8 @@ const HoldToRecordDemo = dynamic(
   () => import("../demos/hold-to-record").then((m) => m.HoldToRecordDemo),
   { ssr: false },
 );
-const FlightBookingDemo = dynamic(
-  () => import("../demos/flight-booking").then((m) => m.FlightBookingDemo),
+const TableBookingDemo = dynamic(
+  () => import("../demos/table-booking").then((m) => m.TableBookingDemo),
   { ssr: false },
 );
 const OtpInputDemo = dynamic(
@@ -49,14 +55,6 @@ const OtpInputDemo = dynamic(
 );
 const DonationGoalDemo = dynamic(
   () => import("../demos/donation-goal").then((m) => m.DonationGoalDemo),
-  { ssr: false },
-);
-const VisitorsGlobeDemo = dynamic(
-  () => import("../demos/visitors-globe").then((m) => m.VisitorsGlobeDemo),
-  { ssr: false },
-);
-const FocusTimerDemo = dynamic(
-  () => import("../demos/focus-timer").then((m) => m.FocusTimerDemo),
   { ssr: false },
 );
 const LiveRoomDemo = dynamic(
@@ -87,6 +85,10 @@ const CurrencyConverterDemo = dynamic(
   () => import("../demos/currency-converter").then((m) => m.CurrencyConverterDemo),
   { ssr: false },
 );
+const OrderTrackerDemo = dynamic(
+  () => import("../demos/order-tracker").then((m) => m.OrderTrackerDemo),
+  { ssr: false },
+);
 const KitchenTicketDemo = dynamic(
   () => import("../demos/kitchen-ticket").then((m) => m.KitchenTicketDemo),
   { ssr: false },
@@ -105,6 +107,22 @@ const RevenueCardDemo = dynamic(
 );
 const ApiKeysDemo = dynamic(
   () => import("../demos/api-keys").then((m) => m.ApiKeysDemo),
+  { ssr: false },
+);
+const PriceFilterDemo = dynamic(
+  () => import("../demos/price-filter").then((m) => m.PriceFilterDemo),
+  { ssr: false },
+);
+const EventRsvpDemo = dynamic(
+  () => import("../demos/event-rsvp").then((m) => m.EventRsvpDemo),
+  { ssr: false },
+);
+const PromoCodeDemo = dynamic(
+  () => import("../demos/promo-code").then((m) => m.PromoCodeDemo),
+  { ssr: false },
+);
+const FluidPopoverDemo = dynamic(
+  () => import("../demos/fluid-popover").then((m) => m.FluidPopoverDemo),
   { ssr: false },
 );
 const SeatCalculatorDemo = dynamic(
@@ -129,11 +147,6 @@ const OnboardingChecklistDemo = dynamic(
 );
 const BulkSelectDemo = dynamic(
   () => import("../demos/bulk-select").then((m) => m.BulkSelectDemo),
-  { ssr: false },
-);
-const ConnectionBannerDemo = dynamic(
-  () =>
-    import("../demos/connection-banner").then((m) => m.ConnectionBannerDemo),
   { ssr: false },
 );
 const FilterBarDemo = dynamic(
@@ -170,6 +183,11 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number]["id"];
 
+const FILTER_CATEGORIES = CATEGORIES.map(({ id, label }) => ({
+  value: id,
+  label,
+}));
+
 /** The plain names people see in the component catalogue and docs, rather than each card's marketing headline. */
 const COMPONENT_NAME_BY_DOC: Record<string, string> = {
   "/docs/components/live-room": "Live room",
@@ -179,11 +197,12 @@ const COMPONENT_NAME_BY_DOC: Record<string, string> = {
   "/docs/primitives/layout": "Layout",
   "/docs/components/particles-story": "Particles story",
   "/docs/components/two-factor": "Two-factor setup",
-  "/docs/components/flight-booking": "Flight booking",
+  "/docs/components/table-booking": "Table booking",
   "/docs/components/invite-team": "Invite teammates",
   "/docs/primitives/icon": "SVG morph",
   "/docs/components/podcast-player": "Podcast",
   "/docs/components/logo-morph": "Logo morph",
+  "/docs/components/fluid-popover": "Fluid popover menu",
 };
 
 /** A card's anchor on the home page, from its title: "Send money" → "send-money". */
@@ -268,7 +287,7 @@ function PartCard({
           aria-label={autoplay.playing ? `Pause ${title}` : `Play ${title}`}
         >
           <Remold.Icon
-            d={autoplay.playing ? PAUSE : PLAY}
+            path={autoplay.playing ? PAUSE : PLAY}
             viewBox="0 0 24 24"
             fill="currentColor"
           />
@@ -293,40 +312,135 @@ function PartCard({
   );
 }
 
-/** Apple's own badge, as its guidelines ask: the previews are Apple Music's, so it links to the artist there. */
-function AppleMusicBadge() {
-  const badge = (
-    <img
-      src="/brand/listen-on-apple-music.svg"
-      alt="Listen on Apple Music"
-      width={110}
-      height={32}
-      style={{ display: "block" }}
-    />
-  );
-  // In a preview card (itself a link) it's just the badge: a link can't hold another link.
-  if (useInPreview()) return badge;
-  return (
-    <a
-      href="https://music.apple.com/gh/artist/kofi-kinaata/744862250"
-      target="_blank"
-      rel="noreferrer"
-      aria-label="Listen to Kofi Kinaata on Apple Music"
-    >
-      {badge}
-    </a>
-  );
-}
 const APPLE_MUSIC_BADGE = <AppleMusicBadge />;
 
-const LOGO = [
-  { brand: 0, form: "text" as const },
-  { brand: 0, form: "logo" as const },
-  { brand: 3, form: "text" as const },
-  { brand: 3, form: "logo" as const },
-];
+const LOGO = [0, 1, 2, 3, 4, 5, 6].map((brand) => ({ brand, form: "logo" as const }));
 
 type Card = ReactElement<Parameters<typeof PartCard>[0]>;
+
+type FilterOption = { value: string; label: string };
+
+const FILTER_SPRING = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
+const FILTER_MENU_WIDTH = 260;
+
+/**
+ * A multi-select filter whose menu grows out from beneath its pill: one shell springs from the
+ * pill's width to the menu's size and back, and the options rise into it once there is room. A pill with a selection
+ * becomes a chip that says what's picked, with its own button to clear it.
+ */
+function GalleryFilter({
+  label,
+  selected,
+  options,
+  onSelectedChange,
+}: {
+  label: string;
+  selected: ReadonlySet<string>;
+  options: FilterOption[];
+  onSelectedChange: (selected: Set<string>) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [shown, setShown] = useState(false);
+  const [pill, setPill] = useState({ width: 0, height: 44 });
+  const [menuHeight, setMenuHeight] = useState(0);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const shell = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
+
+  const picked = options.filter((option) => selected.has(option.value));
+  const value =
+    picked.length === 0 ? "All" : picked.length === 1 ? picked[0]!.label : `${picked[0]!.label} +${picked.length - 1}`;
+
+  // Base UI mounts the menu after it opens, so it's measured from the moment it's there.
+  const watching = useRef<ResizeObserver | null>(null);
+  const menu = (element: HTMLDivElement | null) => {
+    watching.current?.disconnect();
+    watching.current = null;
+    if (!element) return;
+    watching.current = new ResizeObserver(() => setMenuHeight(element.offsetHeight));
+    watching.current.observe(element);
+  };
+
+  const changeOpen = (next: boolean) => {
+    if (next && trigger.current) {
+      setPill({ width: trigger.current.offsetWidth, height: trigger.current.offsetHeight });
+      setShown(true);
+    }
+    setOpen(next);
+  };
+
+  const toggle = (option: string) => {
+    const next = new Set(selected);
+    if (next.has(option)) next.delete(option);
+    else next.add(option);
+    onSelectedChange(next);
+  };
+
+  return (
+    <Popover.Root open={open} onOpenChange={changeOpen} modal={false}>
+      <span className="hp-filter-slot">
+        <Popover.Trigger
+          ref={trigger}
+          className="hp-filter-select"
+          data-picked={picked.length > 0 || undefined}
+          aria-label={picked.length > 0 ? `${label}: ${picked.map((option) => option.label).join(", ")}` : label}
+        >
+          {picked.length === 0 && <span className="hp-filter-label">{label}</span>}
+          <span className="hp-filter-value">
+            <Remold.Text>{value}</Remold.Text>
+          </span>
+          {picked.length === 0 && <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" />}
+        </Popover.Trigger>
+        {picked.length > 0 && (
+          <button type="button" className="hp-filter-clear" aria-label={`Clear ${label.toLowerCase()}`} onClick={() => onSelectedChange(new Set())}>
+            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={3} aria-hidden="true" />
+          </button>
+        )}
+        <motion.div
+          ref={shell}
+          className="hp-filter-shell"
+          data-shown={shown || undefined}
+          initial={false}
+          animate={
+            open
+              ? { width: FILTER_MENU_WIDTH, height: menuHeight, opacity: 1 }
+              : { width: pill.width, height: 0, opacity: 0 }
+          }
+          transition={reduceMotion ? { duration: 0 } : { ...FILTER_SPRING, delay: open ? 0 : 0.08 }}
+          onAnimationComplete={() => !open && setShown(false)}
+        >
+          <Popover.Portal container={shell}>
+            <Popover.Positioner className="!absolute !inset-0 !transform-none">
+              <Popover.Popup className="hp-filter-menu" aria-label={label} initialFocus={false}>
+                <div ref={menu} className="hp-filter-menu-inner">
+                  <div className="hp-filter-options">
+                    {options.map((option, index) => (
+                      <motion.button
+                        key={option.value}
+                        type="button"
+                        className="hp-filter-option"
+                        aria-pressed={selected.has(option.value)}
+                        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, filter: "blur(4px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        transition={{ duration: 0.22, delay: reduceMotion ? 0 : 0.06 + index * 0.025, ease: [0.23, 1, 0.32, 1] }}
+                        onClick={() => toggle(option.value)}
+                      >
+                        <span className="hp-filter-option-mark" aria-hidden="true">
+                          {selected.has(option.value) && <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.6} aria-hidden="true" />}
+                        </span>
+                        {option.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </motion.div>
+      </span>
+    </Popover.Root>
+  );
+}
 
 /** One landing card as data, for the components page: the same component, props and order. */
 export interface LandingCard {
@@ -369,13 +483,70 @@ export function landingCards(): LandingCard[] {
 }
 
 export function Parts() {
+  // The cards show in the order they're written below: no shuffling.
+  const [categories, setCategories] = useState<Set<Category>>(new Set());
+  const [techniquesSelected, setTechniquesSelected] = useState<Set<string>>(
+    new Set(),
+  );
   const cards = Children.toArray(allCards().props.children) as Card[];
-  const grid = useMasonry();
-
+  const catalogueCards = cards;
+  const techniques: FilterOption[] = [
+    ...Array.from(
+      new Set(catalogueCards.flatMap((card) => card.props.kicker.split(" · "))),
+    )
+      .sort()
+      .map((value) => ({ value, label: value })),
+  ];
+  const shown = catalogueCards.filter((card) => {
+    if (categories.size > 0 && !categories.has(card.props.category)) return false;
+    return (
+      techniquesSelected.size === 0 ||
+      [...techniquesSelected].some((technique) => card.props.kicker.split(" · ").includes(technique))
+    );
+  });
+  const hasFilters = categories.size > 0 || techniquesSelected.size > 0;
+  const grid = useMasonry(shown.map((card) => card.key).join(","));
   return (
-    <div ref={grid} className="hp">
-      {cards}
-    </div>
+    <>
+      <section className="hp-filter" aria-label="Filter live examples">
+      <div className="hp-filter-bar">
+        <div className="hp-filter-controls">
+          <GalleryFilter
+            label="Category"
+            selected={categories}
+            options={FILTER_CATEGORIES}
+            onSelectedChange={(next) => setCategories(next as Set<Category>)}
+          />
+          <GalleryFilter
+            label="Built with"
+            selected={techniquesSelected}
+            options={techniques}
+            onSelectedChange={setTechniquesSelected}
+          />
+        </div>
+        <div className="hp-filter-summary" aria-live="polite">
+          <span>{`Showing ${shown.length} of ${catalogueCards.length}`}</span>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={() => {
+                setCategories(new Set());
+                setTechniquesSelected(new Set());
+              }}
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      </div>
+      <div ref={grid} className="hp">
+        {shown}
+        {shown.length === 0 && (
+          <p className="hp-filter-empty">No examples match those filters.</p>
+        )}
+      </div>
+      </section>
+    </>
   );
 }
 
@@ -384,9 +555,9 @@ export function Parts() {
  * shortest column (a wide card in the lowest pair, a full one below everything), spanning as many
  * rows as its height needs. A card keeps the tallest height it has reached at its current width,
  * held as a min-height, so a demo that shrinks mid-animation neither shuffles the grid nor leaves
- * a wider gap below it. Cards are never sized by their slot, so nothing can feed back and grow.
+ * a wider gap below it. Cards are measured before any stretch, so nothing can feed back and grow.
  */
-function useMasonry() {
+function useMasonry(itemsKey: string) {
   const grid = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -419,8 +590,11 @@ function useMasonry() {
       const row = Number.parseFloat(style.gridAutoRows) || 1;
       const count = style.gridTemplateColumns.split(" ").filter(Boolean).length || 1;
       const bottoms = Array.from({ length: count }, () => 0);
+      const lasts: ({ item: HTMLElement; top: number } | undefined)[] = Array.from({ length: count });
 
       for (const item of items) {
+        // Measured at its own height: a stretch from the last pass would otherwise feed back.
+        item.style.alignSelf = "";
         const span = columnsOf(item, count);
         let start = 0;
         let top = Number.POSITIVE_INFINITY;
@@ -434,7 +608,17 @@ function useMasonry() {
         const rows = Math.ceil(heightOf(item) / row);
         item.style.gridColumn = `${start + 1} / span ${span}`;
         item.style.gridRow = `${top + 1} / span ${rows}`;
-        for (let column = start; column < start + span; column++) bottoms[column] = top + rows;
+        // A wide card starts below the taller of its columns; the card above the shorter one
+        // stretches down to meet it, so no hole is left between them.
+        for (let column = start; column < start + span; column++) {
+          const last = lasts[column];
+          if (last && bottoms[column] < top && columnsOf(last.item, count) === 1) {
+            last.item.style.gridRow = `${last.top + 1} / span ${top - last.top}`;
+            last.item.style.alignSelf = "stretch";
+          }
+          bottoms[column] = top + rows;
+          lasts[column] = { item, top };
+        }
       }
     };
 
@@ -455,10 +639,11 @@ function useMasonry() {
       for (const item of items) {
         item.style.gridColumn = "";
         item.style.gridRow = "";
+        item.style.alignSelf = "";
         item.style.minHeight = authored.get(item) ?? "";
       }
     };
-  }, []);
+  }, [itemsKey]);
 
   return grid;
 }
@@ -468,7 +653,6 @@ function allCards() {
   return (
     <>
       <PartCard
-        featured
         kicker="Base UI · Motion"
         category="forms"
         title="Mentions"
@@ -479,35 +663,22 @@ function allCards() {
         {(_, playing) => <EditorMentionsDemo playing={playing} />}
       </PartCard>
       <PartCard
-        featured
-        kicker="Particles · Motion"
-        category="canvas"
-        title="Donation goal"
-        docs="/docs/components/donation-goal"
-        states={["Give"]}
-        minHeight={520}
+        kicker="Layout · Icon · Text"
+        category="morphing"
+        title="Code to verified"
+        docs="/docs/components/otp-input"
+        states={["Code"]}
       >
-        {(_, playing) => <DonationGoalDemo playing={playing} />}
+        {(_, playing) => <OtpInputDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Particles · Motion"
-        category="canvas"
-        title="Live visitors"
-        docs="/docs/components/visitors-globe"
-        states={["Watch"]}
-        minHeight={740}
+        kicker="SVG · Illustration"
+        category="morphing"
+        title="Order tracker"
+        docs="/docs/components/order-tracker"
+        states={["Track"]}
       >
-        {(_, playing) => <VisitorsGlobeDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Particles · Motion"
-        category="canvas"
-        title="Focus timer"
-        docs="/docs/components/focus-timer"
-        states={["Focus"]}
-        minHeight={560}
-      >
-        {(_, playing) => <FocusTimerDemo playing={playing} />}
+        {(_, playing) => <OrderTrackerDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Motion · Media"
@@ -519,10 +690,41 @@ function allCards() {
         {(_, playing) => <LiveRoomDemo playing={playing} previewOpen />}
       </PartCard>
       <PartCard
+        kicker="Motion · Media"
+        category="morphing"
+        title="Mini player to full"
+        docs="/docs/components/podcast-player"
+        states={["Mini", "Player", "Mini", "Player"]}
+        every={2600}
+        bleed
+        minHeight={680}
+      >
+        {(i) => (
+          <PodcastPlayer
+            source="/api/music"
+            credit={APPLE_MUSIC_BADGE}
+            scene={i}
+            height={600}
+          />
+        )}
+      </PartCard>
+      <PartCard
+        featured
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Event RSVP"
+        docs="/docs/components/event-rsvp"
+        states={["RSVP"]}
+        minHeight={600}
+      >
+        {(_, playing) => <EventRsvpDemo playing={playing} />}
+      </PartCard>
+      <PartCard
         kicker="Layout · Connectors"
         category="morphing"
         title="Post and comments"
         spotlight
+        wide
         tall
         docs="/docs/components/comment-thread"
         states={["Comments"]}
@@ -530,13 +732,14 @@ function allCards() {
         {(_, playing) => <CommentThread variant="preview" playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Layout · Icon · Text"
-        category="morphing"
-        title="Code to verified"
-        docs="/docs/components/otp-input"
-        states={["Code"]}
+        kicker="Particles · Motion"
+        category="canvas"
+        title="Donation goal"
+        docs="/docs/components/donation-goal"
+        states={["Give"]}
+        minHeight={520}
       >
-        {(_, playing) => <OtpInputDemo playing={playing} />}
+        {(_, playing) => <DonationGoalDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Canvas · States"
@@ -573,14 +776,14 @@ function allCards() {
       </PartCard>
       <PartCard
         featured
-        kicker="Motion · createMorph"
-        category="illustrations"
-        title="Streak"
-        docs="/docs/components/streak"
-        states={["Streak"]}
+        kicker="Layout · Motion"
+        category="payments"
+        title="Currency converter"
+        docs="/docs/components/currency-converter"
+        states={["Convert"]}
         minHeight={560}
       >
-        {(_, playing) => <StreakDemo playing={playing} />}
+        {(_, playing) => <CurrencyConverterDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -616,15 +819,42 @@ function allCards() {
         {(_, playing) => <SendMoneyDemo playing={playing} />}
       </PartCard>
       <PartCard
-        featured
-        kicker="Layout · Motion"
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Price filter"
+        docs="/docs/components/price-filter"
+        states={["Filter"]}
+      >
+        {(_, playing) => <PriceFilterDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
         category="payments"
-        title="Currency converter"
-        docs="/docs/components/currency-converter"
-        states={["Convert"]}
+        title="Promo code"
+        docs="/docs/components/promo-code"
+        states={["Apply"]}
+      >
+        {(_, playing) => <PromoCodeDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
+        category="morphing"
+        title="Floating menu"
+        docs="/docs/components/fluid-popover"
+        states={["Menu"]}
+      >
+        {(_, playing) => <FluidPopoverDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        featured
+        kicker="Motion · createMorph"
+        category="illustrations"
+        title="Streak"
+        docs="/docs/components/streak"
+        states={["Streak"]}
         minHeight={560}
       >
-        {(_, playing) => <CurrencyConverterDemo playing={playing} />}
+        {(_, playing) => <StreakDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -649,15 +879,13 @@ function allCards() {
         {(_, playing) => <SeatCalculatorDemo playing={playing} />}
       </PartCard>
       <PartCard
-        featured
-        kicker="Base UI · Motion"
-        category="charts"
-        title="Usage meter"
-        docs="/docs/components/usage-meter"
-        states={["Usage"]}
-        minHeight={680}
+        kicker="Layout · Text"
+        category="morphing"
+        title="Option to booking"
+        docs="/docs/components/table-booking"
+        states={["Booking"]}
       >
-        {(_, playing) => <UsageMeterDemo playing={playing} />}
+        {(_, playing) => <TableBookingDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -680,17 +908,6 @@ function allCards() {
         minHeight={600}
       >
         {(_, playing) => <BulkSelectDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        featured
-        kicker="Motion · Base UI"
-        category="morphing"
-        title="Back online"
-        docs="/docs/components/connection-banner"
-        states={["Connection"]}
-        minHeight={560}
-      >
-        {(_, playing) => <ConnectionBannerDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -717,9 +934,9 @@ function allCards() {
       <PartCard
         kicker="Layout · Matching"
         category="morphing"
-        title="One person, four components"
+        title="One person, three components"
         docs="/docs/primitives/layout"
-        states={["Chip"]}
+        states={["Card"]}
         bleed
         selfPlaying
         minHeight={680}
@@ -757,13 +974,15 @@ function allCards() {
         {(_, playing) => <HoldToRecordDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Layout · Text"
-        category="morphing"
-        title="Result to boarding pass"
-        docs="/docs/components/flight-booking"
-        states={["Booking"]}
+        featured
+        kicker="Base UI · Motion"
+        category="charts"
+        title="Usage meter"
+        docs="/docs/components/usage-meter"
+        states={["Usage"]}
+        minHeight={680}
       >
-        {(_, playing) => <FlightBookingDemo playing={playing} />}
+        {(_, playing) => <UsageMeterDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Layout · Shared"
@@ -787,31 +1006,12 @@ function allCards() {
         {(i) => <EmblemDemo framed={false} index={i} />}
       </PartCard>
       <PartCard
-        kicker="Motion · Media"
-        category="morphing"
-        title="Mini player to full"
-        docs="/docs/components/podcast-player"
-        states={["Mini", "Player", "Mini", "Player"]}
-        every={2600}
-        bleed
-        minHeight={680}
-      >
-        {(i) => (
-          <PodcastPlayer
-            source="/api/music"
-            credit={APPLE_MUSIC_BADGE}
-            scene={i}
-            height={600}
-          />
-        )}
-      </PartCard>
-      <PartCard
         kicker="SVG · Branding"
         category="illustrations"
-        title="Word into logo"
+        title="Logo into logo"
         bare
         docs="/docs/components/logo-morph"
-        states={["Cursor", "Cursor logo", "X", "X logo"]}
+        states={["OpenAI", "Apple", "Cursor", "Mercedes", "X", "Anthropic", "Tesla"]}
         every={2000}
       >
         {(i) => (

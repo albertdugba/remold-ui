@@ -40,7 +40,7 @@ export const logoMorphControls: Customizable = {
     autoplay: {
       type: "toggle",
       label: "Autoplay",
-      default: true,
+      default: false,
       description:
         "Play name → logo → name through the brands while on screen, until someone takes over.",
     },

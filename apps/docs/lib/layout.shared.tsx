@@ -10,7 +10,6 @@ export function baseOptions(): BaseLayoutProps {
       { text: "Docs", url: "/docs", active: "url" },
       { text: "Components", url: "/docs/components", active: "nested-url" },
       { text: "Building blocks", url: "/docs/primitives", active: "nested-url" },
-      { text: "Playground", url: "/play", active: "url" },
     ],
   };
 }

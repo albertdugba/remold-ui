@@ -223,6 +223,119 @@ describe("transition", () => {
     await t.finished;
   });
 
+  describe("choreography", () => {
+    const opacityOf = (el: HTMLElement) => Number.parseFloat(el.style.opacity || "1");
+
+    it("lets what leaves go first, then moves", async () => {
+      const root = mount(
+        list([
+          ["Gone", 0],
+          ["Keep", 50],
+        ]),
+      );
+      const frames = manualLoop();
+      const t = transition(
+        root,
+        () => {
+          root.innerHTML = list([["Keep", 0]]);
+        },
+        { loop: frames.loop, reducedMotion: "never", choreography: true },
+      );
+      await t.ready;
+      const ghost = root.querySelector("[data-rm-exiting]") as HTMLElement;
+
+      frames.step();
+      expect(translateOf(find(root, "Keep"))).toEqual([0, 50]);
+      expect(Number.parseFloat(ghost.style.opacity)).toBeLessThan(1);
+
+      for (let frame = 0; frame < 5; frame++) frames.step();
+      expect(translateOf(find(root, "Keep"))[1]).toBeLessThan(50);
+
+      frames.run();
+      await t.finished;
+      expect(find(root, "Keep").style.translate).toBe("");
+    });
+
+    it("brings arrivals in once the moves have started, one after another", async () => {
+      const root = mount(list([["Alpha", 0]]));
+      const frames = manualLoop();
+      const t = transition(
+        root,
+        () => {
+          root.innerHTML = list([
+            ["First", 0],
+            ["Second", 50],
+            ["Alpha", 100],
+          ]);
+        },
+        { loop: frames.loop, reducedMotion: "never", choreography: { enter: 0.1, stagger: 0.05 } },
+      );
+      await t.ready;
+      const first = find(root, "First");
+      const second = find(root, "Second");
+
+      frames.step();
+      expect(translateOf(find(root, "Alpha"))[1]).toBeGreaterThan(-100);
+      expect(opacityOf(first)).toBe(0);
+
+      // 0.1 s in: the first arrival has started, the second waits its turn.
+      for (let frame = 0; frame < 6; frame++) frames.step();
+      expect(opacityOf(first)).toBeGreaterThan(0);
+      expect(opacityOf(second)).toBe(0);
+
+      for (let frame = 0; frame < 4; frame++) frames.step();
+      expect(opacityOf(second)).toBeGreaterThan(0);
+
+      frames.run();
+      await t.finished;
+      expect(second.style.opacity).toBe("");
+    });
+
+    it("keeps the whole stagger short however many arrive", async () => {
+      const root = mount(list([["Alpha", 0]]));
+      const frames = manualLoop();
+      const items: [string, number][] = Array.from({ length: 30 }, (_, index) => [`Item ${index}`, index * 40]);
+      const t = transition(
+        root,
+        () => {
+          root.innerHTML = list(items);
+        },
+        { loop: frames.loop, reducedMotion: "never", choreography: { enter: 0, stagger: 0.05, maxStagger: 0.1 } },
+      );
+      await t.ready;
+
+      // Alpha leaving holds the arrivals 0.06 s; 0.1 s of stagger later, even the last of 30 has
+      // started, though 30 × 0.05 s would be 1.5 s.
+      for (let frame = 0; frame < 11; frame++) frames.step();
+      expect(opacityOf(find(root, "Item 29"))).toBeGreaterThan(0);
+
+      frames.run();
+      await t.finished;
+    });
+
+    it("is off with reduced motion: changes fade at once", async () => {
+      const root = mount(list([["Alpha", 0]]));
+      const frames = manualLoop();
+      const t = transition(
+        root,
+        () => {
+          root.innerHTML = list([
+            ["New", 0],
+            ["Alpha", 50],
+          ]);
+        },
+        { loop: frames.loop, reducedMotion: "always", choreography: { enter: 0.5 } },
+      );
+      await t.ready;
+
+      frames.step();
+      expect(opacityOf(find(root, "New"))).toBeGreaterThan(0);
+
+      frames.run();
+      await t.finished;
+    });
+  });
+
   it("is interruptible: a second transition takes over from the first", async () => {
     const root = mount(
       list([

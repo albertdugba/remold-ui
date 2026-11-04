@@ -2,7 +2,6 @@
 import { Remold } from "@remold-ui/react";
 import { useState } from "react";
 import { Frame, Segmented } from "./frame";
-import "./scene.css";
 
 type Layouts = Remold.Scene.Props["layouts"];
 type Box = Layouts[string]["objects"][string];
@@ -68,14 +67,14 @@ export function SceneDemo({
   const layout = index === undefined ? own : (["Simple", "Scaled"] as const)[index % 2]!;
 
   const body = (
-    <div className="rm-scene">
+    <div className="grid w-full gap-3">
       <Remold.Scene
         {...SCENE}
         palette="slate"
         layout={layout}
-        className="rm-scene-canvas"
+        className="block aspect-video w-full touch-pan-y"
       />
-      <div className="rm-scene-foot">
+      <div className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-2 text-center">
         {index === undefined && (
           <Segmented
             label="Layout"
@@ -84,7 +83,7 @@ export function SceneDemo({
             options={["Simple", "Scaled"] as const}
           />
         )}
-        <p>{SCENE.layouts[layout].caption}</p>
+        <p className="m-0 text-[13px] text-white/60">{SCENE.layouts[layout].caption}</p>
       </div>
     </div>
   );

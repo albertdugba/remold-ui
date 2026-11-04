@@ -61,15 +61,15 @@ export function useMatchLines(
             if (Math.hypot(q.x - p.x, q.y - p.y) < SHORTEST) continue;
             lines.push({ x1: p.x, y1: p.y, x2: q.x, y2: q.y });
           }
-          const arrivals = matches.added.flatMap((i) => {
-            if (select && !after.elements[i]?.matches(select)) return [];
-            const parent = after.nodes[i]?.parent ?? -1;
+          const arrivals = matches.added.flatMap((index) => {
+            if (select && !after.elements[index]?.matches(select)) return [];
+            const parent = after.nodes[index]?.parent ?? -1;
             if (
               parent >= 0 &&
               (matchedAfter.has(parent) || matches.added.includes(parent))
             )
               return [];
-            const b = after.boxes[i];
+            const b = after.boxes[index];
             return b ? [centre(b)] : [];
           });
           setDrawing({ id: ++count.current, lines, arrivals });
@@ -83,15 +83,15 @@ export function useMatchLines(
     <svg ref={box} className="ml-overlay" aria-hidden="true">
       {enabled && drawing && (
         <g key={drawing.id} className="ml-drawing">
-          {drawing.lines.map((l, i) => (
-            <g key={i}>
+          {drawing.lines.map((l, index) => (
+            <g key={index}>
               <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} pathLength={1} />
               <circle cx={l.x1} cy={l.y1} r={2.5} className="ml-from" />
               <circle cx={l.x2} cy={l.y2} r={3.5} className="ml-to" />
             </g>
           ))}
-          {drawing.arrivals.map((p, i) => (
-            <circle key={`a${i}`} cx={p.x} cy={p.y} r={5} className="ml-new" />
+          {drawing.arrivals.map((p, index) => (
+            <circle key={`a${index}`} cx={p.x} cy={p.y} r={5} className="ml-new" />
           ))}
         </g>
       )}

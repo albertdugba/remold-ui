@@ -24,7 +24,7 @@ export function RemoldMark({ size = 28, wordmark = false }: { size?: number; wor
   return (
     <span className="rm-brand" onPointerEnter={() => setHover(true)} onPointerLeave={() => setHover(false)}>
       <Remold.Icon
-        d={round ? ARC : BLOCK}
+        path={round ? ARC : BLOCK}
         viewBox="6 6 20 20"
         className="rm-mark"
         style={{ width: size, height: size }}

@@ -15,7 +15,6 @@ import { extrude } from "@remold-ui/canvas";
 import { Remold } from "@remold-ui/react";
 import { NIGHT, PLATFORM_INK, VIOLET, WIRE_INK } from "./night-stage";
 import { useScene } from "./use-scene";
-import "./gradual-rollout.css";
 
 type SceneProps = Remold.Scene.Props;
 
@@ -26,15 +25,15 @@ const GAP = 14;
 const PERCENTS = [0, 10, 50, 100] as const;
 type Percent = (typeof PERCENTS)[number];
 
-const TILES = Array.from({ length: COLS * ROWS }, (_, i) => ({
-  id: `u${i}`,
-  x: (i % COLS) * (TILE + GAP) - ((COLS * (TILE + GAP) - GAP) / 2),
-  y: Math.floor(i / COLS) * (TILE + GAP) - ((ROWS * (TILE + GAP) - GAP) / 2),
+const TILES = Array.from({ length: COLS * ROWS }, (_, index) => ({
+  id: `u${index}`,
+  x: (index % COLS) * (TILE + GAP) - ((COLS * (TILE + GAP) - GAP) / 2),
+  y: Math.floor(index / COLS) * (TILE + GAP) - ((ROWS * (TILE + GAP) - GAP) / 2),
 }));
 
 /** The order users get the feature: shuffled once, so a rollout looks scattered, not row by row. */
 const ORDER = (() => {
-  const ids = TILES.map((_, i) => i);
+  const ids = TILES.map((_, index) => index);
   let seed = 7;
   for (let i = ids.length - 1; i > 0; i--) {
     seed = (seed * 9301 + 49297) % 233280;
@@ -67,8 +66,8 @@ function layoutFor(percent: Percent): SceneProps["layouts"][string] {
     objects: {
       base: { x: -190, y: -165, z: 0, width: 380, depth: 330, height: 14 },
       ...Object.fromEntries(
-        TILES.map((t, i) => {
-          const on = ORDER[i]! < reached;
+        TILES.map((t, index) => {
+          const on = ORDER[index]! < reached;
           return [
             t.id,
             {
@@ -81,7 +80,7 @@ function layoutFor(percent: Percent): SceneProps["layouts"][string] {
               ghost: on ? 0 : 0.8,
               fill: on ? 1 : 0,
               color: VIOLET,
-              delay: on ? ORDER[i]! * 0.025 : (TILES.length - ORDER[i]!) * 0.012,
+              delay: on ? ORDER[index]! * 0.025 : (TILES.length - ORDER[index]!) * 0.012,
             },
           ];
         }),
@@ -131,9 +130,9 @@ export function GradualRollout({ playing }: GradualRolloutProps = {}) {
       />
 
       <div className="night-chip gr-flag">
-        <span className="gr-dot" data-on={state.percent > 0 || undefined} aria-hidden="true" />
-        <code>checkout-v2</code>
-        <span className="gr-errors">errors 0.02%</span>
+        <span className="size-[7px] rounded-full bg-[#5b5868] transition-[background-color,box-shadow] duration-300 data-[on]:bg-[#7c5cff] data-[on]:shadow-[0_0_0_3px_rgb(124_92_255_/_0.25)]" data-on={state.percent > 0 || undefined} aria-hidden="true" />
+        <code className="font-mono text-[12.5px]">checkout-v2</code>
+        <span className="rounded-full bg-[rgb(52_199_89_/_0.12)] px-[7px] py-0.5 font-mono text-[11px] text-[#5ee08a]">errors 0.02%</span>
       </div>
 
       <div className="night-foot">
@@ -141,13 +140,13 @@ export function GradualRollout({ playing }: GradualRolloutProps = {}) {
           <b>{reachedOf(state.percent)}</b> users
         </span>
         <ToggleGroup
-          className="gr-steps"
+          className="flex gap-0.5 rounded-[10px] bg-white/5 p-[3px] shadow-[inset_0_0_0_1px_rgb(255_255_255_/_0.07)]"
           aria-label="Roll out to"
           value={[String(state.percent)]}
           onValueChange={(v) => v[0] !== undefined && take({ percent: Number(v[0]) as Percent })}
         >
           {PERCENTS.map((p) => (
-            <Toggle key={p} value={String(p)} className="gr-step">
+            <Toggle key={p} value={String(p)} className="h-7 min-w-[46px] rounded-[7px] px-2 font-mono text-xs text-[#8f8ca3] transition-[background-color,color] hover:text-[#ecebf5] data-[pressed]:bg-[rgb(124_92_255_/_0.22)] data-[pressed]:text-white data-[pressed]:shadow-[inset_0_0_0_1px_rgb(124_92_255_/_0.55)] focus-visible:outline-2 focus-visible:outline-[#a48bff] focus-visible:outline-offset-1">
               {p}%
             </Toggle>
           ))}

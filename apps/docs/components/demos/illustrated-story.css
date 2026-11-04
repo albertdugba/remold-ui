@@ -1,0 +1,250 @@
+.ils-stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 24px 16px;
+}
+
+.ils {
+  --ils-ink: #27272a;
+  --ils-brand: #16a34a;
+  --ils-light: #ffffff;
+  --ils-soft: #d4d4d8;
+  --ils-sheen: rgb(255 255 255 / 0.16);
+  --ils-muted: #71717a;
+  --ils-track: #e4e4e7;
+
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: min(100%, 420px);
+  color: var(--ils-ink);
+  font-family: inherit;
+  text-align: center;
+}
+
+.dark .ils {
+  --ils-ink: #e4e4e7;
+  --ils-light: #18181b;
+  --ils-soft: #3f3f46;
+  --ils-sheen: rgb(0 0 0 / 0.12);
+  --ils-muted: #a1a1aa;
+  --ils-track: #3f3f46;
+}
+
+/* Every layer covers the frame exactly, so they line up as one drawing. The frame has the
+   drawing's own proportions, so a transform origin in percent lands on the same point of it. */
+.ils-art {
+  position: relative;
+  width: min(100%, 380px);
+  aspect-ratio: 160 / 128;
+}
+
+.ils-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ils-ground ellipse {
+  fill: rgb(0 0 0 / 0.06);
+}
+
+.dark .ils-ground ellipse {
+  fill: rgb(0 0 0 / 0.35);
+}
+
+.ils-soft,
+.ils-topSoft {
+  color: var(--ils-soft);
+}
+
+.ils-ink,
+.ils-top {
+  color: var(--ils-ink);
+}
+
+.ils-sheen {
+  color: var(--ils-sheen);
+}
+
+.ils-brand,
+.ils-topBrand {
+  color: var(--ils-brand);
+}
+
+.ils-light,
+.ils-topLight {
+  color: var(--ils-light);
+}
+
+/* The object moves from its foot; its parts and pieces each set their own origin. */
+.ils-body,
+.ils-soft {
+  transform-origin: 50% 88%;
+}
+
+/* A story's extra pieces (a road, spokes, a ping) show only in the stage that wants them. */
+.ils-extra {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+/* Held still while the layers reshape, so the live motion never fights the morph. */
+.ils-art[data-morphing] * {
+  animation: none !important;
+}
+
+.ils-art[data-morphing] .ils-extra {
+  opacity: 0 !important;
+}
+
+.ils-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.ils-title {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.ils-line {
+  color: var(--ils-muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The steps: filled up to where things are, the rest still to come. */
+.ils-steps {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ils-step {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 4px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ils-track);
+  cursor: pointer;
+}
+
+/* A larger hit area than the 4px bar. */
+.ils-step::before {
+  content: "";
+  position: absolute;
+  inset: -10px 0;
+}
+
+.ils-step::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--ils-brand);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ils-step[data-state="done"]::after,
+.ils-step[data-state="current"]::after {
+  transform: scaleX(1);
+}
+
+.ils-step:focus-visible {
+  outline: 2px solid var(--ils-ink);
+  outline-offset: 4px;
+}
+
+/* Shared live motions, for any story to use. */
+@keyframes ils-rise {
+  0% {
+    transform: translateY(4px);
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+}
+
+@keyframes ils-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes ils-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes ils-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ils-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ils-land {
+  from {
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes ils-ping {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ils-art *,
+  .ils-step::after {
+    animation: none !important;
+    transition: none;
+  }
+}

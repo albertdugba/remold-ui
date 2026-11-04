@@ -1,0 +1,34 @@
+---
+title: "Address autocomplete"
+description: "An address field that fills in the form for you: pick a suggestion and it rests for a beat, then splits. The street stays as the box becomes the street field, the area glides down into its own field, and the new fields unfold from behind it."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="address-autocomplete" code={<Source demo="address-autocomplete" />} minHeight={440}>
+  <AddressAutocompleteDemo />
+</Stage>
+
+## Things to try
+
+- **Type “12 Ox”.** Matching addresses are offered.
+- **Pick one.** It rests in the box for a beat, then the area and city glide down out of the line while the new fields unfold from behind the street, one after the other.
+- **Search again.** The fields fold back into the search.
+
+## Install
+
+<AddCommand name="address-autocomplete" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="address-autocomplete" />
+
+## How it works
+
+- **Built on Base UI.** `Autocomplete` does the suggestions and keyboard handling; `Field` gives each part its label.
+- **One line becomes three.** The search box becomes the street field, and each part of the address keeps a Motion `layoutId` from the line to its field, so the words themselves travel. The fields show their own text once the words land.
+- **No jumps.** The element reserves the split form's height from the start, so splitting grows downwards instead of moving what you were looking at.
+
+<Callout>The addresses are made up.</Callout>

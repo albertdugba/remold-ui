@@ -105,7 +105,7 @@ export function Picker<V extends string>({
               </p>
             )}
             <LayoutGroup id={id}>
-              {options.map((option, i) => (
+              {options.map((option, index) => (
                 <Select.Item
                   key={option.value}
                   value={option.value}
@@ -125,7 +125,7 @@ export function Picker<V extends string>({
                   {icon?.(option.value)}
                   <Select.ItemText className="pk-option-label">{option.label}</Select.ItemText>
                   {option.value === value && <span className="pk-current">{currentLabel}</span>}
-                  {shortcuts && i < 9 && <kbd>{i + 1}</kbd>}
+                  {shortcuts && index < 9 && <kbd>{index + 1}</kbd>}
                 </Select.Item>
               ))}
             </LayoutGroup>

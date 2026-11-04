@@ -1,10 +1,23 @@
 "use client";
+/**
+ * Files you select by range, with an action bar for what you selected. The table is TanStack Table
+ * (columns, row model and row selection), drawn with Base UI checkboxes; Motion joins selected rows
+ * into one band, folds deleted rows away and rolls the count.
+ */
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Cancel01Icon, Delete02Icon, FileAttachmentIcon, FileSpreadsheetIcon, FolderInputIcon, Image01Icon, MinusSignIcon, Share02Icon, CheckIcon } from "@hugeicons/core-free-icons";
 import { Checkbox } from "@base-ui/react/checkbox";
 import { Tooltip } from "@base-ui/react/tooltip";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  type RowSelectionState,
+  type Updater,
+} from "@tanstack/react-table";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties, type MouseEvent } from "react";
 import { useScene } from "./use-scene";
 import { usePortalContainer } from "./portal-container";
 import "./bulk-select.css";
@@ -54,6 +67,38 @@ const fromBeat = (step: number): State => {
 
 const SPRING = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
 
+const column = createColumnHelper<File>();
+
+/** The table's data columns. The select column is added inside, where it can reach the scene. */
+const DATA_COLUMNS = [
+  column.accessor("name", {
+    header: ({ table }) => (
+      <span className="bk-title">
+        Files <span>{table.getRowCount()}</span>
+      </span>
+    ),
+    cell: ({ row }) => {
+      const Icon = row.original.icon;
+      return (
+        <span className="bk-name">
+          <span className="bk-icon" style={{ "--tint": row.original.color } as CSSProperties}>
+            <HugeiconsIcon icon={Icon} aria-hidden="true" />
+          </span>
+          <span className="bk-file">{row.original.name}</span>
+        </span>
+      );
+    },
+  }),
+  column.accessor("size", {
+    header: () => <span className="bk-col-size">Size</span>,
+    cell: (info) => <span className="bk-size">{info.getValue()}</span>,
+  }),
+  column.accessor("edited", {
+    header: () => <span className="bk-col-date">Edited</span>,
+    cell: (info) => <span className="bk-date">{info.getValue()}</span>,
+  }),
+];
+
 interface BulkSelectDemoProps {
   /** Plays and pauses the scene from outside, as the home page's card does. Leave it out to play until touched. */
   playing?: boolean;
@@ -68,109 +113,147 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
   // Undo stays a few seconds, then the bar leaves.
   useEffect(() => {
     if (scene.live || !state.undo) return;
-    const t = setTimeout(() => take((s) => ({ ...s, undo: null })), 4500);
+    const t = setTimeout(() => take((current) => ({ ...current, undo: null })), 4500);
     return () => clearTimeout(t);
   }, [scene.live, state.undo, take]);
 
-  const rows = FILES.filter((f) => !state.gone.includes(f.id));
+  const rows = useMemo(() => FILES.filter((f) => !state.gone.includes(f.id)), [state.gone]);
   const count = state.selected.length;
-  const all = count > 0 && count === rows.length;
 
   const tick = (id: string, on: boolean) =>
-    take((s) => {
-      const visible = FILES.filter((f) => !s.gone.includes(f.id)).map((f) => f.id);
+    take((current) => {
+      const visible = FILES.filter((f) => !current.gone.includes(f.id)).map((f) => f.id);
       // Shift-click selects everything between the last row ticked and this one.
-      if (shift.current && s.anchor && on) {
-        const [from, to] = [visible.indexOf(s.anchor), visible.indexOf(id)].sort((x, y) => x - y);
+      if (shift.current && current.anchor && on) {
+        const [from, to] = [visible.indexOf(current.anchor), visible.indexOf(id)].sort((x, y) => x - y);
         const range = visible.slice(from, to + 1);
-        return { ...s, selected: [...new Set([...s.selected, ...range])], undo: null };
+        return { ...current, selected: [...new Set([...current.selected, ...range])], undo: null };
       }
       return {
-        ...s,
-        selected: on ? [...s.selected, id] : s.selected.filter((x) => x !== id),
+        ...current,
+        selected: on ? [...current.selected, id] : current.selected.filter((x) => x !== id),
         anchor: id,
         undo: null,
       };
     });
 
   const remove = () =>
-    take((s) => ({ gone: [...s.gone, ...s.selected], selected: [], anchor: null, undo: s.selected }));
-  const restore = () => take((s) => ({ ...s, gone: s.gone.filter((g) => !s.undo?.includes(g)), undo: null }));
+    take((current) => ({ gone: [...current.gone, ...current.selected], selected: [], anchor: null, undo: current.selected }));
+  const restore = () => take((current) => ({ ...current, gone: current.gone.filter((g) => !current.undo?.includes(g)), undo: null }));
+
+  // TanStack Table holds the rows, columns and selection model; the scene's state stays the source
+  // of truth, so selection is read from it and written back to it.
+  const rowSelection = useMemo<RowSelectionState>(() => Object.fromEntries(state.selected.map((id) => [id, true])), [state.selected]);
+  const onRowSelectionChange = (updater: Updater<RowSelectionState>) =>
+    take((current) => {
+      const previous = Object.fromEntries(current.selected.map((id) => [id, true]));
+      const next = typeof updater === "function" ? updater(previous) : updater;
+      return { ...current, selected: Object.keys(next).filter((id) => next[id]), undo: null };
+    });
+
+  const columns = [
+    column.display({
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox.Root
+          className="bk-check"
+          checked={table.getIsAllRowsSelected()}
+          indeterminate={table.getIsSomeRowsSelected()}
+          onCheckedChange={(on) => table.toggleAllRowsSelected(on)}
+          aria-label="Select all files"
+        >
+          <Checkbox.Indicator
+            className="bk-tick"
+            render={(props, st) => (
+              <span {...props}>
+                <HugeiconsIcon icon={st.indeterminate ? MinusSignIcon : CheckIcon} aria-hidden="true" />
+              </span>
+            )}
+          />
+        </Checkbox.Root>
+      ),
+      cell: ({ row }) => (
+        <Checkbox.Root
+          className="bk-check"
+          checked={row.getIsSelected()}
+          // Through `tick`, so a shift-click still selects the range from the last row ticked.
+          onCheckedChange={(next) => tick(row.id, next)}
+          aria-label={`Select ${row.original.name}`}
+        >
+          <Checkbox.Indicator className="bk-tick">
+            <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
+          </Checkbox.Indicator>
+        </Checkbox.Root>
+      ),
+    }),
+    ...DATA_COLUMNS,
+  ];
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getRowId: (file) => file.id,
+    getCoreRowModel: getCoreRowModel(),
+    state: { rowSelection },
+    onRowSelectionChange,
+    enableRowSelection: true,
+  });
+  const tableRows = table.getRowModel().rows;
 
   const bar = count > 0 ? "select" : state.undo ? "undo" : null;
-  const picked = (id: string | undefined) => id !== undefined && state.selected.includes(id);
 
   return (
     <Tooltip.Provider delay={300}>
       <section ref={scene.ref} className="bk bk-layer not-prose" aria-label="Files">
-        <div className="bk-head">
-          <Checkbox.Root
-            className="bk-check"
-            checked={all}
-            indeterminate={count > 0 && !all}
-            onCheckedChange={(on) => take((s) => ({ ...s, selected: on ? rows.map((r) => r.id) : [], undo: null }))}
-            aria-label="Select all files"
-          >
-            <Checkbox.Indicator className="bk-tick" render={(props, st) => (
-              <span {...props}>{st.indeterminate ? <HugeiconsIcon icon={MinusSignIcon} aria-hidden="true" /> : <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />}</span>
-            )} />
-          </Checkbox.Root>
-          <span className="bk-title">
-            Files <span>{rows.length}</span>
-          </span>
-          <span className="bk-col-size">Size</span>
-          <span className="bk-col-date">Edited</span>
-        </div>
+        <div role="table" aria-label="Files" aria-rowcount={tableRows.length}>
+          {table.getHeaderGroups().map((group) => (
+            <div key={group.id} role="row" className="bk-head">
+              {group.headers.map((header) => (
+                <span key={header.id} role="columnheader" className="bk-cell">
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </span>
+              ))}
+            </div>
+          ))}
 
-        <ul className="bk-rows">
-          <AnimatePresence initial={false}>
-            {rows.map((file, i) => {
-              const on = state.selected.includes(file.id);
-              const order = state.undo?.indexOf(file.id) ?? -1;
-              const Icon = file.icon;
-              return (
-                <motion.li
-                  key={file.id}
-                  layout="position"
-                  className="bk-row"
-                  data-selected={on || undefined}
-                  // Selected neighbours join into one band: only its outer corners round.
-                  data-joins-up={(on && picked(rows[i - 1]?.id)) || undefined}
-                  data-joins-down={(on && picked(rows[i + 1]?.id)) || undefined}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  // Deleted rows fold away one after another, in the order they sit.
-                  exit={{ opacity: 0, height: 0, transition: { duration: 0.28, delay: Math.max(0, order) * 0.06, ease: [0.4, 0, 0.2, 1] } }}
-                  transition={SPRING}
-                  onClickCapture={(e: MouseEvent) => {
-                    shift.current = e.shiftKey;
-                  }}
-                >
-                  <label className="bk-row-inner">
-                    <Checkbox.Root
-                      className="bk-check"
-                      checked={on}
-                      onCheckedChange={(next) => tick(file.id, next)}
-                      aria-label={`Select ${file.name}`}
-                    >
-                      <Checkbox.Indicator className="bk-tick">
-                        <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
-                      </Checkbox.Indicator>
-                    </Checkbox.Root>
-                    <span className="bk-name">
-                      <span className="bk-icon" style={{ "--tint": file.color } as CSSProperties}>
-                        <HugeiconsIcon icon={Icon} aria-hidden="true" />
-                      </span>
-                      <span className="bk-file">{file.name}</span>
-                    </span>
-                    <span className="bk-size">{file.size}</span>
-                    <span className="bk-date">{file.edited}</span>
-                  </label>
-                </motion.li>
-              );
-            })}
-          </AnimatePresence>
-        </ul>
+          <ul role="rowgroup" className="bk-rows">
+            <AnimatePresence initial={false}>
+              {tableRows.map((row, index) => {
+                const on = row.getIsSelected();
+                const order = state.undo?.indexOf(row.id) ?? -1;
+                return (
+                  <motion.li
+                    key={row.id}
+                    role="row"
+                    aria-selected={on}
+                    layout="position"
+                    className="bk-row"
+                    data-selected={on || undefined}
+                    // Selected neighbours join into one band: only its outer corners round.
+                    data-joins-up={(on && tableRows[index - 1]?.getIsSelected()) || undefined}
+                    data-joins-down={(on && tableRows[index + 1]?.getIsSelected()) || undefined}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    // Deleted rows fold away one after another, in the order they sit.
+                    exit={{ opacity: 0, height: 0, transition: { duration: 0.28, delay: Math.max(0, order) * 0.06, ease: [0.4, 0, 0.2, 1] } }}
+                    transition={SPRING}
+                    onClickCapture={(event: MouseEvent) => {
+                      shift.current = event.shiftKey;
+                    }}
+                  >
+                    <label className="bk-row-inner">
+                      {row.getVisibleCells().map((cell) => (
+                        <span key={cell.id} role="cell" className="bk-cell">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </span>
+                      ))}
+                    </label>
+                  </motion.li>
+                );
+              })}
+            </AnimatePresence>
+          </ul>
+        </div>
         <div className="bk-dock" aria-live="polite">
           <AnimatePresence initial={false}>
             {!bar && (
@@ -205,7 +288,7 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.18 }}
                     >
-                      <button type="button" className="bk-clear" onClick={() => take((s) => ({ ...s, selected: [] }))} aria-label="Clear selection">
+                      <button type="button" className="bk-clear" onClick={() => take((current) => ({ ...current, selected: [] }))} aria-label="Clear selection">
                         <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
                       </button>
                       <span className="bk-count">

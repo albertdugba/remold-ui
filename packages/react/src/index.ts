@@ -29,6 +29,7 @@ export type { ParticleShape } from "./particles/types.js";
 export type { GlobeArcEvent, GlobePulse } from "./globe/types.js";
 export type { RemoldDotGridActions as DotGridActions } from "./dot-grid/types.js";
 export type {
+  Choreography,
   Transition,
   TransitionOptions,
   TransitionResult,

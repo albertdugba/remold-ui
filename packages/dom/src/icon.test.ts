@@ -35,6 +35,22 @@ describe("iconToPath", () => {
     expect(iconToPath(host)?.look).toEqual({ viewBox: "0 0 20 20" });
   });
 
+  it("reads paint the svg leaves out from the first shape, as Hugeicons sets it", () => {
+    const host = mount(
+      `<svg viewBox="0 0 24 24" fill="none">
+        <path d="M5 14L8.5 17.5L19 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+        <path d="M4 4h1" stroke="red" stroke-width="3"></path>
+      </svg>`,
+    );
+    expect(iconToPath(host)?.look).toEqual({
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "1.5",
+      strokeLinecap: "round",
+    });
+  });
+
   it("skips shapes that aren't drawn, such as clip paths and gradients", () => {
     const host = mount(
       `<svg viewBox="0 0 24 24"><defs><clipPath id="c"><rect width="24" height="24"></rect></clipPath></defs>

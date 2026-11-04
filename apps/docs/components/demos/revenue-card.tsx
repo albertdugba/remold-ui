@@ -5,15 +5,18 @@
  * change badge rolls too, its arrow turning between up and down. Scrub along the chart and a dot
  * rides the line while the headline shows that day.
  *
- * Built with Base UI (toggle group) and Motion; the chart line and the badge arrow reshape with
- * Remold's `createMorph`. It plays a short scene while it's on screen. Touch it and it's yours.
+ * Built with Base UI (toggle group) and Motion; the chart line reshapes with Remold's `createMorph`
+ * and the badge arrow with `Remold.Icon`. It plays a short scene while it's on screen. Touch it and it's yours.
  * The numbers are made up.
  */
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowDown02Icon, ArrowUp02Icon } from "@hugeicons/core-free-icons";
+import { Remold } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useId, useRef, type KeyboardEvent, type PointerEvent } from "react";
-import { MorphIcon, useMorphPath } from "./morph-icon";
+import { useMorphPath } from "./use-morph-path";
 import { Odometer } from "./odometer";
 import { useScene } from "./use-scene";
 import "./revenue-card.css";
@@ -31,15 +34,15 @@ interface Series {
 
 /** A believable curve from one value to another: a trend, some weekly wobble, and an optional dip. */
 function curve(n: number, from: number, to: number, wobble: number, dip = 0) {
-  return Array.from({ length: n }, (_, i) => {
-    if (i === 0) return from;
-    if (i === n - 1) return to;
-    const t = i / (n - 1);
-    const noise = Math.sin(i * 1.7) * wobble + Math.sin(i * 0.43) * wobble * 1.6;
+  return Array.from({ length: n }, (_, index) => {
+    if (index === 0) return from;
+    if (index === n - 1) return to;
+    const t = index / (n - 1);
+    const noise = Math.sin(index * 1.7) * wobble + Math.sin(index * 0.43) * wobble * 1.6;
     return Math.round(from + (to - from) * t + noise - dip * Math.sin(Math.PI * t) ** 2);
   });
 }
-const signups = (n: number, seed: number) => Array.from({ length: n }, (_, i) => 6 + ((i * 7 + seed) % 13));
+const signups = (n: number, seed: number) => Array.from({ length: n }, (_, index) => 6 + ((index * 7 + seed) % 13));
 
 const SERIES: Record<Range, Series> = {
   "7d": {
@@ -75,7 +78,7 @@ function points(values: number[]) {
   const lo = Math.min(...values);
   const hi = Math.max(...values);
   const span = hi - lo || 1;
-  return values.map((v, i) => [(i / (values.length - 1)) * W, PAD + (1 - (v - lo) / span) * (H - PAD * 2)] as const);
+  return values.map((v, index) => [(index / (values.length - 1)) * W, PAD + (1 - (v - lo) / span) * (H - PAD * 2)] as const);
 }
 
 /** A smooth line through the points (Catmull-Rom, as cubic Béziers). */
@@ -94,17 +97,15 @@ function smooth(pts: readonly (readonly [number, number])[]) {
 }
 
 const TODAY = new Date(2026, 9, 27);
-const dateOf = (series: Series, i: number) => {
+const dateOf = (series: Series, index: number) => {
   const d = new Date(TODAY);
-  d.setDate(d.getDate() - (series.values.length - 1 - i) * series.step);
+  d.setDate(d.getDate() - (series.values.length - 1 - index) * series.step);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 /** Two strokes each: an arrow's shaft and head, pointing up or down. */
-const UP = "M12 19V5M5.5 11.5L12 5l6.5 6.5";
-const DOWN = "M12 5v14M5.5 12.5L12 19l6.5-6.5";
 
 interface State {
   range: Range;
@@ -158,14 +159,14 @@ export function RevenueCardDemo({ playing }: RevenueCardDemoProps = {}) {
     const box = chart.current!.getBoundingClientRect();
     const t = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width));
     const i = Math.round(t * last);
-    if (i !== state.hover) take((s) => ({ ...s, hover: i }));
+    if (i !== state.hover) take((current) => ({ ...current, hover: i }));
   };
 
   const onKey = (event: KeyboardEvent) => {
     const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
     if (!step) return;
     event.preventDefault();
-    take((s) => ({ ...s, hover: Math.min(last, Math.max(0, (s.hover ?? last) + step)) }));
+    take((current) => ({ ...current, hover: Math.min(last, Math.max(0, (current.hover ?? last) + step)) }));
   };
 
   return (
@@ -192,7 +193,7 @@ export function RevenueCardDemo({ playing }: RevenueCardDemoProps = {}) {
       <div className="rv-figure">
         <Odometer value={money(value)} className="rv-mrr" />
         <span className="rv-badge" data-down={up ? undefined : ""}>
-          <MorphIcon d={up ? UP : DOWN} strokeWidth={2.6} />
+          <Remold.Icon icon={<HugeiconsIcon icon={up ? ArrowUp02Icon : ArrowDown02Icon} />} strokeWidth={2.6} />
           <Odometer value={`${Math.abs(change * 100).toFixed(1)}%`} />
         </span>
       </div>
@@ -220,9 +221,9 @@ export function RevenueCardDemo({ playing }: RevenueCardDemoProps = {}) {
         aria-label={`Revenue over ${series.label}, ${up ? "up" : "down"} ${Math.abs(change * 100).toFixed(1)} percent`}
         onPointerMove={scrub}
         onPointerDown={scrub}
-        onPointerLeave={() => state.hover !== null && take((s) => ({ ...s, hover: null }))}
+        onPointerLeave={() => state.hover !== null && take((current) => ({ ...current, hover: null }))}
         onKeyDown={onKey}
-        onBlur={() => state.hover !== null && take((s) => ({ ...s, hover: null }))}
+        onBlur={() => state.hover !== null && take((current) => ({ ...current, hover: null }))}
         data-down={up ? undefined : ""}
       >
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">

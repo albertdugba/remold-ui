@@ -1,0 +1,34 @@
+---
+title: "Phone input"
+description: "A phone number field that formats as you type: each digit rises into place, the country's spaces and brackets appear as the number reaches them, and changing country regroups the same digits with the separators sliding to their new places."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="phone-input" code={<Source demo="phone-input" />} minHeight={360}>
+  <PhoneInputDemo />
+</Stage>
+
+## Things to try
+
+- **Type a number.** Spaces appear as the number reaches them.
+- **Change the country.** The same digits regroup into the new format, and the spaces that both formats share slide across.
+- **Paste a full number.** A pasted country code or leading zero is dropped.
+
+## Install
+
+<AddCommand name="phone-input" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="phone-input" />
+
+## How it works
+
+- **Built on Base UI.** `Field` gives the label and description, and `Select` is the country picker.
+- **A real input underneath.** An invisible input covers the number, so typing, pasting and autofill work as usual. The digits you see are drawn from its value.
+- **Separators slide.** Digits are keyed by their position and separators by their order, so a space shared by both formats moves instead of being redrawn.
+
+<Callout>Formats are simplified examples, not full numbering plans.</Callout>

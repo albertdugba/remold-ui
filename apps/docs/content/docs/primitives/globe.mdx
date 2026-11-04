@@ -13,6 +13,8 @@ The globe above is one `<Remold.Globe>`. The arcs are a list of journeys passed 
 
 <Install packages="@remold-ui/react" />
 
+Import the globe from `@remold-ui/react/canvas` so canvas rendering stays opt-in.
+
 Using plain JavaScript? Install `@remold-ui/canvas` instead, and use `globe()`.
 
 ## Usage
@@ -20,7 +22,7 @@ Using plain JavaScript? Install `@remold-ui/canvas` instead, and use `globe()`.
 Give every event an `id`. Each id it hasn't seen sends out one pulse or flies one arc, so pass your recent events as they are.
 
 ```tsx tab="React" tab-group="lang"
-import { Remold } from '@remold-ui/react';
+import { Remold } from '@remold-ui/react/canvas';
 
 <Remold.Globe
   colors={{ sphere: "#0c1633", glow: "#3d6bff", land: "#7d9be0", arc: ["#ff7ac6", "#5ab0ff"] }}

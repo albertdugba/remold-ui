@@ -16,9 +16,9 @@ export default defineConfig([
   },
   // CommonJS for older tools, as one file, with the type declarations for both.
   {
-    entry: ["src/index.ts"],
+    entry: ["src/index.ts", "src/canvas.ts"],
     format: ["cjs"],
-    dts: { entry: "src/index.ts", compilerOptions: { composite: false } },
+    dts: { entry: ["src/index.ts", "src/canvas.ts"], compilerOptions: { composite: false } },
     outDir: "dist",
     target: "es2022",
     external,

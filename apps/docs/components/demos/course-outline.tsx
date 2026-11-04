@@ -152,14 +152,14 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
     set: (f: (s: Set<string>) => Set<string>) => void,
     id: string,
   ) =>
-    set((s) => {
-      const nextSet = new Set(s);
+    set((current) => {
+      const nextSet = new Set(current);
       if (nextSet.has(id)) nextSet.delete(id);
       else nextSet.add(id);
       return nextSet;
     });
 
-  const onKey = (e: KeyboardEvent, row: Row) => {
+  const onKey = (event: KeyboardEvent, row: Row) => {
     const i = rows.findIndex((r) => r.id === row.id);
     const move = (id: string) => {
       setFocus(id);
@@ -170,15 +170,15 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
             ?.focus(),
       );
     };
-    if (e.key === "ArrowDown" && rows[i + 1]) move(rows[i + 1]!.id);
-    else if (e.key === "ArrowUp" && rows[i - 1]) move(rows[i - 1]!.id);
-    else if (e.key === "ArrowRight" && row.module && !open.has(row.id))
+    if (event.key === "ArrowDown" && rows[i + 1]) move(rows[i + 1]!.id);
+    else if (event.key === "ArrowUp" && rows[i - 1]) move(rows[i - 1]!.id);
+    else if (event.key === "ArrowRight" && row.module && !open.has(row.id))
       toggle(setOpen, row.id);
-    else if (e.key === "ArrowLeft" && row.module && open.has(row.id))
+    else if (event.key === "ArrowLeft" && row.module && open.has(row.id))
       toggle(setOpen, row.id);
-    else if (e.key === "ArrowLeft" && row.parent) move(row.parent);
+    else if (event.key === "ArrowLeft" && row.parent) move(row.parent);
     else return;
-    e.preventDefault();
+    event.preventDefault();
   };
 
   const finished = lessons.filter((l) => done.has(l.id)).length;
@@ -209,12 +209,12 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
             if (next) setShow(next);
           }}
         >
-          {SHOW.map((s) => (
+          {SHOW.map((option) => (
             <Toggle
-              key={s}
-              value={s}
+              key={option}
+              value={option}
             >
-              {s}
+              {option}
             </Toggle>
           ))}
         </ToggleGroup>
@@ -257,7 +257,7 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
                     setFocus(m.id);
                     toggle(setOpen, m.id);
                   }}
-                  onKeyDown={(e) => onKey(e, row)}
+                  onKeyDown={(event) => onKey(event, row)}
                 >
                   <span className="co-chevron" aria-hidden="true">
                     <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} aria-hidden="true" data-open={isOpen ? "" : undefined} />
@@ -305,7 +305,7 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
                     setFocus(l.id);
                     toggle(setDone, l.id);
                   }}
-                  onKeyDown={(e) => onKey(e, row)}
+                  onKeyDown={(event) => onKey(event, row)}
                 >
                   <Remold.Icon
                     icon={<HugeiconsIcon icon={isDone ? CheckmarkCircle01Icon : CircleIcon} />}

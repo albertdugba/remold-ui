@@ -1,0 +1,40 @@
+---
+title: "Product tour"
+description: "A product tour where the spotlight springs from one control to the next, a line ties each tip to what it explains, and the tip grows out of the help button and folds back into it."
+status: "new"
+tags: ["Layout", "Connectors", "Text"]
+---
+
+<Stage name="product-tour" code={<Source demo="product-tour" />} wide>
+  <ProductTourDemo />
+</Stage>
+
+## Things to try
+
+- **Press Take the tour.** The pill in the corner grows into the first tip, the app dims, and a window opens around New report. A dotted line runs from the button to the tip, and a light travels along it.
+- **Press Next.** The window springs to the search field, the tip moves beside it, and its title and text change letter by letter. The old line draws out and a new one draws in.
+- **Use the arrow keys,** or Back and Next. Escape ends the tour from any step.
+- **Finish.** The window opens past the edges, the dim fades, and the tip folds back into the pill it came from, ready for next time.
+
+## Install
+
+<AddCommand name="product-tour" />
+
+## Dependencies
+
+<Dependencies demo="product-tour" />
+
+## Make it yours
+
+- **Your steps** are `STEPS`: the control to point at, a title, a line of text, and which side of the control the tip sits on. The tip stays inside the window, whichever side you choose.
+- **Your app** is the mock between the comments. Wrap each control you want to point at in `Remold.Anchor` with a `name`, and use that name as a step's `target`.
+- **Your look:** the dim, the ring round the window and the line's dash are CSS custom properties and plain styles in `product-tour.css`.
+
+## How it works
+
+- **The spotlight** is one element with a wide shadow that dims everything outside it. It springs to each control with a CSS transition whose easing is a spring curve, so it overshoots a touch and settles.
+- **The tip is the help button.** One element is both. When the tour starts, a [Layout](/docs/primitives/layout) grows it out of the corner into the tip. Each step, it moves the tip to its new place. At the end, it folds the tip back into the pill.
+- **The line** is [Connectors](/docs/primitives/connectors): each control is an anchor, and the tip links to the current one. Changing the link draws the old line out and the new one in, and `pulse={step}` sends a light along it on every step. It stays attached while the tip moves.
+- **The words** are [Text](/docs/primitives/text), so the title, the text and "1 of 4" change letter by letter instead of swapping.
+- **Every control is measured once,** and again on resize, so the spotlight and the tip are placed in the same render that changes the step.
+- **It's a dialog while it's open.** It's labelled by the tip's title and described by its text. Focus moves to Next when the tour starts and back to the pill when it ends. The app behind is `inert`, so keyboard focus stays in the tip.

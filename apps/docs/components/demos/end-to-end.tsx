@@ -16,7 +16,6 @@ import { useEffect } from "react";
 import { BROWSER_GLYPH, CHAT_GLYPH, SERVER_GLYPH } from "./demo-glyphs";
 import { NIGHT, PLATFORM_INK, VIOLET, WIRE_INK } from "./night-stage";
 import { useScene } from "./use-scene";
-import "./end-to-end.css";
 
 type SceneProps = Remold.Scene.Props;
 type Beat = "write" | "sealed" | "transit" | "arrived" | "opened";
@@ -162,8 +161,7 @@ export function EndToEnd({ playing }: EndToEndProps = {}) {
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.b
             key={read.sees}
-            className="e2e-sees"
-            data-sealed={read.sealed || undefined}
+            className={`inline-block whitespace-nowrap font-mono text-[13px] font-semibold ${read.sealed ? "text-[#a48bff]" : ""}`}
             initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}

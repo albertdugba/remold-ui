@@ -1,7 +1,13 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, CircleIcon, Mic01Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
+import {
+  Cancel01Icon,
+  CircleIcon,
+  Mic01Icon,
+  PauseIcon,
+  PlayIcon,
+} from "@hugeicons/core-free-icons";
 import { useAutoplay } from "@remold-ui/react";
 import { motion } from "motion/react";
 import {
@@ -38,7 +44,7 @@ const TICK = 80;
 const SHORTEST = 500;
 const LONGEST = 60_000;
 
-const SPRING = { type: "spring" as const, duration: 0.32, bounce: 0.08 };
+const SPRING = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
 const QUIET = Array<number>(BARS).fill(0);
 
 const clock = (s: number) =>
@@ -51,9 +57,12 @@ function speech(i: number) {
 }
 
 function summarise(levels: number[]) {
-  return Array.from({ length: BARS }, (_, i) => {
-    const from = Math.floor((i * levels.length) / BARS);
-    const to = Math.max(from + 1, Math.floor(((i + 1) * levels.length) / BARS));
+  return Array.from({ length: BARS }, (_, index) => {
+    const from = Math.floor((index * levels.length) / BARS);
+    const to = Math.max(
+      from + 1,
+      Math.floor(((index + 1) * levels.length) / BARS),
+    );
     return Math.max(0, ...levels.slice(from, to));
   });
 }
@@ -74,12 +83,24 @@ export function HoldToRecordDemo({ playing }: HoldToRecordDemoProps = {}) {
   const [state, setState] = useState<State>({ phase: "idle" });
   const [said, setSaid] = useState("");
   const autoplay = useAutoplay(STEPS.length, {
-    every: (i) => STEPS[i]!.ms,
+    every: (index) => STEPS[index]!.ms,
     stopOnInteraction: playing === undefined,
+    autoStart: playing !== undefined,
   });
   const { step, playing: live, setPlaying: setLive } = autoplay;
 
   const stateRef = useRef(state);
+  const inner = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState<number | null>(null);
+
+  // The pill springs to the width of what it holds and clips it, so nothing inside is stretched.
+  useEffect(() => {
+    const element = inner.current;
+    if (!element) return;
+    const observer = new ResizeObserver(() => setWidth(element.offsetWidth));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   const hintTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(hintTimer.current), []);
 
@@ -201,29 +222,29 @@ export function HoldToRecordDemo({ playing }: HoldToRecordDemoProps = {}) {
   }, [live, set]);
 
   const holdable = state.phase !== "clip";
-  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (!holdable || e.button !== 0) return;
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (!holdable || event.button !== 0) return;
     setLive(false);
     start("you");
 
     try {
-      e.currentTarget.setPointerCapture(e.pointerId);
+      event.currentTarget.setPointerCapture(event.pointerId);
     } catch {}
   };
-  const onPointerUp = (e: PointerEvent<HTMLDivElement>) =>
-    finish(e.type === "pointercancel");
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+  const onPointerUp = (event: PointerEvent<HTMLDivElement>) =>
+    finish(event.type === "pointercancel");
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!holdable) return;
-    if (e.key === "Escape") return finish(true);
-    if ((e.key === " " || e.key === "Enter") && !e.repeat) {
-      e.preventDefault();
+    if (event.key === "Escape") return finish(true);
+    if ((event.key === " " || event.key === "Enter") && !event.repeat) {
+      event.preventDefault();
       setLive(false);
       start("you", true);
     }
   };
-  const onKeyUp = (e: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyUp = (event: KeyboardEvent<HTMLDivElement>) => {
     if (
-      (e.key === " " || e.key === "Enter") &&
+      (event.key === " " || event.key === "Enter") &&
       state.phase === "recording" &&
       state.keyboard
     )
@@ -258,9 +279,10 @@ export function HoldToRecordDemo({ playing }: HoldToRecordDemoProps = {}) {
 
   return (
     <div ref={autoplay.ref} className="rec not-prose">
-      <motion.div layout transition={SPRING} className="rec-stage">
+      <div className="rec-stage">
         <motion.div
-          layout
+          initial={false}
+          animate={width === null ? undefined : { width }}
           transition={SPRING}
           className="rec-pill"
           data-phase={state.phase}
@@ -285,48 +307,50 @@ export function HoldToRecordDemo({ playing }: HoldToRecordDemoProps = {}) {
           onBlur={() =>
             state.phase === "recording" && state.keyboard && finish(true)
           }
-          onContextMenu={(e) => e.preventDefault()}
+          onContextMenu={(event) => event.preventDefault()}
         >
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.94 }}
-            className="rec-lead"
-            tabIndex={holdable ? -1 : 0}
-            aria-hidden={holdable || undefined}
-            aria-label={
-              state.phase === "clip"
-                ? state.playing
-                  ? "Pause"
-                  : "Play"
-                : undefined
-            }
-            onClick={togglePlay}
-          >
-            <HugeiconsIcon icon={Icon} aria-hidden="true" />
-          </motion.button>
-          <motion.span layout className="rec-words">{words}</motion.span>
-          <span className="rec-wave" aria-hidden="true">
-            {bars.map((level, i) => (
-              <i
-                key={i}
-                style={{ height: `${Math.round(14 + level * 86)}%` }}
-                data-dim={i / BARS >= progress ? "" : undefined}
-              />
-            ))}
-          </span>
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.94 }}
-            className="rec-end"
-            tabIndex={holdable ? -1 : 0}
-            aria-hidden={holdable || undefined}
-            aria-label={holdable ? undefined : "Delete clip"}
-            onClick={discard}
-          >
-            <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
-          </motion.button>
+          <div ref={inner} className="rec-inner">
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.94 }}
+              className="rec-lead"
+              tabIndex={holdable ? -1 : 0}
+              aria-hidden={holdable || undefined}
+              aria-label={
+                state.phase === "clip"
+                  ? state.playing
+                    ? "Pause"
+                    : "Play"
+                  : undefined
+              }
+              onClick={togglePlay}
+            >
+              <HugeiconsIcon icon={Icon} aria-hidden="true" />
+            </motion.button>
+            <span className="rec-words">{words}</span>
+            <span className="rec-wave" aria-hidden="true">
+              {bars.map((level, index) => (
+                <i
+                  key={index}
+                  style={{ height: `${Math.round(14 + level * 86)}%` }}
+                  data-dim={index / BARS >= progress ? "" : undefined}
+                />
+              ))}
+            </span>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.94 }}
+              className="rec-end"
+              tabIndex={holdable ? -1 : 0}
+              aria-hidden={holdable || undefined}
+              aria-label={holdable ? undefined : "Delete clip"}
+              onClick={discard}
+            >
+              <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
+            </motion.button>
+          </div>
         </motion.div>
-      </motion.div>
+      </div>
       <p className="rec-said" role="status">
         {said}
       </p>

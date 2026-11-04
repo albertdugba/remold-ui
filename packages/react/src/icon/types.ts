@@ -15,11 +15,11 @@ export interface RemoldIconProps
    * The icon to show: an element (`<Heart />`, `<svg>…</svg>`) or a component (`Heart`). From
    * Lucide, Heroicons or your own files: anything that renders an `<svg>` of paths, circles,
    * ellipses, rectangles, lines, polylines and polygons. Its viewBox, fill and stroke are used
-   * unless you set them here. Give this or `d`.
+   * unless you set them here. Give this or `path`.
    */
   icon?: ReactElement | ElementType;
-  /** The icon as path data instead. Several strokes go in one path (`"M4 6h16M4 12h16"`). */
-  d?: string;
+  /** The icon as SVG path data instead of `icon`. Several strokes go in one path (`"M4 6h16M4 12h16"`). */
+  path?: string;
   /** Default `springs.snappy`. */
   spring?: SpringConfig;
   reducedMotion?: ReducedMotion;

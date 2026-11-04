@@ -1,0 +1,33 @@
+---
+title: "Quantity stepper"
+description: "An add-to-cart button that becomes a quantity stepper: the count rolls up and down, and at one the minus becomes a bin, so the next press folds it back into Add."
+status: "new"
+tags: ["Base UI", "Morph"]
+---
+
+<Stage name="quantity-stepper" code={<Source demo="quantity-stepper" />} minHeight={260}>
+  <QuantityStepperDemo />
+</Stage>
+
+## Things to try
+
+- **Press Add.** The button stretches into minus, count and plus.
+- **Count up and down.** The number rolls like a counter.
+- **Go back to one.** The minus becomes a bin; press it and the stepper folds back into Add.
+
+## Install
+
+<AddCommand name="quantity-stepper" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="quantity-stepper" />
+
+## How it works
+
+- **Built on Base UI.** `NumberField` gives increment, decrement, the arrow keys and the min and max.
+- **The button becomes the stepper.** Both share a Motion `layoutId`. The minus reshapes into the bin with `Remold.Icon`, and the count rolls with the Odometer.
+
+<Callout>The product picture is an illustration.</Callout>

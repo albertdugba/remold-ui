@@ -59,6 +59,7 @@ export function buildMotionRecords({
       },
       shadow: mode === "box" ? parseShadow(getComputedStyle(element).boxShadow) : null,
       marks,
+      delay: 0,
     });
   };
   const boxChannels = ({

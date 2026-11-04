@@ -10,7 +10,12 @@
  *   fade in, riding along with any animated parent.
  * - Reduced motion keeps the fades (so changes are still visible) and drops the movement.
  */
-import { matchNodes, springs, type NodeMatches, type SpringConfig } from "@remold-ui/core";
+import {
+  matchNodes,
+  springs,
+  type NodeMatches,
+  type SpringConfig,
+} from "@remold-ui/core";
 import { announce, resolveReducedMotion } from "../accessibility";
 import { readNodes, type PageSnapshot, type PixelBox } from "../snapshot";
 import { buildExitRecords } from "./exits";
@@ -19,6 +24,7 @@ import { buildMotionRecords } from "./records";
 import {
   allChannels,
   applyRecord,
+  travelOf,
   liftMovers,
   computeVisual,
   containerScale,
@@ -29,8 +35,22 @@ import {
 } from "./utils";
 
 export { containerScale } from "./utils";
-export type { ChangeSummary, PreparedTransition, Transition, TransitionOptions, TransitionResult } from "./types";
-import type { ChangeSummary, PreparedTransition, Transition, TransitionOptions, TransitionResult } from "./types";
+export type {
+  ChangeSummary,
+  Choreography,
+  PreparedTransition,
+  Transition,
+  TransitionOptions,
+  TransitionResult,
+} from "./types";
+import type {
+  ChangeSummary,
+  PreparedTransition,
+  Transition,
+  TransitionOptions,
+  TransitionResult,
+} from "./types";
+import type { Choreography } from "./types";
 
 /* Animation records */
 
@@ -48,18 +68,32 @@ const sharedLoop: FrameLoop = { add: frames };
 /* Helpers */
 
 const moved = (a: PixelBox, b: PixelBox) =>
-  Math.abs(a.x - b.x) > 1 || Math.abs(a.y - b.y) > 1 || Math.abs(a.width - b.width) > 1 || Math.abs(a.height - b.height) > 1;
+  Math.abs(a.x - b.x) > 1 ||
+  Math.abs(a.y - b.y) > 1 ||
+  Math.abs(a.width - b.width) > 1 ||
+  Math.abs(a.height - b.height) > 1;
 
 /** Count what changed between two snapshots. Splits and merges count once each. */
-export function summarize(before: PageSnapshot, after: PageSnapshot, matches: NodeMatches): ChangeSummary {
+export function summarize(
+  before: PageSnapshot,
+  after: PageSnapshot,
+  matches: NodeMatches,
+): ChangeSummary {
   const added = new Set(matches.added);
   const removed = new Set(matches.removed);
 
   return {
-    moved: matches.pairs.filter((p) => moved(before.boxes[p.from]!, after.boxes[p.to]!)).length,
-    changed: matches.pairs.filter((p) => before.nodes[p.from]!.text !== after.nodes[p.to]!.text).length,
-    added: matches.added.filter((j) => !added.has(after.nodes[j]!.parent)).length,
-    removed: matches.removed.filter((i) => !removed.has(before.nodes[i]!.parent)).length,
+    moved: matches.pairs.filter((p) =>
+      moved(before.boxes[p.from]!, after.boxes[p.to]!),
+    ).length,
+    changed: matches.pairs.filter(
+      (p) => before.nodes[p.from]!.text !== after.nodes[p.to]!.text,
+    ).length,
+    added: matches.added.filter((j) => !added.has(after.nodes[j]!.parent))
+      .length,
+    removed: matches.removed.filter(
+      (i) => !removed.has(before.nodes[i]!.parent),
+    ).length,
     split: matches.splits.length,
     merged: matches.merges.length,
   };
@@ -81,6 +115,38 @@ export function describeChanges(summary: ChangeSummary): string {
     .join(", ");
 }
 
+/* Choreography */
+
+const CHOREOGRAPHY: Required<Choreography> = { move: 0.06, enter: 0.1, stagger: 0.03, maxStagger: 0.24 };
+
+/**
+ * Gives each record the delay its beat starts at: moves wait for what leaves, and arrivals wait
+ * for the moves, then come in one after another in document order.
+ */
+function choreograph({
+  records,
+  exiting,
+  timing,
+}: {
+  records: readonly MotionRecord[];
+  exiting: boolean;
+  timing: Choreography;
+}): void {
+  const { move, enter, stagger, maxStagger } = { ...CHOREOGRAPHY, ...timing };
+  const arrivals = records.filter((record) => record.mode === "enter");
+  const movers = records.filter((record) => record.mode !== "enter");
+  const moveAt = exiting ? move : 0;
+  const enterAt = movers.some((record) => travelOf(record) > 1) ? moveAt + enter : moveAt;
+  const gap = arrivals.length > 1 ? Math.min(stagger, maxStagger / (arrivals.length - 1)) : 0;
+
+  for (const record of movers) record.delay = moveAt;
+  arrivals
+    .sort((first, second) => (first.el.compareDocumentPosition(second.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+    .forEach((record, order) => {
+      record.delay = enterAt + order * gap;
+    });
+}
+
 /* The transition */
 
 /**
@@ -97,8 +163,13 @@ export function describeChanges(summary: ChangeSummary): string {
  * prepared.play();
  * ```
  */
-export function prepareTransition(root: HTMLElement, options: TransitionOptions = {}): PreparedTransition {
-  const spring = options.spring ?? springs.smooth;
+export function prepareTransition(
+  root: HTMLElement,
+  options: TransitionOptions = {},
+): PreparedTransition {
+  // A small overshoot makes discrete layout changes feel responsive without
+  // turning long-running scenes or connector drawing into a bounce.
+  const spring = options.spring ?? springs.snappy;
   const fade: SpringConfig = { duration: 0.35, bounce: 0 };
   const loop = options.loop ?? sharedLoop;
   const reduced = resolveReducedMotion(options.reducedMotion);
@@ -110,9 +181,12 @@ export function prepareTransition(root: HTMLElement, options: TransitionOptions 
   finished.promise.catch(() => {});
 
   const before = readNodes(root);
-  const opacities = before.elements.map((el) => Number.parseFloat(getComputedStyle(el).opacity) || 1);
+  const opacities = before.elements.map(
+    (el) => Number.parseFloat(getComputedStyle(el).opacity) || 1,
+  );
   const clones = snapshotClones(root);
-  const focused = typeof document !== "undefined" ? document.activeElement : null;
+  const focused =
+    typeof document !== "undefined" ? document.activeElement : null;
 
   let skipped = false;
   let skip = () => {
@@ -150,6 +224,13 @@ export function prepareTransition(root: HTMLElement, options: TransitionOptions 
     });
     const summary = summarize(before, after, matches);
 
+    if (options.choreography && !reduced)
+      choreograph({
+        records: [...records.values()],
+        exiting: exits.length > 0,
+        timing: options.choreography === true ? {} : options.choreography,
+      });
+
     const ordered = [...records.values()].sort((p, q) => p.depth - q.depth);
     for (const r of ordered) {
       for (let p = r.el.parentElement; p && p !== root; p = p.parentElement) {
@@ -161,7 +242,8 @@ export function prepareTransition(root: HTMLElement, options: TransitionOptions 
       }
     }
 
-    const unlift = options.lift !== false && !reduced ? liftMovers(ordered, root) : () => {};
+    const unlift =
+      options.lift !== false && !reduced ? liftMovers(ordered, root) : () => {};
 
     const render = () => {
       for (const r of ordered) computeVisual(r);
@@ -210,7 +292,8 @@ export function prepareTransition(root: HTMLElement, options: TransitionOptions 
     running.set(root, run);
 
     skip = () => {
-      for (const r of ordered) for (const c of allChannels(r.channels)) c.set(c.target);
+      for (const r of ordered)
+        for (const c of allChannels(r.channels)) c.set(c.target);
       cleanUp();
       finishExits();
       settle();
@@ -223,7 +306,10 @@ export function prepareTransition(root: HTMLElement, options: TransitionOptions 
     }
 
     if (options.announce) {
-      const message = typeof options.announce === "function" ? options.announce(summary) : describeChanges(summary);
+      const message =
+        typeof options.announce === "function"
+          ? options.announce(summary)
+          : describeChanges(summary);
       announce(message);
     }
 
@@ -235,10 +321,18 @@ export function prepareTransition(root: HTMLElement, options: TransitionOptions 
 
     render();
     renderExits();
+    let elapsed = 0;
     loop.add((dt) => {
       if (frozen || done) return false;
+      elapsed += dt;
       let moving = false;
-      for (const r of ordered) for (const c of allChannels(r.channels)) if (c.step(dt)) moving = true;
+      for (const r of ordered) {
+        if (elapsed < r.delay) {
+          moving = true;
+          continue;
+        }
+        for (const c of allChannels(r.channels)) if (c.step(dt)) moving = true;
+      }
       render();
       if (!moving) cleanUp();
       return moving;
@@ -314,7 +408,11 @@ export function prepareTransition(root: HTMLElement, options: TransitionOptions 
  * });
  * ```
  */
-export function transition(root: HTMLElement, update: () => void | Promise<void>, options: TransitionOptions = {}): Transition {
+export function transition(
+  root: HTMLElement,
+  update: () => void | Promise<void>,
+  options: TransitionOptions = {},
+): Transition {
   const held = running.get(root);
   held?.freeze();
   const prepared = prepareTransition(root, options);

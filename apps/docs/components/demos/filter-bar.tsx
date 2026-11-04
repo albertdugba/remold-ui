@@ -92,8 +92,8 @@ export function FilterBarDemo({ playing }: FilterBarDemoProps = {}) {
   const portal = usePortalContainer();
 
   const set = (field: Field, value: string | null) =>
-    take((s) => {
-      const filters = { ...s.filters };
+    take((current) => {
+      const filters = { ...current.filters };
       if (value === null) delete filters[field];
       else filters[field] = value;
       return { filters };

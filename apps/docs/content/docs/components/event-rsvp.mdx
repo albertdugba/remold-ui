@@ -1,0 +1,35 @@
+---
+title: "Event RSVP"
+description: "An RSVP button that grows into a sheet for your answer, saves with a progress bar, and becomes your spot, all in one tray. Built almost entirely from Base UI parts."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="event-rsvp" code={<Source demo="event-rsvp" />} minHeight={600}>
+  <EventRsvpDemo />
+</Stage>
+
+## Things to try
+
+- **Press RSVP.** The button grows into a sheet around itself and travels down to the bottom of it as Confirm, while the event, the spots left and your choices blur in.
+- **Pick an answer.** The highlight slides to Going, Maybe or Can’t go. Can’t go turns the reminder off. Hover the ⓘ by the spots left to see what the evening is.
+- **Confirm.** The button says Saving with a progress bar running along it, and the rest of the sheet locks.
+- **See your spot.** The sheet springs into the result: a check, "You’re in" with your spot number, and the going count rolls up by one. The button travels down to become Done, which folds it all back into RSVP.
+
+## Install
+
+<AddCommand name="event-rsvp" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="event-rsvp" />
+
+## How it works
+
+- **One tray.** The button, the sheet and the result are faces of one element. It springs its real width, height and radius to whichever face is showing and clips what's inside, so nothing is scaled.
+- **One part travels.** The main button moves between every face with Motion's `layoutId`; its label reshapes with `Remold.Text` from RSVP to Confirm, Saving and Done. Everything else scales in from just below its size, unblurring, a beat after the part before.
+- **Built on Base UI.** `Button` for every press, `RadioGroup` and `Radio` for the answer, `Checkbox` for the reminder, `Progress` while it saves, `Tooltip` for what the evening is, and `Separator` between the result's lines. The going count rolls with the Odometer.
+
+<Callout>Nothing is saved. Swap the timeout in `confirm` for a request to your own API.</Callout>

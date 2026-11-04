@@ -1,187 +1,156 @@
-.fx,
-.fx-popup {
-  --fx-surface: #ffffff;
-  --fx-well: #f3f3f5;
+.fx {
+  --fx-surface: #f3f3f5;
+  --fx-well: #ffffff;
   --fx-line: rgb(24 24 27 / 0.08);
   --fx-ink: #18181b;
   --fx-muted: #71717a;
   --fx-quiet: #a1a1aa;
-  --fx-faint: #d4d4d8;
-}
-
-.dark .fx,
-.dark .fx-popup {
-  --fx-surface: #232327;
-  --fx-well: #2e2e33;
-  --fx-line: rgb(255 255 255 / 0.1);
-  --fx-ink: #fafafa;
-  --fx-muted: #a1a1aa;
-  --fx-quiet: #71717a;
-  --fx-faint: #3f3f46;
-}
-
-.fx {
-  display: grid;
-  width: min(100%, 380px);
+  /* The view that's leaving is lifted out against the card while the next one takes its place, and
+     the card clips both, so its springing edge reveals and hides them rather than moving them. */
+  position: relative;
+  display: block;
+  overflow: clip;
+  box-sizing: border-box;
+  width: min(100%, 420px);
   padding: 12px;
   border-radius: 28px;
   background: var(--fx-surface);
   color: var(--fx-ink);
+  transition: background-color 0.3s;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
 }
 
+.fx[data-picking] {
+  background: var(--fx-well);
+}
+
+.dark .fx {
+  --fx-surface: #1c1c1f;
+  --fx-well: #2c2c31;
+  --fx-line: rgb(255 255 255 / 0.1);
+  --fx-ink: #fafafa;
+  --fx-muted: #a1a1aa;
+  --fx-quiet: #71717a;
+}
+
+.fx-content {
+  position: relative;
+}
+
+/* The card's two faces: the converter, and the list a currency opens */
+.fx-view {
+  display: grid;
+}
+
+.fx-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 6px 0 16px;
+}
+
+/* The two amount cards and the swap between them */
 .fx-wells {
   position: relative;
   display: grid;
   gap: 8px;
 }
 
-.fx-well,
-.fx-trigger {
-  grid-column: 1;
-}
-
-[data-side="send"]:is(.fx-well, .fx-trigger) {
-  grid-row: 1;
-}
-
-[data-side="get"]:is(.fx-well, .fx-trigger) {
-  grid-row: 2;
-}
-
 .fx-well {
-  padding: 12px 128px 14px 16px;
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 18px 128px 20px 20px;
   border-radius: 20px;
   background: var(--fx-well);
+  box-shadow: 0 1px 2px rgb(24 24 27 / 0.04);
 }
 
+/* As wide as its text in both places it lives, so it travels without being stretched. */
 .fx-label {
+  justify-self: start;
+  width: fit-content;
   color: var(--fx-muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 
-.fx-fit {
-  position: relative;
+.fx-amount {
+  display: flex;
+  align-items: baseline;
+  height: 46px;
   min-width: 0;
-  margin-top: 2px;
-}
-
-.fx-input {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
   border: 0;
   background: transparent;
-  color: transparent;
-  caret-color: transparent;
-  font-size: 16px;
-  outline: 0;
-  cursor: text;
+  color: inherit;
+  font: inherit;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 46px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  outline: none;
 }
 
-.fx-scale {
-  transform-origin: left center;
+.fx-quiet {
+  color: var(--fx-quiet);
 }
 
 .fx-digits {
   display: inline-flex;
-  align-items: baseline;
-  height: 40px;
-  font-size: 34px;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 40px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
 }
 
-.fx-digits[data-size="sm"] {
-  height: 18px;
-  font-size: 13.5px;
-  letter-spacing: -0.01em;
-  line-height: 18px;
-}
-
-.fx-char {
+.fx-digits > * {
   display: inline-block;
 }
 
-.fx-char[data-muted] {
-  color: var(--fx-faint);
-}
-
-.fx-caret {
-  display: inline-block;
-  align-self: center;
-  width: 2px;
-  height: 28px;
-  margin-left: 2px;
-  border-radius: 1px;
-  background: var(--fx-ink);
-  animation: fx-blink 1.05s steps(1) infinite;
-}
-
-@keyframes fx-blink {
-  50% {
-    opacity: 0;
-  }
+.fx-well .fx-trigger {
+  position: absolute;
+  right: 16px;
+  bottom: 25px;
+  z-index: 2;
 }
 
 .fx-trigger {
-  position: relative;
-  z-index: 2;
   display: inline-flex;
   align-items: center;
-  align-self: end;
-  justify-self: end;
   gap: 6px;
   height: 36px;
-  margin: 0 12px 14px 0;
-  padding: 0 8px 0 7px;
-  border: 1px solid var(--fx-line);
+  padding: 0 4px;
+  border: 0;
   border-radius: 999px;
-  background: var(--fx-surface);
-  box-shadow: 0 1px 1px rgb(24 24 27 / 0.04);
+  background: transparent;
   color: var(--fx-ink);
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 650;
-  letter-spacing: -0.01em;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.fx-trigger:hover,
-.fx-trigger:focus-visible {
-  border-color: rgb(24 24 27 / 0.16);
+.fx-trigger:disabled {
+  cursor: default;
 }
 
-.dark .fx-trigger:hover,
-.dark .fx-trigger:focus-visible {
-  border-color: rgb(255 255 255 / 0.2);
-}
-
-.fx-trigger:focus-visible {
+.fx-trigger:focus-visible,
+.fx-swap:focus-visible,
+.fx-send:focus-visible {
   outline: 2px solid var(--fx-ink);
   outline-offset: 2px;
 }
 
 .fx-chevron {
-  display: flex;
+  width: 13px;
+  height: 13px;
   color: var(--fx-muted);
 }
 
-.fx-chevron svg {
-  width: 13px;
-  height: 13px;
-}
-
 .fx-flag {
-  display: flex;
+  display: grid;
   flex: none;
-  align-items: center;
-  justify-content: center;
+  place-items: center;
   width: 20px;
   height: 20px;
   overflow: hidden;
@@ -206,8 +175,7 @@
   background: var(--fx-surface);
   box-shadow:
     0 0 0 4px var(--fx-surface),
-    0 0 0 5px var(--fx-line),
-    0 6px 16px -8px rgb(24 24 27 / 0.35);
+    0 0 0 5px var(--fx-line);
   color: var(--fx-ink);
   cursor: pointer;
 }
@@ -217,97 +185,21 @@
   height: 16px;
 }
 
-.fx-swap:focus-visible {
-  outline: 2px solid var(--fx-ink);
-  outline-offset: 3px;
-}
-
-.fx-meta {
-  display: grid;
-  gap: 7px;
-  margin: 14px 6px 6px;
-  padding-top: 12px;
-  border-top: 1px solid var(--fx-line);
-}
-
-.fx-meta > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 18px;
-}
-
-.fx-meta dt {
-  color: var(--fx-muted);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.fx-meta dd {
-  margin: 0;
-  font-size: 13.5px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-.fx-stack {
-  display: grid;
-  justify-items: end;
-}
-
-.fx-stack > * {
-  grid-area: 1 / 1;
-}
-
-.fx-fee {
-  display: flex;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 5px;
-}
-
-.fx-fee .fx-stack {
-  min-width: 2.2em;
-}
-
-.fx-quiet {
-  color: var(--fx-quiet);
-  font-weight: 500;
-}
-
-.fx-positioner {
-  z-index: 50;
-}
-
-.fx-popup {
-  display: flex;
-  flex-direction: column;
-  width: min(340px, calc(100vw - 32px));
-  max-height: min(420px, var(--available-height));
-  padding: 8px;
-  border: 1px solid var(--fx-line);
-  border-radius: 16px;
-  background: var(--fx-surface);
-  box-shadow:
-    0 16px 40px -12px rgb(0 0 0 / 0.18),
-    0 2px 6px rgb(0 0 0 / 0.06);
-  color: var(--fx-ink);
-  font-size: 14px;
-  outline: none;
-}
-
 .fx-search {
   display: flex;
-  flex: none;
   align-items: center;
   gap: 8px;
   height: 40px;
-  margin-bottom: 6px;
+  margin: 0 0 6px;
   padding: 0 12px;
   border-radius: 999px;
-  background: var(--fx-well);
+  background: var(--fx-surface);
+  color: var(--fx-muted);
+}
+
+.fx-search svg {
+  width: 16px;
+  height: 16px;
 }
 
 .fx-search input {
@@ -315,84 +207,67 @@
   min-width: 0;
   border: 0;
   background: transparent;
-  color: inherit;
+  color: var(--fx-ink);
   font: inherit;
+  font-size: 14px;
   outline: none;
 }
 
-.fx-search input::placeholder {
-  color: var(--fx-quiet);
-}
-
-.fx-search svg {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  color: var(--fx-muted);
-}
-
+/* Five and a half rows show, so the half row says the list scrolls */
 .fx-list {
+  max-height: 242px;
   overflow: auto;
-  min-height: 0;
+  scrollbar-width: thin;
+  outline: none;
 }
 
 .fx-option {
-  position: relative;
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 28px auto minmax(0, 1fr) auto;
+  gap: 10px;
   align-items: center;
-  padding: 8px 10px;
-  border-radius: 12px;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 14px;
   cursor: pointer;
 }
 
-.fx-option > * {
-  position: relative;
-  z-index: 1;
+.fx-option[data-highlighted] {
+  background: rgb(24 24 27 / 0.05);
 }
 
-.fx-option > .fx-highlight {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  background: var(--fx-well);
-}
-
-.fx-list:not(:has([data-highlighted])) .fx-option[data-selected] {
-  background: var(--fx-well);
+.dark .fx-option[data-highlighted] {
+  background: rgb(255 255 255 / 0.06);
 }
 
 .fx-option .fx-flag {
-  width: 32px;
-  height: 32px;
-  font-size: 34px;
-}
-
-.fx-option-text {
-  display: grid;
-  min-width: 0;
-}
-
-.fx-option-name {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.011em;
-  line-height: 1.25;
+  width: 28px;
+  height: 28px;
+  font-size: 30px;
 }
 
 .fx-option-code {
+  font-size: 14.5px;
+  font-weight: 650;
+}
+
+.fx-option-name {
+  overflow: hidden;
   color: var(--fx-muted);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fx-option-check {
+  width: 16px;
+  height: 16px;
 }
 
 .fx-empty {
-  padding: 18px 12px 14px;
+  padding: 18px 12px;
   color: var(--fx-muted);
-  font-weight: 500;
+  font-size: 14px;
   text-align: center;
 }
 
@@ -400,8 +275,89 @@
   display: none;
 }
 
+/* The rate, Send, and the credit the rates provider asks for */
+.fx-rate {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin: 16px 0 2px;
+  color: var(--fx-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-retry {
+  border: 0;
+  background: none;
+  color: var(--fx-ink);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.fx-send {
+  display: grid;
+  height: 52px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fx-ink);
+  color: var(--fx-surface);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}
+
+.fx-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.fx-send[data-status="sent"] {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.fx-send-label {
+  display: inline-flex;
+  grid-area: 1 / 1;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.fx-send-label svg {
+  width: 17px;
+  height: 17px;
+}
+
+.fx-spin {
+  animation: fx-spin 0.8s linear infinite;
+}
+
+@keyframes fx-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.fx-credit {
+  margin: 10px 0 2px;
+  color: var(--fx-quiet);
+  font-size: 11.5px;
+  text-align: center;
+}
+
+.fx-credit a {
+  color: inherit;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .fx-caret {
+  .fx-spin {
     animation: none;
   }
 }
