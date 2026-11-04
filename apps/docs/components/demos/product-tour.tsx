@@ -69,8 +69,8 @@ const SPRING = { duration: 0.6, bounce: 0.14 };
 
 /** Keyboard focus on any control in the demo: a ring in the accent. */
 const FOCUS = "cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--pt-accent)";
-/** A metric card in the app. */
-const KPI = "grid gap-0.5 rounded-xl px-3 py-[11px] shadow-[inset_0_0_0_1px_rgb(24_24_27/0.08)] dark:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]";
+/** A metric in the app's top row: the row is split by hairlines rather than boxed. */
+const KPI = "grid gap-0.5 rounded-lg px-3 py-2 not-first:border-l not-first:border-zinc-200/70 dark:not-first:border-white/[0.07]";
 
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -96,9 +96,21 @@ const FACING: Record<Side, { from: Side; to: Side }> = {
   right: { from: "right", to: "left" },
 };
 
-/** Weekly revenue for the chart, as a share of the tallest week. */
-const WEEKS = [38, 44, 41, 52, 49, 58, 55, 63, 61, 72, 69, 80];
-const PEAK = Math.max(...WEEKS);
+/** Weekly revenue for the chart, in thousands. */
+const WEEKS = [26.1, 28.4, 27.2, 31.9, 30.6, 34.8, 33.1, 37.5, 36.2, 41.8, 40.3, 48.2];
+const CHART = { top: 50, bottom: 20 };
+/** Every fourth week is labelled along the bottom. */
+const WEEK_LABELS = [
+  { week: 0, label: "Aug 18" },
+  { week: 4, label: "Sep 15" },
+  { week: 8, label: "Oct 13" },
+];
+/** The line through the weeks, in a 0–100 by 0–100 box. */
+const LINE = WEEKS.map((week, index) => {
+  const x = (index / (WEEKS.length - 1)) * 100;
+  const y = 100 - ((week - CHART.bottom) / (CHART.top - CHART.bottom)) * 100;
+  return `${index ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)}`;
+}).join(" ");
 
 interface ProductTourDemoProps {
   framed?: boolean;
@@ -182,16 +194,18 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
         shape="curve"
         gap={6}
         // The app window. The line from a target to its tip is drawn over the dim, as a white dotted lead.
-        className="group/tour relative isolate h-[430px] overflow-hidden rounded-[18px] bg-white shadow-[0_0_0_1px_rgb(24_24_27/0.08),0_24px_60px_-20px_rgb(24_24_27/0.22)] dark:bg-[#1c1c20] dark:shadow-[0_0_0_1px_rgb(255_255_255/0.08),0_24px_60px_-20px_rgb(24_24_27/0.22)] [&_.rm-connector]:stroke-white/75 [&_.rm-connector]:[stroke-dasharray:2_4] [&_.rm-connector]:[stroke-linecap:round] [&_.rm-connector]:[stroke-width:1.5] [&>svg]:z-3 [&>svg]:text-white"
+        className="group/tour relative isolate h-[430px] overflow-hidden rounded-[18px] bg-white dark:bg-[#1c1c20] [&_.rm-connector]:stroke-white/75 [&_.rm-connector]:[stroke-dasharray:2_4] [&_.rm-connector]:[stroke-linecap:round] [&_.rm-connector]:[stroke-width:1.5] [&>svg]:z-3 [&>svg]:text-white"
         ref={root}
         onKeyDown={onKeyDown}
         data-touring={touring || undefined}
       >
         {/* The app being toured. */}
         <div className="grid h-full grid-cols-[150px_1fr]" inert={touring || undefined}>
-          <aside className="grid content-start gap-0.5 bg-zinc-50 px-2.5 py-4 shadow-[1px_0_0_rgb(24_24_27/0.08)] dark:bg-[#232327] dark:shadow-[1px_0_0_rgb(255_255_255/0.08)]">
+          <aside className="grid content-start gap-0.5 border-r border-zinc-200/70 px-2.5 py-4 dark:border-white/[0.07]">
             <span className="flex items-center gap-2 px-2 pb-3.5 text-[14px] font-[650] tracking-[-0.01em]">
-              <span className="size-[18px] rounded-md bg-[conic-gradient(from_210deg,#6d4aff,#c084fc,#f472b6,#6d4aff)]" aria-hidden="true" />
+              <span className="grid size-[22px] place-items-center rounded-md bg-zinc-900 text-[11px] font-bold text-white dark:bg-zinc-50 dark:text-[#1c1c20]" aria-hidden="true">
+                O
+              </span>
               Orbit
             </span>
             {[
@@ -202,7 +216,7 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
             ].map((item) => (
               <span
                 key={item.label}
-                className="flex h-8 items-center gap-[9px] rounded-lg px-2 text-zinc-500 data-on:bg-white data-on:font-medium data-on:text-zinc-900 data-on:shadow-[0_0_0_1px_rgb(24_24_27/0.08),0_1px_2px_rgb(24_24_27/0.05)] dark:text-zinc-400 dark:data-on:bg-[#1c1c20] dark:data-on:text-zinc-50 dark:data-on:shadow-[0_0_0_1px_rgb(255_255_255/0.08)] [&_svg]:size-4"
+                className="flex h-8 items-center gap-[9px] rounded-lg px-2 text-zinc-500 data-on:bg-zinc-100 data-on:font-medium data-on:text-zinc-900 dark:text-zinc-400 dark:data-on:bg-white/[0.07] dark:data-on:text-zinc-50 [&_svg]:size-4"
                 data-on={item.on || undefined}
               >
                 <HugeiconsIcon icon={item.icon} strokeWidth={1.7} aria-hidden="true" />
@@ -213,17 +227,20 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
 
           <main className="grid min-w-0 grid-rows-[auto_auto_1fr] gap-3.5 px-[18px] pt-4 pb-[18px]">
             <header className="flex items-center gap-2">
-              <h3 className="m-0 flex-1 text-[16px] font-[650] tracking-[-0.015em]">Overview</h3>
+              <span className="grid flex-1 leading-tight">
+                <h3 className="m-0 text-[15px] font-[650] tracking-[-0.015em]">Overview</h3>
+                <span className="text-[11.5px] text-zinc-500 dark:text-zinc-400">Last 30 days</span>
+              </span>
               <Remold.Anchor name="search" render={<label className="flex h-8 w-[150px] items-center gap-[7px] rounded-[9px] bg-zinc-100 pr-1.5 pl-2.5 text-zinc-400 dark:bg-[#2c2c31] dark:text-zinc-500 [&_svg]:size-[15px]" />}
               >
                 <HugeiconsIcon icon={Search01Icon} strokeWidth={1.8} aria-hidden="true" />
                 <span className="flex-1">Search…</span>
-                <kbd className="rounded-[5px] bg-white px-1.5 py-px font-mono text-[11px] leading-[1.4] shadow-[0_0_0_1px_rgb(24_24_27/0.08)] dark:bg-[#1c1c20] dark:shadow-[0_0_0_1px_rgb(255_255_255/0.08)]">/</kbd>
+                <kbd className="rounded-[5px] bg-white px-1.5 py-px font-mono text-[11px] leading-[1.4] text-zinc-500 dark:bg-[#1c1c20]">/</kbd>
               </Remold.Anchor>
               <Remold.Anchor name="share" render={
                   <button
                     type="button"
-                    className={`inline-flex h-8 items-center gap-1.5 rounded-[9px] px-3 font-medium whitespace-nowrap shadow-[inset_0_0_0_1px_rgb(24_24_27/0.08)] dark:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)] [&_svg]:size-[15px] ${FOCUS}`}
+                    className={`inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-zinc-100 px-3 font-medium whitespace-nowrap dark:bg-[#2c2c31] [&_svg]:size-[15px] ${FOCUS}`}
                   />
                 }
               >
@@ -242,7 +259,7 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
               </Remold.Anchor>
             </header>
 
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="-mx-3 grid grid-cols-3">
               {[
                 { label: "Revenue", value: "$48.2k", delta: "+12.4%" },
                 { label: "Active users", value: "3,120", delta: "+4.1%" },
@@ -251,8 +268,10 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
                 const parts = (
                   <>
                     <span className="text-[12px] text-zinc-500 dark:text-zinc-400">{kpi.label}</span>
-                    <span className="text-[18px] font-[650] tracking-[-0.02em] tabular-nums">{kpi.value}</span>
-                    <span className="text-[11.5px] font-medium text-green-700 dark:text-green-400">{kpi.delta}</span>
+                    <span className="flex items-baseline gap-1.5">
+                      <span className="text-[20px] font-[650] tracking-[-0.025em] tabular-nums">{kpi.value}</span>
+                      <span className="text-[11.5px] font-medium tabular-nums text-green-700 dark:text-green-400">{kpi.delta}</span>
+                    </span>
                   </>
                 );
                 // The first card is a tour target.
@@ -268,20 +287,42 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
               })}
             </div>
 
-            <figure className="m-0 grid min-h-0 grid-rows-[auto_1fr] overflow-hidden rounded-xl px-3 pt-3 text-(--pt-accent) shadow-[inset_0_0_0_1px_rgb(24_24_27/0.08)] dark:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]">
-              <figcaption className="flex justify-between text-[12px] text-zinc-500 dark:text-zinc-400">
-                <span>Revenue, last 12 weeks</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-50">$412,900</span>
+            <figure className="m-0 grid min-h-0 grid-rows-[auto_1fr_auto] gap-2 border-t border-zinc-200/70 pt-3.5 dark:border-white/[0.07]">
+              <figcaption className="flex items-baseline justify-between text-[12px] text-zinc-500 dark:text-zinc-400">
+                <span>Weekly revenue</span>
+                <span>
+                  <b className="font-semibold text-zinc-900 tabular-nums dark:text-zinc-50">$412,900</b> in 12 weeks
+                </span>
               </figcaption>
-              {/* Twelve weeks as bars, this week in full colour. */}
-              <span className="flex min-h-0 items-end gap-1.5 py-3" aria-hidden="true">
-                {WEEKS.map((week, index) => (
+              {/* Twelve weeks as a line over three gridlines, this week marked with a dot. */}
+              <span className="relative min-h-0" aria-hidden="true">
+                {[50, 40, 30].map((value) => (
                   <span
-                    key={index}
-                    className="flex-1 rounded-[5px_5px_2px_2px] bg-current/22 data-now:bg-current"
-                    style={{ height: `${(week / PEAK) * 100}%` }}
-                    data-now={index === WEEKS.length - 1 || undefined}
-                  />
+                    key={value}
+                    className="absolute inset-x-0 flex items-center gap-2 text-[10.5px] text-zinc-400 tabular-nums dark:text-zinc-500"
+                    style={{ top: `${((CHART.top - value) / (CHART.top - CHART.bottom)) * 100}%` }}
+                  >
+                    <span className="h-px flex-1 border-t border-dashed border-zinc-200 dark:border-white/10" />
+                    <span className="w-7 -translate-y-px text-right">${value}k</span>
+                  </span>
+                ))}
+                <svg className="absolute inset-y-0 left-0 right-9 h-full w-[calc(100%-36px)] overflow-visible text-zinc-900 dark:text-zinc-50" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <path d={LINE} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                </svg>
+                <span
+                  className="absolute size-2 -translate-1/2 rounded-full bg-zinc-900 shadow-[0_0_0_3px_white] dark:bg-zinc-50 dark:shadow-[0_0_0_3px_#1c1c20]"
+                  style={{ left: "calc(100% - 36px)", top: `${((CHART.top - WEEKS.at(-1)!) / (CHART.top - CHART.bottom)) * 100}%` }}
+                />
+              </span>
+              <span className="relative h-3.5 text-[10.5px] text-zinc-400 dark:text-zinc-500" aria-hidden="true">
+                {WEEK_LABELS.map(({ week, label }) => (
+                  <span
+                    key={label}
+                    className="absolute top-0 -translate-x-1/2 first:translate-x-0 whitespace-nowrap"
+                    style={{ left: `calc((100% - 36px) * ${week / (WEEKS.length - 1)})` }}
+                  >
+                    {label}
+                  </span>
                 ))}
               </span>
             </figure>
@@ -305,7 +346,7 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
             pulse={step}
             render={
               <div
-                className="pointer-events-auto absolute right-3.5 bottom-3.5 data-open:right-auto data-open:bottom-auto data-open:grid data-open:gap-1.5 data-open:rounded-2xl data-open:bg-white data-open:px-3.5 data-open:pt-3.5 data-open:pb-3 data-open:shadow-[0_0_0_1px_rgb(24_24_27/0.08),0_18px_40px_-12px_rgb(14_12_28/0.4)] dark:data-open:bg-[#1c1c20] dark:data-open:shadow-[0_0_0_1px_rgb(255_255_255/0.08),0_18px_40px_-12px_rgb(14_12_28/0.4)]"
+                className="pointer-events-auto absolute right-3.5 bottom-3.5 data-open:right-auto data-open:bottom-auto data-open:grid data-open:gap-1.5 data-open:rounded-2xl data-open:bg-white data-open:px-3.5 data-open:pt-3.5 data-open:pb-3 dark:data-open:bg-[#1c1c20]"
                 data-open={touring || undefined}
                 role={touring ? "dialog" : undefined}
                 aria-labelledby={touring ? `${id}-title` : undefined}
@@ -337,7 +378,7 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
                     {STEPS.map((entry, index) => (
                       <span
                         key={entry.target}
-                        className="h-1.5 w-1.5 rounded-[3px] bg-zinc-100 shadow-[inset_0_0_0_1px_rgb(24_24_27/0.08)] transition-[width,background-color] duration-[400ms,250ms] ease-(--pt-spring) data-done:bg-(--pt-accent)/45 data-done:shadow-none data-on:w-[18px] data-on:bg-(--pt-accent) data-on:shadow-none motion-reduce:transition-none dark:bg-[#2c2c31] dark:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]"
+                        className="h-1.5 w-1.5 rounded-[3px] bg-zinc-200 transition-[width,background-color] duration-[400ms,250ms] ease-(--pt-spring) data-done:bg-(--pt-accent)/45 data-on:w-[18px] data-on:bg-(--pt-accent) motion-reduce:transition-none dark:bg-[#2c2c31]"
                         data-on={index === step || undefined}
                         data-done={index < step || undefined}
                       />
@@ -364,7 +405,7 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
               <button
                 ref={help}
                 type="button"
-                className={`inline-flex h-9 items-center gap-[7px] rounded-full bg-zinc-900 pr-3.5 pl-[11px] font-medium text-white shadow-[0_8px_20px_-6px_rgb(14_12_28/0.45)] dark:bg-zinc-50 dark:text-[#1c1c20] [&_svg]:size-[17px] ${FOCUS}`}
+                className={`inline-flex h-9 items-center gap-[7px] rounded-full bg-zinc-900 pr-3.5 pl-[11px] font-medium text-white dark:bg-zinc-50 dark:text-[#1c1c20] [&_svg]:size-[17px] ${FOCUS}`}
                 onClick={() => go(0)}>
                 <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={1.8} aria-hidden="true" />
                 <span>Take the tour</span>
