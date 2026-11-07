@@ -200,8 +200,8 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
         data-touring={touring || undefined}
       >
         {/* The app being toured. */}
-        <div className="grid h-full grid-cols-[150px_1fr]" inert={touring || undefined}>
-          <aside className="grid content-start gap-0.5 border-r border-zinc-200/70 px-2.5 py-4 dark:border-white/[0.07]">
+        <div className="grid h-full grid-cols-[150px_1fr] max-sm:grid-cols-1" inert={touring || undefined}>
+          <aside className="grid content-start gap-0.5 max-sm:hidden border-r border-zinc-200/70 px-2.5 py-4 dark:border-white/[0.07]">
             <span className="flex items-center gap-2 px-2 pb-3.5 text-[14px] font-[650] tracking-[-0.01em]">
               <span className="grid size-[22px] place-items-center rounded-md bg-zinc-900 text-[11px] font-bold text-white dark:bg-zinc-50 dark:text-[#1c1c20]" aria-hidden="true">
                 O
@@ -225,27 +225,27 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
             ))}
           </aside>
 
-          <main className="grid min-w-0 grid-rows-[auto_auto_1fr] gap-3.5 px-[18px] pt-4 pb-[18px]">
+          <main className="grid min-w-0 grid-rows-[auto_auto_1fr] gap-3.5 px-[18px] pt-4 pb-[18px] max-sm:px-3.5">
             <header className="flex items-center gap-2">
               <span className="grid flex-1 leading-tight">
                 <h3 className="m-0 text-[15px] font-[650] tracking-[-0.015em]">Overview</h3>
                 <span className="text-[11.5px] text-zinc-500 dark:text-zinc-400">Last 30 days</span>
               </span>
-              <Remold.Anchor name="search" render={<label className="flex h-8 w-[150px] items-center gap-[7px] rounded-[9px] bg-zinc-100 pr-1.5 pl-2.5 text-zinc-400 dark:bg-[#2c2c31] dark:text-zinc-500 [&_svg]:size-[15px]" />}
+              <Remold.Anchor name="search" render={<label className="flex h-8 w-[150px] items-center gap-[7px] rounded-[9px] bg-zinc-100 pr-1.5 pl-2.5 max-sm:w-8 max-sm:justify-center max-sm:px-0 text-zinc-400 dark:bg-[#2c2c31] dark:text-zinc-500 [&_svg]:size-[15px]" />}
               >
                 <HugeiconsIcon icon={Search01Icon} strokeWidth={1.8} aria-hidden="true" />
-                <span className="flex-1">Search…</span>
-                <kbd className="rounded-[5px] bg-white px-1.5 py-px font-mono text-[11px] leading-[1.4] text-zinc-500 dark:bg-[#1c1c20]">/</kbd>
+                <span className="flex-1 max-sm:hidden">Search…</span>
+                <kbd className="rounded-[5px] bg-white px-1.5 max-sm:hidden py-px font-mono text-[11px] leading-[1.4] text-zinc-500 dark:bg-[#1c1c20]">/</kbd>
               </Remold.Anchor>
               <Remold.Anchor name="share" render={
                   <button
                     type="button"
-                    className={`inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-zinc-100 px-3 font-medium whitespace-nowrap dark:bg-[#2c2c31] [&_svg]:size-[15px] ${FOCUS}`}
+                    className={`inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-zinc-100 px-3 font-medium whitespace-nowrap max-sm:px-2.5 dark:bg-[#2c2c31] [&_svg]:size-[15px] ${FOCUS}`}
                   />
                 }
               >
                 <HugeiconsIcon icon={Share08Icon} strokeWidth={1.8} aria-hidden="true" />
-                Share
+                <span className="max-sm:sr-only">Share</span>
               </Remold.Anchor>
               <Remold.Anchor name="new" render={
                   <button
@@ -255,7 +255,7 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
                 }
               >
                 <HugeiconsIcon icon={Add01Icon} strokeWidth={2} aria-hidden="true" />
-                New report
+                New<span className="max-sm:hidden"> report</span>
               </Remold.Anchor>
             </header>
 
@@ -268,8 +268,8 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
                 const parts = (
                   <>
                     <span className="text-[12px] text-zinc-500 dark:text-zinc-400">{kpi.label}</span>
-                    <span className="flex items-baseline gap-1.5">
-                      <span className="text-[20px] font-[650] tracking-[-0.025em] tabular-nums">{kpi.value}</span>
+                    <span className="flex flex-wrap items-baseline gap-x-1.5">
+                      <span className="text-[20px] font-[650] tracking-[-0.025em] tabular-nums max-sm:text-[17px]">{kpi.value}</span>
                       <span className="text-[11.5px] font-medium tabular-nums text-green-700 dark:text-green-400">{kpi.delta}</span>
                     </span>
                   </>

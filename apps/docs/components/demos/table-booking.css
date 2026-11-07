@@ -144,8 +144,10 @@
   transition: background-color 0.15s;
 }
 
-.tbk-option:hover {
-  background: color-mix(in oklab, var(--tbk-ink) 7%, var(--tbk-well));
+@media (hover: hover) and (pointer: fine) {
+  .tbk-option:hover {
+    background: color-mix(in oklab, var(--tbk-ink) 7%, var(--tbk-well));
+  }
 }
 
 .tbk-option-copy {

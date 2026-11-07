@@ -94,12 +94,16 @@
   transition: background-color 0.15s;
 }
 
-.stq-btn:hover:not([data-disabled]) {
-  background: rgb(255 255 255 / 0.14);
+@media (hover: hover) and (pointer: fine) {
+  .stq-btn:hover:not([data-disabled]) {
+    background: rgb(255 255 255 / 0.14);
+  }
 }
 
-.dark .stq-btn:hover:not([data-disabled]) {
-  background: rgb(0 0 0 / 0.1);
+@media (hover: hover) and (pointer: fine) {
+  .dark .stq-btn:hover:not([data-disabled]) {
+    background: rgb(0 0 0 / 0.1);
+  }
 }
 
 .stq-btn[data-disabled] {

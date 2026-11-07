@@ -76,9 +76,11 @@
   cursor: pointer;
 }
 
-.sc-step:hover {
-  background: var(--sc-surface);
-  color: var(--sc-ink);
+@media (hover: hover) and (pointer: fine) {
+  .sc-step:hover {
+    background: var(--sc-surface);
+    color: var(--sc-ink);
+  }
 }
 
 .sc-step svg {

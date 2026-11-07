@@ -173,9 +173,11 @@
   color: var(--dg-muted);
 }
 
-.dg-again:hover {
-  background: var(--dg-soft);
-  color: var(--dg-ink);
+@media (hover: hover) and (pointer: fine) {
+  .dg-again:hover {
+    background: var(--dg-soft);
+    color: var(--dg-ink);
+  }
 }
 
 .dg-amount:focus-visible,

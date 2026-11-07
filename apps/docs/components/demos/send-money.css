@@ -199,6 +199,7 @@
 }
 
 .sm-key {
+  touch-action: manipulation;
   display: grid;
   place-items: center;
   height: 50px;
@@ -214,8 +215,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.sm-key:hover:not(:disabled) {
-  background: var(--sm-key);
+@media (hover: hover) and (pointer: fine) {
+  .sm-key:hover:not(:disabled) {
+    background: var(--sm-key);
+  }
 }
 
 .sm-key:active:not(:disabled) {
@@ -234,6 +237,7 @@
 }
 
 .sm-send {
+  touch-action: manipulation;
   position: relative;
   display: flex;
   align-items: center;

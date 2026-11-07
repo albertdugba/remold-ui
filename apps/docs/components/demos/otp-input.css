@@ -179,8 +179,10 @@
   transition: opacity 0.2s;
 }
 
-.otp-foot:hover {
-  color: var(--otp-ink);
+@media (hover: hover) and (pointer: fine) {
+  .otp-foot:hover {
+    color: var(--otp-ink);
+  }
 }
 
 .otp-foot:disabled {

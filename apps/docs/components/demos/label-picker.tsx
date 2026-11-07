@@ -263,7 +263,7 @@ export function LabelPickerDemo({ playing }: LabelPickerDemoProps = {}) {
                                     ...SPRING,
                                     delay: state.open ? index * 0.035 : 0,
                                   }}
-                                  onPointerEnter={() =>
+                                  onPointerEnter={(event) => event.pointerType === "mouse" &&
                                     index !== active &&
                                     take((current) => ({
                                       ...current,
@@ -321,7 +321,7 @@ export function LabelPickerDemo({ playing }: LabelPickerDemoProps = {}) {
                                   ...SPRING,
                                   delay: state.open ? found.length * 0.035 : 0,
                                 }}
-                                onPointerEnter={() =>
+                                onPointerEnter={(event) => event.pointerType === "mouse" &&
                                   active !== found.length &&
                                   take((current) => ({
                                     ...current,

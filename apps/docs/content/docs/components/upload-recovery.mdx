@@ -1,0 +1,26 @@
+---
+title: "Upload recovery"
+description: "Recover interrupted transfers without restarting completed files."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="upload-recovery" code={<Source demo="upload-recovery" />} minHeight={620}>
+  <UploadRecoveryDemo />
+</Stage>
+
+## Things to try
+
+Retry either failed file or retry both together. Transfers resume from their existing progress. Completed files collect into an expandable summary. You can pause a transfer or remove a file from the queue.
+
+These are simulated transfers. No files are selected, uploaded, or stored remotely. A production implementation should connect progress and retry actions to its upload service.
+
+## Motion and accessibility
+
+Motion coordinates the card size and content transitions with a restrained spring. Controls use Base UI buttons with visible keyboard focus and touch targets of at least 44 pixels. Progress indicators have accessible labels, and motion respects the system reduced-motion preference. Styling uses Tailwind utilities in both themes.
+
+## Install
+
+<AddCommand name="upload-recovery" />
+
+<Dependencies demo="upload-recovery" />

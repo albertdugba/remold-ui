@@ -190,8 +190,10 @@
   pointer-events: auto;
 }
 
-.rec-end:hover {
-  color: var(--rec-ink);
+@media (hover: hover) and (pointer: fine) {
+  .rec-end:hover {
+    color: var(--rec-ink);
+  }
 }
 
 .rec-lead:focus-visible,

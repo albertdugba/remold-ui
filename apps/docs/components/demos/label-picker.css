@@ -111,9 +111,11 @@
   cursor: pointer;
 }
 
-.lp-chip button:hover {
-  background: var(--lp-surface);
-  color: var(--lp-ink);
+@media (hover: hover) and (pointer: fine) {
+  .lp-chip button:hover {
+    background: var(--lp-surface);
+    color: var(--lp-ink);
+  }
 }
 
 .lp-chip button svg {
@@ -137,10 +139,16 @@
   cursor: pointer;
 }
 
-.lp-add:hover,
 .lp-add[data-popup-open] {
   border-style: solid;
   color: var(--lp-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lp-add:hover {
+    border-style: solid;
+    color: var(--lp-ink);
+  }
 }
 
 .lp-add svg {

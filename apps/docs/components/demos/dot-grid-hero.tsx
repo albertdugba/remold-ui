@@ -63,7 +63,7 @@ export function DotGridHeroDemo({ playing }: { playing?: boolean }) {
   return (
     <MotionConfig reducedMotion="user">
       <div className="dt" ref={scene.ref}>
-        <div className="dt-hero" ref={hero} onPointerEnter={takeOver}>
+        <div className="dt-hero" ref={hero} onPointerEnter={(event) => event.pointerType === "mouse" && takeOver()}>
           <Remold.DotGrid className="dt-grid" actionsRef={grid} gap={20} reach={150} />
 
           <div className="dt-content">

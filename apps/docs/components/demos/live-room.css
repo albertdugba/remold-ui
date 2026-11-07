@@ -210,9 +210,11 @@
   cursor: pointer;
 }
 
-.lr-close:hover {
-  background: var(--lr-fill);
-  color: var(--lr-ink);
+@media (hover: hover) and (pointer: fine) {
+  .lr-close:hover {
+    background: var(--lr-fill);
+    color: var(--lr-ink);
+  }
 }
 
 .lr-close svg {
@@ -322,8 +324,10 @@
   cursor: pointer;
 }
 
-.lr-leave:hover {
-  color: var(--lr-ink);
+@media (hover: hover) and (pointer: fine) {
+  .lr-leave:hover {
+    color: var(--lr-ink);
+  }
 }
 
 .lr-close:focus-visible,

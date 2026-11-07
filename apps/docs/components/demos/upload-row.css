@@ -25,11 +25,17 @@
   cursor: pointer;
 }
 
-.upl-box[data-state="empty"]:hover,
 .upl-box[data-state="empty"]:focus-visible,
 .upl-box[data-dragging] {
   background-color: var(--fk-well);
   outline: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .upl-box[data-state="empty"]:hover {
+    background-color: var(--fk-well);
+    outline: none;
+  }
 }
 
 .upl-box[data-dragging] {
@@ -149,9 +155,11 @@
   padding: 0;
 }
 
-.upl-action:hover {
-  background: var(--fk-well);
-  color: var(--fk-ink);
+@media (hover: hover) and (pointer: fine) {
+  .upl-action:hover {
+    background: var(--fk-well);
+    color: var(--fk-ink);
+  }
 }
 
 .upl-action svg {

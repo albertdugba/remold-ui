@@ -10,7 +10,8 @@
   width: 100%;
   min-height: 340px;
   color: var(--stp-ink);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    system-ui, sans-serif;
 }
 
 .dark .stp-stage {
@@ -76,8 +77,10 @@
   transition: background-color 0.15s;
 }
 
-.stp-step:hover:not([data-disabled]) {
-  background: var(--stp-well);
+@media (hover: hover) and (pointer: fine) {
+  .stp-step:hover:not([data-disabled]) {
+    background: var(--stp-well);
+  }
 }
 
 .stp-step[data-disabled] {
@@ -222,7 +225,7 @@
   display: flex;
   align-items: flex-end;
   gap: 3px;
-  width: 280px;
+  width: min(280px, 100%);
   height: 56px;
   margin-bottom: 4px;
 }
@@ -252,6 +255,26 @@
   font-size: 22px;
   font-weight: 650;
   letter-spacing: -0.02em;
+}
+
+/* A phone keeps the same interaction, with controls large enough for a thumb. */
+@media (max-width: 480px) {
+  .stp-stage {
+    min-height: 360px;
+  }
+
+  .stp-field {
+    width: 100%;
+  }
+
+  .stp-step {
+    width: 44px;
+    height: 44px;
+  }
+
+  .stp-thumb {
+    height: 44px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

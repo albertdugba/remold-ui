@@ -77,8 +77,10 @@
     box-shadow 0.2s ease;
 }
 
-.cx-seg button:hover {
-  color: var(--cx-text);
+@media (hover: hover) and (pointer: fine) {
+  .cx-seg button:hover {
+    color: var(--cx-text);
+  }
 }
 
 .cx-seg button[aria-pressed="true"] {
@@ -338,8 +340,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.cx-vote:hover {
-  background: var(--cx-subtle);
+@media (hover: hover) and (pointer: fine) {
+  .cx-vote:hover {
+    background: var(--cx-subtle);
+  }
 }
 
 .cx-vote[aria-pressed="true"] {
@@ -361,8 +365,10 @@
   color: var(--cx-muted);
 }
 
-.cx-text-button:hover {
-  color: var(--cx-text);
+@media (hover: hover) and (pointer: fine) {
+  .cx-text-button:hover {
+    color: var(--cx-text);
+  }
 }
 
 .cx-compose {
@@ -457,9 +463,11 @@
   color: var(--cx-muted);
 }
 
-.cx-compose .cx-compose-cancel:hover {
-  background: var(--cx-subtle);
-  color: var(--cx-text);
+@media (hover: hover) and (pointer: fine) {
+  .cx-compose .cx-compose-cancel:hover {
+    background: var(--cx-subtle);
+    color: var(--cx-text);
+  }
 }
 
 .cx-compose .cx-compose-send {
@@ -506,8 +514,10 @@
   color: var(--cx-muted);
 }
 
-.cx-folded:hover {
-  background: var(--cx-subtle);
+@media (hover: hover) and (pointer: fine) {
+  .cx-folded:hover {
+    background: var(--cx-subtle);
+  }
 }
 
 .cx-faces {

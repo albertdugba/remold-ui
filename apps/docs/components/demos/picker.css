@@ -41,9 +41,14 @@
   transition: background-color 0.15s, transform 0.15s;
 }
 
-.pk-trigger:hover,
 .pk-trigger[data-popup-open] {
   background: var(--pk-fill);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pk-trigger:hover {
+    background: var(--pk-fill);
+  }
 }
 
 .pk-trigger:active {

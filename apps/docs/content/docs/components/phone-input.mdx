@@ -12,7 +12,8 @@ tags: ["Base UI", "Motion"]
 ## Things to try
 
 - **Type a number.** Spaces appear as the number reaches them.
-- **Change the country.** The same digits regroup into the new format, and the spaces that both formats share slide across.
+- **Search countries.** Search by name, country abbreviation, or dialing code across the ten example countries.
+- **Change the country.** The same digits regroup into the new format when the input is not focused. Extra digits are preserved and a length hint appears.
 - **Paste a full number.** A pasted country code or leading zero is dropped.
 
 ## Install
@@ -27,8 +28,8 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **Built on Base UI.** `Field` gives the label and description, and `Select` is the country picker.
-- **A real input underneath.** An invisible input covers the number, so typing, pasting and autofill work as usual. The digits you see are drawn from its value.
+- **Built on Base UI.** `Field` gives the label and description, and `Combobox` provides the searchable country picker.
+- **Native editing.** The real input is visible while focused, supporting caret placement, selection, and deletion. The formatted animated preview returns on blur.
 - **Separators slide.** Digits are keyed by their position and separators by their order, so a space shared by both formats moves instead of being redrawn.
 
 <Callout>Formats are simplified examples, not full numbering plans.</Callout>

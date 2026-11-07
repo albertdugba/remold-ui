@@ -157,9 +157,11 @@
   font-weight: 600;
 }
 
-.co-module:hover,
-.co-lesson:hover {
-  background: var(--co-subtle);
+@media (hover: hover) and (pointer: fine) {
+  .co-module:hover,
+  .co-lesson:hover {
+    background: var(--co-subtle);
+  }
 }
 
 .co-chevron {
