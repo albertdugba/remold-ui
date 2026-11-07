@@ -1,0 +1,28 @@
+---
+title: "Popover menu"
+description: "A compact project-actions menu that grows out of its trigger, with Base UI handling all of the popover behavior."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="popover-menu" code={<Source demo="popover-menu" />}>
+  <PopoverMenuDemo />
+</Stage>
+
+## Things to try
+
+- **Open the menu.** The ellipsis grows into the tray around itself, and the rows blur in one after another from the top.
+- **Pick an action.** The menu closes cleanly after the click, leaving the trigger as the familiar ellipsis for the next action.
+
+## The split of responsibilities
+
+Use Base UI's `Popover` for the things that must be correct: anchored positioning, focus, Escape, and outside-click dismissal. Motion drives one clipped tray: the ellipsis key expands into the project menu, ending up in its top-right corner as the close button, then the rows rise out from beneath it.
+
+The rows are action links, so a product can attach its own navigation or side effect without the menu inventing a selected state. In this demo they use placeholder targets and simply close the menu.
+
+## Details worth keeping
+
+- The tray is one element, rather than a trigger plus a detached popup card.
+- The tray expands from the trigger's centre; menu rows arrive only after there is room for them.
+- Closing runs the other way: the rows blur out first (Base UI waits for the popup's `data-ending-style` transition), then the tray shrinks back around the trigger.
+- Reduced-motion users get an opacity-only transition.

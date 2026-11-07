@@ -49,7 +49,7 @@ export function HeroWord() {
       <span
         className="hm-word"
         style={width ? { width } : undefined}
-        onPointerEnter={() => setHeld(true)}
+        onPointerEnter={(event) => event.pointerType === "mouse" && setHeld(true)}
         onPointerLeave={() => setHeld(false)}
       >
         <Remold.Text spring={SPRING}>{WORDS[i]!}</Remold.Text>

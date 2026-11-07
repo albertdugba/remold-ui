@@ -152,8 +152,10 @@
   color: var(--fk-ink);
 }
 
-.fk-btn[data-variant="soft"]:hover:not(:disabled) {
-  background: var(--fk-well-strong);
+@media (hover: hover) and (pointer: fine) {
+  .fk-btn[data-variant="soft"]:hover:not(:disabled) {
+    background: var(--fk-well-strong);
+  }
 }
 
 .fk-btn[data-variant="ghost"] {
@@ -161,8 +163,10 @@
   color: var(--fk-muted);
 }
 
-.fk-btn[data-variant="ghost"]:hover:not(:disabled) {
-  color: var(--fk-ink);
+@media (hover: hover) and (pointer: fine) {
+  .fk-btn[data-variant="ghost"]:hover:not(:disabled) {
+    color: var(--fk-ink);
+  }
 }
 
 .fk-btn[data-variant="danger"] {
@@ -198,9 +202,11 @@
     color 0.15s;
 }
 
-.fk-icon:hover {
-  background: var(--fk-well);
-  color: var(--fk-ink);
+@media (hover: hover) and (pointer: fine) {
+  .fk-icon:hover {
+    background: var(--fk-well);
+    color: var(--fk-ink);
+  }
 }
 
 .fk-icon svg {
@@ -237,9 +243,11 @@
   cursor: pointer;
 }
 
-.fk-chip button:hover {
-  background: color-mix(in oklab, var(--fk-ink) 8%, transparent);
-  color: var(--fk-ink);
+@media (hover: hover) and (pointer: fine) {
+  .fk-chip button:hover {
+    background: color-mix(in oklab, var(--fk-ink) 8%, transparent);
+    color: var(--fk-ink);
+  }
 }
 
 .fk-chip svg {

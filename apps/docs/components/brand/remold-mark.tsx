@@ -22,7 +22,7 @@ export function RemoldMark({ size = 28, wordmark = false }: { size?: number; wor
   const round = formed !== hover;
 
   return (
-    <span className="rm-brand" onPointerEnter={() => setHover(true)} onPointerLeave={() => setHover(false)}>
+    <span className="rm-brand" onPointerEnter={(event) => event.pointerType === "mouse" && setHover(true)} onPointerLeave={() => setHover(false)}>
       <Remold.Icon
         path={round ? ARC : BLOCK}
         viewBox="6 6 20 20"

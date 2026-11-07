@@ -45,6 +45,8 @@ const HoldToRecordDemo = dynamic(
   () => import("../demos/hold-to-record").then((m) => m.HoldToRecordDemo),
   { ssr: false },
 );
+const ExportPreparationDemo = dynamic(() => import("../demos/export-preparation").then(m => m.ExportPreparationDemo), { ssr: false });
+const UploadRecoveryDemo = dynamic(() => import("../demos/upload-recovery").then(m => m.UploadRecoveryDemo), { ssr: false });
 const TableBookingDemo = dynamic(
   () => import("../demos/table-booking").then((m) => m.TableBookingDemo),
   { ssr: false },
@@ -121,8 +123,8 @@ const PromoCodeDemo = dynamic(
   () => import("../demos/promo-code").then((m) => m.PromoCodeDemo),
   { ssr: false },
 );
-const FluidPopoverDemo = dynamic(
-  () => import("../demos/fluid-popover").then((m) => m.FluidPopoverDemo),
+const PopoverMenuDemo = dynamic(
+  () => import("../demos/popover-menu").then((m) => m.PopoverMenuDemo),
   { ssr: false },
 );
 const SeatCalculatorDemo = dynamic(
@@ -202,7 +204,7 @@ const COMPONENT_NAME_BY_DOC: Record<string, string> = {
   "/docs/primitives/icon": "SVG morph",
   "/docs/components/podcast-player": "Podcast",
   "/docs/components/logo-morph": "Logo morph",
-  "/docs/components/fluid-popover": "Fluid popover menu",
+  "/docs/components/popover-menu": "Popover menu",
 };
 
 /** A card's anchor on the home page, from its title: "Send money" → "send-money". */
@@ -261,7 +263,6 @@ function PartCard({
   children: (step: number, playing: boolean) => ReactNode;
 }) {
   const inPreview = useInPreview();
-  const componentName = docs ? COMPONENT_NAME_BY_DOC[docs] ?? title : title;
   const autoplay = useAutoplay(states.length, {
     every,
     autoStart: !selfPlaying,
@@ -296,18 +297,17 @@ function PartCard({
       <div className="hp-stage">
         {children(autoplay.step, autoplay.playing)}
       </div>
-      <footer className="hp-foot">
-        <span className="hp-kicker">{componentName}</span>
         {docs && !inPreview && (
           <Link
             href={docs}
-            className="hp-doc-link"
+            className="hp-play hp-view"
+            style={selfPlaying ? { right: 14 } : undefined}
             aria-label={`View ${title} component details`}
+            title={`View ${title}`}
           >
-            View <span aria-hidden="true">→</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
           </Link>
         )}
-      </footer>
     </article>
   );
 }
@@ -342,6 +342,8 @@ function GalleryFilter({
   const [open, setOpen] = useState(false);
   const [shown, setShown] = useState(false);
   const [pill, setPill] = useState({ width: 0, height: 44 });
+  // Near the right edge of a small screen the menu opens leftwards, and never wider than the screen.
+  const [room, setRoom] = useState({ width: FILTER_MENU_WIDTH, fromRight: false });
   const [menuHeight, setMenuHeight] = useState(0);
   const trigger = useRef<HTMLButtonElement>(null);
   const shell = useRef<HTMLDivElement>(null);
@@ -363,6 +365,9 @@ function GalleryFilter({
 
   const changeOpen = (next: boolean) => {
     if (next && trigger.current) {
+      const box = trigger.current.getBoundingClientRect();
+      const width = Math.min(FILTER_MENU_WIDTH, window.innerWidth - 24);
+      setRoom({ width, fromRight: box.left + width > window.innerWidth - 12 });
       setPill({ width: trigger.current.offsetWidth, height: trigger.current.offsetHeight });
       setShown(true);
     }
@@ -400,10 +405,11 @@ function GalleryFilter({
           ref={shell}
           className="hp-filter-shell"
           data-shown={shown || undefined}
+          data-from-right={room.fromRight || undefined}
           initial={false}
           animate={
             open
-              ? { width: FILTER_MENU_WIDTH, height: menuHeight, opacity: 1 }
+              ? { width: room.width, height: menuHeight, opacity: 1 }
               : { width: pill.width, height: 0, opacity: 0 }
           }
           transition={reduceMotion ? { duration: 0 } : { ...FILTER_SPRING, delay: open ? 0 : 0.08 }}
@@ -545,6 +551,15 @@ export function Parts() {
           <p className="hp-filter-empty">No examples match those filters.</p>
         )}
       </div>
+      {shown.length > 0 && (
+        <div className="hp-gallery-end">
+          <div className="hp-gallery-fog" aria-hidden="true" />
+          <Link href="/docs/components" className="hp-gallery-link">
+            View all components
+            <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+      )}
       </section>
     </>
   );
@@ -839,11 +854,11 @@ function allCards() {
       <PartCard
         kicker="Base UI · Motion"
         category="morphing"
-        title="Floating menu"
-        docs="/docs/components/fluid-popover"
+        title="Popover menu"
+        docs="/docs/components/popover-menu"
         states={["Menu"]}
       >
-        {(_, playing) => <FluidPopoverDemo playing={playing} />}
+        {(_, playing) => <PopoverMenuDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -877,6 +892,12 @@ function allCards() {
         minHeight={720}
       >
         {(_, playing) => <SeatCalculatorDemo playing={playing} />}
+      </PartCard>
+      <PartCard kicker="Base UI · Motion" category="morphing" title="Export preparation" docs="/docs/components/export-preparation" states={["Export"]}>
+        {(_, playing) => <ExportPreparationDemo playing={playing} />}
+      </PartCard>
+      <PartCard kicker="Base UI · Motion" category="morphing" title="Upload recovery" docs="/docs/components/upload-recovery" states={["Recovery"]}>
+        {(_, playing) => <UploadRecoveryDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Layout · Text"

@@ -192,7 +192,7 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
         </filter>
       </svg>
 
-      <div className="wa-scene" onPointerEnter={() => setHover(true)} onPointerLeave={() => setHover(false)}>
+      <div className="wa-scene" onPointerEnter={(event) => event.pointerType === "mouse" && setHover(true)} onPointerLeave={() => setHover(false)}>
         <motion.div className="wa-back" initial={false} animate={{ y: sunk }} transition={{ ...SPRING, delay: chosen ? 0.04 : 0 }}>
           <Leather id={id} d={BACK} stitch={[BACK_STITCH, BACK_STITCH_L]} tone="back" />
         </motion.div>

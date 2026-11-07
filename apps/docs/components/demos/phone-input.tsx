@@ -9,10 +9,10 @@
  * and autofill all work; Motion moves the digits and separators.
  */
 import { Field } from "@base-ui/react/field";
-import { Select } from "@base-ui/react/select";
+import { Combobox } from "@base-ui/react/combobox";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRef, useState } from "react";
 import { usePortalContainer } from "./portal-container";
 import { useScene } from "./use-scene";
@@ -25,6 +25,12 @@ const COUNTRIES = {
   NG: { name: "Nigeria", flag: "🇳🇬", dial: "+234", format: "### ### ####", example: "803 123 4567" },
   GB: { name: "United Kingdom", flag: "🇬🇧", dial: "+44", format: "#### ######", example: "7700 900123" },
   US: { name: "United States", flag: "🇺🇸", dial: "+1", format: "(###) ###-####", example: "(415) 555-0132" },
+  CA: { name: "Canada", flag: "🇨🇦", dial: "+1", format: "(###) ###-####", example: "(416) 555-0132" },
+  FR: { name: "France", flag: "🇫🇷", dial: "+33", format: "# ## ## ## ##", example: "6 12 34 56 78" },
+  IN: { name: "India", flag: "🇮🇳", dial: "+91", format: "##### #####", example: "98765 43210" },
+  AU: { name: "Australia", flag: "🇦🇺", dial: "+61", format: "### ### ###", example: "412 345 678" },
+  KE: { name: "Kenya", flag: "🇰🇪", dial: "+254", format: "### ### ###", example: "712 345 678" },
+  ZA: { name: "South Africa", flag: "🇿🇦", dial: "+27", format: "## ### ####", example: "82 123 4567" },
 } as const;
 
 type Country = keyof typeof COUNTRIES;
@@ -50,6 +56,10 @@ function characters(digits: string, format: string) {
       out.push({ key: `s${separators++}${slot}`, char: slot, digit: false });
     }
   }
+  while (next < digits.length) {
+    out.push({ key: `d${next}`, char: digits[next]!, digit: true });
+    next++;
+  }
   return out;
 }
 
@@ -64,9 +74,11 @@ export interface PhoneInputProps {
 }
 
 export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }: PhoneInputProps) {
+  const reduced = useReducedMotion();
   const portal = usePortalContainer();
   const input = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
+  const [query, setQuery] = useState("");
   const c = COUNTRIES[country];
   const chars = characters(digits, c.format);
   const complete = digits.length === capacity(c.format);
@@ -75,35 +87,46 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
     <Field.Root className="fk phn">
       <Field.Label className="fk-label">Phone number</Field.Label>
       <div className="fk-box phn-box" data-focused={focused || undefined}>
-        <Select.Root value={country} onValueChange={(next) => next && onCountryChange(next as Country)}>
-          <Select.Trigger className="phn-country" aria-label={`Country, ${c.name}`}>
+        <Combobox.Root items={Object.keys(COUNTRIES) as Country[]} value={country} inputValue={query} onInputValueChange={setQuery} onOpenChange={() => setQuery("")} itemToStringLabel={(code) => `${COUNTRIES[code].name} ${COUNTRIES[code].dial} ${code}`} onValueChange={(next) => { if (next) onCountryChange(next); setQuery(""); }}>
+          <Combobox.Trigger className="phn-country" aria-label={`Country, ${c.name}, ${c.dial}`}>
             <span className="phn-flag" aria-hidden="true">
               {c.flag}
             </span>
-            <Select.Value>{() => c.dial}</Select.Value>
-            <Select.Icon className="phn-chevron">
+            <span className="relative inline-grid overflow-hidden">
+              <AnimatePresence initial={false} mode="popLayout">
+                <motion.span key={country} initial={{ opacity: 0, y: reduced ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reduced ? 0 : -12 }} transition={{ duration: 0.2 }} className="col-start-1 row-start-1">{c.dial}</motion.span>
+              </AnimatePresence>
+            </span>
+            <span className="phn-chevron">
               <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
-            </Select.Icon>
-          </Select.Trigger>
-          <Select.Portal container={portal}>
-            <Select.Positioner sideOffset={6} alignItemWithTrigger={false} align="start">
-              <Select.Popup className="fk-popup phn-popup">
-                <Select.List>
-                  {(Object.keys(COUNTRIES) as Country[]).map((code) => (
-                    <Select.Item key={code} value={code} className="fk-option">
-                      <span aria-hidden="true">{COUNTRIES[code].flag}</span>
-                      <Select.ItemText>{COUNTRIES[code].name}</Select.ItemText>
-                      <span className="fk-option-note">{COUNTRIES[code].dial}</span>
-                      <Select.ItemIndicator className="phn-check">
+            </span>
+          </Combobox.Trigger>
+          <Combobox.Portal container={portal}>
+            <Combobox.Positioner sideOffset={8} align="start" className="z-50">
+              <Combobox.Popup className="fk-popup phn-popup" render={<motion.div initial={{ opacity: 0, scale: reduced ? 1 : 0.94, y: reduced ? 0 : -12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={reduced ? { duration: 0.1 } : { type: "spring", duration: 0.38, bounce: 0.18 }} />}>
+                <div className="px-4 pb-3 pt-4">
+                  <div className="mb-3 flex items-center justify-between"><span className="text-sm font-semibold">Country & region</span><span className="text-[11px] text-zinc-500">Dialing code</span></div>
+                  <div className="relative"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="pointer-events-none absolute left-3 top-3.5 size-4 text-zinc-400"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+                  <Combobox.Input aria-label="Search countries" placeholder="Search name or +code" className="h-11 w-full rounded-xl bg-zinc-100 pl-9 pr-3 text-base text-zinc-900 outline-none focus:ring-2 focus:ring-blue-500/40 dark:bg-zinc-800 dark:text-white" />
+                  </div>
+                </div>
+                <Combobox.Empty className="p-4 text-sm text-zinc-500">No matching country</Combobox.Empty>
+                <Combobox.List className="phn-country-list">
+                  {(code: Country) => (
+                    <Combobox.Item key={code} value={code} className="phn-choice">
+                      <motion.span aria-hidden="true" className="phn-choice-flag" initial={{ opacity: 0, scale: reduced ? 1 : 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.22, delay: reduced ? 0 : Math.min(Object.keys(COUNTRIES).indexOf(code), 5) * 0.025 }}>{COUNTRIES[code].flag}</motion.span>
+                      <motion.span className="min-w-0 flex-1" initial={{ opacity: 0, x: reduced ? 0 : -7 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: reduced ? 0 : Math.min(Object.keys(COUNTRIES).indexOf(code), 5) * 0.025 }}><span className="block text-[13px] font-medium">{COUNTRIES[code].name}</span><span className="mt-0.5 block text-[10px] tracking-wider text-zinc-400">{code}</span></motion.span>
+                      <span className="text-xs tabular-nums text-zinc-500">{COUNTRIES[code].dial}</span>
+                      <span className="phn-check-slot"><Combobox.ItemIndicator className="phn-check">
                         <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.4} />
-                      </Select.ItemIndicator>
-                    </Select.Item>
-                  ))}
-                </Select.List>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>
+                      </Combobox.ItemIndicator></span>
+                    </Combobox.Item>
+                  )}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
 
         <span className="phn-rule" aria-hidden="true" />
 
@@ -113,7 +136,7 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
             input.current?.focus();
           }
         }}>
-          <span className="phn-drawn" aria-hidden="true">
+          <span className="phn-drawn" aria-hidden="true" style={{ visibility: focused ? "hidden" : "visible" }}>
             {digits.length === 0 && <span className="phn-placeholder">{c.example}</span>}
             <AnimatePresence initial={false} mode="popLayout">
               {chars.map(({ key, char, digit }) => (
@@ -139,6 +162,7 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
             type="tel"
             inputMode="tel"
             autoComplete="tel-national"
+            placeholder={c.example}
             value={digits}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
@@ -148,14 +172,14 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
               const dial = c.dial.slice(1);
               if (next.length > capacity(c.format) && next.startsWith(dial)) next = next.slice(dial.length);
               // A national trunk zero isn't part of the international number.
-              if (country !== "US" && next.startsWith("0")) next = next.slice(1);
-              onDigitsChange(next.slice(0, capacity(c.format)));
+              if (country !== "US" && country !== "CA" && next.startsWith("0")) next = next.slice(1);
+              onDigitsChange(next.slice(0, 15));
             }}
           />
         </span>
       </div>
       <Field.Description className="fk-description phn-help" data-complete={complete || undefined}>
-        {complete ? `${c.dial} ${chars.map((x) => x.char).join("")}` : "We’ll text a code to confirm it."}
+        {digits.length > capacity(c.format) ? "Check the number length for this country." : complete ? `${c.dial} ${chars.map((x) => x.char).join("")}` : `${c.name} · Enter your national number`}
       </Field.Description>
     </Field.Root>
   );

@@ -1,7 +1,9 @@
 /* Phone input. Styling only: Motion moves the digits and separators. */
 .phn-box {
   gap: 0;
-  padding: 0 12px 0 4px;
+  padding: 5px 14px 5px 5px;
+  min-height: 60px;
+  border-radius: 18px;
 }
 
 .phn-country {
@@ -9,11 +11,12 @@
   flex: none;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  height: 48px;
+  touch-action: manipulation;
   padding: 0 6px 0 8px;
   border: 0;
-  border-radius: 9px;
-  background: none;
+  border-radius: 12px;
+  background: var(--fk-well);
   color: var(--fk-ink);
   font: inherit;
   font-size: 14px;
@@ -21,9 +24,14 @@
   cursor: pointer;
 }
 
-.phn-country:hover,
 .phn-country[data-popup-open] {
   background: var(--fk-well);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .phn-country:hover {
+    background: var(--fk-well);
+  }
 }
 
 .phn-flag {
@@ -119,13 +127,91 @@
   opacity: 0;
 }
 
+.phn-input:focus {
+  opacity: 1;
+  color: var(--fk-ink);
+  caret-color: var(--fk-ink);
+  font-weight: 550;
+}
+
 .phn-help[data-complete] {
   color: var(--fk-ink);
   font-weight: 550;
 }
 
 .phn-popup {
-  min-width: 240px;
+  width: min(340px, calc(100vw - 24px));
+  min-width: 0;
+  padding: 0;
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: min(440px, var(--available-height, 70dvh));
+  transform-origin: var(--transform-origin);
+  transition: opacity 120ms ease-out;
+}
+
+.phn-popup > div:first-child {
+  flex-shrink: 0;
+}
+
+.phn-country-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 8px 8px;
+}
+
+.phn-check-slot {
+  width: 18px;
+  flex: none;
+}
+
+/* Motion owns the entrance transform; the shared form popup must not scale it again. */
+.fk-popup.phn-popup[data-starting-style] {
+  opacity: 1;
+  transform: none;
+}
+
+.fk-popup.phn-popup[data-ending-style] {
+  transform: none;
+}
+
+.phn-popup[data-ending-style] {
+  opacity: 0;
+}
+
+.phn-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 8px 12px;
+  border-radius: 13px;
+  cursor: pointer;
+  touch-action: manipulation;
+  outline: none;
+  transition: background-color 120ms ease-out;
+}
+
+.phn-choice[data-highlighted] {
+  background: var(--fk-well);
+}
+
+.phn-choice[data-selected] {
+  background: color-mix(in srgb, #3b82f6 8%, var(--fk-surface, white));
+}
+
+.phn-choice-flag {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--fk-well);
+  font-size: 23px;
 }
 
 .phn-check {
@@ -140,6 +226,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .phn-popup { transition: none; }
   .phn-caret {
     animation: none;
   }

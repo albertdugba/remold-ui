@@ -12,8 +12,10 @@
  * a few targeted rules, so Fumadocs updates keep working.
  */
 @theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+    "Segoe UI", system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo,
+    monospace;
 }
 
 :root {
@@ -69,6 +71,24 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/*
+ * Safari zooms a page when a focused editable control computes below 16px.
+ * Keep text entry stable on phones without changing the visual sizing of
+ * sliders, switches, file inputs, or other non-text controls.
+ */
+@media (max-width: 767px) {
+  :where(
+      input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+          [type="color"]
+        ):not([type="file"]),
+      textarea,
+      select,
+      [contenteditable="true"]
+    ) {
+    font-size: 16px !important;
+  }
+}
+
 /* Sidebar: same colour as the page, lighter items, a quiet current page */
 #nd-sidebar {
   background: var(--color-fd-background);
@@ -85,9 +105,11 @@ body {
     background-color 0.15s;
 }
 
-#nd-sidebar a:hover {
-  background: var(--color-fd-accent);
-  color: var(--color-fd-foreground);
+@media (hover: hover) and (pointer: fine) {
+  #nd-sidebar a:hover {
+    background: var(--color-fd-accent);
+    color: var(--color-fd-foreground);
+  }
 }
 
 #nd-sidebar a[data-active="true"] {
@@ -186,13 +208,19 @@ body {
 }
 
 #nd-page .prose a:not(.not-prose a) {
-  text-decoration-color: color-mix(in srgb, var(--color-fd-foreground) 25%, transparent);
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--color-fd-foreground) 25%,
+    transparent
+  );
   text-underline-offset: 3px;
   transition: text-decoration-color 0.15s;
 }
 
-#nd-page .prose a:not(.not-prose a):hover {
-  text-decoration-color: var(--color-fd-foreground);
+@media (hover: hover) and (pointer: fine) {
+  #nd-page .prose a:not(.not-prose a):hover {
+    text-decoration-color: var(--color-fd-foreground);
+  }
 }
 
 /* Inline code: small, quiet, no border */
@@ -235,7 +263,12 @@ figure.rm-bare-code {
   background: var(--color-fd-background);
 }
 
-#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) {
+#nd-page
+  .prose
+  [role="tablist"]:not(
+    .rm-pm-bar [role="tablist"],
+    .rm-stage [role="tablist"]
+  ) {
   gap: 2px;
   margin: 8px 8px 0;
   padding: 3px;
@@ -244,7 +277,10 @@ figure.rm-bare-code {
   background: var(--color-fd-muted);
 }
 
-#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) [role="tab"] {
+#nd-page
+  .prose
+  [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"])
+  [role="tab"] {
   padding: 4px 12px;
   border: 0;
   border-radius: 7px;
@@ -252,29 +288,51 @@ figure.rm-bare-code {
   color: var(--color-fd-muted-foreground);
 }
 
-#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) [role="tab"][data-state="active"],
-#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) [role="tab"][aria-selected="true"] {
+#nd-page
+  .prose
+  [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"])
+  [role="tab"][data-state="active"],
+#nd-page
+  .prose
+  [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"])
+  [role="tab"][aria-selected="true"] {
   background: var(--color-fd-background);
   color: var(--color-fd-foreground);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
 }
 
-#nd-page .prose [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"]) [role="tab"]::after {
+#nd-page
+  .prose
+  [role="tablist"]:not(.rm-pm-bar [role="tablist"], .rm-stage [role="tablist"])
+  [role="tab"]::after {
   display: none;
 }
 
 /* The preview panel stays quiet so the example is the focus. */
-#nd-page .prose div:has(> [role="tablist"]):not(.rm-stage *) > [role="tabpanel"] {
+#nd-page
+  .prose
+  div:has(> [role="tablist"]):not(.rm-stage *)
+  > [role="tabpanel"] {
   background-color: var(--color-fd-background);
 }
 
 /* The demo stage: a soft grey, like the home page's cards, so a component's own surface (a white
    card, a dark player) reads against it. */
 .rm-stage-preview {
-  background-color: color-mix(in oklab, var(--color-fd-foreground) 3%, var(--color-fd-background));
+  background-color: color-mix(
+    in oklab,
+    var(--color-fd-foreground) 3%,
+    var(--color-fd-background)
+  );
 }
 
 /* Demos sit in the middle of the stage. Ones that fill their container still fill it. */
+/* One column as wide as the stage, never wider: a demo drawn at a fixed width (440px, 680px) then
+   shrinks to fit a phone instead of pushing past it. */
+.rm-stage-demo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .rm-stage-demo > * {
   max-width: 100%;
   margin-inline: auto !important;
@@ -340,9 +398,14 @@ figure.rm-bare-code {
   transition: color 0.15s;
 }
 
-#nd-toc a:hover,
 #nd-toc a[data-active="true"] {
   color: var(--color-fd-foreground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #nd-toc a:hover {
+    color: var(--color-fd-foreground);
+  }
 }
 
 html {
@@ -414,9 +477,11 @@ html > body[data-scroll-locked] {
   color: var(--color-fd-muted-foreground);
 }
 
-.rm-showcase-meta h3 a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) and (pointer: fine) {
+  .rm-showcase-meta h3 a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .rm-showcase-meta p {
@@ -463,9 +528,11 @@ html > body[data-scroll-locked] {
   color: var(--color-fd-muted-foreground);
 }
 
-.rm-command button:hover {
-  background: var(--color-fd-accent);
-  color: var(--color-fd-foreground);
+@media (hover: hover) and (pointer: fine) {
+  .rm-command button:hover {
+    background: var(--color-fd-accent);
+    color: var(--color-fd-foreground);
+  }
 }
 
 /* Install commands: one per package manager */
@@ -516,9 +583,11 @@ html > body[data-scroll-locked] {
   color: var(--color-fd-muted-foreground);
 }
 
-.rm-pm-copy:hover {
-  background: var(--color-fd-accent);
-  color: var(--color-fd-foreground);
+@media (hover: hover) and (pointer: fine) {
+  .rm-pm-copy:hover {
+    background: var(--color-fd-accent);
+    color: var(--color-fd-foreground);
+  }
 }
 
 .rm-pm .rm-bare-code pre {
@@ -596,9 +665,15 @@ html > body[data-scroll-locked] {
     box-shadow 0.15s;
 }
 
-.rm-grid-card:hover {
-  border-color: color-mix(in oklab, var(--color-fd-foreground) 35%, transparent);
-  box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.18);
+@media (hover: hover) and (pointer: fine) {
+  .rm-grid-card:hover {
+    border-color: color-mix(
+      in oklab,
+      var(--color-fd-foreground) 35%,
+      transparent
+    );
+    box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.18);
+  }
 }
 
 /* The live preview: the component, scaled to fit inside the card. */
@@ -606,7 +681,11 @@ html > body[data-scroll-locked] {
   position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: linear-gradient(135deg, color-mix(in oklab, var(--color-fd-card) 92%, var(--color-fd-muted) 8%), var(--color-fd-background));
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--color-fd-card) 92%, var(--color-fd-muted) 8%),
+    var(--color-fd-background)
+  );
 }
 
 .dark .rm-preview:not(.dark) {
@@ -638,7 +717,11 @@ html > body[data-scroll-locked] {
 
 /* "Browse all": a compact, visual library shelf. */
 .rm-browser {
-  --rm-tile: color-mix(in oklab, var(--color-fd-foreground) 3.5%, var(--color-fd-background));
+  --rm-tile: color-mix(
+    in oklab,
+    var(--color-fd-foreground) 3.5%,
+    var(--color-fd-background)
+  );
   container-type: inline-size;
 }
 
@@ -677,7 +760,10 @@ html > body[data-scroll-locked] {
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out,
+    border-color 150ms ease-out;
 }
 
 .rm-browser-chip span {
@@ -686,8 +772,10 @@ html > body[data-scroll-locked] {
   font-variant-numeric: tabular-nums;
 }
 
-.rm-browser-chip:hover {
-  color: var(--color-fd-foreground);
+@media (hover: hover) and (pointer: fine) {
+  .rm-browser-chip:hover {
+    color: var(--color-fd-foreground);
+  }
 }
 
 .rm-browser-chip[data-pressed] {
@@ -758,7 +846,9 @@ html > body[data-scroll-locked] {
   border: 1px solid var(--color-fd-border);
   border-radius: 11px;
   background: var(--color-fd-background);
-  transition: border-color 160ms ease-out, box-shadow 160ms ease-out;
+  transition:
+    border-color 160ms ease-out,
+    box-shadow 160ms ease-out;
 }
 
 .rm-browser-search svg {
@@ -777,8 +867,13 @@ html > body[data-scroll-locked] {
 }
 
 .rm-browser-search:focus-within {
-  border-color: color-mix(in oklab, var(--color-fd-foreground) 35%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-fd-foreground) 8%, transparent);
+  border-color: color-mix(
+    in oklab,
+    var(--color-fd-foreground) 35%,
+    transparent
+  );
+  box-shadow: 0 0 0 3px
+    color-mix(in oklab, var(--color-fd-foreground) 8%, transparent);
 }
 
 .rm-card:focus-visible {
@@ -808,7 +903,9 @@ html > body[data-scroll-locked] {
   background: var(--color-fd-card);
   color: inherit;
   text-decoration: none;
-  transition: border-color 180ms ease-out, box-shadow 180ms ease-out;
+  transition:
+    border-color 180ms ease-out,
+    box-shadow 180ms ease-out;
 }
 
 .rm-card-stage {
@@ -821,10 +918,24 @@ html > body[data-scroll-locked] {
   background: var(--rm-tile);
 }
 
-.rm-card:hover,
 .rm-card:focus-visible {
-  border-color: color-mix(in oklab, var(--color-fd-foreground) 25%, transparent);
+  border-color: color-mix(
+    in oklab,
+    var(--color-fd-foreground) 25%,
+    transparent
+  );
   box-shadow: 0 12px 30px -24px rgb(0 0 0 / 0.25);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rm-card:hover {
+    border-color: color-mix(
+      in oklab,
+      var(--color-fd-foreground) 25%,
+      transparent
+    );
+    box-shadow: 0 12px 30px -24px rgb(0 0 0 / 0.25);
+  }
 }
 
 .rm-card .rm-preview {
@@ -833,17 +944,26 @@ html > body[data-scroll-locked] {
 }
 
 .rm-card .rm-preview,
-.dark .rm-card .rm-preview:not(.dark) { background: transparent; }
+.dark .rm-card .rm-preview:not(.dark) {
+  background: transparent;
+}
 
-.rm-card .rm-preview:not(.dark, [data-cover], [data-landing]) .rm-preview-inner > *,
-.rm-card .rm-preview:not(.dark, [data-landing]) :is(.cx-stage, .lx-stage, .cs-canvas, .rm-emblem, .tf-panel) {
+.rm-card
+  .rm-preview:not(.dark, [data-cover], [data-landing])
+  .rm-preview-inner
+  > *,
+.rm-card
+  .rm-preview:not(.dark, [data-landing])
+  :is(.cx-stage, .lx-stage, .cs-canvas, .rm-emblem, .tf-panel) {
   border-color: transparent !important;
   background: transparent !important;
   box-shadow: none !important;
 }
 
 /* The library frame owns the preview's quiet backdrop; no demo gets a second dashed frame inside it. */
-.rm-card .rm-preview[data-landing] .lx-stage { border: 0 !important; }
+.rm-card .rm-preview[data-landing] .lx-stage {
+  border: 0 !important;
+}
 
 .rm-card .rm-preview[data-surface] .rm-preview-inner {
   padding: 16px;
@@ -865,7 +985,11 @@ html > body[data-scroll-locked] {
 }
 
 .dark .rm-card .rm-preview[data-surface] .rm-preview-inner {
-  background: color-mix(in oklab, var(--color-fd-foreground) 9%, var(--color-fd-background));
+  background: color-mix(
+    in oklab,
+    var(--color-fd-foreground) 9%,
+    var(--color-fd-background)
+  );
 }
 
 .rm-preview[data-crop] .rm-preview-inner {
@@ -874,7 +998,9 @@ html > body[data-scroll-locked] {
 }
 
 .rm-card .rm-preview[data-cover],
-.rm-card .rm-preview.dark { --rm-preview-inset: 0px; }
+.rm-card .rm-preview.dark {
+  --rm-preview-inset: 0px;
+}
 
 .rm-card .rm-preview[data-cover] .rm-preview-inner > * {
   border: 0 !important;
@@ -888,8 +1014,15 @@ html > body[data-scroll-locked] {
   border-radius: 16px 16px 0 0;
 }
 
-.dark .rm-card .rm-preview[data-surface][data-preview="course-outline"] .rm-preview-inner { background: #fff; }
-.rm-card .rm-preview.dark { background: #0b0b0e; }
+.dark
+  .rm-card
+  .rm-preview[data-surface][data-preview="course-outline"]
+  .rm-preview-inner {
+  background: #fff;
+}
+.rm-card .rm-preview.dark {
+  background: #0b0b0e;
+}
 
 .rm-card-new {
   position: absolute;
@@ -906,7 +1039,11 @@ html > body[data-scroll-locked] {
   text-transform: uppercase;
 }
 
-.rm-card-meta { display: grid; gap: 3px; padding: 11px 14px 13px; }
+.rm-card-meta {
+  display: grid;
+  gap: 3px;
+  padding: 11px 14px 13px;
+}
 
 .rm-card-meta strong {
   font-size: 14px;
@@ -926,11 +1063,17 @@ html > body[data-scroll-locked] {
 }
 
 @container (max-width: 620px) {
-  .rm-browser-filters { display: grid; gap: 10px; }
-  .rm-browser-search { max-width: none; }
-  .rm-browser-grid { grid-template-columns: 1fr; }
+  .rm-browser-filters {
+    display: grid;
+    gap: 10px;
+  }
+  .rm-browser-search {
+    max-width: none;
+  }
+  .rm-browser-grid {
+    grid-template-columns: 1fr;
+  }
 }
-
 
 .rm-grid-text {
   display: grid;
@@ -1016,4 +1159,13 @@ html > body[data-scroll-locked] {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+/* Phones: the demos' entrances bridge states with a blur that Motion writes inline. Repainting a
+   blur every frame is what makes them stutter on a phone, so there they fade and scale without
+   it. Blurs set in a stylesheet are left alone. */
+@media (hover: none) and (pointer: coarse) {
+  .not-prose [style*="blur("] {
+    filter: none !important;
+  }
 }

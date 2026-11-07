@@ -86,4 +86,6 @@ export {
   PermissionCardDemo,
   SelectableOptionCardDemo,
 } from "./cards";
-export { FluidPopoverDemo } from "./fluid-popover";
+export { PopoverMenuDemo } from "./popover-menu";
+export { ExportPreparationDemo } from "./export-preparation";
+export { UploadRecoveryDemo } from "./upload-recovery";

@@ -21,6 +21,8 @@ export interface StageProps {
   minHeight?: number;
   /** Let the demo use the stage's full width (galleries, wide canvases). */
   wide?: boolean;
+  /** Show a reset control for an intentional, replayable sequence. Off by default. */
+  replay?: boolean;
 }
 
 const tab =
@@ -35,6 +37,7 @@ export function Stage({
   width = 900,
   minHeight = 480,
   wide = false,
+  replay = false,
 }: StageProps) {
   const [view, setView] = useState<"preview" | "code">("preview");
   const [run, setRun] = useState(0);
@@ -117,7 +120,7 @@ export function Stage({
             </button>
           )}
         </div>
-        {view === "preview" && (
+        {view === "preview" && replay && (
           <button
             type="button"
             onClick={() => setRun((r) => r + 1)}

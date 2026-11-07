@@ -1,10 +1,15 @@
 {
   "name": "@remold-ui/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Headless core: shapes, morphing and matching. No browser APIs.",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/albertdugba/remold-ui.git" },
-  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/albertdugba/remold-ui.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [

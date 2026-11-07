@@ -10,7 +10,8 @@
   width: 100%;
   min-height: 560px;
   color: var(--rsvp-ink);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    system-ui, sans-serif;
 }
 
 .dark .rsvp-stage {
@@ -183,25 +184,56 @@
 }
 
 .rsvp-option {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   position: relative;
   display: flex;
   align-items: center;
   gap: 11px;
   height: 54px;
   padding: 0 12px 0 10px;
+  border: 0;
   border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
 .rsvp-option > * {
   position: relative;
+  z-index: 1;
+}
+
+.rsvp-option > span,
+.rsvp-option::after {
+  pointer-events: none;
 }
 
 .rsvp-option > .rsvp-pick {
   position: absolute;
   inset: 0;
+  z-index: 0;
   border-radius: 14px;
   background: var(--rsvp-well);
+}
+
+.rsvp-option::after {
+  position: absolute;
+  right: 12px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in oklab, var(--rsvp-ink) 22%, transparent);
+  content: "";
+  transition: box-shadow 0.16s ease-out;
+}
+
+.rsvp-option[data-checked]::after {
+  box-shadow: inset 0 0 0 6px var(--rsvp-ink);
 }
 
 .rsvp-option-icon {
@@ -236,30 +268,8 @@
   font-size: 12px;
 }
 
-.rsvp-radio {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: var(--rsvp-surface);
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--rsvp-ink) 22%, transparent);
-  cursor: pointer;
-  transition: box-shadow 0.2s;
-}
-
-.rsvp-radio[data-checked] {
-  box-shadow: inset 0 0 0 6px var(--rsvp-ink);
-}
-
 .rsvp-radio-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--rsvp-surface);
+  display: none;
 }
 
 .rsvp-remind[data-disabled] {
@@ -270,34 +280,46 @@
 .rsvp-remind {
   display: flex;
   align-items: center;
+  width: 100%;
+  min-height: 44px;
   gap: 10px;
   padding: 2px 12px 4px;
+  border: 0;
+  background: transparent;
   color: var(--rsvp-muted);
+  font: inherit;
   font-size: 12.5px;
+  text-align: left;
   cursor: pointer;
 }
 
-.rsvp-checkbox {
+.rsvp-checkbox-box {
   display: grid;
-  flex: none;
   place-items: center;
+  flex: none;
   width: 18px;
   height: 18px;
-  padding: 0;
-  border: 0;
   border-radius: 6px;
   background: var(--rsvp-surface);
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--rsvp-ink) 22%, transparent);
-  color: var(--rsvp-surface);
-  cursor: pointer;
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in oklab, var(--rsvp-ink) 22%, transparent);
   transition:
     background-color 0.15s,
     box-shadow 0.15s;
+  pointer-events: none;
 }
 
-.rsvp-checkbox[data-checked] {
+.rsvp-remind[data-checked] .rsvp-checkbox-box {
   background: var(--rsvp-ink);
   box-shadow: none;
+}
+
+.rsvp-checkbox-mark {
+  display: grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  color: var(--rsvp-surface);
 }
 
 .rsvp-checkbox-mark svg {
@@ -458,6 +480,14 @@
 .rsvp-main:focus-visible {
   outline: 2px solid var(--rsvp-ink);
   outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .rsvp-close {
+    width: 44px;
+    height: 44px;
+    margin: -6px -6px 0 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

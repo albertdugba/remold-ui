@@ -119,10 +119,12 @@
   cursor: pointer;
 }
 
-.ob-hide:hover,
-.ob-show:hover {
-  background: var(--ob-panel);
-  color: var(--ob-ink);
+@media (hover: hover) and (pointer: fine) {
+  .ob-hide:hover,
+  .ob-show:hover {
+    background: var(--ob-panel);
+    color: var(--ob-ink);
+  }
 }
 
 .ob-hide svg,

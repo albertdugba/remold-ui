@@ -80,8 +80,10 @@
   transition: background-color 0.15s;
 }
 
-.amt-max:hover {
-  background: color-mix(in oklab, var(--amt-ink) 11%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  .amt-max:hover {
+    background: color-mix(in oklab, var(--amt-ink) 11%, transparent);
+  }
 }
 
 .amt-row {

@@ -189,8 +189,10 @@
   cursor: pointer;
 }
 
-.prm-chip button:hover {
-  background: color-mix(in oklab, var(--fk-good) 16%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  .prm-chip button:hover {
+    background: color-mix(in oklab, var(--fk-good) 16%, transparent);
+  }
 }
 
 .prm-chip button svg {

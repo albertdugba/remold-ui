@@ -118,8 +118,10 @@
   transition: opacity 0.18s;
 }
 
-.bk-row:hover {
-  background: var(--bk-hover);
+@media (hover: hover) and (pointer: fine) {
+  .bk-row:hover {
+    background: var(--bk-hover);
+  }
 }
 
 .bk-row[data-selected] {
@@ -205,8 +207,10 @@
   transition: background-color 0.15s, box-shadow 0.15s;
 }
 
-.bk-row-inner:hover .bk-check:not([data-checked]):not([data-indeterminate]) {
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--bk-ink) 45%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  .bk-row-inner:hover .bk-check:not([data-checked]):not([data-indeterminate]) {
+    box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--bk-ink) 45%, transparent);
+  }
 }
 
 .bk-check[data-checked],
@@ -348,11 +352,13 @@
   color: var(--bk-bar-muted);
 }
 
-.bk-clear:hover,
-.bk-action:hover,
-.bk-undo:hover {
-  background: var(--bk-bar-hover);
-  color: var(--bk-bar-ink);
+@media (hover: hover) and (pointer: fine) {
+  .bk-clear:hover,
+  .bk-action:hover,
+  .bk-undo:hover {
+    background: var(--bk-bar-hover);
+    color: var(--bk-bar-ink);
+  }
 }
 
 .bk-delete {
@@ -361,8 +367,10 @@
   color: var(--bk-danger);
 }
 
-.bk-delete:hover {
-  background: color-mix(in oklab, var(--bk-danger) 16%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  .bk-delete:hover {
+    background: color-mix(in oklab, var(--bk-danger) 16%, transparent);
+  }
 }
 
 .bk-undo {

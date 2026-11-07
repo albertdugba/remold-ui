@@ -65,8 +65,10 @@
     background 0.15s;
 }
 
-.cs-tabs button:hover {
-  color: #18181b;
+@media (hover: hover) and (pointer: fine) {
+  .cs-tabs button:hover {
+    color: #18181b;
+  }
 }
 
 .cs-tabs button[aria-pressed="true"] {
@@ -85,8 +87,10 @@
   border-radius: 50%;
 }
 
-.cs-play:hover {
-  background: #f4f4f5;
+@media (hover: hover) and (pointer: fine) {
+  .cs-play:hover {
+    background: #f4f4f5;
+  }
 }
 
 .cs-play svg {

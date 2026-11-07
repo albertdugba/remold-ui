@@ -1,0 +1,26 @@
+---
+title: "Export preparation"
+description: "Configure a report, preview its records, and prepare a downloadable CSV or JSON file."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="export-preparation" code={<Source demo="export-preparation" />} minHeight={620}>
+  <ExportPreparationDemo />
+</Stage>
+
+## Things to try
+
+Choose CSV or JSON and filter to paid projects. Prepare the export, then download the generated file. Cancel returns to settings without losing your choices.
+
+The records are fictional. Preparation progress is simulated; the download is a real file generated locally from the displayed sample data.
+
+## Motion and accessibility
+
+Motion coordinates the card size and content transitions with a restrained spring. Controls use Base UI buttons with visible keyboard focus and touch targets of at least 44 pixels. Progress indicators have accessible labels, and motion respects the system reduced-motion preference. Styling uses Tailwind utilities in both themes.
+
+## Install
+
+<AddCommand name="export-preparation" />
+
+<Dependencies demo="export-preparation" />

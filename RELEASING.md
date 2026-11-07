@@ -9,15 +9,10 @@ Every public package is versioned together and published under `@remold-ui`.
    git tag vX.Y.Z
    git push origin vX.Y.Z
    ```
-4. The **Publish packages** workflow verifies the tag, runs the full checks, then publishes the six packages.
+4. The **Publish packages** workflow verifies the tag, runs the full checks, then publishes the seven packages.
 
 ## npm authentication
 
-For the first publish, add an npm granular publish token as the repository secret `NPM_TOKEN`. Then, in the npm settings for each package, add a GitHub Actions trusted publisher with:
+The current workflow publishes with an npm granular token stored in the repository as `NPM_TOKEN`. It needs publish permission for every `@remold-ui/*` package.
 
-- Owner: `albertdugba`
-- Repository: `remold-ui`
-- Workflow: `publish.yml`
-- Permission: allow `npm publish`
-
-Trusted publishing uses GitHub OIDC and removes the need for a long-lived publishing token. The workflow already has the required `id-token: write` permission.
+You can later replace the token with npm trusted publishing after configuring the package-side publisher settings and adding `id-token: write` to the workflow permissions.

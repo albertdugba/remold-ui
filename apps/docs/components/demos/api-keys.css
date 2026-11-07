@@ -106,8 +106,10 @@
   color: var(--ak-muted);
 }
 
-.ak-ghost:hover {
-  color: var(--ak-ink);
+@media (hover: hover) and (pointer: fine) {
+  .ak-ghost:hover {
+    color: var(--ak-ink);
+  }
 }
 
 
@@ -283,8 +285,10 @@
   color: var(--ak-ink);
 }
 
-.ak-done:hover {
-  background: color-mix(in oklab, var(--ak-ink) 8%, var(--ak-field));
+@media (hover: hover) and (pointer: fine) {
+  .ak-done:hover {
+    background: color-mix(in oklab, var(--ak-ink) 8%, var(--ak-field));
+  }
 }
 
 .ak-list {
@@ -392,14 +396,21 @@
     color 0.15s;
 }
 
-.ak-row:hover .ak-revoke,
 .ak-revoke:focus-visible,
 .ak-row[data-confirming] .ak-revoke {
   opacity: 1;
 }
 
-.ak-revoke:hover {
-  color: #dc2626;
+@media (hover: hover) and (pointer: fine) {
+  .ak-row:hover .ak-revoke {
+    opacity: 1;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ak-revoke:hover {
+    color: #dc2626;
+  }
 }
 
 .ak-revoke:focus-visible {
@@ -424,8 +435,10 @@
   background: rgb(248 113 113 / 0.12);
 }
 
-.dark .ak-revoke:hover {
-  color: #f87171;
+@media (hover: hover) and (pointer: fine) {
+  .dark .ak-revoke:hover {
+    color: #f87171;
+  }
 }
 
 .dark .ak-row[data-confirming] .ak-revoke {

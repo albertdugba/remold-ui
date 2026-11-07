@@ -109,8 +109,10 @@
     color 0.2s;
 }
 
-.ff-scale button:hover {
-  color: var(--color-fd-foreground, #18181b);
+@media (hover: hover) and (pointer: fine) {
+  .ff-scale button:hover {
+    color: var(--color-fd-foreground, #18181b);
+  }
 }
 
 .ff-scale button[data-pressed] {

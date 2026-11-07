@@ -66,9 +66,14 @@
   transition: color 0.2s;
 }
 
-.ib-tab:hover,
 .ib-tab[data-active] {
   color: var(--ib-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ib-tab:hover {
+    color: var(--ib-ink);
+  }
 }
 
 .ib-count {
@@ -138,8 +143,10 @@
   cursor: pointer;
 }
 
-.ib-tool:hover {
-  background: var(--ib-band);
+@media (hover: hover) and (pointer: fine) {
+  .ib-tool:hover {
+    background: var(--ib-band);
+  }
 }
 
 /* Checkboxes */
@@ -226,8 +233,10 @@
   transition: background-color 0.15s;
 }
 
-.ib-mail:hover {
-  background: color-mix(in srgb, var(--ib-surface), var(--ib-ink) 3%);
+@media (hover: hover) and (pointer: fine) {
+  .ib-mail:hover {
+    background: color-mix(in srgb, var(--ib-surface), var(--ib-ink) 3%);
+  }
 }
 
 .ib-mail[data-selected] {
@@ -317,10 +326,24 @@
   transition: opacity 0.15s, transform 0.15s;
 }
 
-.ib-mail:hover .ib-actions,
 .ib-mail:focus-within .ib-actions {
   opacity: 1;
   transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ib-mail:hover .ib-actions {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* No hover on touch screens: the actions are simply there, so one tap acts. */
+@media (hover: none) {
+  .ib-actions {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .ib-mail[data-moving] .ib-actions {
@@ -339,9 +362,11 @@
   cursor: pointer;
 }
 
-.ib-action:hover {
-  background: var(--ib-soft);
-  color: var(--ib-ink);
+@media (hover: hover) and (pointer: fine) {
+  .ib-action:hover {
+    background: var(--ib-soft);
+    color: var(--ib-ink);
+  }
 }
 
 .ib-tip {
@@ -449,8 +474,10 @@
 }
 
 /* Base UI holds the toast while it's hovered, so the bar holds too. */
-.ib-toasts:hover .ib-countdown {
-  animation-play-state: paused;
+@media (hover: hover) and (pointer: fine) {
+  .ib-toasts:hover .ib-countdown {
+    animation-play-state: paused;
+  }
 }
 
 @keyframes ib-countdown {

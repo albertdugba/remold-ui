@@ -93,10 +93,15 @@
   cursor: pointer;
 }
 
-.flt-value:hover,
-.flt-value[data-popup-open],
-.flt-remove:hover {
+.flt-value[data-popup-open] {
   background: color-mix(in oklab, var(--flt-ink) 6%, var(--flt-field));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .flt-value:hover,
+  .flt-remove:hover {
+    background: color-mix(in oklab, var(--flt-ink) 6%, var(--flt-field));
+  }
 }
 
 .flt-roll {
@@ -132,9 +137,14 @@
   cursor: pointer;
 }
 
-.flt-add:hover,
 .flt-add[data-popup-open] {
   color: var(--flt-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .flt-add:hover {
+    color: var(--flt-ink);
+  }
 }
 
 .flt-add svg {
@@ -154,8 +164,10 @@
   cursor: pointer;
 }
 
-.flt-clear:hover {
-  color: var(--flt-ink);
+@media (hover: hover) and (pointer: fine) {
+  .flt-clear:hover {
+    color: var(--flt-ink);
+  }
 }
 
 .flt-value:focus-visible,
