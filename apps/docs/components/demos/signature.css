@@ -175,8 +175,10 @@
   cursor: pointer;
 }
 
-.sg-clear:hover {
-  color: var(--sg-ink);
+@media (hover: hover) and (pointer: fine) {
+  .sg-clear:hover {
+    color: var(--sg-ink);
+  }
 }
 
 .sg-adopt {

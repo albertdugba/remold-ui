@@ -2,8 +2,20 @@
 
 import { Autocomplete } from "@base-ui/react/autocomplete";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, ArrowUpDownIcon, Cancel01Icon, Loading03Icon, Search01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
-import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
+import {
+  ArrowDown01Icon,
+  ArrowUpDownIcon,
+  Cancel01Icon,
+  Loading03Icon,
+  Search01Icon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons";
+import {
+  AnimatePresence,
+  LayoutGroup,
+  MotionConfig,
+  motion,
+} from "motion/react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useScript } from "./use-script";
 import "./currency-converter.css";
@@ -25,18 +37,31 @@ interface Rates {
   updated: Date;
 }
 
-const LABELS: Record<Side, string> = { send: "You send", get: "Recipient gets" };
+const LABELS: Record<Side, string> = {
+  send: "You send",
+  get: "Recipient gets",
+};
 const names = new Intl.DisplayNames(["en"], { type: "currency" });
 const nameOf = (code: string) => names.of(code) ?? code;
 /** Codes whose first two letters aren't a country with a flag: the Antillean guilder is Curaçao's. */
 const FLAG_REGIONS: Record<string, string> = { ANG: "CW" };
 /** A currency's flag, from the country letters at the start of its code (EUR gives the EU's). */
 const flagOf = (code: string) =>
-  String.fromCodePoint(...[...(FLAG_REGIONS[code] ?? code.slice(0, 2))].map((letter) => 0x1f1e6 + letter.charCodeAt(0) - 65));
+  String.fromCodePoint(
+    ...[...(FLAG_REGIONS[code] ?? code.slice(0, 2))].map(
+      (letter) => 0x1f1e6 + letter.charCodeAt(0) - 65,
+    ),
+  );
 const decimalsOf = (code: string) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: code }).resolvedOptions().maximumFractionDigits ?? 2;
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: code,
+  }).resolvedOptions().maximumFractionDigits ?? 2;
 const format = (value: number, code: string) =>
-  value.toLocaleString("en-US", { minimumFractionDigits: decimalsOf(code), maximumFractionDigits: decimalsOf(code) });
+  value.toLocaleString("en-US", {
+    minimumFractionDigits: decimalsOf(code),
+    maximumFractionDigits: decimalsOf(code),
+  });
 
 let ratesRequest: Promise<Rates> | null = null;
 
@@ -48,7 +73,10 @@ function useRates() {
     setFailed(false);
     ratesRequest ??= fetch(RATES_URL)
       .then((response) => response.json())
-      .then((body) => ({ perUsd: body.rates, updated: new Date(body.time_last_update_utc) }));
+      .then((body) => ({
+        perUsd: body.rates,
+        updated: new Date(body.time_last_update_utc),
+      }));
     ratesRequest.then(setRates, () => {
       ratesRequest = null;
       setFailed(true);
@@ -61,14 +89,13 @@ function useRates() {
 /** Everything that moves rides one bouncy spring, so the parts arrive together. */
 const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.18 };
 const FADE = { duration: 0.18 };
-/** A part that isn't travelling: it scales in from just below its size, blurred, and back out. */
+/** A light entrance that keeps the search list responsive on lower-powered phones. */
 const PART = {
-  initial: { opacity: 0, scale: 0.94, filter: "blur(6px)" },
-  animate: { opacity: 1, scale: 1, filter: "blur(0px)" },
-  exit: { opacity: 0, scale: 0.94, filter: "blur(6px)", transition: { duration: 0.16 } },
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4, transition: { duration: 0.12 } },
 };
-/** A part that travels to its new place blurs a little on the way, like a fast-moving thing. */
-const TRAVEL = { initial: { filter: "blur(3px)" }, animate: { filter: "blur(0px)" } };
+const TRAVEL = { initial: { opacity: 0.8 }, animate: { opacity: 1 } };
 /** The card's padding, which its measured height doesn't include. */
 const CARD_PADDING = 12;
 const SENDING_FOR = 1100;
@@ -83,12 +110,11 @@ function Digits({ text }: { text: string }) {
         {characters.map((character, index) => (
           <motion.span
             key={`${characters.length - index}-${character}`}
-            layout="position"
             aria-hidden="true"
-            initial={{ y: "55%", opacity: 0, filter: "blur(4px)" }}
-            animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-            exit={{ y: "-45%", opacity: 0, filter: "blur(4px)", transition: FADE }}
-            transition={{ type: "spring", duration: 0.38, bounce: 0.16 }}
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -8, opacity: 0, transition: FADE }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
           >
             {character}
           </motion.span>
@@ -119,41 +145,94 @@ interface ListProps {
 }
 
 /** The card as a list: the label and pill as its header, a search, and every currency. */
-function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, onClose }: ListProps) {
+function CurrencyList({
+  side,
+  code,
+  codes,
+  query,
+  onQueryChange,
+  focus,
+  onPick,
+  onClose,
+}: ListProps) {
   const typed = query.trim().toLowerCase();
-  const shown = codes.filter((other) => !typed || other.toLowerCase().includes(typed) || nameOf(other).toLowerCase().includes(typed));
+  const shown = codes.filter(
+    (other) =>
+      !typed ||
+      other.toLowerCase().includes(typed) ||
+      nameOf(other).toLowerCase().includes(typed),
+  );
+  // The full currency list has well over a hundred rows. Rendering and springing every hidden row
+  // blocks the first tap on a phone, so show a useful shortlist until the user starts searching.
+  const visible = shown.slice(0, typed ? 36 : 24);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") onClose();
   };
 
   return (
-    <div role="dialog" aria-label={`Choose the currency ${side === "send" ? "you send" : "they get"}`}>
+    <div
+      role="dialog"
+      aria-label={`Choose the currency ${
+        side === "send" ? "you send" : "they get"
+      }`}
+    >
       <div className="fx-head">
-        <motion.span layoutId={`fx-label-${side}`} className="fx-label" {...TRAVEL}>
+        <motion.span
+          layoutId={`fx-label-${side}`}
+          className="fx-label"
+          {...TRAVEL}
+        >
           {LABELS[side]}
         </motion.span>
-        <motion.button layoutId={`fx-pill-${side}`} type="button" className="fx-trigger" onClick={onClose} aria-label={`Keep ${code}`} {...TRAVEL}>
+        <motion.button
+          layoutId={`fx-pill-${side}`}
+          type="button"
+          className="fx-trigger"
+          onClick={onClose}
+          aria-label={`Keep ${code}`}
+          {...TRAVEL}
+        >
           <Flag code={code} />
           {code}
-          <HugeiconsIcon icon={Cancel01Icon} className="fx-chevron" strokeWidth={2} aria-hidden="true" />
+          <HugeiconsIcon
+            icon={Cancel01Icon}
+            className="fx-chevron"
+            strokeWidth={2}
+            aria-hidden="true"
+          />
         </motion.button>
       </div>
       <Autocomplete.Root
         open
         inline
-        items={shown}
+        items={visible}
         filter={null}
         value={query}
         autoHighlight="always"
         itemToStringValue={(item: string) => `${item} ${nameOf(item)}`}
-        onValueChange={(next, details) => details.reason !== "item-press" && details.reason !== "list-navigation" && onQueryChange(next)}
+        onValueChange={(next, details) =>
+          details.reason !== "item-press" &&
+          details.reason !== "list-navigation" &&
+          onQueryChange(next)
+        }
       >
-        <motion.label className="fx-search" {...PART} transition={{ ...SPRING, delay: 0.04 }}>
+        <motion.label
+          className="fx-search"
+          {...PART}
+          transition={{ ...SPRING, delay: 0.04 }}
+        >
           <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
-          <Autocomplete.Input autoFocus={focus} placeholder="Search currencies" aria-label="Search currencies" onKeyDown={handleKeyDown} />
+          <Autocomplete.Input
+            autoFocus={focus}
+            placeholder="Search currencies"
+            aria-label="Search currencies"
+            onKeyDown={handleKeyDown}
+          />
         </motion.label>
-        <Autocomplete.Empty className="fx-empty">No currencies match</Autocomplete.Empty>
+        <Autocomplete.Empty className="fx-empty">
+          No currencies match
+        </Autocomplete.Empty>
         <Autocomplete.List className="fx-list">
           {(item: string, index: number) => (
             <Autocomplete.Item
@@ -161,15 +240,40 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
               value={item}
               className="fx-option"
               onClick={() => onPick(item)}
-              render={<motion.div {...PART} transition={{ ...SPRING, delay: 0.06 + Math.min(index, 6) * 0.025 }} />}
+              render={
+                index < 7 ? (
+                  <motion.div
+                    {...PART}
+                    transition={{
+                      duration: 0.18,
+                      ease: "easeOut",
+                      delay: index * 0.018,
+                    }}
+                  />
+                ) : (
+                  <div />
+                )
+              }
             >
               <Flag code={item} />
               <span className="fx-option-code">{item}</span>
               <span className="fx-option-name">{nameOf(item)}</span>
-              {item === code && <HugeiconsIcon icon={Tick02Icon} className="fx-option-check" strokeWidth={2.2} aria-label="Current" />}
+              {item === code && (
+                <HugeiconsIcon
+                  icon={Tick02Icon}
+                  className="fx-option-check"
+                  strokeWidth={2.2}
+                  aria-label="Current"
+                />
+              )}
             </Autocomplete.Item>
           )}
         </Autocomplete.List>
+        {shown.length > visible.length && (
+          <p className="fx-list-note">
+            Type to search all {shown.length} currencies
+          </p>
+        )}
       </Autocomplete.Root>
     </div>
   );
@@ -201,7 +305,11 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
     return () => observer.disconnect();
   }, []);
 
-  const codes = rates ? Object.keys(rates.perUsd).filter((code) => !code.startsWith("X")).sort() : [from, to];
+  const codes = rates
+    ? Object.keys(rates.perUsd)
+        .filter((code) => !code.startsWith("X"))
+        .sort()
+    : [from, to];
   const rate = rates ? rates.perUsd[to]! / rates.perUsd[from]! : null;
   const sent = Number(amount) || 0;
   const gets = rate === null ? null : sent * rate;
@@ -211,7 +319,11 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
   // Closing the list puts focus back on the pill it was opened from.
   useEffect(() => {
     if (picking || !returnFocus.current) return;
-    card.current?.querySelector<HTMLElement>(`.fx-well[data-side="${returnFocus.current}"] .fx-trigger`)?.focus({ preventScroll: true });
+    card.current
+      ?.querySelector<HTMLElement>(
+        `.fx-well[data-side="${returnFocus.current}"] .fx-trigger`,
+      )
+      ?.focus({ preventScroll: true });
     returnFocus.current = null;
   }, [picking]);
 
@@ -248,25 +360,35 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
   };
 
   const live = useScript(card, playing, [
-    ...["2", "25", "250", "2500"].map((typed) => [110, () => setAmount(typed)] as const),
+    ...["2", "25", "250", "2500"].map(
+      (typed) => [110, () => setAmount(typed)] as const,
+    ),
     [1300, () => open("get")],
     ...["e", "eu", "eur"].map((typed) => [120, () => setQuery(typed)] as const),
     [900, () => {}],
     [1500, () => pick("EUR")],
     [1600, swap],
     [SENDING_FOR + SENT_FOR + 600, send],
-    [1400, () => {
-      setFrom("GBP");
-      setTo("USD");
-      setAmount("1000");
-    }],
+    [
+      1400,
+      () => {
+        setFrom("GBP");
+        setTo("USD");
+        setAmount("1000");
+      },
+    ],
   ]);
 
   const well = (side: Side) => {
     const code = side === "send" ? from : to;
     return (
       <motion.div className="fx-well" data-side={side} {...PART}>
-        <motion.label layoutId={`fx-label-${side}`} className="fx-label" htmlFor={side === "send" ? "fx-amount" : undefined} {...TRAVEL}>
+        <motion.label
+          layoutId={`fx-label-${side}`}
+          className="fx-label"
+          htmlFor={side === "send" ? "fx-amount" : undefined}
+          {...TRAVEL}
+        >
           {LABELS[side]}
         </motion.label>
         {side === "send" ? (
@@ -278,14 +400,24 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
             value={amount}
             disabled={busy}
             onChange={(event) => {
-              const [whole = "", ...rest] = event.target.value.replace(/[^\d.]/g, "").split(".");
+              const [whole = "", ...rest] = event.target.value
+                .replace(/[^\d.]/g, "")
+                .split(".");
               const decimals = decimalsOf(from);
-              setAmount(rest.length && decimals ? `${whole.slice(0, 9)}.${rest.join("").slice(0, decimals)}` : whole.slice(0, 9));
+              setAmount(
+                rest.length && decimals
+                  ? `${whole.slice(0, 9)}.${rest.join("").slice(0, decimals)}`
+                  : whole.slice(0, 9),
+              );
             }}
           />
         ) : (
           <span className="fx-amount" aria-live="polite">
-            {gets === null ? <span className="fx-quiet">{failed ? "—" : "…"}</span> : <Digits text={format(gets, to)} />}
+            {gets === null ? (
+              <span className="fx-quiet">{failed ? "—" : "…"}</span>
+            ) : (
+              <Digits text={format(gets, to)} />
+            )}
           </span>
         )}
         <motion.button
@@ -301,7 +433,12 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
         >
           <Flag code={code} />
           {code}
-          <HugeiconsIcon icon={ArrowDown01Icon} className="fx-chevron" strokeWidth={2} aria-hidden="true" />
+          <HugeiconsIcon
+            icon={ArrowDown01Icon}
+            className="fx-chevron"
+            strokeWidth={2}
+            aria-hidden="true"
+          />
         </motion.button>
       </motion.div>
     );
@@ -316,14 +453,25 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
           aria-label="Currency converter"
           data-picking={picking ?? undefined}
           initial={false}
-          animate={{ height: height === null ? "auto" : height + CARD_PADDING * 2 }}
+          animate={{
+            height: height === null ? "auto" : height + CARD_PADDING * 2,
+          }}
         >
           <div ref={content} className="fx-content">
             <AnimatePresence mode="popLayout" initial={false}>
               {picking ? (
                 // A motion element, so the list can be lifted out of the layout while it leaves.
                 <motion.div key="list" className="fx-view">
-                  <CurrencyList side={picking} code={picking === "send" ? from : to} codes={codes} query={query} onQueryChange={setQuery} focus={!live} onPick={pick} onClose={close} />
+                  <CurrencyList
+                    side={picking}
+                    code={picking === "send" ? from : to}
+                    codes={codes}
+                    query={query}
+                    onQueryChange={setQuery}
+                    focus={!live}
+                    onPick={pick}
+                    onClose={close}
+                  />
                 </motion.div>
               ) : (
                 <motion.div key="converter" className="fx-view">
@@ -340,7 +488,10 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
                       whileTap={{ scale: 1.08 }}
                       onClick={swap}
                     >
-                      <HugeiconsIcon icon={ArrowUpDownIcon} aria-hidden="true" />
+                      <HugeiconsIcon
+                        icon={ArrowUpDownIcon}
+                        aria-hidden="true"
+                      />
                     </motion.button>
                   </div>
 
@@ -348,7 +499,11 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
                     {failed ? (
                       <>
                         Couldn't load today's rates.{" "}
-                        <button type="button" className="fx-retry" onClick={retry}>
+                        <button
+                          type="button"
+                          className="fx-retry"
+                          onClick={retry}
+                        >
                           Try again
                         </button>
                       </>
@@ -356,7 +511,11 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
                       "Loading today's rates…"
                     ) : (
                       <>
-                        1 {from} = <Digits text={rate >= 10 ? rate.toFixed(2) : rate.toFixed(4)} /> {to}
+                        1 {from} ={" "}
+                        <Digits
+                          text={rate >= 10 ? rate.toFixed(2) : rate.toFixed(4)}
+                        />{" "}
+                        {to}
                       </>
                     )}
                   </motion.p>
@@ -372,20 +531,53 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
                     {...PART}
                   >
                     <AnimatePresence initial={false} mode="popLayout">
-                      <motion.span key={status} className="fx-send-label" initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }} exit={{ opacity: 0, filter: "blur(4px)" }} transition={FADE}>
-                        {status === "sending" && <HugeiconsIcon icon={Loading03Icon} className="fx-spin" strokeWidth={2} aria-hidden="true" />}
-                        {status === "sent" && <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.4} aria-hidden="true" />}
-                        {status === "sending" ? "Sending" : `${status === "sent" ? "Sent" : "Send"} ${format(sent, from)} ${from}`}
+                      <motion.span
+                        key={status}
+                        className="fx-send-label"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={FADE}
+                      >
+                        {status === "sending" && (
+                          <HugeiconsIcon
+                            icon={Loading03Icon}
+                            className="fx-spin"
+                            strokeWidth={2}
+                            aria-hidden="true"
+                          />
+                        )}
+                        {status === "sent" && (
+                          <HugeiconsIcon
+                            icon={Tick02Icon}
+                            strokeWidth={2.4}
+                            aria-hidden="true"
+                          />
+                        )}
+                        {status === "sending"
+                          ? "Sending"
+                          : `${status === "sent" ? "Sent" : "Send"} ${format(
+                              sent,
+                              from,
+                            )} ${from}`}
                       </motion.span>
                     </AnimatePresence>
                   </motion.button>
 
                   {rates && (
                     <motion.p className="fx-credit" {...PART}>
-                      <a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">
+                      <a
+                        href="https://www.exchangerate-api.com"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         Rates by ExchangeRate-API
                       </a>{" "}
-                      · {rates.updated.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                      ·{" "}
+                      {rates.updated.toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                      })}
                     </motion.p>
                   )}
                 </motion.div>

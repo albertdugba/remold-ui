@@ -85,9 +85,11 @@
   font-weight: 500;
 }
 
-.hm-brandline a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) and (pointer: fine) {
+  .hm-brandline a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .hm-hero h1 {
@@ -137,8 +139,10 @@
     transform 0.15s;
 }
 
-.hm-cta:hover {
-  background: var(--color-fd-accent);
+@media (hover: hover) and (pointer: fine) {
+  .hm-cta:hover {
+    background: var(--color-fd-accent);
+  }
 }
 
 .hm-cta:active {
@@ -151,8 +155,10 @@
   color: var(--color-fd-background);
 }
 
-.hm-cta.primary:hover {
-  opacity: 0.86;
+@media (hover: hover) and (pointer: fine) {
+  .hm-cta.primary:hover {
+    opacity: 0.86;
+  }
 }
 
 .hm-install {
@@ -197,12 +203,16 @@
   padding-left: 0;
 }
 
-.hm-lines a:hover {
-  background: var(--color-fd-accent);
+@media (hover: hover) and (pointer: fine) {
+  .hm-lines a:hover {
+    background: var(--color-fd-accent);
+  }
 }
 
-.hm-lines li:first-child a:hover {
-  background: none;
+@media (hover: hover) and (pointer: fine) {
+  .hm-lines li:first-child a:hover {
+    background: none;
+  }
 }
 
 .hm-lines strong {
@@ -304,8 +314,10 @@
   transition: transform 0.2s;
 }
 
-.hm-link:hover span {
-  transform: translateX(3px);
+@media (hover: hover) and (pointer: fine) {
+  .hm-link:hover span {
+    transform: translateX(3px);
+  }
 }
 
 .hm-split {
@@ -462,10 +474,15 @@
     background 0.15s;
 }
 
-.bx-cell:hover .bx-play,
 .bx-play:focus-visible,
 .bx-play[aria-pressed="false"] {
   opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bx-cell:hover .bx-play {
+    opacity: 1;
+  }
 }
 
 @media (hover: none) {
@@ -474,8 +491,10 @@
   }
 }
 
-.bx-play:hover {
-  background: var(--color-fd-accent);
+@media (hover: hover) and (pointer: fine) {
+  .bx-play:hover {
+    background: var(--color-fd-accent);
+  }
 }
 
 .bx-play:active {
@@ -523,8 +542,10 @@
   transition: margin 0.2s;
 }
 
-.bx-title:hover span {
-  margin-left: 4px;
+@media (hover: hover) and (pointer: fine) {
+  .bx-title:hover span {
+    margin-left: 4px;
+  }
 }
 
 .bx-meta p {
@@ -557,8 +578,10 @@
   transition: background 0.15s;
 }
 
-.hm-component:hover {
-  background: var(--color-fd-accent);
+@media (hover: hover) and (pointer: fine) {
+  .hm-component:hover {
+    background: var(--color-fd-accent);
+  }
 }
 
 .hm-component header {
@@ -697,8 +720,10 @@
   color: var(--hm-muted);
 }
 
-.hm-footer nav a:hover {
-  color: var(--hm-ink);
+@media (hover: hover) and (pointer: fine) {
+  .hm-footer nav a:hover {
+    color: var(--hm-ink);
+  }
 }
 
 .hm-footer-legal {
@@ -745,8 +770,10 @@
     padding: 16px 0;
   }
 
-  .hm-lines a:hover {
-    background: none;
+  @media (hover: hover) and (pointer: fine) {
+    .hm-lines a:hover {
+      background: none;
+    }
   }
 
   .hm-components {
@@ -861,9 +888,11 @@
   color: var(--color-fd-muted-foreground);
 }
 
-.fx-copy:hover {
-  background: var(--color-fd-accent);
-  color: var(--color-fd-foreground);
+@media (hover: hover) and (pointer: fine) {
+  .fx-copy:hover {
+    background: var(--color-fd-accent);
+    color: var(--color-fd-foreground);
+  }
 }
 
 .fx-code {
@@ -1017,8 +1046,10 @@
     background-color 0.2s;
 }
 
-.hs-tab:hover {
-  color: var(--hm-ink);
+@media (hover: hover) and (pointer: fine) {
+  .hs-tab:hover {
+    color: var(--hm-ink);
+  }
 }
 
 .hs-tab[aria-selected="true"] {
@@ -1137,10 +1168,12 @@
   grid-column: span 2;
 }
 
-.hg-card:hover {
-  border-color: color-mix(in oklab, var(--hm-ink) 25%, transparent);
-  transform: translateY(-2px);
-  box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.3);
+@media (hover: hover) and (pointer: fine) {
+  .hg-card:hover {
+    border-color: color-mix(in oklab, var(--hm-ink) 25%, transparent);
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.3);
+  }
 }
 
 .hg-card .rm-preview {
@@ -1183,9 +1216,11 @@
     color 0.2s;
 }
 
-.hg-meta:hover .hg-arrow {
-  color: var(--hm-ink);
-  transform: translate(2px, -2px);
+@media (hover: hover) and (pointer: fine) {
+  .hg-meta:hover .hg-arrow {
+    color: var(--hm-ink);
+    transform: translate(2px, -2px);
+  }
 }
 
 .hg-card .rm-preview {
@@ -1388,9 +1423,11 @@
   font-weight: 600;
 }
 
-.hm-new:hover {
-  border-color: color-mix(in oklab, var(--hm-ink) 30%, transparent);
-  color: var(--hm-ink);
+@media (hover: hover) and (pointer: fine) {
+  .hm-new:hover {
+    border-color: color-mix(in oklab, var(--hm-ink) 30%, transparent);
+    color: var(--hm-ink);
+  }
 }
 
 /* The stage: one big, quiet panel cradling the live review thread. */
@@ -1713,6 +1750,11 @@
   display: block;
 }
 
+.hp-filter-shell[data-from-right] {
+  right: 0;
+  left: auto;
+}
+
 .hp-filter-menu {
   outline: none;
   transition:
@@ -1726,7 +1768,7 @@
 }
 
 .hp-filter-menu-inner {
-  width: 260px;
+  width: min(260px, calc(100vw - 24px));
   padding: 6px;
   box-sizing: border-box;
 }
@@ -1759,9 +1801,14 @@
   cursor: pointer;
 }
 
-.hp-filter-option:hover,
 .hp-filter-option:focus-visible {
   background: rgb(255 255 255 / 0.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hp-filter-option:hover {
+    background: rgb(255 255 255 / 0.08);
+  }
 }
 
 .hp-filter-option-mark {
@@ -1811,9 +1858,11 @@
   cursor: pointer;
 }
 
-.hp-filter-summary button:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) and (pointer: fine) {
+  .hp-filter-summary button:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .hp-filter-empty {
@@ -1821,6 +1870,56 @@
   margin: 28px 0;
   color: var(--hm-muted);
   text-align: center;
+}
+
+.hp-gallery-end {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  justify-content: center;
+  padding: 28px 16px 12px;
+}
+
+.hp-gallery-fog {
+  position: absolute;
+  z-index: -1;
+  inset: -100px 0 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in oklab, var(--color-fd-background) 80%, transparent) 45%,
+    var(--color-fd-background) 72%
+  );
+}
+
+.hp-gallery-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 1px solid var(--hm-line);
+  border-radius: 999px;
+  background: var(--color-fd-background);
+  color: var(--hm-ink);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: 0 3px 12px color-mix(in oklab, var(--hm-ink) 6%, transparent);
+  touch-action: manipulation;
+}
+
+@media (hover: hover) {
+  .hp-gallery-link:hover {
+    background: color-mix(in oklab, var(--hm-ink) 4%, var(--color-fd-background));
+  }
+}
+
+.hp-gallery-link:focus-visible {
+  outline: 2px solid var(--hm-ink);
+  outline-offset: 4px;
 }
 
 .sr-only {
@@ -1836,7 +1935,7 @@
 
 .hp-card {
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: 1fr;
   min-height: 420px;
   overflow: hidden;
   border: 1px solid color-mix(in oklab, var(--hm-ink) 3%, transparent);
@@ -1932,6 +2031,12 @@
   position: relative;
 }
 
+/* Separate the outer demo frames from the dark page, without recoloring demos. */
+.dark .hm .hp-card {
+  background: #161619;
+  border-color: rgb(255 255 255 / 0.06);
+}
+
 .hp-foot {
   display: flex;
   align-items: baseline;
@@ -1966,12 +2071,16 @@
   transition: transform 160ms ease-out;
 }
 
-.hp-doc-link:hover {
-  color: var(--color-fd-primary);
+@media (hover: hover) and (pointer: fine) {
+  .hp-doc-link:hover {
+    color: var(--color-fd-primary);
+  }
 }
 
-.hp-doc-link:hover span {
-  transform: translateX(2px);
+@media (hover: hover) and (pointer: fine) {
+  .hp-doc-link:hover span {
+    transform: translateX(2px);
+  }
 }
 
 .hp-doc-link:focus-visible {
@@ -2004,8 +2113,27 @@
   height: 14px;
 }
 
-.hp-play:hover {
-  background: var(--color-fd-accent);
+.hp-view {
+  right: 56px;
+}
+
+@media (pointer: coarse) {
+  .hp-play {
+    width: 44px;
+    height: 44px;
+  }
+  .hp-view {
+    right: 66px;
+  }
+  .hp-card .hp-stage {
+    padding-top: 72px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hp-play:hover {
+    background: var(--color-fd-accent);
+  }
 }
 
 .hp-play:active {
@@ -2052,7 +2180,7 @@
   }
 }
 
-/* One column, a little wider than a squeezed pair, and centred on the page. */
+/* Single-column cards use the same available width as the gallery controls. */
 @media (max-width: 1100px) {
   .hp {
     grid-template-columns: minmax(0, 1fr);
@@ -2062,11 +2190,19 @@
   .hp-card.wide,
   .hp-card.full,
   .hp-card.tall {
-    width: min(100%, 560px);
+    width: 100%;
+    max-width: none;
+  }
+  .hp-filter-bar {
+    position: relative;
+    top: auto;
+  }
+  .hp-filter-bar::before {
+    display: none;
   }
   .hp-filter-controls {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .hp-filter-slot,
   .hp-filter-select {
@@ -2087,7 +2223,52 @@
 
 @media (max-width: 640px) {
   .hp-filter-bar {
-    top: 56px;
+    top: auto;
+  }
+
+  .hp-filter-select {
+    min-height: 48px;
+    padding-inline: 14px;
+    font-size: 14px;
+    touch-action: manipulation;
+  }
+
+  .hp-filter-select[data-picked] {
+    padding-right: 48px;
+  }
+
+  .hp-filter-clear {
+    right: 2px;
+    width: 44px;
+    height: 44px;
+    margin-top: -22px;
+    background: transparent;
+    color: var(--hm-ink);
+    touch-action: manipulation;
+  }
+
+  .hp-filter-clear svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .hp-filter-option {
+    min-height: 48px;
+    padding: 10px 12px;
+    font-size: 16px;
+    touch-action: manipulation;
+  }
+
+  .hp-filter-options {
+    gap: 4px;
+    max-height: min(360px, 50dvh);
+    overscroll-behavior: contain;
+  }
+
+  .hp-filter-summary button {
+    min-height: 44px;
+    padding-inline: 8px;
+    touch-action: manipulation;
   }
 
   .hm {

@@ -16,6 +16,13 @@ const LARGEST_SOURCE_FILE = 40_000;
  * doesn't live in components/demos, the folder under components it does live in. */
 const ITEMS = [
   [
+    "popover-menu",
+    "Popover menu",
+    "A project-actions menu that grows from a compact trigger into an anchored popover.",
+  ],
+  ["export-preparation", "Export preparation", "Configure and download a local CSV or JSON report from sample records."],
+  ["upload-recovery", "Upload recovery", "A simulated upload queue with resumable retries and a completed-file summary."],
+  [
     "split-amount",
     "Split amount",
     "A bill splitter where toggling people re-divides the bar and rolls everyone's share, cents included. Built on Base UI's ToggleGroup.",

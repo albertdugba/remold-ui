@@ -352,7 +352,7 @@ export function EditorMentions({
                             bounce: 0.1,
                           }}
                           onPointerDown={(event) => event.preventDefault()}
-                          onPointerEnter={() =>
+                          onPointerEnter={(event) => event.pointerType === "mouse" &&
                             index !== state.active && setActive(index)
                           }
                           onClick={() =>

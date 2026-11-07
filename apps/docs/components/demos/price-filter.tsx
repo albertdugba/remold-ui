@@ -17,10 +17,10 @@ const MAX = 500;
 const STEP = 10;
 const START = 120;
 const STEPPER_WIDTH = 172;
+/** The slider's widest; on a narrow screen it takes the room it has. */
 const RANGE_WIDTH = 320;
-/** Where the slider's track starts and how long it is: the padding, an end label and the gap before it. */
+/** Where the slider's track starts: the padding, an end label and the gap before it. */
 const TRACK_LEFT = 14 + 34 + 10;
-const TRACK_WIDTH = RANGE_WIDTH - TRACK_LEFT * 2;
 /** Pixels the pointer moves sideways on the number before the stepper becomes a range. */
 const DRAG_FROM = 6;
 
@@ -54,19 +54,31 @@ export function PriceFilterDemo({ playing }: { playing?: boolean } = {}) {
   const pill = useRef<HTMLSpanElement>(null);
   const shownMode = useRef<Mode | null>(null);
   const x = useMotionValue(0);
+  const [rangeWidth, setRangeWidth] = useState(RANGE_WIDTH);
+  const trackWidth = rangeWidth - TRACK_LEFT * 2;
+
+  useLayoutEffect(() => {
+    const stage = control.current?.closest<HTMLElement>(".stp-stage");
+    if (!stage) return;
+    const fit = () => setRangeWidth(Math.min(RANGE_WIDTH, stage.clientWidth));
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
   const reduceMotion = useReducedMotion();
 
   // One value pill, always there: centred in the stepper, over the thumb in the range. It springs
   // between the two when the shape changes, and follows the thumb closely while you drag.
   useLayoutEffect(() => {
     const width = pill.current?.offsetWidth ?? 0;
-    const centre = mode === "range" ? TRACK_LEFT + ((value - MIN) / (MAX - MIN)) * TRACK_WIDTH : STEPPER_WIDTH / 2;
+    const centre = mode === "range" ? TRACK_LEFT + ((value - MIN) / (MAX - MIN)) * trackWidth : STEPPER_WIDTH / 2;
     const target = centre - width / 2;
     const reshaped = shownMode.current !== mode;
     if (shownMode.current === null || reduceMotion) x.set(target);
     else void animate(x, target, reshaped ? SPRING : FOLLOW);
     shownMode.current = mode;
-  }, [mode, value, x, reduceMotion]);
+  }, [mode, value, x, reduceMotion, trackWidth]);
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (mode !== "stepper" || event.button !== 0 || !(event.target as HTMLElement).closest(".stp-number")) return;
@@ -86,7 +98,7 @@ export function PriceFilterDemo({ playing }: { playing?: boolean } = {}) {
         setMode("range");
       }
       // Relative to where the drag began, so the thumb starts under the value it already had.
-      setValue(clamp(from.value + (distance / RANGE_WIDTH) * (MAX - MIN)));
+      setValue(clamp(from.value + (distance / rangeWidth) * (MAX - MIN)));
     };
     const end = () => {
       element.removeEventListener("pointermove", move);
@@ -142,7 +154,7 @@ export function PriceFilterDemo({ playing }: { playing?: boolean } = {}) {
             className="stp"
             data-mode={mode}
             initial={false}
-            animate={{ width: mode === "range" ? RANGE_WIDTH : STEPPER_WIDTH }}
+            animate={{ width: mode === "range" ? rangeWidth : STEPPER_WIDTH }}
             onPointerDown={handlePointerDown}
           >
             <AnimatePresence mode="popLayout" initial={false}>

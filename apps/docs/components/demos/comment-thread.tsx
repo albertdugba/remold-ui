@@ -286,7 +286,7 @@ export function CommentThreadDemo({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", duration: 0.32, bounce: 0.12 }}
-          onPointerEnter={() => setHover(x.key)}
+          onPointerEnter={(event) => event.pointerType === "mouse" && setHover(x.key)}
           onPointerLeave={() => setHover(parent === "top" ? null : parent)}
         >
           <Avatar

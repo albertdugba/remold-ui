@@ -50,8 +50,10 @@
   width: 14px;
   height: 14px;
 }
-.vo-swap:hover {
-  background: var(--vo-ring);
+@media (hover: hover) and (pointer: fine) {
+  .vo-swap:hover {
+    background: var(--vo-ring);
+  }
 }
 
 .vo-captions {

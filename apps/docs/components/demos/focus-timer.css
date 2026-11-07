@@ -97,9 +97,11 @@
   transition: color 0.2s, background-color 0.2s;
 }
 
-.ft-icon:hover {
-  background: var(--ft-soft);
-  color: var(--ft-ink);
+@media (hover: hover) and (pointer: fine) {
+  .ft-icon:hover {
+    background: var(--ft-soft);
+    color: var(--ft-ink);
+  }
 }
 
 .ft-primary {

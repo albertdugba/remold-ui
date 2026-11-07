@@ -58,8 +58,6 @@ When a change swaps one thing for another, Remold reshapes the old one into the 
 
 ## Quick start
 
-> Remold hasn't had its first npm release yet. Until it does, clone the repo and use the workspace packages (see [Development](#development)).
-
 ### React
 
 ```bash
@@ -151,7 +149,7 @@ The docs site has around 55 copy-in components. Each one solves a specific produ
 
 | | |
 | --- | --- |
-| **Interface** | API keys · Bulk selection · Cards · Command palette · Comment thread · Course outline · Currency converter · Event RSVP · Filter bar · Fluid popover menu · Hold to record · Invite teammates · Kitchen ticket · Label picker · Live room · Logo morph · Mentions · Morph icons · Music player · Onboarding checklist · One-time code · Price filter · Product tour · Project setup · Revenue · Save button · Seat calculator · Send a message · Send money · Share link · Signature · Step progress · Streak · Table booking · Task list · Two-factor setup · Usage meter · Wallet |
+| **Interface** | API keys · Bulk selection · Cards · Command palette · Comment thread · Course outline · Currency converter · Event RSVP · Filter bar · Popover menu · Hold to record · Invite teammates · Kitchen ticket · Label picker · Live room · Logo morph · Mentions · Morph icons · Music player · Onboarding checklist · One-time code · Price filter · Product tour · Project setup · Revenue · Save button · Seat calculator · Send a message · Send money · Share link · Signature · Step progress · Streak · Table booking · Task list · Two-factor setup · Usage meter · Wallet |
 | **Form elements** | Address autocomplete · Amount input · Phone input · Promo code · Quantity stepper · Range slider · Split amount · Tag input · Upload row |
 | **Illustrations** | Order tracker |
 | **Particles and canvas** | Donation goal · Dot grid hero · Focus timer · Inbox triage · Live visitors · Particles story · Unit chart · Voice orb |

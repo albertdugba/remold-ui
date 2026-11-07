@@ -15,9 +15,10 @@ import { useScript } from "./use-script";
 type Access = "view" | "edit";
 
 const LINK = "remold.dev/f/q4-launch-plan";
-const ACCESS: { value: Access; label: string }[] = [
-  { value: "view", label: "Can view" },
-  { value: "edit", label: "Can edit" },
+/** `short` is what a phone has room for. */
+const ACCESS: { value: Access; label: string; short: string }[] = [
+  { value: "view", label: "Can view", short: "View" },
+  { value: "edit", label: "Can edit", short: "Edit" },
 ];
 
 /** Who can already open the file: the people the link would be shared alongside. */
@@ -130,7 +131,7 @@ export function ShareLinkDemo({
               className="relative flex h-full w-max items-center"
             >
               <ul
-                className="group/faces m-0 flex list-none items-center p-0 pl-2"
+                className="group/faces m-0 flex list-none items-center p-0 pl-2 data-open:max-sm:hidden"
                 data-open={open || undefined}
                 aria-label={`${PEOPLE.length} people have access`}
               >
@@ -169,7 +170,7 @@ export function ShareLinkDemo({
                   >
                     <motion.span
                       {...part(0.02)}
-                      className="mr-1.5 h-5 w-px bg-zinc-200 dark:bg-white/10"
+                      className="mr-1.5 h-5 w-px bg-zinc-200 max-sm:hidden dark:bg-white/10"
                       aria-hidden="true"
                     />
                     <motion.span
@@ -185,7 +186,7 @@ export function ShareLinkDemo({
                     </motion.span>
                     <motion.span
                       {...part(0.06)}
-                      className="mr-1.5 w-36 truncate text-[13.5px] text-zinc-700 dark:text-zinc-300"
+                      className="mr-1.5 w-36 truncate text-[13.5px] text-zinc-700 max-sm:hidden dark:text-zinc-300"
                       title={LINK}
                     >
                       {LINK}
@@ -211,7 +212,10 @@ export function ShareLinkDemo({
                                 className="absolute inset-0 rounded-full bg-white shadow-[0_1px_2px_rgb(0_0_0/0.1),0_0_0_0.5px_rgb(0_0_0/0.06)] dark:bg-[#3a3a40]"
                               />
                             )}
-                            <span className="relative">{option.label}</span>
+                            <span className="relative">
+                              <span className="sm:hidden">{option.short}</span>
+                              <span className="max-sm:hidden">{option.label}</span>
+                            </span>
                           </Toggle>
                         ))}
                       </ToggleGroup>

@@ -3,78 +3,55 @@
 import { Popover } from "@base-ui/react/popover";
 import {
   Cancel01Icon,
-  Invoice01Icon,
+  FileAttachmentIcon,
+  Folder01Icon,
+  Link01Icon,
   MoreHorizontalIcon,
-  NoteEditIcon,
-  RepeatIcon,
-  Share08Icon,
-  Tick02Icon,
-  UserGroupIcon,
+  Settings01Icon,
+  UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Remold } from "@remold-ui/react";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useRef, useState, type MouseEvent } from "react";
 import { useScript } from "./use-script";
 
-/** What an action did, said in a few words. */
-type Action = { label: string; icon: IconSvgElement; done: string };
+type Action = { label: string; icon: IconSvgElement };
 
 const actions: readonly Action[] = [
-  { label: "View receipt", icon: Invoice01Icon, done: "Receipt opened" },
-  { label: "Split with friends", icon: UserGroupIcon, done: "Split request sent" },
-  { label: "Repeat payment", icon: RepeatIcon, done: "Payment repeated" },
-  { label: "Add a note", icon: NoteEditIcon, done: "Note added" },
-  { label: "Share receipt", icon: Share08Icon, done: "Receipt link copied" },
+  { label: "Open files", icon: Folder01Icon },
+  { label: "Add files", icon: FileAttachmentIcon },
+  { label: "Copy review link", icon: Link01Icon },
+  { label: "Invite reviewers", icon: UserAdd01Icon },
+  { label: "Project settings", icon: Settings01Icon },
 ];
-
-/** What the trigger shows for a moment after an action, before it goes back to the ellipsis. */
-type Outcome = { icon: IconSvgElement; message: string };
-
-const OUTCOME_FOR = 1600;
 
 // The open tray grows when a consumer adds an action, instead of hiding rows
 // below a hard-coded viewport.
 const MENU_WIDTH = 300;
 const MENU_HEIGHT = 76 + actions.length * 44;
 
-/** A Base UI popover whose visible shell expands from the trigger itself. */
-export function FluidPopoverDemo({ playing }: { playing?: boolean }) {
+/** A Base UI popover menu whose visible shell expands from the trigger itself. */
+export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
   const [open, setOpen] = useState(false);
   const [hoveredAction, setHoveredAction] = useState<string | null>(null);
-  const [outcome, setOutcome] = useState<Outcome | null>(null);
   const shellRef = useRef<HTMLDivElement>(null);
-  const outcomeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const reduceMotion = useReducedMotion();
-
-  useEffect(() => () => clearTimeout(outcomeTimer.current), []);
 
   const close = (nextOpen: boolean) => {
     setOpen(nextOpen);
-    if (nextOpen) {
-      clearTimeout(outcomeTimer.current);
-      setOutcome(null);
-    } else {
-      setHoveredAction(null);
-    }
+    if (!nextOpen) setHoveredAction(null);
   };
 
-  const finish = (next: Outcome) => {
-    close(false);
-    setOutcome(next);
-    clearTimeout(outcomeTimer.current);
-    outcomeTimer.current = setTimeout(() => setOutcome(null), OUTCOME_FOR);
-  };
-
-  const choose = (event: MouseEvent<HTMLAnchorElement>, action: Action) => {
+  const choose = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
-    finish({ icon: Tick02Icon, message: action.done });
+    close(false);
   };
 
   useScript(shellRef, playing, [
     [900, () => close(true)],
     ...actions.slice(0, 3).map((action) => [380, () => setHoveredAction(action.label)] as const),
-    [OUTCOME_FOR + 900, () => finish({ icon: Tick02Icon, message: actions[2]!.done })],
+    [900, () => close(false)],
   ]);
 
   const rise = (delay = 0) => ({
@@ -118,9 +95,8 @@ export function FluidPopoverDemo({ playing }: { playing?: boolean }) {
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden border border-black/[0.06] bg-white text-[#1f1f1d] shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] dark:border-white/[0.07] dark:bg-[#252420] dark:text-[#f2f1ec] dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)]"
           >
             <Popover.Trigger
-              aria-label={open ? "Close transaction menu" : "Open transaction menu"}
-              data-done={(!open && outcome) || undefined}
-              className={`absolute z-10 grid place-items-center text-[#1f1f1d] transition-[background-color,border-radius,color,transform] duration-150 ease-out active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-fd-ring data-done:text-green-600 dark:text-[#f2f1ec] dark:data-done:text-green-400 ${
+              aria-label={open ? "Close project menu" : "Open project menu"}
+              className={`absolute z-10 grid place-items-center text-[#1f1f1d] transition-[background-color,border-radius,color,transform] duration-150 ease-out active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-fd-ring dark:text-[#f2f1ec] ${
                 open
                   ? "right-[5px] top-[5px] size-11 rounded-full bg-[#efefeb] hover:bg-[#e6e6e0] dark:bg-[#3c3b35] dark:hover:bg-[#47463f]"
                   : "right-0 top-0 size-[52px] rounded-full hover:bg-[#efefeb] dark:hover:bg-[#3c3b35]"
@@ -132,7 +108,7 @@ export function FluidPopoverDemo({ playing }: { playing?: boolean }) {
                     icon={
                       open
                         ? Cancel01Icon
-                        : (outcome?.icon ?? MoreHorizontalIcon)
+                        : MoreHorizontalIcon
                     }
                   />
                 }
@@ -172,9 +148,9 @@ export function FluidPopoverDemo({ playing }: { playing?: boolean }) {
                     className="absolute inset-x-1 top-2"
                   >
                     <div className="flex h-[52px] items-center px-5 pr-16 text-[16px] font-semibold leading-5 tracking-[-0.015em] text-[#1f1f1d] dark:text-[#f2f1ec]">
-                      <span className="truncate">Blue Bottle · $4.80</span>
+                      <span className="truncate">Launch assets</span>
                     </div>
-                    <LayoutGroup id="fluid-popover-menu">
+                    <LayoutGroup id="popover-menu">
                       <div onPointerLeave={() => setHoveredAction(null)}>
                         {actions.map((action, index) => (
                           <motion.a
@@ -184,16 +160,16 @@ export function FluidPopoverDemo({ playing }: { playing?: boolean }) {
                               .replace(" ", "-")}`}
                             {...rise(0.11 + index * 0.045)}
                             whileTap={{ scale: 0.99 }}
-                            onPointerEnter={() =>
+                            onPointerEnter={(event) => event.pointerType === "mouse" &&
                               setHoveredAction(action.label)
                             }
                             onFocus={() => setHoveredAction(action.label)}
-                            onClick={(event) => choose(event, action)}
+                            onClick={choose}
                             className="relative flex h-11 w-full items-center gap-3 rounded-xl px-5 text-left text-[15px] font-medium leading-5 tracking-[-0.01em] text-[#1f1f1d] focus-visible:outline-none dark:text-[#f2f1ec]"
                           >
                             {hoveredAction === action.label && (
                               <motion.span
-                                layoutId="fluid-popover-hover"
+                                layoutId="popover-menu-hover"
                                 className="pointer-events-none absolute inset-0 rounded-xl bg-[#f5f5f1] dark:bg-[#33322d]"
                                 transition={{
                                   type: "spring",
@@ -223,9 +199,6 @@ export function FluidPopoverDemo({ playing }: { playing?: boolean }) {
           </motion.div>
         </Popover.Root>
       </div>
-      <p className="sr-only" aria-live="polite">
-        {outcome?.message ?? ""}
-      </p>
     </div>
   );
 }

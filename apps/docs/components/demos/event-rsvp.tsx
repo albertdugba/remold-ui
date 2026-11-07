@@ -8,7 +8,14 @@ import { RadioGroup } from "@base-ui/react/radio-group";
 import { Separator } from "@base-ui/react/separator";
 import { Tooltip } from "@base-ui/react/tooltip";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { Cancel01Icon, HelpCircleIcon, InformationCircleIcon, Tick02Icon, UserCheck01Icon, UserRemove01Icon } from "@hugeicons/core-free-icons";
+import {
+  Cancel01Icon,
+  HelpCircleIcon,
+  InformationCircleIcon,
+  Tick02Icon,
+  UserCheck01Icon,
+  UserRemove01Icon,
+} from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
@@ -27,20 +34,56 @@ interface Option {
 }
 
 const OPTIONS: Option[] = [
-  { id: "going", label: "Going", detail: "Save me a spot", icon: UserCheck01Icon },
-  { id: "maybe", label: "Maybe", detail: "Remind me closer to the day", icon: HelpCircleIcon },
-  { id: "no", label: "Can’t go", detail: "Let the host know", icon: UserRemove01Icon },
+  {
+    id: "going",
+    label: "Going",
+    detail: "Save me a spot",
+    icon: UserCheck01Icon,
+  },
+  {
+    id: "maybe",
+    label: "Maybe",
+    detail: "Remind me closer to the day",
+    icon: HelpCircleIcon,
+  },
+  {
+    id: "no",
+    label: "Can’t go",
+    detail: "Let the host know",
+    icon: UserRemove01Icon,
+  },
 ];
 
-const EVENT = { name: "Design Systems Night", when: "Fri 14 Nov · 18:30", where: "Studio 4, Osu", month: "Nov", day: "14" };
+const EVENT = {
+  name: "DevCongress December Meetup",
+  when: "December · Date and time TBC",
+  where: "Ghana · Venue TBC",
+  month: "Dec",
+  day: "—",
+};
 const GOING = 38;
 const SPOTS = 50;
 const SAVING_FOR = 1300;
 
-const RESULTS: Record<Answer, { mark: IconSvgElement; title: string; line: string }> = {
-  going: { mark: Tick02Icon, title: "You’re in", line: `Spot #${GOING + 1} of ${SPOTS}` },
-  maybe: { mark: HelpCircleIcon, title: "Marked as maybe", line: "We’ll check in on Thursday" },
-  no: { mark: UserRemove01Icon, title: "Thanks for letting them know", line: "The host can offer your spot to someone else" },
+const RESULTS: Record<
+  Answer,
+  { mark: IconSvgElement; title: string; line: string }
+> = {
+  going: {
+    mark: Tick02Icon,
+    title: "You’re in",
+    line: `Spot #${GOING + 1} of ${SPOTS}`,
+  },
+  maybe: {
+    mark: HelpCircleIcon,
+    title: "Marked as maybe",
+    line: "We’ll check in closer to the meetup",
+  },
+  no: {
+    mark: UserRemove01Icon,
+    title: "Thanks for letting them know",
+    line: "The host can offer your spot to someone else",
+  },
 };
 
 const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.2 };
@@ -48,26 +91,47 @@ const QUICK = { duration: 0.14 };
 const ROUND = { borderRadius: 999 };
 
 const part = (delay = 0) => ({
-  initial: { opacity: 0, scale: 0.94, filter: "blur(6px)" },
-  animate: { opacity: 1, scale: 1, filter: "blur(0px)", transition: { ...SPRING, delay } },
-  exit: { opacity: 0, scale: 0.94, filter: "blur(6px)", transition: QUICK },
+  initial: { opacity: 0, y: 6 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.2, delay },
+  },
+  exit: { opacity: 0, y: -4, transition: QUICK },
 });
 
 function MainButton({ face, onClick }: { face: Face; onClick: () => void }) {
-  const label = face === "done" ? "Done" : face === "saving" ? "Saving" : face === "sheet" ? "Confirm" : "RSVP";
+  const label =
+    face === "done"
+      ? "Done"
+      : face === "saving"
+      ? "Saving"
+      : face === "sheet"
+      ? "Confirm"
+      : "RSVP";
   return (
     <Button
       className="rsvp-main"
       data-face={face}
       disabled={face === "saving"}
       onClick={onClick}
-      render={<motion.button layoutId="rsvp-main" style={ROUND} whileTap={{ scale: face === "saving" ? 1 : 0.97 }} />}
+      render={
+        <motion.button
+          layoutId="rsvp-main"
+          style={ROUND}
+          whileTap={{ scale: face === "saving" ? 1 : 0.97 }}
+        />
+      }
     >
       <motion.span layout className="rsvp-main-label">
         <Remold.Text>{label}</Remold.Text>
       </motion.span>
       {face === "saving" && (
-        <Progress.Root className="rsvp-progress" value={null} aria-label="Saving your answer">
+        <Progress.Root
+          className="rsvp-progress"
+          value={null}
+          aria-label="Saving your answer"
+        >
           <Progress.Track className="rsvp-progress-track">
             <Progress.Indicator className="rsvp-progress-bar" />
           </Progress.Track>
@@ -85,13 +149,17 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
   const tray = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  const [size, setSize] = useState<{ width: number; height: number } | null>(
+    null,
+  );
   const result = RESULTS[answer];
 
   useEffect(() => {
     const element = content.current;
     if (!element) return;
-    const observer = new ResizeObserver(() => setSize({ width: element.offsetWidth, height: element.offsetHeight }));
+    const observer = new ResizeObserver(() =>
+      setSize({ width: element.offsetWidth, height: element.offsetHeight }),
+    );
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
@@ -102,7 +170,10 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
     setFace("saving");
     timer.current = setTimeout(() => {
       setFace("done");
-      timer.current = setTimeout(() => setGoing(answer === "going" ? GOING + 1 : GOING), 450);
+      timer.current = setTimeout(
+        () => setGoing(answer === "going" ? GOING + 1 : GOING),
+        450,
+      );
     }, SAVING_FOR);
   };
 
@@ -122,10 +193,13 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
     [700, () => setAnswer("maybe")],
     [700, () => setAnswer("going")],
     [SAVING_FOR + 2400, confirm],
-    [1200, () => {
-      reset();
-      setRemind(true);
-    }],
+    [
+      1200,
+      () => {
+        reset();
+        setRemind(true);
+      },
+    ],
   ]);
 
   const open = face === "sheet" || face === "saving";
@@ -139,12 +213,25 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
             className="rsvp"
             data-face={face}
             initial={false}
-            animate={size ? { width: size.width, height: size.height, borderRadius: face === "button" ? 26 : 28 } : undefined}
+            animate={
+              size
+                ? {
+                    width: size.width,
+                    height: size.height,
+                    borderRadius: face === "button" ? 26 : 28,
+                  }
+                : undefined
+            }
           >
             <div ref={content} className="rsvp-content">
               <AnimatePresence mode="popLayout" initial={false}>
                 {open && (
-                  <motion.div key="sheet" className="rsvp-face rsvp-sheet" role="group" aria-label={`RSVP to ${EVENT.name}`}>
+                  <motion.div
+                    key="sheet"
+                    className="rsvp-face rsvp-sheet"
+                    role="group"
+                    aria-label={`RSVP to ${EVENT.name}`}
+                  >
                     <motion.header className="rsvp-head" {...part(0.02)}>
                       <span className="rsvp-date" aria-hidden="true">
                         <span>{EVENT.month}</span>
@@ -155,8 +242,17 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
                         <span>{EVENT.when}</span>
                         <span>{EVENT.where}</span>
                       </span>
-                      <Button className="rsvp-close" aria-label="Close" disabled={face === "saving" || live} onClick={() => setFace("button")}>
-                        <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.2} aria-hidden="true" />
+                      <Button
+                        className="rsvp-close"
+                        aria-label="Close"
+                        disabled={face === "saving" || live}
+                        onClick={() => setFace("button")}
+                      >
+                        <HugeiconsIcon
+                          icon={Cancel01Icon}
+                          strokeWidth={2.2}
+                          aria-hidden="true"
+                        />
                       </Button>
                     </motion.header>
 
@@ -164,12 +260,21 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
                       <span className="rsvp-count-label">
                         {SPOTS - GOING} spots left
                         <Tooltip.Root>
-                          <Tooltip.Trigger className="rsvp-info" aria-label="About the evening">
-                            <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} aria-hidden="true" />
+                          <Tooltip.Trigger
+                            className="rsvp-info"
+                            aria-label="About the evening"
+                          >
+                            <HugeiconsIcon
+                              icon={InformationCircleIcon}
+                              strokeWidth={2}
+                              aria-hidden="true"
+                            />
                           </Tooltip.Trigger>
                           <Tooltip.Portal>
                             <Tooltip.Positioner sideOffset={6}>
-                              <Tooltip.Popup className="rsvp-tooltip">Doors at 18:00. Talks, then drinks and snacks.</Tooltip.Popup>
+                              <Tooltip.Popup className="rsvp-tooltip">
+                                Demo RSVP for the DevCongress December meetup in Ghana. Date, venue, and attendance figures are placeholders.
+                              </Tooltip.Popup>
                             </Tooltip.Positioner>
                           </Tooltip.Portal>
                         </Tooltip.Root>
@@ -185,49 +290,88 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
                       onValueChange={(value) => setAnswer(value as Answer)}
                     >
                       {OPTIONS.map((option, index) => (
-                        <motion.label key={option.id} className="rsvp-option" {...part(0.08 + index * 0.035)}>
-                          {answer === option.id && <motion.span layoutId="rsvp-pick" className="rsvp-pick" />}
+                        <Radio.Root
+                          key={option.id}
+                          nativeButton
+                          value={option.id}
+                          className="rsvp-option"
+                          render={
+                            <motion.button
+                              type="button"
+                              {...part(0.08 + index * 0.035)}
+                            />
+                          }
+                        >
+                          {answer === option.id && (
+                            <motion.span
+                              layoutId="rsvp-pick"
+                              className="rsvp-pick"
+                            />
+                          )}
                           <span className="rsvp-option-icon">
-                            <HugeiconsIcon icon={option.icon} strokeWidth={1.8} aria-hidden="true" />
+                            <HugeiconsIcon
+                              icon={option.icon}
+                              strokeWidth={1.8}
+                              aria-hidden="true"
+                            />
                           </span>
                           <span className="rsvp-option-copy">
                             <b>{option.label}</b>
                             <span>{option.detail}</span>
                           </span>
-                          <Radio.Root value={option.id} className="rsvp-radio">
-                            <Radio.Indicator className="rsvp-radio-dot" />
-                          </Radio.Root>
-                        </motion.label>
+                          <Radio.Indicator className="rsvp-radio-dot" />
+                        </Radio.Root>
                       ))}
                     </RadioGroup>
 
-                    <motion.label className="rsvp-remind" data-disabled={answer === "no" || undefined} {...part(0.2)}>
-                      <Checkbox.Root
-                        className="rsvp-checkbox"
-                        checked={remind && answer !== "no"}
-                        disabled={face === "saving" || answer === "no"}
-                        onCheckedChange={setRemind}
-                      >
-                        <Checkbox.Indicator className="rsvp-checkbox-mark">
-                          <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.6} aria-hidden="true" />
-                        </Checkbox.Indicator>
-                      </Checkbox.Root>
-                      Remind me an hour before
-                    </motion.label>
+                    <Checkbox.Root
+                      nativeButton
+                      className="rsvp-remind"
+                      data-disabled={answer === "no" || undefined}
+                      checked={remind && answer !== "no"}
+                      disabled={face === "saving" || answer === "no"}
+                      onCheckedChange={setRemind}
+                      render={<motion.button type="button" {...part(0.2)} />}
+                    >
+                      <span className="rsvp-checkbox-box" aria-hidden="true">
+                      <Checkbox.Indicator className="rsvp-checkbox-mark">
+                        <HugeiconsIcon
+                          icon={Tick02Icon}
+                          strokeWidth={2.6}
+                          aria-hidden="true"
+                        />
+                      </Checkbox.Indicator>
+                      </span>
+                      <span>Remind me an hour before</span>
+                    </Checkbox.Root>
 
                     <MainButton face={face} onClick={press} />
                   </motion.div>
                 )}
 
                 {face === "done" && (
-                  <motion.div key="done" className="rsvp-face rsvp-done" data-answer={answer} role="status">
+                  <motion.div
+                    key="done"
+                    className="rsvp-face rsvp-done"
+                    data-answer={answer}
+                    role="status"
+                  >
                     <motion.span
                       className="rsvp-mark"
                       initial={{ scale: 0.4, opacity: 0, rotate: -30 }}
-                      animate={{ scale: 1, opacity: 1, rotate: 0, transition: { ...SPRING, bounce: 0.4, delay: 0.08 } }}
+                      animate={{
+                        scale: 1,
+                        opacity: 1,
+                        rotate: 0,
+                        transition: { ...SPRING, bounce: 0.4, delay: 0.08 },
+                      }}
                       exit={{ opacity: 0, scale: 0.8, transition: QUICK }}
                     >
-                      <HugeiconsIcon icon={result.mark} strokeWidth={2.4} aria-hidden="true" />
+                      <HugeiconsIcon
+                        icon={result.mark}
+                        strokeWidth={2.4}
+                        aria-hidden="true"
+                      />
                     </motion.span>
                     <motion.div className="rsvp-done-head" {...part(0.12)}>
                       <b>{result.title}</b>
@@ -253,7 +397,11 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
                       <Separator className="rsvp-separator" />
                       <div>
                         <dt>Reminder</dt>
-                        <dd>{remind && answer !== "no" ? "An hour before" : "None"}</dd>
+                        <dd>
+                          {remind && answer !== "no"
+                            ? "An hour before"
+                            : "None"}
+                        </dd>
                       </div>
                     </motion.dl>
                     <MainButton face={face} onClick={press} />

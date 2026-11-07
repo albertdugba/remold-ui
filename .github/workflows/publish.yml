@@ -31,7 +31,7 @@ jobs:
           EXPECTED: ${{ github.ref_name }}
       - name: Publish public packages
         run: |
-          for package in core dom canvas react vue angular; do
+          for package in core dom canvas morph react vue angular; do
             pnpm --filter "@remold-ui/${package}" publish --access public --no-git-checks
           done
         env:

@@ -17,7 +17,8 @@
   background: var(--fx-surface);
   color: var(--fx-ink);
   transition: background-color 0.3s;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    system-ui, sans-serif;
 }
 
 .fx[data-picking] {
@@ -109,7 +110,7 @@
 .fx-well .fx-trigger {
   position: absolute;
   right: 16px;
-  bottom: 25px;
+  bottom: 21px;
   z-index: 2;
 }
 
@@ -117,7 +118,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  min-width: 44px;
+  height: 44px;
   padding: 0 4px;
   border: 0;
   border-radius: 999px;
@@ -166,9 +168,9 @@
   left: 50%;
   z-index: 3;
   display: grid;
-  width: 36px;
-  height: 36px;
-  margin: -18px 0 0 -18px;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
   place-items: center;
   border: 0;
   border-radius: 50%;
@@ -189,7 +191,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 40px;
+  height: 44px;
   margin: 0 0 6px;
   padding: 0 12px;
   border-radius: 999px;
@@ -209,7 +211,7 @@
   background: transparent;
   color: var(--fx-ink);
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
 }
 
@@ -268,6 +270,13 @@
   padding: 18px 12px;
   color: var(--fx-muted);
   font-size: 14px;
+  text-align: center;
+}
+
+.fx-list-note {
+  margin: 6px 0 0;
+  color: var(--fx-muted);
+  font-size: 12px;
   text-align: center;
 }
 

@@ -191,9 +191,9 @@ export function TaskListDemo({ framed = true, playing }: TaskListDemoProps) {
   const fold = () => take((current) => ({ ...current, open: !current.open }));
 
   const body = (
-    <section ref={scene.ref} className="grid min-h-[330px] w-[min(100%,560px)] content-start font-sans text-[13px] text-(--tl-ink) [--tl-done:#5e6ad2] [--tl-faint:#a1a1aa] [--tl-head:#f7f7f8] [--tl-ink:#18181b] [--tl-line:rgb(24_24_27/0.06)] [--tl-muted:#6b6b76] [--tl-progress:#e2a33b] [--tl-surface:#ffffff] [--tl-todo:#b4b4bd] dark:[--tl-done:#7d86e6] dark:[--tl-faint:#6b6b76] dark:[--tl-head:#222226] dark:[--tl-ink:#ededef] dark:[--tl-line:rgb(255_255_255/0.06)] dark:[--tl-muted:#9b9ba5] dark:[--tl-progress:#f0b44c] dark:[--tl-surface:#1c1c1f] dark:[--tl-todo:#6b6b76]" aria-label="Issues">
+    <section ref={scene.ref} className="grid min-h-[330px] w-[min(100%,560px)] grid-cols-[minmax(0,1fr)] content-start font-sans text-[13px] text-(--tl-ink) [--tl-done:#5e6ad2] [--tl-faint:#a1a1aa] [--tl-head:#f7f7f8] [--tl-ink:#18181b] [--tl-line:rgb(24_24_27/0.06)] [--tl-muted:#6b6b76] [--tl-progress:#e2a33b] [--tl-surface:#ffffff] [--tl-todo:#b4b4bd] dark:[--tl-done:#7d86e6] dark:[--tl-faint:#6b6b76] dark:[--tl-head:#222226] dark:[--tl-ink:#ededef] dark:[--tl-line:rgb(255_255_255/0.06)] dark:[--tl-muted:#9b9ba5] dark:[--tl-progress:#f0b44c] dark:[--tl-surface:#1c1c1f] dark:[--tl-todo:#6b6b76]" aria-label="Issues">
       <LayoutGroup id="task-list">
-        <motion.div layout transition={LAYOUT_SPRING} className="grid rounded-xl bg-(--tl-surface) in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(24_24_27/0.08)] dark:in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]">
+        <motion.div layout transition={LAYOUT_SPRING} className="grid min-w-0 grid-cols-[minmax(0,1fr)] rounded-xl bg-(--tl-surface) in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(24_24_27/0.08)] dark:in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]">
           {GROUPS.map(({ status, name }) => {
             const issues = ISSUES.filter(
               (issue) => issue.status === status && !isDone.has(issue.id),
@@ -211,7 +211,7 @@ export function TaskListDemo({ framed = true, playing }: TaskListDemoProps) {
                   <strong>{name}</strong>
                   <Odometer className="text-(--tl-faint)" value={String(issues.length)} />
                 </header>
-                <ul className="m-0 grid list-none p-0">
+                <ul className="m-0 grid list-none grid-cols-[minmax(0,1fr)] p-0">
                   {issues.map((issue) => (
                     <Row
                       key={issue.id}
@@ -255,7 +255,7 @@ export function TaskListDemo({ framed = true, playing }: TaskListDemoProps) {
             )}
           </button>
           {state.open && (
-            <ul className="m-0 grid list-none p-0">
+            <ul className="m-0 grid list-none grid-cols-[minmax(0,1fr)] p-0">
               {done.map((issue) => (
                 <Row
                   key={issue.id}

@@ -174,9 +174,11 @@
   cursor: pointer;
 }
 
-.iv-chip-remove:hover {
-  background: var(--iv-chip);
-  color: var(--iv-ink);
+@media (hover: hover) and (pointer: fine) {
+  .iv-chip-remove:hover {
+    background: var(--iv-chip);
+    color: var(--iv-ink);
+  }
 }
 
 .iv-chip-remove svg {
@@ -292,9 +294,11 @@
   height: 13px;
 }
 
-.iv-row-revoke:hover {
-  background: var(--iv-fill);
-  color: var(--iv-bad);
+@media (hover: hover) and (pointer: fine) {
+  .iv-row-revoke:hover {
+    background: var(--iv-fill);
+    color: var(--iv-bad);
+  }
 }
 
 .iv-status {
