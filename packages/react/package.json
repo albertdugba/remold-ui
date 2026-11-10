@@ -3,9 +3,25 @@
   "version": "0.2.0",
   "description": "React bindings for Remold: keyless transitions, text morph and canvas scenes.",
   "license": "MIT",
+  "author": "Albert Dugba",
+  "homepage": "https://github.com/albertdugba/remold-ui/tree/main/packages/react#readme",
+  "bugs": {
+    "url": "https://github.com/albertdugba/remold-ui/issues"
+  },
+  "keywords": [
+    "react",
+    "morph",
+    "animation",
+    "transition",
+    "text-morph",
+    "icons",
+    "particles",
+    "connectors"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/albertdugba/remold-ui.git"
+    "url": "git+https://github.com/albertdugba/remold-ui.git",
+    "directory": "packages/react"
   },
   "publishConfig": {
     "access": "public"
