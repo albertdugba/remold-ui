@@ -1,8 +1,10 @@
 import { Studio } from "@/components/studio/studio";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Studio · Remold",
+export const metadata: Metadata = {
+  title: "Studio",
   description: "Open an illustrated story, change its words, colours and steps, and export it as a React component that plays the same way.",
+  robots: { index: false, follow: false },
 };
 
 export default function StudioPage() {
