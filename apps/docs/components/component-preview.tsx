@@ -11,6 +11,8 @@ import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 
 
 /** The most a fitted preview is enlarged. */
 const MAX_ZOOM = 1.5;
+/** Form fields read as bloated when blown up; they're shown at about their real size. */
+const FORM_ZOOM = 1.1;
 
 interface Preview {
   Component: ComponentType<Record<string, unknown>>;
@@ -30,6 +32,8 @@ interface Preview {
   dark?: boolean;
   /** For demos that are stepped from outside (`index`), how often to step them, in ms. */
   every?: number;
+  /** The most a fitted preview is enlarged. Default `MAX_ZOOM`. */
+  maxZoom?: number;
   props?: Record<string, unknown>;
 }
 
@@ -49,12 +53,6 @@ const PREVIEWS: Record<string, Preview> = {
     width: 500,
     props: { variant: "preview" },
   },
-  "hold-to-record": {
-    Component: load(() =>
-      import("./demos/hold-to-record").then((m) => m.HoldToRecordDemo),
-    ),
-    width: 420,
-  },
   "table-booking": {
     Component: load(() =>
       import("./demos/table-booking").then((m) => m.TableBookingDemo),
@@ -68,7 +66,11 @@ const PREVIEWS: Record<string, Preview> = {
     width: 420,
     surface: true,
   },
-  "live-room": { Component: load(() => import("./demos/live-room").then((m) => m.LiveRoomDemo)), width: 420, surface: true },
+  "morphing-dialog": {
+    Component: load(() => import("./demos/morphing-dialog").then((m) => m.MorphingDialogDemo)),
+    width: 440,
+    props: { preview: true },
+  },
   "course-outline": {
     Component: load(() =>
       import("./demos/course-outline").then((m) => m.CourseOutlineDemo),
@@ -84,18 +86,6 @@ const PREVIEWS: Record<string, Preview> = {
     width: 640,
     props: { controls: false },
   },
-  "morph-icons": {
-    Component: load(() =>
-      import("./demos/morph-icons").then((m) => m.MorphIconsDemo),
-    ),
-  },
-  "step-progress": {
-    Component: load(() =>
-      import("./demos/step-progress").then((m) => m.StepProgressDemo),
-    ),
-    width: 460,
-    surface: true,
-  },
   "share-link": {
     Component: load(() =>
       import("./demos/share-link").then((m) => m.ShareLinkDemo),
@@ -103,12 +93,20 @@ const PREVIEWS: Record<string, Preview> = {
     width: 520,
     surface: true,
   },
-  "save-button": {
-    Component: load(() =>
-      import("./demos/save-button").then((m) => m.SaveButtonDemo),
-    ),
+  "expanding-search": {
+    Component: load(() => import("./demos/expanding-search").then((m) => m.ExpandingSearchDemo)),
+    width: 440,
+    props: { preview: true },
+  },
+  "booking-steps": {
+    Component: load(() => import("./demos/booking-steps").then((m) => m.BookingStepsDemo)),
     width: 420,
-    surface: true,
+    props: { preview: true },
+  },
+  "feedback-prompt": {
+    Component: load(() => import("./demos/feedback-prompt").then((m) => m.FeedbackPromptDemo)),
+    width: 420,
+    props: { preview: true },
   },
   "product-tour": {
     Component: load(() =>
@@ -121,6 +119,7 @@ const PREVIEWS: Record<string, Preview> = {
       import("./demos/command-palette").then((m) => m.CommandPaletteDemo),
     ),
     width: 480,
+    props: { preview: true },
   },
   "two-factor": {
     Component: load(() =>
@@ -164,6 +163,10 @@ const PREVIEWS: Record<string, Preview> = {
     cover: true,
     props: { source: "/api/music", height: 480 },
   },
+  "focus-timer": {
+    Component: load(() => import("./demos/focus-timer").then((m) => m.FocusTimerDemo)),
+    width: 420,
+  },
   "voice-orb": {
     Component: load(() =>
       import("./demos/voice-orb").then((m) => m.VoiceOrbDemo),
@@ -184,26 +187,23 @@ const PREVIEWS: Record<string, Preview> = {
   "amount-input": {
     Component: load(() => import("./demos/amount-input").then((m) => m.AmountInputDemo)),
     width: 400,
+    props: { preview: true },
+    maxZoom: FORM_ZOOM,
   },
 
   "phone-input": {
     Component: load(() => import("./demos/phone-input").then((m) => m.PhoneInputDemo)),
     width: 380,
     surface: true,
+    props: { preview: true },
+    maxZoom: FORM_ZOOM,
   },
 
   "tag-input": {
     Component: load(() => import("./demos/tag-input").then((m) => m.TagInputDemo)),
     width: 400,
     surface: true,
-  },
-
-
-
-  "address-autocomplete": {
-    Component: load(() => import("./demos/address-autocomplete").then((m) => m.AddressAutocompleteDemo)),
-    width: 420,
-    surface: true,
+    props: { preview: true },
   },
 
   "quantity-stepper": {
@@ -218,47 +218,23 @@ const PREVIEWS: Record<string, Preview> = {
     surface: true,
   },
 
-
-
   "range-slider": {
     Component: load(() => import("./demos/range-slider").then((m) => m.RangeSliderDemo)),
     width: 400,
     surface: true,
   },
 
-
-
-  "upload-row": {
-    Component: load(() => import("./demos/upload-row").then((m) => m.UploadRowDemo)),
+  "split-amount": {
+    Component: load(() => import("./demos/split-amount").then((m) => m.SplitAmountDemo)),
     width: 400,
     surface: true,
   },
-
-
-  "split-amount": {
-    Component: load(() => import("./demos/split-amount").then((m) => m.SplitAmountDemo)),
-    width: 380,
-    surface: true,
-  },
-
-
-
-
-
-
-
 
   // The home page
   "home/text": {
     Component: load(() => import("./demos/text").then((m) => m.PriceDemo)),
     width: 520,
     every: 2000,
-  },
-  "home/world": {
-    Component: load(() => import("./demos/world").then((m) => m.WorldDemo)),
-    width: 560,
-    every: 2600,
-    dark: true,
   },
   "home/particles": {
     Component: load(() =>
@@ -272,13 +248,8 @@ const PREVIEWS: Record<string, Preview> = {
     width: 520,
     every: 1800,
   },
-  "home/scene": {
-    Component: load(() => import("./demos/scene").then((m) => m.SceneDemo)),
-    width: 640,
-    every: 2800,
-  },
-  "home/layout": {
-    Component: load(() => import("./demos/layout").then((m) => m.LayoutDemo)),
+  "home/morph": {
+    Component: load(() => import("./demos/morph").then((m) => m.MorphDemo)),
     width: 640,
   },
   "home/feedback": {
@@ -302,6 +273,10 @@ export interface CustomPreview {
   bare?: boolean;
   /** This render already owns its backdrop, so it should fill the catalogue card. */
   cover?: boolean;
+  /** The most a fitted preview is enlarged. Default `MAX_ZOOM`. */
+  maxZoom?: number;
+  /** A fixed height, for a card whose part fills whatever box it's in. */
+  height?: number;
 }
 
 function CustomBody({ custom, playing }: { custom: CustomPreview; playing: boolean }) {
@@ -360,7 +335,7 @@ export function ComponentPreview({
 }) {
   // A landing card is shown as it is on the landing page: its own frame, no extra card around it.
   const preview: Preview | undefined = custom
-    ? { Component: () => null, width: custom.width, cover: custom.cover }
+    ? { Component: () => null, width: custom.width, cover: custom.cover, maxZoom: custom.maxZoom, height: custom.height }
     : PREVIEWS[id];
   const [layer, setLayer] = useState<HTMLDivElement | null>(null);
   const frame = useRef<HTMLDivElement>(null);
@@ -370,11 +345,14 @@ export function ComponentPreview({
   /** How far the drawn component's centre sits from the frame's centre, before scaling. */
   const [shift, setShift] = useState({ x: 0, y: 0 });
   const width = preview?.width ?? 760;
+  const maxZoom = preview?.maxZoom ?? MAX_ZOOM;
   const crop = !interactive && !!preview?.crop;
   // A catalogue picture is fitted to what's actually drawn, not the width it's drawn at, so a 360px
   // field in a 440px stage fills its card. Live landing demos, cropped and full-bleed ones keep the
   // whole frame.
   const tight = !interactive && !crop && !preview?.cover && !preview?.dark;
+  /** A cover preview fills its card and lets the overflow be clipped, rather than fitting inside it. */
+  const fill = !interactive && !crop && !!preview?.cover;
 
   // Load the component once the card comes near the screen.
   useEffect(() => {
@@ -454,7 +432,7 @@ export function ComponentPreview({
         const h = box.bottom - box.top;
         if (!w || !h) return;
         // A small control is enlarged only so far, so a lone button doesn't fill its card.
-        setScale(Math.min(roomX / w, roomY / h, MAX_ZOOM));
+        setScale(Math.min(roomX / w, roomY / h, maxZoom));
         setShift({ x: (box.left + box.right) / 2 - now.frameWidth / 2, y: (box.top + box.bottom) / 2 - now.frameHeight / 2 });
         return;
       }
@@ -464,14 +442,14 @@ export function ComponentPreview({
       tallest = Math.max(tallest, content.offsetHeight, content.scrollHeight);
       if (!tallest) return;
       const across = roomX / width;
-      setScale(crop ? across : Math.min(across, roomY / tallest));
+      setScale(crop ? across : fill ? Math.max(across, roomY / tallest) : Math.min(across, roomY / tallest));
     };
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(outer);
     ro.observe(content);
     return () => ro.disconnect();
-  }, [near, width, crop, tight]);
+  }, [near, width, crop, tight, fill, maxZoom]);
 
   if (!preview) return <div className="rm-preview" aria-hidden="true" />;
   const { Component, height, dark, every, props, aspectRatio, surface, cover } =

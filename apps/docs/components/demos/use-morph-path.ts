@@ -1,16 +1,14 @@
 "use client";
-/**
- * Path data that springs to each new shape it's given, as a motion value for a `motion.path`. The
- * geometry comes from Remold's `createMorph`; Motion supplies the spring. A change mid-flight starts
- * from the shape on screen, so it never jumps. For icons, use `Remold.Icon` instead.
- */
 import { createMorph } from "@remold-ui/core";
 import { animate, useMotionValue, type MotionValue, type ValueAnimationTransition } from "motion/react";
 import { useEffect, useRef } from "react";
 
 const SPRING: ValueAnimationTransition<number> = { type: "spring", duration: 0.45, bounce: 0.2 };
 
-export function useMorphPath(target: string, transition: ValueAnimationTransition<number> = SPRING): MotionValue<string> {
+export function useMorphPath(
+  target: string,
+  transition: ValueAnimationTransition<number> = SPRING,
+): MotionValue<string> {
   const path = useMotionValue(target);
   const shown = useRef(target);
 

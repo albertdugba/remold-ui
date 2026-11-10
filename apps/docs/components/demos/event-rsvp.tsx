@@ -18,8 +18,10 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
+
 import { Odometer } from "./odometer";
+import { useMeasuredSize } from "./use-measured-size";
 import { useScript } from "./use-script";
 import "./event-rsvp.css";
 
@@ -65,10 +67,7 @@ const GOING = 38;
 const SPOTS = 50;
 const SAVING_FOR = 1300;
 
-const RESULTS: Record<
-  Answer,
-  { mark: IconSvgElement; title: string; line: string }
-> = {
+const RESULTS: Record<Answer, { mark: IconSvgElement; title: string; line: string }> = {
   going: {
     mark: Tick02Icon,
     title: "You’re in",
@@ -102,13 +101,7 @@ const part = (delay = 0) => ({
 
 function MainButton({ face, onClick }: { face: Face; onClick: () => void }) {
   const label =
-    face === "done"
-      ? "Done"
-      : face === "saving"
-      ? "Saving"
-      : face === "sheet"
-      ? "Confirm"
-      : "RSVP";
+    face === "done" ? "Done" : face === "saving" ? "Saving" : face === "sheet" ? "Confirm" : "RSVP";
   return (
     <Button
       className="rsvp-main"
@@ -127,11 +120,7 @@ function MainButton({ face, onClick }: { face: Face; onClick: () => void }) {
         <Remold.Text>{label}</Remold.Text>
       </motion.span>
       {face === "saving" && (
-        <Progress.Root
-          className="rsvp-progress"
-          value={null}
-          aria-label="Saving your answer"
-        >
+        <Progress.Root className="rsvp-progress" value={null} aria-label="Saving your answer">
           <Progress.Track className="rsvp-progress-track">
             <Progress.Indicator className="rsvp-progress-bar" />
           </Progress.Track>
@@ -141,28 +130,171 @@ function MainButton({ face, onClick }: { face: Face; onClick: () => void }) {
   );
 }
 
+function SheetHeader({ closeDisabled, onClose }: { closeDisabled: boolean; onClose: () => void }) {
+  return (
+    <motion.header className="rsvp-head" {...part(0.02)}>
+      <span className="rsvp-date" aria-hidden="true">
+        <span>{EVENT.month}</span>
+        <b>{EVENT.day}</b>
+      </span>
+      <span className="rsvp-head-copy">
+        <b>{EVENT.name}</b>
+        <span>{EVENT.when}</span>
+        <span>{EVENT.where}</span>
+      </span>
+      <Button className="rsvp-close" aria-label="Close" disabled={closeDisabled} onClick={onClose}>
+        <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.2} aria-hidden="true" />
+      </Button>
+    </motion.header>
+  );
+}
+
+function SpotsLeft() {
+  return (
+    <motion.div className="rsvp-count" {...part(0.05)}>
+      <span className="rsvp-count-label">
+        {SPOTS - GOING} spots left
+        <Tooltip.Root>
+          <Tooltip.Trigger className="rsvp-info" aria-label="About the evening">
+            <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} aria-hidden="true" />
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner sideOffset={6}>
+              <Tooltip.Popup className="rsvp-tooltip">
+                Demo RSVP for the DevCongress December meetup in Ghana. Date, venue, and attendance figures
+                are placeholders.
+              </Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </span>
+      <b>{GOING} going</b>
+    </motion.div>
+  );
+}
+
+function AnswerOptions({
+  answer,
+  disabled,
+  onChange,
+}: {
+  answer: Answer;
+  disabled: boolean;
+  onChange: (answer: Answer) => void;
+}) {
+  return (
+    <RadioGroup
+      className="rsvp-options"
+      aria-label="Your answer"
+      value={answer}
+      disabled={disabled}
+      onValueChange={(value) => onChange(value as Answer)}
+    >
+      {OPTIONS.map((option, index) => (
+        <Radio.Root
+          key={option.id}
+          nativeButton
+          value={option.id}
+          className="rsvp-option"
+          render={<motion.button type="button" {...part(0.08 + index * 0.035)} />}
+        >
+          {answer === option.id && <motion.span layoutId="rsvp-pick" className="rsvp-pick" />}
+          <span className="rsvp-option-icon">
+            <HugeiconsIcon icon={option.icon} strokeWidth={1.8} aria-hidden="true" />
+          </span>
+          <span className="rsvp-option-copy">
+            <b>{option.label}</b>
+            <span>{option.detail}</span>
+          </span>
+          <Radio.Indicator className="rsvp-radio-dot" />
+        </Radio.Root>
+      ))}
+    </RadioGroup>
+  );
+}
+
+function RemindCheckbox({
+  checked,
+  disabled,
+  dimmed,
+  onChange,
+}: {
+  checked: boolean;
+  disabled: boolean;
+  dimmed: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <Checkbox.Root
+      nativeButton
+      className="rsvp-remind"
+      data-disabled={dimmed || undefined}
+      checked={checked}
+      disabled={disabled}
+      onCheckedChange={onChange}
+      render={<motion.button type="button" {...part(0.2)} />}
+    >
+      <span className="rsvp-checkbox-box" aria-hidden="true">
+        <Checkbox.Indicator className="rsvp-checkbox-mark">
+          <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.6} aria-hidden="true" />
+        </Checkbox.Indicator>
+      </span>
+      <span>Remind me an hour before</span>
+    </Checkbox.Root>
+  );
+}
+
+function Summary({ answer, going, reminder }: { answer: Answer; going: number; reminder: boolean }) {
+  const result = RESULTS[answer];
+  const lines = [
+    { term: "Event", detail: EVENT.name },
+    { term: "When", detail: EVENT.when },
+    { term: "Going", detail: <Odometer value={String(going)} /> },
+    { term: "Reminder", detail: reminder ? "An hour before" : "None" },
+  ];
+
+  return (
+    <>
+      <motion.span
+        className="rsvp-mark"
+        initial={{ scale: 0.4, opacity: 0, rotate: -30 }}
+        animate={{ scale: 1, opacity: 1, rotate: 0, transition: { ...SPRING, bounce: 0.4, delay: 0.08 } }}
+        exit={{ opacity: 0, scale: 0.8, transition: QUICK }}
+      >
+        <HugeiconsIcon icon={result.mark} strokeWidth={2.4} aria-hidden="true" />
+      </motion.span>
+
+      <motion.div className="rsvp-done-head" {...part(0.12)}>
+        <b>{result.title}</b>
+        <span>{result.line}</span>
+      </motion.div>
+
+      <motion.dl className="rsvp-lines" {...part(0.18)}>
+        {lines.map((line, index) => (
+          <Fragment key={line.term}>
+            {index > 0 && <Separator className="rsvp-separator" />}
+            <div>
+              <dt>{line.term}</dt>
+              <dd>{line.detail}</dd>
+            </div>
+          </Fragment>
+        ))}
+      </motion.dl>
+    </>
+  );
+}
+
 export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
   const [face, setFace] = useState<Face>("button");
   const [answer, setAnswer] = useState<Answer>("going");
   const [remind, setRemind] = useState(true);
   const [going, setGoing] = useState(GOING);
   const tray = useRef<HTMLDivElement>(null);
-  const content = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [size, setSize] = useState<{ width: number; height: number } | null>(
-    null,
-  );
-  const result = RESULTS[answer];
+  const [content, size] = useMeasuredSize<HTMLDivElement>();
 
-  useEffect(() => {
-    const element = content.current;
-    if (!element) return;
-    const observer = new ResizeObserver(() =>
-      setSize({ width: element.offsetWidth, height: element.offsetHeight }),
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+  const open = face === "sheet" || face === "saving";
+  const saving = face === "saving";
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -170,10 +302,7 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
     setFace("saving");
     timer.current = setTimeout(() => {
       setFace("done");
-      timer.current = setTimeout(
-        () => setGoing(answer === "going" ? GOING + 1 : GOING),
-        450,
-      );
+      timer.current = setTimeout(() => setGoing(answer === "going" ? GOING + 1 : GOING), 450);
     }, SAVING_FOR);
   };
 
@@ -202,8 +331,6 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
     ],
   ]);
 
-  const open = face === "sheet" || face === "saving";
-
   return (
     <MotionConfig transition={SPRING} reducedMotion="user">
       <Tooltip.Provider delay={250}>
@@ -215,11 +342,7 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
             initial={false}
             animate={
               size
-                ? {
-                    width: size.width,
-                    height: size.height,
-                    borderRadius: face === "button" ? 26 : 28,
-                  }
+                ? { width: size.width, height: size.height, borderRadius: face === "button" ? 26 : 28 }
                 : undefined
             }
           >
@@ -232,178 +355,22 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
                     role="group"
                     aria-label={`RSVP to ${EVENT.name}`}
                   >
-                    <motion.header className="rsvp-head" {...part(0.02)}>
-                      <span className="rsvp-date" aria-hidden="true">
-                        <span>{EVENT.month}</span>
-                        <b>{EVENT.day}</b>
-                      </span>
-                      <span className="rsvp-head-copy">
-                        <b>{EVENT.name}</b>
-                        <span>{EVENT.when}</span>
-                        <span>{EVENT.where}</span>
-                      </span>
-                      <Button
-                        className="rsvp-close"
-                        aria-label="Close"
-                        disabled={face === "saving" || live}
-                        onClick={() => setFace("button")}
-                      >
-                        <HugeiconsIcon
-                          icon={Cancel01Icon}
-                          strokeWidth={2.2}
-                          aria-hidden="true"
-                        />
-                      </Button>
-                    </motion.header>
-
-                    <motion.div className="rsvp-count" {...part(0.05)}>
-                      <span className="rsvp-count-label">
-                        {SPOTS - GOING} spots left
-                        <Tooltip.Root>
-                          <Tooltip.Trigger
-                            className="rsvp-info"
-                            aria-label="About the evening"
-                          >
-                            <HugeiconsIcon
-                              icon={InformationCircleIcon}
-                              strokeWidth={2}
-                              aria-hidden="true"
-                            />
-                          </Tooltip.Trigger>
-                          <Tooltip.Portal>
-                            <Tooltip.Positioner sideOffset={6}>
-                              <Tooltip.Popup className="rsvp-tooltip">
-                                Demo RSVP for the DevCongress December meetup in Ghana. Date, venue, and attendance figures are placeholders.
-                              </Tooltip.Popup>
-                            </Tooltip.Positioner>
-                          </Tooltip.Portal>
-                        </Tooltip.Root>
-                      </span>
-                      <b>{GOING} going</b>
-                    </motion.div>
-
-                    <RadioGroup
-                      className="rsvp-options"
-                      aria-label="Your answer"
-                      value={answer}
-                      disabled={face === "saving"}
-                      onValueChange={(value) => setAnswer(value as Answer)}
-                    >
-                      {OPTIONS.map((option, index) => (
-                        <Radio.Root
-                          key={option.id}
-                          nativeButton
-                          value={option.id}
-                          className="rsvp-option"
-                          render={
-                            <motion.button
-                              type="button"
-                              {...part(0.08 + index * 0.035)}
-                            />
-                          }
-                        >
-                          {answer === option.id && (
-                            <motion.span
-                              layoutId="rsvp-pick"
-                              className="rsvp-pick"
-                            />
-                          )}
-                          <span className="rsvp-option-icon">
-                            <HugeiconsIcon
-                              icon={option.icon}
-                              strokeWidth={1.8}
-                              aria-hidden="true"
-                            />
-                          </span>
-                          <span className="rsvp-option-copy">
-                            <b>{option.label}</b>
-                            <span>{option.detail}</span>
-                          </span>
-                          <Radio.Indicator className="rsvp-radio-dot" />
-                        </Radio.Root>
-                      ))}
-                    </RadioGroup>
-
-                    <Checkbox.Root
-                      nativeButton
-                      className="rsvp-remind"
-                      data-disabled={answer === "no" || undefined}
+                    <SheetHeader closeDisabled={saving || live} onClose={() => setFace("button")} />
+                    <SpotsLeft />
+                    <AnswerOptions answer={answer} disabled={saving} onChange={setAnswer} />
+                    <RemindCheckbox
                       checked={remind && answer !== "no"}
-                      disabled={face === "saving" || answer === "no"}
-                      onCheckedChange={setRemind}
-                      render={<motion.button type="button" {...part(0.2)} />}
-                    >
-                      <span className="rsvp-checkbox-box" aria-hidden="true">
-                      <Checkbox.Indicator className="rsvp-checkbox-mark">
-                        <HugeiconsIcon
-                          icon={Tick02Icon}
-                          strokeWidth={2.6}
-                          aria-hidden="true"
-                        />
-                      </Checkbox.Indicator>
-                      </span>
-                      <span>Remind me an hour before</span>
-                    </Checkbox.Root>
-
+                      disabled={saving || answer === "no"}
+                      dimmed={answer === "no"}
+                      onChange={setRemind}
+                    />
                     <MainButton face={face} onClick={press} />
                   </motion.div>
                 )}
 
                 {face === "done" && (
-                  <motion.div
-                    key="done"
-                    className="rsvp-face rsvp-done"
-                    data-answer={answer}
-                    role="status"
-                  >
-                    <motion.span
-                      className="rsvp-mark"
-                      initial={{ scale: 0.4, opacity: 0, rotate: -30 }}
-                      animate={{
-                        scale: 1,
-                        opacity: 1,
-                        rotate: 0,
-                        transition: { ...SPRING, bounce: 0.4, delay: 0.08 },
-                      }}
-                      exit={{ opacity: 0, scale: 0.8, transition: QUICK }}
-                    >
-                      <HugeiconsIcon
-                        icon={result.mark}
-                        strokeWidth={2.4}
-                        aria-hidden="true"
-                      />
-                    </motion.span>
-                    <motion.div className="rsvp-done-head" {...part(0.12)}>
-                      <b>{result.title}</b>
-                      <span>{result.line}</span>
-                    </motion.div>
-                    <motion.dl className="rsvp-lines" {...part(0.18)}>
-                      <div>
-                        <dt>Event</dt>
-                        <dd>{EVENT.name}</dd>
-                      </div>
-                      <Separator className="rsvp-separator" />
-                      <div>
-                        <dt>When</dt>
-                        <dd>{EVENT.when}</dd>
-                      </div>
-                      <Separator className="rsvp-separator" />
-                      <div>
-                        <dt>Going</dt>
-                        <dd>
-                          <Odometer value={String(going)} />
-                        </dd>
-                      </div>
-                      <Separator className="rsvp-separator" />
-                      <div>
-                        <dt>Reminder</dt>
-                        <dd>
-                          {remind && answer !== "no"
-                            ? "An hour before"
-                            : "None"}
-                        </dd>
-                      </div>
-                    </motion.dl>
+                  <motion.div key="done" className="rsvp-face rsvp-done" data-answer={answer} role="status">
+                    <Summary answer={answer} going={going} reminder={remind && answer !== "no"} />
                     <MainButton face={face} onClick={press} />
                   </motion.div>
                 )}

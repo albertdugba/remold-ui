@@ -259,7 +259,7 @@ describe("pointCloud with scatter", () => {
     const cloud = pointCloud(row(3));
     cloud.to(row(3, 50), { scatter: { seed: 4 } });
     for (let n = 0; n < 10; n++) cloud.step(1 / 60);
-    expect(cloud.heading()).toEqual(row(3, 50));
+    expect(cloud.heading()).toEqual(row(3, 50).map((p) => ({ ...p, z: 0 })));
     const { pairs } = cloud.to(row(3, 50, 11));
     expect(pairs).toEqual([
       [0, 0],
@@ -305,5 +305,71 @@ describe("pointCloud with scatter", () => {
     expect(() => cloud.to(row(2), { scatter: { hold: -1 } })).toThrow(/hold/);
     expect(() => cloud.to(row(2), { scatter: { stagger: Number.NaN } })).toThrow(/stagger/);
     expect(() => cloud.to(row(2), { scatter: { seed: Number.POSITIVE_INFINITY } })).toThrow(/seed/);
+  });
+});
+
+describe("pointCloud with depth", () => {
+  const depths = (cloud: ReturnType<typeof pointCloud>) =>
+    Array.from({ length: cloud.length }, (_, i) => cloud.data[i * STRIDE + 4]!);
+
+  it("treats a missing z as 0", () => {
+    const cloud = pointCloud(row(2));
+    expect(depths(cloud)).toEqual([0, 0]);
+  });
+
+  it("springs each point's z along with it", () => {
+    const cloud = pointCloud([
+      { x: 0, y: 0, z: -10 },
+      { x: 10, y: 0, z: 10 },
+    ]);
+    cloud.to([
+      { x: 0, y: 0, z: 40 },
+      { x: 10, y: 0, z: -40 },
+    ]);
+    cloud.step(1 / 60);
+    const midway = depths(cloud);
+    expect(midway[0]).toBeGreaterThan(-10);
+    expect(midway[1]).toBeLessThan(10);
+    settle(cloud);
+    expect(depths(cloud)).toEqual([40, -40]);
+  });
+
+  it("grows arriving points in from their own depth, shifted by enter.z", () => {
+    const cloud = pointCloud([], { enter: { y: 0, z: 30 } });
+    cloud.to([{ x: 0, y: 0, z: 5 }]);
+    expect(depths(cloud)).toEqual([35]);
+    settle(cloud);
+    expect(depths(cloud)).toEqual([5]);
+  });
+
+  it("keeps a leaving point's depth while it shrinks", () => {
+    const cloud = pointCloud([
+      { x: 0, y: 0, z: 7 },
+      { x: 100, y: 0, z: -7 },
+    ]);
+    cloud.to([{ x: 0, y: 0, z: 7 }]);
+    settle(cloud);
+    cloud.step(1 / 60);
+    expect(cloud.length).toBe(1);
+    expect(depths(cloud)).toEqual([7]);
+  });
+
+  it("scatters a 3D cloud through its depth, and keeps a flat one flat", () => {
+    const deep = pointCloud(row(20).map((p, i) => ({ ...p, z: i % 2 ? 50 : -50 })));
+    deep.to(row(20, 40).map((p, i) => ({ ...p, z: i % 2 ? -50 : 50 })), { scatter: { seed: 9, hold: 1 } });
+    for (let n = 0; n < 30; n++) deep.step(1 / 60);
+    const spread = depths(deep);
+    expect(spread.some((z) => Math.abs(z) < 49)).toBe(true);
+    expect(spread.every((z) => Math.abs(z) <= 50 * 1.35 + 1)).toBe(true);
+
+    const flat = pointCloud(row(20));
+    flat.to(row(20, 40), { scatter: { seed: 9 } });
+    for (let n = 0; n < 30; n++) flat.step(1 / 60);
+    expect(depths(flat).every((z) => z === 0)).toBe(true);
+  });
+
+  it("refuses a z that isn't a finite number", () => {
+    expect(() => pointCloud([{ x: 0, y: 0, z: Number.NaN }])).toThrow(RangeError);
+    expect(() => pointCloud().to([{ x: 0, y: 0, z: Number.POSITIVE_INFINITY }])).toThrow(RangeError);
   });
 });

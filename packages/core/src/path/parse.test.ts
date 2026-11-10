@@ -107,6 +107,30 @@ describe("parsePath: curves", () => {
   });
 });
 
+describe("parsePath: the rest of the grammar", () => {
+  it("reads nothing as no commands, and commas as spaces", () => {
+    expect(parsePath("")).toEqual([]);
+    expect(parsePath("M1,2,L3,4")).toEqual([
+      { type: "M", x: 1, y: 2 },
+      { type: "L", x: 3, y: 4 },
+    ]);
+  });
+  it("treats pairs after a relative move as relative lines", () => {
+    expect(parsePath("m5 5 1 0 0 1")).toEqual([
+      { type: "M", x: 5, y: 5 },
+      { type: "L", x: 6, y: 5 },
+      { type: "L", x: 6, y: 6 },
+    ]);
+  });
+  it("puts T's handle on the pen when no quadratic came before, and repeats curves", () => {
+    expect(parsePath("M0 0 T10 0")[1]).toEqual({ type: "Q", x1: 0, y1: 0, x: 10, y: 0 });
+    expect(parsePath("M0 0 c1 1 2 1 3 0 1 1 2 1 3 0").slice(1)).toEqual([
+      { type: "C", x1: 1, y1: 1, x2: 2, y2: 1, x: 3, y: 0 },
+      { type: "C", x1: 4, y1: 1, x2: 5, y2: 1, x: 6, y: 0 },
+    ]);
+  });
+});
+
 describe("parsePath: error messages", () => {
   it("point at the character where things went wrong", () => {
     expect(() => parsePath("M10 10 L20")).toThrow("expected a number at the end");

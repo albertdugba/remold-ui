@@ -1,6 +1,6 @@
 "use client";
 import type { Point } from "@remold-ui/core";
-import { Remold, type ParticleShape } from "@remold-ui/react";
+import { Remold, type ParticleShape } from "@remold-ui/react/canvas";
 import { useEffect, useRef, useState } from "react";
 import { Frame, Segmented } from "./frame";
 import "./particles.css";
@@ -33,8 +33,7 @@ function bars(): Point[] {
   const count = 12;
   const raw = Array.from(
     { length: count },
-    (_, index) =>
-      0.2 + 0.8 * Math.abs(Math.sin(index * 1.7 + Math.random() * 3)) * Math.random(),
+    (_, index) => 0.2 + 0.8 * Math.abs(Math.sin(index * 1.7 + Math.random() * 3)) * Math.random(),
   );
   const top = Math.max(...raw);
   const points: Point[] = [];
@@ -54,21 +53,12 @@ function bars(): Point[] {
 }
 
 function snowflake(): string {
-  const bar = (
-    fromX: number,
-    fromY: number,
-    angle: number,
-    length: number,
-    half: number,
-  ) => {
+  const bar = (fromX: number, fromY: number, angle: number, length: number, half: number) => {
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     const at = (along: number, across: number) =>
       `${(50 + fromX + along * cos - across * sin).toFixed(2)} ${(
-        50 +
-        fromY +
-        along * sin +
-        across * cos
+        50 + fromY + along * sin + across * cos
       ).toFixed(2)}`;
     return `M${at(0, -half)}L${at(length, -half)}L${at(length, half)}L${at(0, half)}Z`;
   };
@@ -87,9 +77,7 @@ function snowflake(): string {
       const x = Math.cos(angle) * distance;
       const y = Math.sin(angle) * distance;
 
-      path +=
-        bar(x, y, angle + Math.PI / 4, length, 2.4) +
-        bar(x, y, angle - Math.PI / 4, length, 2.4);
+      path += bar(x, y, angle + Math.PI / 4, length, 2.4) + bar(x, y, angle - Math.PI / 4, length, 2.4);
     }
   }
 
@@ -156,16 +144,9 @@ const BEAT = 900;
 
 const BOUNCE = 420;
 
-export function ParticlesDemo({
-  framed = true,
-  index,
-}: {
-  framed?: boolean;
-  index?: number;
-}) {
+export function ParticlesDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [choice, setChoice] = useState<Choice>("Text");
-  // Scatter dissolves each shape into a glittering cloud before it gathers into the next.
   const [motion, setMotion] = useState<"Scatter" | "Direct">("Scatter");
   const [frame, setFrame] = useState({
     name: "Text",
@@ -208,9 +189,7 @@ export function ParticlesDemo({
 
     show(frames[0]!);
 
-    const timers = frames
-      .slice(1)
-      .map((name, step) => setTimeout(() => show(name), BEAT * (step + 1)));
+    const timers = frames.slice(1).map((name, step) => setTimeout(() => show(name), BEAT * (step + 1)));
 
     let bounce: ReturnType<typeof setInterval> | undefined;
 
@@ -228,16 +207,11 @@ export function ParticlesDemo({
     };
   }, [choice, driven]);
 
-  const imageCount = Math.min(
-    MAX_IMAGE_COUNT,
-    Math.max(1200, Math.round(stageWidth ** 2 / 100)),
-  );
+  const imageCount = Math.min(MAX_IMAGE_COUNT, Math.max(1200, Math.round(stageWidth ** 2 / 100)));
   const body = (
     <div ref={containerRef} className="rm-particles">
       <Remold.Particles
-        className={`rm-particles-canvas${
-          frame.name === "Image" ? " rm-particles-canvas--image" : ""
-        }`}
+        className={`rm-particles-canvas${frame.name === "Image" ? " rm-particles-canvas--image" : ""}`}
         shape={frame.shape}
         label={FRAMES[frame.name]!.label}
         count={frame.name === "Image" ? imageCount : COUNT}
@@ -245,21 +219,12 @@ export function ParticlesDemo({
         palette={framed ? DEMO_PALETTE : HOME_PALETTE}
         padding={20}
         pairing={frame.beat ? "index" : "match"}
-        // The equaliser's beats stay direct: scattering on every beat would never let it settle.
         transition={motion === "Scatter" && !frame.beat ? "scatter" : "direct"}
       />
       {frame.name === "Image" && index === undefined && (
         <div className="rm-particles-image-source">
-          <img
-            src={JACKET_IMAGE}
-            alt="Olive field jacket source photograph"
-            width={48}
-            height={48}
-          />
-          <span>
-            {imageCount.toLocaleString()} halftone dots sampled from the field
-            jacket photograph
-          </span>
+          <img src={JACKET_IMAGE} alt="Olive field jacket source photograph" width={48} height={48} />
+          <span>{imageCount.toLocaleString()} halftone dots sampled from the field jacket photograph</span>
         </div>
       )}
       {index === undefined && (

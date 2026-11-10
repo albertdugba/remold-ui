@@ -1,0 +1,88 @@
+/* The voice assistant: an orb of dots on a dark stage, what it's doing under it, and the mic. */
+.vas-stage {
+  display: grid;
+  width: 100%;
+}
+
+.vas {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 20px 24px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: radial-gradient(90% 70% at 50% 35%, #111a33 0%, #07080d 70%);
+  color: #f8fafc;
+  text-align: center;
+}
+
+.vas-orb {
+  display: block;
+  width: min(100%, 420px);
+  height: 320px;
+}
+
+.vas-copy {
+  display: grid;
+  gap: 6px;
+  min-height: 64px;
+}
+
+.vas-status {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.vas-caption {
+  max-width: 34ch;
+  margin: 0;
+  color: rgb(248 250 252 / 0.6);
+  font-size: 14.5px;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.vas-mic {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-top: 10px;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.06);
+  color: #f8fafc;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    transform 160ms ease-out;
+}
+
+.vas-mic[data-pressed] {
+  border-color: transparent;
+  background: #2563eb;
+}
+
+.vas-mic:active {
+  transform: scale(0.95);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .vas-mic:not([data-pressed]):hover {
+    background: rgb(255 255 255 / 0.12);
+  }
+}
+
+.vas-mic:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 0.8);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vas-mic {
+    transition: none;
+  }
+}

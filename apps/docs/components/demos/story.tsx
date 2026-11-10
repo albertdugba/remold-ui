@@ -1,5 +1,5 @@
 "use client";
-import { Remold } from "@remold-ui/react";
+import { Remold } from "@remold-ui/react/canvas";
 import { useState } from "react";
 import { Frame } from "./frame";
 import { SCENE } from "./scene";

@@ -1,42 +1,44 @@
 ---
 title: "Introduction"
-description: "Remold animates interface changes without asking you to label anything."
+description: "Animated React components you copy into your app, and the small engine that morphs them."
 ---
 
-Remold is a motion toolkit for interfaces that change. It helps a product feel continuous when content is reordered, filtered, replaced, or moves between states.
+Remold UI is an open-source library of animated React components, and the engine underneath them. Copy a component into your app, or use the engine to animate changes in your own interface.
 
-When an update happens, Remold compares the previous UI with the next one, finds the elements that correspond, and carries them into their new position with spring motion. You keep rendering your interface normally; Remold handles the transition between its states.
+## What is this?
 
-## The problem it solves
+Two things that work together.
 
-Most interfaces are made from repeated changes: a user sorts a list, applies a filter, opens a detail view, receives fresh data, or switches context. Without a transition, the old interface disappears and the next one arrives abruptly.
+**Components** for the screens you actually ship: inputs, menus, checkouts, dashboards, chat and more. Each one solves a specific product problem and animates only the change that matters. They're built on [Base UI](https://base-ui.com) for behaviour and accessibility, and animated with [Motion](https://motion.dev) and Remold.
 
-Many animation tools require you to explicitly pair those states with identifiers such as `layoutId` or `view-transition-name`. That can be useful, but it becomes fragile when the markup is rebuilt by a server response, a different component, or generated content. Remold matches elements from what is on screen—their content, geometry, and surroundings—so it can animate changes without adding animation-only labels to every element.
+**The engine** that animates change. When your interface updates, Remold compares what was on screen with what's next, finds the elements that correspond, and springs each one into its new place. It works across layouts, text, SVG paths and canvas, including thousands of particles in 3D.
 
-## How to use it
+## No animation IDs
 
-Start with the smallest surface that changes, then choose the primitive that describes that change.
+Most animation tools need you to pair states by hand, with `layoutId` or `view-transition-name`. Remold matches elements by their content, geometry and surroundings instead, so it keeps working when the markup is rebuilt by a server response, another component or generated content. You render your interface normally.
 
-1. Use [Layout](/docs/primitives/layout) for lists, grids, panels, and route-like changes.
-2. Use [Text](/docs/primitives/text), [Icon](/docs/primitives/icon), or [PathGroup](/docs/primitives/path-group) when the content itself changes shape.
-3. Use [Scene](/docs/primitives/scene), [Particles](/docs/primitives/particles), or [Canvas](/docs/primitives/canvas) for a visual system that belongs on a canvas.
-4. Choose spring settings and respect user preferences with the [motion](/docs/core/motion) and [accessibility](/docs/concepts/accessibility) guides.
+## Any framework
 
-For React, wrap the changing region or use a hook around an event-driven update. For any other framework—or plain JavaScript—run the update inside a DOM transition. The [Quick start](/docs/quick-start) shows both paths.
+React gets components and hooks from `@remold-ui/react`. Everywhere else, `@remold-ui/dom` animates any element from plain JavaScript, so it works with Vue, Svelte, Astro or a server-rendered page. `@remold-ui/canvas` draws scenes and particles, and `@remold-ui/core` is the matching and spring maths on its own, with no DOM at all.
 
-## What is included
+## You own the code
 
-- `@remold-ui/react` for React interface components and hooks.
-- `@remold-ui/react/canvas` for opt-in React canvas components and hooks.
-- `@remold-ui/dom` for transitions on ordinary DOM elements, with any framework or none.
-- `@remold-ui/canvas` for scenes, particles, and canvas rendering.
-- `@remold-ui/core` for matching, springs, and shape morphing without the DOM.
+Components are distributed through a [shadcn registry](/docs/registry). Installing one drops its source and CSS into your project, where you can read it, change it and version it like anything else you wrote. The engine is a normal package you update when you choose.
 
-## A good first path
+## Accessible by default
 
-1. [Install Remold](/docs/installation).
-2. Follow the [Quick start](/docs/quick-start) for the React or JavaScript integration that fits your project.
-3. Read [how matching works](/docs/concepts/matching) before tuning a complex transition.
-4. Browse [components](/docs/components) for copyable patterns, or [primitives](/docs/primitives) to build your own.
+Remold follows the system's reduced-motion setting: changes happen at once instead of animating. Morphing text stays real text for screen readers, and focus stays on the element you were on when it's replaced.
 
-Remold is designed to be incremental: begin with one change that currently feels abrupt, then add motion only where it improves clarity.
+## Next steps
+
+<Cards>
+  <Card title="Installation" href="/docs/installation">
+    Requirements, the CLI, and installing the engine.
+  </Card>
+  <Card title="Quick start" href="/docs/quick-start">
+    Animate a list that sorts and filters, in a few lines.
+  </Card>
+  <Card title="Components" href="/docs/components">
+    Every component, live, ready to copy.
+  </Card>
+</Cards>

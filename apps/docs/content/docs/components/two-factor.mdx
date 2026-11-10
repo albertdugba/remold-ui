@@ -2,7 +2,7 @@
 title: "Two-factor setup"
 description: "A setting that opens a QR code and code field in place, moves the rows below out of the way, and folds back to one line once it's on."
 status: "new"
-tags: ["Layout"]
+tags: ["Base UI", "Motion"]
 ---
 
 <Stage name="two-factor" code={<Source demo="two-factor" />}>
@@ -25,7 +25,8 @@ tags: ["Layout"]
 
 ## How it works
 
-- One [Layout](/docs/primitives/layout) wraps the panel. Opening the setup adds it to the flow; Layout fades it in and moves the row below to its new place in the same motion. Accepting the code removes it, and everything closes up.
-- Each switch's knob sits at the start or the end of its track, so flipping it is a layout change as well.
+- **The setup unfolds by its height.** Motion springs it from nothing to its natural height with just a touch of give, so "Sign-in alerts" is pushed down smoothly rather than jumping. What's inside fades in once there's room for it. Closing runs the other way: the contents fade out first, and only then does the box fold, so its shrinking edge never cuts through the code or the QR. The box only ever changes height, so no words stretch.
+- **The status line swaps in place.** "Ask for a code when signing in" lifts away as "On · Authenticator app" settles in.
+- **The switches slide.** Each knob is a Base UI Switch thumb that Motion springs along its track, so it slides to the other end instead of jumping there, and the track's colour fades with it.
 - The code boxes sit over one real input, so typing, pasting and one-time-code autofill all work as usual.
 - The QR code is drawn. Put your real one in its place.

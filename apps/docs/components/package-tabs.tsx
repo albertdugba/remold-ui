@@ -3,8 +3,7 @@
  * One command, shown for npm, pnpm, yarn or bun, with a copy button. The chosen package manager
  * is shared by every block on the page and remembered for next time.
  */
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
-import { FrameworkMenu } from "./framework";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Code } from "./code";
 
 export const MANAGERS = ["npm", "pnpm", "yarn", "bun"] as const;
@@ -43,11 +42,9 @@ const subscribe = (listener: () => void) => {
 export function PackageTabs({
   commands,
   label = "Package manager",
-  menu,
 }: {
   commands: Record<Manager, string>;
   label?: string;
-  menu?: ReactNode;
 }) {
   const manager = useSyncExternalStore(subscribe, read, () => "npm" as Manager);
   const [copied, setCopied] = useState(false);
@@ -62,36 +59,32 @@ export function PackageTabs({
             </button>
           ))}
         </div>
-        <span className="flex items-center gap-1">
-          {menu}
-          <button
-            type="button"
-            className="rm-pm-copy"
-            aria-label="Copy command"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(command);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1500);
-              } catch {
-                // Clipboard blocked: the command can still be selected by hand.
-              }
-            }}
-          >
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </span>
+        <button
+          type="button"
+          className="rm-pm-copy"
+          aria-label="Copy command"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(command);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            } catch {
+              // Clipboard blocked: the command can still be selected by hand.
+            }
+          }}
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
       </div>
       <Code code={command} lang="bash" bare />
     </div>
   );
 }
 
-/** `npm install <packages>` and the same for the other managers. Other frameworks are listed as coming soon. */
+/** `npm install <packages>` and the same for the other managers. */
 export function Install({ packages }: { packages: string }) {
   return (
     <PackageTabs
-      menu={<FrameworkMenu available={["react"]} />}
       commands={{
         npm: `npm install ${packages}`,
         pnpm: `pnpm add ${packages}`,
@@ -109,8 +102,6 @@ export function AddCommand({ name }: { name: string }) {
   const url = `${origin}/r/${name}.json`;
   return (
     <PackageTabs
-      // The registry has React components; other frameworks are coming.
-      menu={<FrameworkMenu available={["react"]} />}
       commands={{
         npm: `npx shadcn@latest add ${url}`,
         pnpm: `pnpm dlx shadcn@latest add ${url}`,

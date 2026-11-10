@@ -2,7 +2,7 @@
 
 import type { PainterFrame } from "@remold-ui/canvas";
 import { deceleration, project, velocityTracker } from "@remold-ui/core";
-import { Remold } from "@remold-ui/react";
+import { Remold } from "@remold-ui/react/canvas";
 import { useMemo, useRef, useState, type PointerEvent } from "react";
 
 const LAND: [number, [number, number][]][] = [
@@ -139,8 +139,7 @@ const DOTS = (() => {
     const below = LAND[i + 1];
     for (let lon = -180 + STEP / 2; lon < 180; lon += STEP) {
       if (onLand(ranges, lon)) dots.push({ lat, lon });
-      if (below && onLand(ranges, lon) && onLand(below[1], lon))
-        dots.push({ lat: lat - STEP, lon });
+      if (below && onLand(ranges, lon) && onLand(below[1], lon)) dots.push({ lat: lat - STEP, lon });
     }
   }
   return dots;
@@ -149,13 +148,10 @@ const DOTS = (() => {
 const RADIANS = Math.PI / 180;
 const TILT = 18 * RADIANS;
 
-const SIN_LAT = Float64Array.from(DOTS, (d) => Math.sin(d.lat * RADIANS));
-const COS_LAT = Float64Array.from(DOTS, (d) => Math.cos(d.lat * RADIANS));
+const SIN_LAT = Float64Array.from(DOTS, (dot) => Math.sin(dot.lat * RADIANS));
+const COS_LAT = Float64Array.from(DOTS, (dot) => Math.cos(dot.lat * RADIANS));
 
-const SHADES = Array.from(
-  { length: 12 },
-  (_, index) => `rgba(140, 200, 255, ${(index / 11).toFixed(3)})`,
-);
+const SHADES = Array.from({ length: 12 }, (_, index) => `rgba(140, 200, 255, ${(index / 11).toFixed(3)})`);
 
 const VIEWS: [string, number | null][] = [
   ["World map", null],
@@ -176,13 +172,7 @@ const SPRINGS = {
   turn: { duration: 1, bounce: 0.15 },
 };
 
-export function WorldDemo({
-  index = 0,
-  onInteract,
-}: {
-  index?: number;
-  onInteract?: () => void;
-}) {
+export function WorldDemo({ index = 0, onInteract }: { index?: number; onInteract?: () => void }) {
   const view = index % VIEWS.length;
   const [name, facing] = VIEWS[view]!;
   const actions = useRef<Remold.CanvasActions<World>>(null);
@@ -203,18 +193,18 @@ export function WorldDemo({
 
   const draw = (
     ctx: CanvasRenderingContext2D,
-    { width, height, values: v, dt, still }: PainterFrame<World>,
+    { width, height, values: frame, dt, still }: PainterFrame<World>,
   ) => {
     if (view === 1 && !dragging && !still) spin.current += 14 * dt;
-    const g = v.globe;
-    const longitude = v.turn + spin.current;
+    const globeAmount = frame.globe;
+    const longitude = frame.turn + spin.current;
     const cx = width / 2;
     const cy = height / 2;
     const mapWidth = Math.min(width * 0.94, height * 1.9);
     const radius = Math.min(width, height) * 0.42;
     const λ0 = longitude * RADIANS;
 
-    if (g > 0.01) {
+    if (globeAmount > 0.01) {
       const sea = ctx.createRadialGradient(
         cx - radius * 0.35,
         cy - radius * 0.4,
@@ -223,11 +213,11 @@ export function WorldDemo({
         cy,
         radius,
       );
-      sea.addColorStop(0, `rgba(80, 120, 255, ${0.28 * g})`);
-      sea.addColorStop(1, `rgba(30, 40, 110, ${0.18 * g})`);
+      sea.addColorStop(0, `rgba(80, 120, 255, ${0.28 * globeAmount})`);
+      sea.addColorStop(1, `rgba(30, 40, 110, ${0.18 * globeAmount})`);
       ctx.fillStyle = sea;
       ctx.beginPath();
-      ctx.arc(cx, cy, radius * (0.6 + 0.4 * g), 0, Math.PI * 2);
+      ctx.arc(cx, cy, radius * (0.6 + 0.4 * globeAmount), 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -235,10 +225,10 @@ export function WorldDemo({
     const groups = Array.from({ length: SHADES.length }, () => new Path2D());
     const sinT = Math.sin(TILT);
     const cosT = Math.cos(TILT);
-    for (let k = 0; k < DOTS.length; k++) {
-      const { lat, lon } = DOTS[k]!;
-      const sinφ = SIN_LAT[k]!;
-      const cosφ = COS_LAT[k]!;
+    for (let dot = 0; dot < DOTS.length; dot++) {
+      const { lat, lon } = DOTS[dot]!;
+      const sinφ = SIN_LAT[dot]!;
+      const cosφ = COS_LAT[dot]!;
       const λ = lon * RADIANS - λ0;
       const cosλ = Math.cos(λ);
       const facingYou = sinT * sinφ + cosT * cosφ * cosλ;
@@ -249,15 +239,12 @@ export function WorldDemo({
       const globeY = cy - radius * (cosT * sinφ - sinT * cosφ * cosλ);
 
       const depth = facingYou > 0 ? 0.35 + 0.65 * facingYou : 0;
-      const alpha = 1 - g + g * depth;
+      const alpha = 1 - globeAmount + globeAmount * depth;
       if (alpha < 0.02) continue;
-      const size = (1 - g) * 1.7 + g * (0.6 + 1.6 * depth);
-      const x = mapX + (globeX - mapX) * g;
-      const y = mapY + (globeY - mapY) * g;
-      const path =
-        groups[
-          Math.min(SHADES.length - 1, Math.round(alpha * (SHADES.length - 1)))
-        ]!;
+      const size = (1 - globeAmount) * 1.7 + globeAmount * (0.6 + 1.6 * depth);
+      const x = mapX + (globeX - mapX) * globeAmount;
+      const y = mapY + (globeY - mapY) * globeAmount;
+      const path = groups[Math.min(SHADES.length - 1, Math.round(alpha * (SHADES.length - 1)))]!;
       path.moveTo(x + size, y);
       path.arc(x, y, size, 0, Math.PI * 2);
     }
@@ -277,30 +264,30 @@ export function WorldDemo({
     tracker.current.add(event.timeStamp, from);
   };
   const move = (event: PointerEvent<HTMLCanvasElement>) => {
-    const d = drag.current;
-    if (!d) return;
-    const dx = event.clientX - d.x;
-    if (!d.moved) {
+    const gesture = drag.current;
+    if (!gesture) return;
+    const dx = event.clientX - gesture.x;
+    if (!gesture.moved) {
       if (Math.abs(dx) < DRAG) return;
-      d.moved = true;
+      gesture.moved = true;
       event.currentTarget.setPointerCapture?.(event.pointerId);
       setDragging(true);
       onInteract?.();
     }
-    const next = d.turn - dx * DEGREES_PER_PIXEL;
-    actions.current?.set({ turn: next });
-    tracker.current.add(event.timeStamp, next);
+    const turn = gesture.turn - dx * DEGREES_PER_PIXEL;
+    actions.current?.set({ turn });
+    tracker.current.add(event.timeStamp, turn);
   };
   const up = () => {
-    const d = drag.current;
+    const gesture = drag.current;
     drag.current = null;
-    if (!d?.moved) return;
+    if (!gesture?.moved) return;
     setDragging(false);
-    const a = actions.current;
-    if (!a) return;
-    const velocity = a.still ? 0 : tracker.current.velocity(performance.now());
-    aim.current = a.values.turn + project(velocity, deceleration.fast);
-    a.to({ turn: aim.current }, { velocity: { turn: velocity } });
+    const painter = actions.current;
+    if (!painter) return;
+    const velocity = painter.still ? 0 : tracker.current.velocity(performance.now());
+    aim.current = painter.values.turn + project(velocity, deceleration.fast);
+    painter.to({ turn: aim.current }, { velocity: { turn: velocity } });
   };
 
   return (

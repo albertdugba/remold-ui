@@ -1,7 +1,14 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CancelCircleIcon, Loading03Icon, MailOpen01Icon, MailRemove01Icon, MailValidation01Icon, CheckIcon } from "@hugeicons/core-free-icons";
+import {
+  CancelCircleIcon,
+  Loading03Icon,
+  MailOpen01Icon,
+  MailRemove01Icon,
+  MailValidation01Icon,
+  CheckIcon,
+} from "@hugeicons/core-free-icons";
 import { Remold, useAutoplay } from "@remold-ui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -49,7 +56,7 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
   const autoplay = useAutoplay(STEPS.length, {
     every: (index) => STEPS[index]!.ms,
     stopOnInteraction: playing === undefined,
-    autoStart: playing !== undefined,
+    autoStart: Boolean(playing),
   });
   const { step, playing: live, setPlaying } = autoplay;
 
@@ -77,10 +84,7 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
 
   useEffect(() => {
     if (phase !== "verifying") return;
-    const timer = setTimeout(
-      () => setPhase(code === CODE ? "verified" : "error"),
-      CHECKING,
-    );
+    const timer = setTimeout(() => setPhase(code === CODE ? "verified" : "error"), CHECKING);
     return () => clearTimeout(timer);
   }, [code, phase]);
 
@@ -92,21 +96,18 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
   const entering = phase === "entry";
   const verified = phase === "verified";
   const failed = phase === "error";
-  // A wrong code leaves the digits in the cells to be corrected, so the field stays editable.
   const editable = entering || failed;
-  // Once the code is in, the row of cells becomes a pill holding the result.
   const pill = phase === "verifying" || verified;
 
   return (
-    <section
-      ref={autoplay.ref}
-      className="otp not-prose"
-      data-phase={phase}
-      aria-label="Verify your email"
-    >
+    <section ref={autoplay.ref} className="otp not-prose" data-phase={phase} aria-label="Verify your email">
       <span className="otp-badge" aria-hidden="true">
         <Remold.Icon
-          icon={<HugeiconsIcon icon={verified ? MailValidation01Icon : failed ? MailRemove01Icon : MailOpen01Icon} />}
+          icon={
+            <HugeiconsIcon
+              icon={verified ? MailValidation01Icon : failed ? MailRemove01Icon : MailOpen01Icon}
+            />
+          }
           fill="none"
           stroke="currentColor"
           strokeWidth={1.75}
@@ -120,30 +121,44 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
       </p>
 
       <motion.div layout transition={SPRING} className="otp-stage">
-        {/* The field morphs between the row of cells and the pill; its radius animates with it. */}
-        <motion.div layout className="otp-field" initial={false} animate={{ borderRadius: pill ? 26 : 14 }} transition={SPRING}>
+        <motion.div
+          layout
+          className="otp-field"
+          initial={false}
+          animate={{ borderRadius: pill ? 26 : 14 }}
+          transition={SPRING}
+        >
           <CodeField
             className="otp-cells"
             value={code}
             onChange={(next) => {
               setCode(next);
-              // Correcting a wrong code clears the red.
               if (failed) setPhase("entry");
             }}
             disabled={!editable}
             invalid={failed}
             inputRef={input}
             describedBy="otp-copy"
-            // After a wrong code, clicking in selects it all, so typing starts a fresh one.
             onFocus={(event) => failed && event.currentTarget.select()}
           />
-          {/* Centred in the field even while hidden, so it fades in where it lands instead of travelling. */}
           <motion.span layout className="otp-result" role="status" aria-live="polite" transition={SPRING}>
-            {verified ? <HugeiconsIcon icon={CheckIcon} className="otp-icon" aria-hidden="true" /> : failed ? <HugeiconsIcon icon={CancelCircleIcon} className="otp-icon" aria-hidden="true" /> : <HugeiconsIcon icon={Loading03Icon} className="otp-icon" aria-hidden="true" />}
-            {/* No word while typing, so nothing has to leave (and close its gap) as the pill forms. */}
+            {verified ? (
+              <HugeiconsIcon icon={CheckIcon} className="otp-icon" aria-hidden="true" />
+            ) : failed ? (
+              <HugeiconsIcon icon={CancelCircleIcon} className="otp-icon" aria-hidden="true" />
+            ) : (
+              <HugeiconsIcon icon={Loading03Icon} className="otp-icon" aria-hidden="true" />
+            )}
             <AnimatePresence mode="popLayout" initial={false}>
               {!entering && (
-                <motion.span key={phase} className="otp-word" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={SPRING}>
+                <motion.span
+                  key={phase}
+                  className="otp-word"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={SPRING}
+                >
                   {verified ? "Verified" : failed ? "Try again" : "Verifying"}
                 </motion.span>
               )}
@@ -152,19 +167,8 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
         </motion.div>
       </motion.div>
 
-      <button
-        type="button"
-        className="otp-foot"
-        disabled={phase === "verifying"}
-        onClick={startOver}
-      >
-        <span>
-          {verified
-            ? "Use another code"
-            : failed
-            ? "Try another code"
-            : "Resend code"}
-        </span>
+      <button type="button" className="otp-foot" disabled={phase === "verifying"} onClick={startOver}>
+        <span>{verified ? "Use another code" : failed ? "Try another code" : "Resend code"}</span>
       </button>
     </section>
   );

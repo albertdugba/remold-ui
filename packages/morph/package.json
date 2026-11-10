@@ -31,8 +31,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean --treeshake --splitting",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch --treeshake --splitting",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo",
     "test": "vitest run"

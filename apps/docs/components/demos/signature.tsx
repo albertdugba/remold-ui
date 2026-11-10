@@ -3,9 +3,10 @@
 import { Remold } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
-import { useRef, useState, type PointerEvent } from "react";
+import { useRef, useState, type PointerEvent, type Ref } from "react";
 import { Frame } from "./frame";
 import { SCRIPT } from "./signature-glyphs";
+import { useControllableState, type ChangeDetails } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 import "./signature.css";
 
@@ -22,7 +23,7 @@ interface Point {
 
 type Mode = "draw" | "type";
 
-interface State {
+export interface SignatureValue {
   mode: Mode;
   strokes: readonly (readonly Point[])[];
   name: string;
@@ -49,13 +50,13 @@ function smooth(points: readonly Point[]): Point[] {
   return out;
 }
 
-const r1 = (n: number) => Math.round(n * 10) / 10;
+const roundTenth = (value: number) => Math.round(value * 10) / 10;
 
 function thin(points: readonly Point[], gap = 2): Point[] {
   const out: Point[] = [];
-  for (const p of points) {
+  for (const point of points) {
     const last = out[out.length - 1];
-    if (!last || Math.hypot(p.x - last.x, p.y - last.y) >= gap) out.push(p);
+    if (!last || Math.hypot(point.x - last.x, point.y - last.y) >= gap) out.push(point);
   }
   const end = points[points.length - 1];
   if (end && out[out.length - 1] !== end) out.push(end);
@@ -67,7 +68,7 @@ function inkOutline(raw: readonly Point[], rough = true): string {
   if (points.length === 0) return "";
   if (points.length === 1) {
     const { x, y } = points[0]!;
-    return `M${r1(x - 1.6)} ${r1(y)}a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0Z`;
+    return `M${roundTenth(x - 1.6)} ${roundTenth(y)}a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0Z`;
   }
   const widths: number[] = [];
   let width = 2.2;
@@ -90,31 +91,28 @@ function inkOutline(raw: readonly Point[], rough = true): string {
     const nx = -(b.y - a.y) / length;
     const ny = (b.x - a.x) / length;
     const half = widths[i]! / 2;
-    const p = points[i]!;
-    left.push(`${r1(p.x + nx * half)} ${r1(p.y + ny * half)}`);
-    right.push(`${r1(p.x - nx * half)} ${r1(p.y - ny * half)}`);
+    const point = points[i]!;
+    left.push(`${roundTenth(point.x + nx * half)} ${roundTenth(point.y + ny * half)}`);
+    right.push(`${roundTenth(point.x - nx * half)} ${roundTenth(point.y - ny * half)}`);
   }
   return `M${left.join("L")}L${right.reverse().join("L")}Z`;
 }
 
-const inkOf = (strokes: State["strokes"]) =>
+const inkOf = (strokes: SignatureValue["strokes"]) =>
   strokes.map((stroke) => inkOutline(stroke, !SMOOTH.has(stroke))).join("");
 
 const glyphs = SCRIPT.glyphs as Record<string, { d: string; adv: number }>;
 const kerning = SCRIPT.kern as Record<string, number>;
 
-function place(d: string, scale: number, dx: number, dy: number): string {
+function place(path: string, scale: number, dx: number, dy: number): string {
   let axis = 0;
-  return d.replace(/[MLQCZ]|-?\d*\.?\d+/g, (token) => {
+  return path.replace(/[MLQCZ]|-?\d*\.?\d+/g, (token) => {
     if (/[MLQCZ]/.test(token)) {
       axis = 0;
       return token;
     }
-    const value =
-      axis++ % 2 === 0
-        ? Number(token) * scale + dx
-        : Number(token) * scale + dy;
-    return ` ${r1(value)}`;
+    const value = axis++ % 2 === 0 ? Number(token) * scale + dx : Number(token) * scale + dy;
+    return ` ${roundTenth(value)}`;
   });
 }
 
@@ -123,19 +121,16 @@ function typed(name: string): string {
   if (!text.length) return "";
   let width = 0;
   const at: number[] = [];
-  text.forEach((ch, index) => {
+  text.forEach((character, index) => {
     at.push(width);
     width +=
-      glyphs[ch]!.adv +
-      (index < text.length - 1 ? kerning[ch + text[index + 1]] ?? 0 : 0);
+      glyphs[character]!.adv + (index < text.length - 1 ? (kerning[character + text[index + 1]] ?? 0) : 0);
   });
   const scale = Math.min(0.068, (W - 48) / width);
   const dx = (W - width * scale) / 2;
   return text
-    .map((ch, index) =>
-      glyphs[ch]!.d
-        ? place(glyphs[ch]!.d, scale, dx + at[index]! * scale, BASELINE)
-        : "",
+    .map((character, index) =>
+      glyphs[character]!.d ? place(glyphs[character]!.d, scale, dx + at[index]! * scale, BASELINE) : "",
     )
     .join("");
 }
@@ -252,19 +247,12 @@ function signed(): Point[][] {
         const u3 = u2 * u;
 
         const along = (a: number, b: number, c: number, d: number) =>
-          0.5 *
-          (2 * b +
-            (c - a) * u +
-            (2 * a - 5 * b + 4 * c - d) * u2 +
-            (3 * b - a - 3 * c + d) * u3);
-        line.push([
-          along(p0[0], p1[0], p2[0], p3[0]),
-          along(p0[1], p1[1], p2[1], p3[1]),
-        ]);
+          0.5 * (2 * b + (c - a) * u + (2 * a - 5 * b + 4 * c - d) * u2 + (3 * b - a - 3 * c + d) * u3);
+        line.push([along(p0[0], p1[0], p2[0], p3[0]), along(p0[1], p1[1], p2[1], p3[1])]);
       }
     }
     line.push(points[points.length - 1]!);
-    let t = 0;
+    let elapsed = 0;
     return line.map(([x, y], index) => {
       if (index > 0) {
         const [px, py] = line[index - 1]!;
@@ -273,12 +261,11 @@ function signed(): Point[][] {
           1 -
           Math.abs(
             ((x - px) * (nx - x) + (y - py) * (ny - y)) /
-              ((Math.hypot(x - px, y - py) || 1) *
-                (Math.hypot(nx - x, ny - y) || 1)),
+              ((Math.hypot(x - px, y - py) || 1) * (Math.hypot(nx - x, ny - y) || 1)),
           );
-        t += Math.hypot(x - px, y - py) / (1.3 - 0.9 * Math.min(1, turn * 2));
+        elapsed += Math.hypot(x - px, y - py) / (1.3 - 0.9 * Math.min(1, turn * 2));
       }
-      return { x, y, t };
+      return { x, y, t: elapsed };
     });
   });
 }
@@ -286,39 +273,38 @@ function signed(): Point[][] {
 const SIGNED = signed();
 
 const SMOOTH = new WeakSet<readonly Point[]>(SIGNED);
-
-const BEATS: readonly { mode: Mode; ms: number }[] = [
-  { mode: "draw", ms: 2400 },
-  { mode: "type", ms: 2600 },
-];
-
 const NAME = "Akua Asante";
-const fromBeat = (step: number): State => ({
-  mode: BEATS[step]!.mode,
-  strokes: SIGNED,
-  name: NAME,
-});
 
 const SPRING = { duration: 0.9, bounce: 0 };
 
-interface SignatureDemoProps {
-  framed?: boolean;
-
-  playing?: boolean;
+export interface SignatureProps {
+  /** Whether it's drawn or typed, the drawn strokes, and the typed name. */
+  value?: SignatureValue;
+  defaultValue?: SignatureValue;
+  onValueChange?: (value: SignatureValue, details: ChangeDetails) => void;
+  /** Starting a stroke clears what's on the pad first, as when it shows a sample signature. */
+  replaceOnDraw?: boolean;
+  ref?: Ref<HTMLElement>;
 }
 
-export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
-  const scene = useScene(BEATS, fromBeat, playing);
-  const { state, take } = scene;
+/** A signature pad you can draw on or type into, then adopt: the ink settles into place as it's adopted. */
+export function Signature({
+  value,
+  defaultValue = { mode: "draw", strokes: [], name: "" },
+  onValueChange,
+  replaceOnDraw = false,
+  ref,
+}: SignatureProps) {
+  const [signature, setSignature] = useControllableState({ value, defaultValue, onValueChange });
   const pad = useRef<SVGSVGElement>(null);
 
-  const [live, setLive] = useState<Point[] | null>(null);
+  const [drawing, setDrawing] = useState<Point[] | null>(null);
   const started = useRef(0);
   const [adopted, setAdopted] = useState(false);
 
   const [inkKey, setInkKey] = useState(0);
 
-  const ink = state.mode === "draw" ? inkOf(state.strokes) : typed(state.name);
+  const ink = signature.mode === "draw" ? inkOf(signature.strokes) : typed(signature.name);
   const empty = !ink;
 
   const at = (event: PointerEvent): Point => {
@@ -331,30 +317,30 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
   };
 
   const down = (event: PointerEvent<SVGSVGElement>) => {
-    if (state.mode !== "draw") return;
+    if (signature.mode !== "draw") return;
     event.currentTarget.setPointerCapture(event.pointerId);
     started.current = performance.now();
     setAdopted(false);
-    setLive([at(event)]);
+    setDrawing([at(event)]);
 
-    if (scene.live) {
-      setInkKey((k) => k + 1);
-      take((current) => ({ ...current, strokes: [] }));
+    if (replaceOnDraw) {
+      setInkKey((key) => key + 1);
+      setSignature((current) => ({ ...current, strokes: [] }));
     }
   };
   const move = (event: PointerEvent<SVGSVGElement>) => {
-    if (live) setLive([...live, at(event)]);
+    if (drawing) setDrawing([...drawing, at(event)]);
   };
   const up = () => {
-    if (!live) return;
-    const stroke = live;
-    setLive(null);
-    setInkKey((k) => k + 1);
-    take((current) => ({ ...current, strokes: [...current.strokes, stroke] }));
+    if (!drawing) return;
+    const stroke = drawing;
+    setDrawing(null);
+    setInkKey((key) => key + 1);
+    setSignature((current) => ({ ...current, strokes: [...current.strokes, stroke] }));
   };
 
-  const body = (
-    <section ref={scene.ref} className="sg" aria-label="Adopt your signature">
+  return (
+    <section ref={ref} className="sg" aria-label="Adopt your signature">
       <div className="sg-card">
         <header className="sg-head">
           <strong>Adopt your signature</strong>
@@ -364,12 +350,12 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
         <label className="sg-name">
           <span>Full name</span>
           <input
-            value={state.name}
+            value={signature.name}
             spellCheck={false}
             autoComplete="name"
             onChange={(event) => {
               setAdopted(false);
-              take((current) => ({ ...current, name: event.target.value }));
+              setSignature((current) => ({ ...current, name: event.target.value }));
             }}
           />
         </label>
@@ -377,48 +363,35 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
         <ToggleGroup
           className="sg-modes"
           aria-label="Signature style"
-          data-mode={state.mode}
-          value={[state.mode]}
+          data-mode={signature.mode}
+          value={[signature.mode]}
           onValueChange={(values) => {
             const mode = values[0] as Mode | undefined;
             if (!mode) return;
             setAdopted(false);
-            take((current) => ({ ...current, mode }));
+            setSignature((current) => ({ ...current, mode }));
           }}
         >
           {(["draw", "type"] as const).map((mode) => (
-            <Toggle
-              key={mode}
-              value={mode}
-            >
+            <Toggle key={mode} value={mode}>
               {mode === "draw" ? "Draw" : "Type"}
             </Toggle>
           ))}
         </ToggleGroup>
 
-        <div className="sg-pad" data-mode={state.mode}>
+        <div className="sg-pad" data-mode={signature.mode}>
           <svg
             ref={pad}
             className="sg-surface"
             viewBox={`0 0 ${W} ${H}`}
             role="img"
-            aria-label={
-              state.mode === "type"
-                ? `Signature: ${state.name}`
-                : "Your drawn signature"
-            }
+            aria-label={signature.mode === "type" ? `Signature: ${signature.name}` : "Your drawn signature"}
             onPointerDown={down}
             onPointerMove={move}
             onPointerUp={up}
             onPointerCancel={up}
           >
-            <line
-              className="sg-line"
-              x1={28}
-              x2={W - 28}
-              y1={BASELINE + 22}
-              y2={BASELINE + 22}
-            />
+            <line className="sg-line" x1={28} x2={W - 28} y1={BASELINE + 22} y2={BASELINE + 22} />
             <text className="sg-mark" x={28} y={BASELINE + 16}>
               ×
             </text>
@@ -433,18 +406,14 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
             spring={SPRING}
             aria-hidden="true"
           />
-          {live && (
-            <svg
-              className="sg-ink"
-              viewBox={`0 0 ${W} ${H}`}
-              aria-hidden="true"
-            >
-              <path d={inkOutline(live)} fill="currentColor" />
+          {drawing && (
+            <svg className="sg-ink" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+              <path d={inkOutline(drawing)} fill="currentColor" />
             </svg>
           )}
-          {empty && !live && (
+          {empty && !drawing && (
             <span className="sg-hint">
-              {state.mode === "draw" ? "Sign here" : "Type your name above"}
+              {signature.mode === "draw" ? "Sign here" : "Type your name above"}
             </span>
           )}
         </div>
@@ -456,26 +425,50 @@ export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
             disabled={empty}
             onClick={() => {
               setAdopted(false);
-              setInkKey((k) => k + 1);
-              take((current) =>
+              setInkKey((key) => key + 1);
+              setSignature((current) =>
                 current.mode === "draw" ? { ...current, strokes: [] } : { ...current, name: "" },
               );
             }}
           >
             Clear
           </button>
-          <button
-            type="button"
-            className="sg-adopt"
-            disabled={empty}
-            onClick={() => setAdopted(true)}
-          >
+          <button type="button" className="sg-adopt" disabled={empty} onClick={() => setAdopted(true)}>
             {adopted ? "Adopted" : "Adopt and sign"}
           </button>
         </footer>
       </div>
     </section>
   );
+}
 
-  return framed ? <Frame>{body}</Frame> : body;
+// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
+
+const BEATS: readonly { mode: Mode; ms: number }[] = [
+  { mode: "draw", ms: 2400 },
+  { mode: "type", ms: 2600 },
+];
+
+const fromBeat = (step: number): SignatureValue => ({
+  mode: BEATS[step]!.mode,
+  strokes: SIGNED,
+  name: NAME,
+});
+
+interface SignatureDemoProps {
+  framed?: boolean;
+  playing?: boolean;
+}
+
+export function SignatureDemo({ framed = true, playing }: SignatureDemoProps) {
+  const scene = useScene(BEATS, fromBeat, playing);
+  const element = (
+    <Signature
+      ref={scene.ref}
+      value={scene.state}
+      onValueChange={scene.onValueChange}
+      replaceOnDraw={scene.live}
+    />
+  );
+  return framed ? <Frame>{element}</Frame> : element;
 }

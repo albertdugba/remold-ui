@@ -1,0 +1,479 @@
+/* Morphing dialog. Styling only: Motion grows the shared surface between the button, the dialog and
+   the new row, and fades the words in; Base UI's Dialog does the modal work. */
+.mdg-demo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The demo's dialog mounts in here. The stage itself isn't positioned, so the backdrop and dialog
+   are placed against whatever frame the demo sits in, and that frame's own clipping trims them. */
+.mdg-stage {
+  --mdg-surface: #ffffff;
+  --mdg-ink: #0a0a0b;
+  --mdg-muted: #71717a;
+  --mdg-well: #f4f4f5;
+  --mdg-line: rgb(10 10 11 / 0.08);
+  --mdg-input-line: rgb(10 10 11 / 0.12);
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 460px;
+  color: var(--mdg-ink);
+  font-size: 14px;
+}
+
+.dark .mdg-stage {
+  --mdg-surface: #1f1f23;
+  --mdg-ink: #fafafa;
+  --mdg-muted: #a1a1aa;
+  --mdg-well: #2a2a2f;
+  --mdg-line: rgb(255 255 255 / 0.1);
+  --mdg-input-line: rgb(255 255 255 / 0.14);
+}
+
+/* The one surface that travels. Its colour and corners are animated; nothing with words in it is. */
+.mdg-surface {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The button */
+.mdg-trigger {
+  position: relative;
+  display: inline-grid;
+  height: 36px;
+  padding: 0 15px 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.mdg-trigger:focus-visible {
+  box-shadow: 0 0 0 2px var(--mdg-surface), 0 0 0 4px var(--mdg-ink);
+}
+
+.mdg-trigger-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.mdg-trigger-label svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* The page behind the dialog dims and softens */
+.mdg-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgb(10 10 11 / 0.18);
+  backdrop-filter: blur(2px);
+  transition:
+    opacity 0.3s ease,
+    backdrop-filter 0.3s ease;
+}
+
+.mdg-backdrop[data-starting-style],
+.mdg-backdrop[data-ending-style] {
+  opacity: 0;
+  backdrop-filter: blur(0);
+}
+
+/* The dialog: centred, sized by its form, its surface drawn by the travelling element underneath */
+.mdg-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 41;
+  width: min(400px, calc(100% - 32px));
+  height: fit-content;
+  margin: auto;
+  color: var(--mdg-ink);
+  outline: none;
+}
+
+/* Inside the demo's stage, both are held to the stage rather than the page */
+.mdg-stage .mdg-backdrop,
+.mdg-stage .mdg-popup {
+  position: absolute;
+}
+
+.mdg-stage .mdg-backdrop {
+  /* Far past every edge: the frame the demo sits in clips it to its own rounded shape */
+  inset: -2000px;
+  background: rgb(10 10 11 / 0.14);
+}
+
+.mdg-popup > .mdg-surface {
+  box-shadow:
+    0 0 0 1px var(--mdg-line),
+    0 2px 4px rgb(0 0 0 / 0.04),
+    0 24px 48px -16px rgb(0 0 0 / 0.22);
+}
+
+/* On a dark page the button is white, so its label is dark */
+.dark .mdg-trigger {
+  color: #0a0a0b;
+}
+
+.mdg-form {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.mdg-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mdg-badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: var(--mdg-well);
+  color: var(--mdg-ink);
+}
+
+.mdg-badge svg {
+  width: 19px;
+  height: 19px;
+}
+
+.mdg-heading {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mdg-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.mdg-description {
+  margin: 0;
+  color: var(--mdg-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.mdg-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: -4px -4px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--mdg-muted);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.15s;
+}
+
+.mdg-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+.mdg-close:focus-visible {
+  box-shadow: 0 0 0 2px var(--mdg-ink);
+}
+
+.mdg-field {
+  display: grid;
+  gap: 7px;
+}
+
+.mdg-label {
+  color: var(--mdg-ink);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mdg-input {
+  height: 42px;
+  padding: 0 12px;
+  border: 1.8px solid var(--mdg-input-line);
+  border-radius: 16px;
+  background: var(--mdg-surface);
+  color: var(--mdg-ink);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.18s;
+}
+
+.mdg-input::placeholder {
+  color: var(--mdg-muted);
+}
+
+.mdg-input:focus {
+  border-color: var(--mdg-ink);
+}
+
+/* Who's going: a segmented choice whose selection slides */
+.mdg-groups {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding: 3px;
+  border-radius: 16px;
+  background: var(--mdg-well);
+}
+
+.mdg-group {
+  position: relative;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--mdg-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: color 0.18s;
+}
+
+.mdg-group[data-pressed] {
+  color: var(--mdg-ink);
+}
+
+.mdg-group:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--mdg-ink);
+}
+
+.mdg-group-pick {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--mdg-surface);
+  box-shadow:
+    0 0 0 1px var(--mdg-line),
+    0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+.mdg-group-name {
+  position: relative;
+}
+
+.mdg-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.mdg-button {
+  display: grid;
+  place-items: center;
+  min-width: 78px;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color 0.15s,
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+.mdg-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.mdg-button:focus-visible {
+  box-shadow: 0 0 0 2px var(--mdg-surface), 0 0 0 4px var(--mdg-ink);
+}
+
+.mdg-button[data-variant="ghost"] {
+  background: transparent;
+  color: var(--mdg-muted);
+}
+
+.mdg-button[data-variant="primary"] {
+  min-width: 128px;
+  background: var(--mdg-ink);
+  color: var(--mdg-surface);
+}
+
+.mdg-button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.mdg-button[aria-busy] {
+  cursor: progress;
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mdg-close:hover,
+  .mdg-button[data-variant="ghost"]:hover:not(:disabled) {
+    background: var(--mdg-well);
+    color: var(--mdg-ink);
+  }
+}
+
+.mdg-spinner {
+  display: grid;
+  place-items: center;
+}
+
+.mdg-spinner svg {
+  width: 16px;
+  height: 16px;
+  animation: mdg-spin 0.75s linear infinite;
+}
+
+@keyframes mdg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The page under the dialog: a list of projects */
+.mdg-panel {
+  width: min(100%, 380px);
+  padding: 8px;
+  border-radius: 22px;
+  background: var(--mdg-surface);
+}
+
+.mdg-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 6px 10px 10px;
+}
+
+.mdg-panel-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.mdg-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--mdg-well);
+  color: var(--mdg-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.mdg-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mdg-row {
+  position: relative;
+}
+
+.mdg-row-surface {
+  border-radius: 14px;
+}
+
+.mdg-row-body {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 12px;
+}
+
+.mdg-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mdg-row-meta {
+  color: var(--mdg-muted);
+  font-size: 12.5px;
+}
+
+.mdg-row-new {
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.mdg-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mdg-backdrop {
+    transition: opacity 0.15s;
+  }
+
+  .mdg-spinner svg {
+    animation-duration: 2.4s;
+  }
+}

@@ -23,6 +23,19 @@ describe("parseColor", () => {
     expect(parseColor("#123456")).toEqual([18, 52, 86, 1]);
   });
 
+  it("reads the rest of CSS Color 4: short and alpha hex, hwb, lch, angles and the other profiles", () => {
+    expect(parseColor("#f00")).toEqual([255, 0, 0, 1]);
+    expect(parseColor("#ff000080")).toEqual([255, 0, 0, 128 / 255]);
+    expect(parseColor("hwb(0 0% 0%)")).toEqual([255, 0, 0, 1]);
+    expect(parseColor("hwb(0 60% 60%)")).toEqual([128, 128, 128, 1]);
+    expect(parseColor("hsl(0.5turn 100% 50%)")).toEqual([0, 255, 255, 1]);
+    expect(parseColor("lch(100% 0 0)")).toEqual([255, 255, 255, 1]);
+    expect(parseColor("oklab(0 0 0)")).toEqual([0, 0, 0, 1]);
+    expect(parseColor("color(a98-rgb 1 1 1)")).toEqual([255, 255, 255, 1]);
+    expect(parseColor("color(prophoto-rgb 1 1 1)")).toEqual([255, 255, 255, 1]);
+    expect(parseColor("color(xyz-d65 0.9505 1 1.089)")).toEqual([255, 255, 255, 1]);
+  });
+
   it("preserves transparent and unknown colour handling", () => {
     expect(parseColor("transparent")).toEqual([0, 0, 0, 0]);
     expect(parseColor("none")).toEqual([0, 0, 0, 0]);

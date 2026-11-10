@@ -5,18 +5,18 @@ description: "Animate a list that sorts and filters, in a few lines."
 
 ## Wrap the part that changes
 
-Put `Remold.Layout` around the content and give it a `trigger`: any value that changes when the content does. Render your content as you normally would.
+Put `Remold.Morph` around the content and give it a `trigger`: any value that changes when the content does. Render your content as you normally would.
 
 ```tsx tab="React" tab-group="lang"
 import { Remold } from "@remold-ui/react";
 
 function Files({ files, sort, kind }) {
   return (
-    <Remold.Layout trigger={`${sort}:${kind}`}>
+    <Remold.Morph trigger={`${sort}:${kind}`}>
       {files.map((file) => (
         <Row key={file.name} file={file} />
       ))}
-    </Remold.Layout>
+    </Remold.Morph>
   );
 }
 ```

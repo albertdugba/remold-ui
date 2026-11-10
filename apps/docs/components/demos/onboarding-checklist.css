@@ -1,5 +1,3 @@
-/* A getting-started checklist. Styling only: Remold.Layout animates the steps opening and the card
-   folding into a pill; the ring and ticks are Motion; the checkboxes are Base UI. */
 .ob-layer {
   --ob-surface: #ffffff;
   --ob-panel: #f7f7f8;

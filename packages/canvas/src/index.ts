@@ -60,6 +60,7 @@ export {
   type Palette,
   type PaletteName,
 } from "./object-looks";
+export { loadPixels } from "./particles/pixels";
 export {
   particles,
   sampleElementPoints,
@@ -67,8 +68,11 @@ export {
   sampleTextPoints,
   type ElementSampleOptions,
   type ImageSampleOptions,
+  type ParticleCamera,
   type ParticleFill,
   type ParticleFit,
+  type ParticlePalette,
+  type ParticlePoint,
   type ParticleTransition,
   type Particles,
   type ParticlesOptions,

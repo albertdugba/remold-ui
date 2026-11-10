@@ -23,7 +23,16 @@ export interface Autoplay {
   setStep: (step: number | ((step: number) => number)) => void;
   /** Go to the next step, wrapping round. */
   next: () => void;
+  /**
+   * Whether playback was requested. This stays true while the element is off screen so a manual
+   * play choice can resume when the element comes back into view.
+   */
   playing: boolean;
+  /**
+   * Whether work should run right now: playback was requested and the watched element is visible.
+   * Pass this to nested timers, canvases, or scripted demo work rather than `playing`.
+   */
+  active: boolean;
   setPlaying: (playing: boolean) => void;
   /** Spread on a button to make it the play/pause control. */
   toggleProps: Record<AutoplayControlAttribute, ""> & { "aria-pressed": boolean; onClick: () => void };

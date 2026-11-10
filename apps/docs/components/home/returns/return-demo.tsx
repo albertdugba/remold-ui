@@ -128,7 +128,7 @@ export function ReturnDemo() {
       <ReturnHeader playing={autoplay.playing && !manual} onReset={resetDemo} onPlayback={togglePlayback} />
       <div className="hret-shell">
         <main className="hret-main">
-          <Remold.Layout trigger={state.phase} spring={{ duration: 0.29, bounce: 0.04 }} className="hret-layout">
+          <Remold.Morph trigger={state.phase} spring={{ duration: 0.29, bounce: 0.04 }} className="hret-layout">
             {state.phase === "order" && <OrderView onStartReturn={startReturn} />}
             {state.phase === "form" && (
               <ReturnForm
@@ -141,7 +141,7 @@ export function ReturnDemo() {
               />
             )}
             {state.phase === "submitted" && <SubmittedView refundMethod={state.refundMethod} />}
-          </Remold.Layout>
+          </Remold.Morph>
         </main>
         <ReturnAside phase={state.phase} />
       </div>

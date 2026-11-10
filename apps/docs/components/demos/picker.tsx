@@ -59,9 +59,8 @@ export function Picker<V extends string>({
   const portal = usePortalContainer();
   const [ownOpen, setOwnOpen] = useState(false);
   const isOpen = open ?? ownOpen;
-  /** The option last lit while open: the highlight stays there as the list closes, not jumping back. */
   const lastLit = useRef<V | null>(null);
-  const current = options.find((o) => o.value === value) ?? options[0]!;
+  const current = options.find((option) => option.value === value) ?? options[0]!;
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (!shortcuts || !/^[1-9]$/.test(event.key)) return;
@@ -84,11 +83,20 @@ export function Picker<V extends string>({
       }}
       modal={false}
     >
-      <Select.Trigger className={`pk-trigger${className ? ` ${className}` : ""}`} aria-label={`${label}: ${current.label}`}>
+      <Select.Trigger
+        className={`pk-trigger${className ? ` ${className}` : ""}`}
+        aria-label={`${label}: ${current.label}`}
+      >
         {icon?.(value)}
         <span className="pk-trigger-label">
           <AnimatePresence initial={false} mode="popLayout">
-            <motion.span key={value} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -10, opacity: 0 }} transition={LABEL}>
+            <motion.span
+              key={value}
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -10, opacity: 0 }}
+              transition={LABEL}
+            >
               {current.label}
             </motion.span>
           </AnimatePresence>
@@ -97,7 +105,12 @@ export function Picker<V extends string>({
       </Select.Trigger>
 
       <Select.Portal container={portal}>
-        <Select.Positioner className={`pk-layer${layerClassName ? ` ${layerClassName}` : ""}`} sideOffset={6} align="start" alignItemWithTrigger={false}>
+        <Select.Positioner
+          className={`pk-layer${layerClassName ? ` ${layerClassName}` : ""}`}
+          sideOffset={6}
+          align="start"
+          alignItemWithTrigger={false}
+        >
           <Select.Popup className="pk-popup" aria-label={heading ?? label} onKeyDown={onKeyDown}>
             {heading && (
               <p className="pk-heading" aria-hidden="true">
@@ -116,7 +129,9 @@ export function Picker<V extends string>({
                     const lit = isOpen ? live : lastLit.current === option.value;
                     return (
                       <div {...props}>
-                        {lit && <motion.span layoutId="pk-highlight" className="pk-highlight" transition={GLIDE} />}
+                        {lit && (
+                          <motion.span layoutId="pk-highlight" className="pk-highlight" transition={GLIDE} />
+                        )}
                         {props.children}
                       </div>
                     );

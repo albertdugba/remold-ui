@@ -3,9 +3,9 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { NextIcon, PauseIcon, PlayIcon, RotateLeft01Icon } from "@hugeicons/core-free-icons";
 import { samplePath, type CloudPoint } from "@remold-ui/core";
-import { Remold } from "@remold-ui/react";
+import { Remold } from "@remold-ui/react/canvas";
 import { MotionConfig, motion } from "motion/react";
-import { useEffect, useMemo, useReducer } from "react";
+import { useEffect, useMemo, useReducer, useImperativeHandle, useRef, type Ref } from "react";
 import { Odometer } from "./odometer";
 import { useScene } from "./use-scene";
 import "./focus-timer.css";
@@ -26,22 +26,27 @@ const GLASS =
   "M22 6C22 30 44 40 47 50C44 60 22 70 22 94L78 94C78 70 56 60 53 50C56 40 78 30 78 6Z M12 4L88 4 M12 96L88 96";
 
 const TONE = { glass: 0, sand: 1 } as const;
-/** Read from the card's CSS, so the dots follow dark mode. */
 const PALETTE = ["var(--ft-glass)", "var(--ft-sand)"];
 
-function seeded(i: number) {
-  const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+function seeded(index: number) {
+  const x = Math.sin(index * 12.9898 + 78.233) * 43758.5453;
   return x - Math.floor(x);
 }
 
-const mirror = (p: CloudPoint): CloudPoint => ({ ...p, x: 100 - p.x, y: 100 - p.y });
+const mirror = (point: CloudPoint): CloudPoint => ({ ...point, x: 100 - point.x, y: 100 - point.y });
 
-const GLASS_POINTS: CloudPoint[] = samplePath(GLASS, { count: 230, mode: "outline" }).map((p) => ({ ...p, tone: TONE.glass }));
+const GLASS_POINTS: CloudPoint[] = samplePath(GLASS, { count: 230, mode: "outline" }).map((point) => ({
+  ...point,
+  tone: TONE.glass,
+}));
 
 const bezier = (t: number, a: number, b: number, c: number, d: number) =>
   (1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t * t * c + t ** 3 * d;
 
-const WALL = Array.from({ length: 65 }, (_, index) => ({ x: bezier(index / 64, 27, 27, 45, 48.6), y: bezier(index / 64, 9, 29, 40, 48.5) }));
+const WALL = Array.from({ length: 65 }, (_, index) => ({
+  x: bezier(index / 64, 27, 27, 45, 48.6),
+  y: bezier(index / 64, 9, 29, 40, 48.5),
+}));
 
 function wallAt(y: number) {
   for (let i = 1; i < WALL.length; i++) {
@@ -73,13 +78,16 @@ function sand(fallen: number, flowing: boolean, flipped: boolean): CloudPoint[] 
   const surface = BOTTOM[Math.min(fallen, BOTTOM.length - 1)]!.y;
   const grains = TOP.map((top, index) => {
     if (index < fallen) return BOTTOM[index]!;
-    const j = index - fallen;
-    if (flowing && j < STREAM) {
-      return { x: 50 + (seeded(index) - 0.5) * 1.4, y: surface - (surface - 51) * (j / STREAM) };
+    const inStream = index - fallen;
+    if (flowing && inStream < STREAM) {
+      return { x: 50 + (seeded(index) - 0.5) * 1.4, y: surface - (surface - 51) * (inStream / STREAM) };
     }
     return top;
   });
-  return [...GLASS_POINTS, ...grains.map((p) => ({ ...(flipped ? mirror(p) : p), tone: TONE.sand }))];
+  return [
+    ...GLASS_POINTS,
+    ...grains.map((grain) => ({ ...(flipped ? mirror(grain) : grain), tone: TONE.sand })),
+  ];
 }
 
 type Phase = "focus" | "break";
@@ -94,7 +102,7 @@ interface Timer {
   rush: boolean;
 }
 
-type Action =
+export type FocusTimerAction =
   | { type: "tick" }
   | { type: "toggle" }
   | { type: "start" }
@@ -105,15 +113,31 @@ type Action =
 
 const lengthOf = (phase: Phase) => (phase === "focus" ? FOCUS : BREAK);
 
-const INITIAL: Timer = { phase: "focus", round: 2, remaining: 3 * 60, running: false, flips: 0, wait: 0, rush: false };
+const INITIAL: Timer = {
+  phase: "focus",
+  round: 2,
+  remaining: 3 * 60,
+  running: false,
+  flips: 0,
+  wait: 0,
+  rush: false,
+};
 
 function next(timer: Timer): Timer {
   const phase: Phase = timer.phase === "focus" ? "break" : "focus";
   const round = phase === "focus" ? (timer.round % ROUNDS) + 1 : timer.round;
-  return { ...timer, phase, round, remaining: lengthOf(phase), flips: timer.flips + 1, wait: FLIP_TICKS, rush: false };
+  return {
+    ...timer,
+    phase,
+    round,
+    remaining: lengthOf(phase),
+    flips: timer.flips + 1,
+    wait: FLIP_TICKS,
+    rush: false,
+  };
 }
 
-function reduce(timer: Timer, action: Action): Timer {
+function reduce(timer: Timer, action: FocusTimerAction): Timer {
   switch (action.type) {
     case "tick": {
       if (timer.wait > 0) return { ...timer, wait: timer.wait - 1 };
@@ -145,24 +169,14 @@ function reduce(timer: Timer, action: Action): Timer {
   }
 }
 
-const BEATS: readonly { action: Action; ms: number }[] = [
-  { action: { type: "set", phase: "focus", round: 2, remaining: 3 * 60 }, ms: 1400 },
-  { action: { type: "start" }, ms: 8400 },
-  { action: { type: "pause" }, ms: 1600 },
-  { action: { type: "start" }, ms: 2200 },
-  { action: { type: "skip" }, ms: 2800 },
-];
-
-const beatAction = (step: number) => BEATS[step]!.action;
-
 const shown = (timer: Timer) => {
   const step = SPEED[timer.phase];
   return Math.min(lengthOf(timer.phase), Math.ceil(timer.remaining / step - 1e-6) * step);
 };
 
 const clock = (seconds: number) => {
-  const s = Math.ceil(seconds);
-  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  const whole = Math.ceil(seconds);
+  return `${String(Math.floor(whole / 60)).padStart(2, "0")}:${String(whole % 60).padStart(2, "0")}`;
 };
 
 function Hourglass({ timer }: { timer: Timer }) {
@@ -173,7 +187,12 @@ function Hourglass({ timer }: { timer: Timer }) {
   const points = useMemo(() => sand(fallen, flowing, flipped), [fallen, flowing, flipped]);
 
   return (
-    <motion.div className="ft-glass" initial={false} animate={{ rotate: timer.flips * 180 }} transition={FLIP}>
+    <motion.div
+      className="ft-glass"
+      initial={false}
+      animate={{ rotate: timer.flips * 180 }}
+      transition={FLIP}
+    >
       <Remold.Particles
         className="ft-canvas"
         shape={{ points }}
@@ -189,15 +208,24 @@ function Hourglass({ timer }: { timer: Timer }) {
   );
 }
 
-export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
-  const scene = useScene(BEATS, beatAction, playing);
+export interface FocusTimerHandle {
+  /** Starts, pauses, skips or resets the timer from outside, as a guided walkthrough does. */
+  dispatch: (action: FocusTimerAction) => void;
+}
+
+export interface FocusTimerProps {
+  actionsRef?: Ref<FocusTimerHandle>;
+  /** Called when the person presses one of the controls. */
+  onAction?: (action: FocusTimerAction) => void;
+  ref?: Ref<HTMLElement>;
+}
+
+/** A pomodoro timer drawn as an hourglass of particles that flips between focus and break. */
+export function FocusTimer({ actionsRef, onAction, ref }: FocusTimerProps) {
   const [timer, dispatch] = useReducer(reduce, INITIAL);
-  const { live, step, take } = scene;
   const active = timer.running || timer.rush || timer.wait > 0;
 
-  useEffect(() => {
-    if (live) dispatch(BEATS[step]!.action);
-  }, [live, step]);
+  useImperativeHandle(actionsRef, () => ({ dispatch }), []);
 
   useEffect(() => {
     if (!active) return;
@@ -205,8 +233,8 @@ export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
     return () => clearInterval(id);
   }, [active, timer.rush]);
 
-  const act = (action: Action) => {
-    take((current) => current);
+  const act = (action: FocusTimerAction) => {
+    onAction?.(action);
     dispatch(action);
   };
 
@@ -214,12 +242,7 @@ export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
 
   return (
     <MotionConfig reducedMotion="user">
-      <section
-        ref={scene.ref}
-        className="ft not-prose"
-        aria-label="Focus timer"
-        data-phase={timer.phase}
-      >
+      <section ref={ref} className="ft not-prose" aria-label="Focus timer" data-phase={timer.phase}>
         <div className="ft-stage">
           <Hourglass timer={timer} />
         </div>
@@ -243,13 +266,46 @@ export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
             onClick={() => act({ type: "toggle" })}
             whileTap={{ scale: 0.92 }}
           >
-            <Remold.Icon icon={<HugeiconsIcon icon={timer.running ? PauseIcon : PlayIcon} />} fill="currentColor" className="ft-play" aria-hidden="true" />
+            <Remold.Icon
+              icon={<HugeiconsIcon icon={timer.running ? PauseIcon : PlayIcon} />}
+              fill="currentColor"
+              className="ft-play"
+              aria-hidden="true"
+            />
           </motion.button>
-          <button type="button" className="ft-icon" aria-label={focus ? "Skip to break" : "Skip break"} onClick={() => act({ type: "skip" })}>
+          <button
+            type="button"
+            className="ft-icon"
+            aria-label={focus ? "Skip to break" : "Skip break"}
+            onClick={() => act({ type: "skip" })}
+          >
             <HugeiconsIcon icon={NextIcon} size={17} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
       </section>
     </MotionConfig>
   );
+}
+
+// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
+
+const BEATS: readonly { action: FocusTimerAction; ms: number }[] = [
+  { action: { type: "set", phase: "focus", round: 2, remaining: 3 * 60 }, ms: 1400 },
+  { action: { type: "start" }, ms: 8400 },
+  { action: { type: "pause" }, ms: 1600 },
+  { action: { type: "start" }, ms: 2200 },
+  { action: { type: "skip" }, ms: 2800 },
+];
+
+const beatAction = (step: number) => BEATS[step]!.action;
+
+export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
+  const scene = useScene(BEATS, beatAction, playing);
+  const timer = useRef<FocusTimerHandle>(null);
+
+  useEffect(() => {
+    if (scene.live) timer.current?.dispatch(BEATS[scene.step]!.action);
+  }, [scene.live, scene.step]);
+
+  return <FocusTimer ref={scene.ref} actionsRef={timer} onAction={() => scene.takeOver(scene.state)} />;
 }

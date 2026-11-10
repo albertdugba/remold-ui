@@ -1,5 +1,5 @@
 "use client";
-import { Remold } from "@remold-ui/react";
+import { Remold } from "@remold-ui/react/canvas";
 import { useState } from "react";
 import { Frame, Segmented } from "./frame";
 
@@ -55,16 +55,10 @@ export const SCENE = {
   },
 } satisfies Pick<Remold.Scene.Props, "label" | "objects" | "links" | "layouts">;
 
-export function SceneDemo({
-  framed = true,
-  index,
-}: {
-  framed?: boolean;
-  index?: number;
-}) {
-  const [own, setLayout] = useState<keyof typeof SCENE.layouts>("Simple");
+export function SceneDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
+  const [chosenLayout, setLayout] = useState<keyof typeof SCENE.layouts>("Simple");
 
-  const layout = index === undefined ? own : (["Simple", "Scaled"] as const)[index % 2]!;
+  const layout = index === undefined ? chosenLayout : (["Simple", "Scaled"] as const)[index % 2]!;
 
   const body = (
     <div className="grid w-full gap-3">

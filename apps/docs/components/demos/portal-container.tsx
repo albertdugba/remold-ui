@@ -1,9 +1,4 @@
 "use client";
-/**
- * Where a demo's popups (menus, popovers, tooltips) mount. On a page of its own that's <body>; when
- * the demo is shown as a scaled preview (the components page), the preview provides a layer inside
- * itself, so the popups stay in the card and scale with it instead of escaping onto the page.
- */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 const PortalContext = createContext<HTMLElement | null>(null);

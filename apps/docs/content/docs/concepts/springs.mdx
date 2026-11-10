@@ -24,7 +24,7 @@ A spring has no fixed end time, so it can be redirected at any moment and keep i
 />
 
 ```tsx tab="React" tab-group="lang"
-<Remold.Layout trigger={view} spring={{ duration: 0.6, bounce: 0.2 }}>
+<Remold.Morph trigger={view} spring={{ duration: 0.6, bounce: 0.2 }}>
 ```
 
 ```js tab="JavaScript"
@@ -36,7 +36,7 @@ transition(list, update, { spring: { duration: 0.6, bounce: 0.2 } });
 | Preset           | Value                             | Suits                             |
 | ---------------- | --------------------------------- | --------------------------------- |
 | `springs.smooth` | `{ duration: 0.5, bounce: 0 }`    | Continuous and calm changes       |
-| `springs.snappy` | `{ duration: 0.5, bounce: 0.15 }` | Layout changes, controls and text |
+| `springs.snappy` | `{ duration: 0.5, bounce: 0.15 }` | Morph changes, controls and text |
 | `springs.bouncy` | `{ duration: 0.5, bounce: 0.3 }`  | Playful moments                   |
 
 ```ts tab="React" tab-group="lang"

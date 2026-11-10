@@ -6,11 +6,11 @@ export const FLAVORS = {
 
 export function Inbox({ messages, sort }) {
   return (
-    <Remold.Layout trigger={sort}>
+    <Remold.Morph trigger={sort}>
       {messages.map((message) => (
         <Message key={message.id} {...message} />
       ))}
-    </Remold.Layout>
+    </Remold.Morph>
   );
 }`,
   },

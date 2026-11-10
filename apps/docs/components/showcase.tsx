@@ -19,9 +19,9 @@ interface Item {
 
 const ITEMS: Item[] = [
   {
-    title: "Layout",
+    title: "Morph",
     description: "Lists, grids and pages that rearrange. Sort and filter this one.",
-    href: "/docs/primitives/layout",
+    href: "/docs/primitives/morph",
     Demo: FilesDemo,
     wide: true,
   },

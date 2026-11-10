@@ -28,12 +28,7 @@ export function MeridianMark(props: SvgProps) {
 
 export function FlightArc(props: SvgProps) {
   return (
-    <svg
-      viewBox="0 0 100 28"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-      {...props}
-    >
+    <svg viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true" {...props}>
       <path d="M3 26 Q50 -8 97 26" />
     </svg>
   );
@@ -56,10 +51,7 @@ export function ArrowUpIcon(props: SvgProps) {
   );
 }
 
-export function TaskStatusIcon({
-  status,
-  ...props
-}: SvgProps & { status: "done" | "progress" | "todo" }) {
+export function TaskStatusIcon({ status, ...props }: SvgProps & { status: "done" | "progress" | "todo" }) {
   return (
     <svg
       className="size-3.5 flex-none text-(--tl-todo) data-[status=done]:text-(--tl-done) data-[status=progress]:text-(--tl-progress)"
@@ -68,14 +60,7 @@ export function TaskStatusIcon({
       aria-hidden="true"
       {...props}
     >
-      <circle
-        cx="7"
-        cy="7"
-        r="5.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
+      <circle cx="7" cy="7" r="5.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
       {status === "progress" ? (
         <path d="M7 3.5a3.5 3.5 0 0 1 0 7Z" fill="currentColor" />
       ) : status === "done" ? (

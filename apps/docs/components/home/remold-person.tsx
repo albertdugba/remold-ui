@@ -1,5 +1,6 @@
 "use client";
 import { Remold, useAutoplay } from "@remold-ui/react";
+import { useEffect } from "react";
 import "./remold-person.css";
 
 const FORMS = ["Card", "List", "Profile"] as const;
@@ -48,7 +49,7 @@ const follow =
 function Form({ form }: { form: (typeof FORMS)[number] }) {
   if (form === "Card")
     return (
-      <div className="grid w-full max-w-[280px] justify-items-center gap-3 rounded-[26px] bg-white p-6 text-center ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+      <div className="grid w-full max-w-[280px] justify-items-center gap-3 rounded-[26px] bg-white p-6 text-center dark:bg-zinc-900">
         <Avatar name={ME.name} size={76} />
         <div className="grid gap-0.5">
           <span className="text-[17px] font-semibold">{ME.name}</span>
@@ -74,7 +75,7 @@ function Form({ form }: { form: (typeof FORMS)[number] }) {
 
   if (form === "List")
     return (
-      <ul className="m-0 grid w-full max-w-[360px] list-none gap-1 rounded-[22px] bg-white p-2 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+      <ul className="m-0 grid w-full max-w-[360px] list-none gap-1 rounded-[22px] bg-white p-2 dark:bg-zinc-900">
         {[OTHERS[0]!, ME, OTHERS[1]!].map((p) => {
           const me = p.name === ME.name;
           return (
@@ -107,7 +108,7 @@ function Form({ form }: { form: (typeof FORMS)[number] }) {
     );
 
   return (
-    <div className="w-full max-w-[480px] overflow-hidden rounded-[26px] bg-white ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+    <div className="w-full max-w-[480px] overflow-hidden rounded-[26px] bg-white dark:bg-zinc-900">
       <div className="h-24 bg-violet-100 dark:bg-violet-500/15" />
       <div className="grid gap-4 px-6 pb-6">
         <div className="-mt-10 flex items-end justify-between gap-3">
@@ -146,9 +147,21 @@ function Form({ form }: { form: (typeof FORMS)[number] }) {
   );
 }
 
-export function RemoldPerson() {
-  const autoplay = useAutoplay(FORMS.length, { every: 2600 });
+export function RemoldPerson({
+  playing,
+  showControls = true,
+}: {
+  /** Lets an enclosing gallery own playback without duplicating a control in the same corner. */
+  playing?: boolean;
+  showControls?: boolean;
+} = {}) {
+  const autoplay = useAutoplay(FORMS.length, { every: 2600, autoStart: false });
   const form = FORMS[autoplay.step]!;
+
+  useEffect(() => {
+    if (playing === undefined) return;
+    autoplay.setPlaying(playing);
+  }, [autoplay.setPlaying, playing]);
 
   return (
     <div ref={autoplay.ref} className="hr">
@@ -166,26 +179,28 @@ export function RemoldPerson() {
             </button>
           ))}
         </div>
-        <span className="hr-tools">
-          <button
-            type="button"
-            {...autoplay.toggleProps}
-            className="hr-play"
-            aria-label={autoplay.playing ? "Pause" : "Play"}
-          >
-            <Remold.Icon
-              path={autoplay.playing ? PAUSE : PLAY}
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            />
-          </button>
-        </span>
+        {showControls && (
+          <span className="hr-tools">
+            <button
+              type="button"
+              {...autoplay.toggleProps}
+              className="hr-play"
+              aria-label={autoplay.playing ? "Pause" : "Play"}
+            >
+              <Remold.Icon
+                path={autoplay.playing ? PAUSE : PLAY}
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              />
+            </button>
+          </span>
+        )}
       </div>
 
       <div className="hr-stage">
-        <Remold.Layout trigger={[form]} spring={SPRING} className="hr-root">
+        <Remold.Morph trigger={[form]} spring={SPRING} className="hr-root">
           <Form form={form} />
-        </Remold.Layout>
+        </Remold.Morph>
       </div>
 
     </div>

@@ -43,7 +43,10 @@ export function ReleaseStatusDemo({ framed = true }: { framed?: boolean }) {
 
   const body = (
     <div className="grid w-full justify-items-center gap-3.5 px-[18px] pt-6 pb-[18px]">
-      <div className="grid grid-cols-[112px_auto] items-center gap-4 max-[440px]:grid-cols-[92px_auto] max-[440px]:gap-2.5" aria-live="polite">
+      <div
+        className="grid grid-cols-[112px_auto] items-center gap-4 max-[440px]:grid-cols-[92px_auto] max-[440px]:gap-2.5"
+        aria-live="polite"
+      >
         <Remold.PathGroup
           className="h-[116px] w-[112px] overflow-visible max-[440px]:h-24 max-[440px]:w-[92px]"
           viewBox="0 0 120 124"
@@ -51,14 +54,42 @@ export function ReleaseStatusDemo({ framed = true }: { framed?: boolean }) {
           aria-label={`Release status: ${current.label}`}
           spring={{ duration: 0.46, bounce: 0.16 }}
           paths={[
-            { id: "sheet", path: roundedSheet, className: `fill-[var(--color-fd-card)] ${current.accent}`, strokeWidth: 2.5 },
-            { id: "fold", path: "M78 12V32H98", className: "stroke-[var(--color-fd-muted-foreground)]", fill: "none", strokeWidth: 3 },
-            { id: "lines", path: current.lines, className: "stroke-[var(--color-fd-muted-foreground)]", fill: "none", strokeWidth: 4, strokeLinecap: "round" },
-            { id: "mark", path: current.mark, className: current.accent, fill: "none", strokeWidth: 4.5, strokeLinecap: "round", strokeLinejoin: "round" },
+            {
+              id: "sheet",
+              path: roundedSheet,
+              className: `fill-[var(--color-fd-card)] ${current.accent}`,
+              strokeWidth: 2.5,
+            },
+            {
+              id: "fold",
+              path: "M78 12V32H98",
+              className: "stroke-[var(--color-fd-muted-foreground)]",
+              fill: "none",
+              strokeWidth: 3,
+            },
+            {
+              id: "lines",
+              path: current.lines,
+              className: "stroke-[var(--color-fd-muted-foreground)]",
+              fill: "none",
+              strokeWidth: 4,
+              strokeLinecap: "round",
+            },
+            {
+              id: "mark",
+              path: current.mark,
+              className: current.accent,
+              fill: "none",
+              strokeWidth: 4.5,
+              strokeLinecap: "round",
+              strokeLinejoin: "round",
+            },
           ]}
         />
         <div className="grid min-w-[140px] gap-1">
-          <strong className="text-base tracking-[-0.01em] text-[var(--color-fd-foreground)]">{current.label}</strong>
+          <strong className="text-base tracking-[-0.01em] text-[var(--color-fd-foreground)]">
+            {current.label}
+          </strong>
           <span className="text-[13px] text-[var(--color-fd-muted-foreground)]">{current.detail}</span>
         </div>
       </div>

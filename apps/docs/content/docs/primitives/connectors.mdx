@@ -15,13 +15,13 @@ Using plain JavaScript? Install `@remold-ui/dom` instead.
 
 ## Usage
 
-Mark the points lines run between with `Remold.Anchor`: give each a `name`, and `linkTo` the anchor its line comes from. Put a [Layout](/docs/primitives/layout) inside, and the lines follow every element while it moves.
+Mark the points lines run between with `Remold.Anchor`: give each a `name`, and `linkTo` the anchor its line comes from. Put a [Morph](/docs/primitives/morph) inside, and the lines follow every element while it moves.
 
 ```tsx tab="React" tab-group="lang"
 import { Remold } from "@remold-ui/react";
 
 <Remold.Connectors radius={12}>
-  <Remold.Layout trigger={thread}>
+  <Remold.Morph trigger={thread}>
     {comments.map((comment) => (
       <article key={comment.id}>
         <Remold.Anchor
@@ -32,7 +32,7 @@ import { Remold } from "@remold-ui/react";
         <p>{comment.text}</p>
       </article>
     ))}
-  </Remold.Layout>
+  </Remold.Morph>
 </Remold.Connectors>
 ```
 

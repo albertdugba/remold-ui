@@ -1,0 +1,34 @@
+---
+title: "Particle shapes"
+description: "Thousands of dots turning in 3D that flow from a spiral galaxy into a double helix, then into the Lorenz attractor's two wings, a honeybee, a butterfly and the Remold mark."
+status: "new"
+tags: ["Canvas", "Particles"]
+---
+
+<Stage name="particle-shapes" code={<Source demo="particle-shapes" />} minHeight={520}>
+  <ParticleShapesDemo />
+</Stage>
+
+## Things to try
+
+- **Watch it play.** The galaxy turns, then its arms unwind and stretch into two twisting strands. The strands loop into the Lorenz attractor's two wings, which fold into a honeybee, stripes, wings and all, then open out into a butterfly and stand up as the Remold mark before it gathers back into the galaxy.
+- **Move your cursor through it.** The dots part around the pointer and drift back as it leaves, as if you were moving through space.
+- **Pick a shape.** It stops playing and flows straight there, from wherever the dots are.
+
+## Install
+
+<AddCommand name="particle-shapes" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="particle-shapes" />
+
+## How it works
+
+- **Shapes from parts.** Each shape is built with `shapes` from `@remold-ui/core`: `spiral`, `helix` and `attractor("lorenz")` are ready-made, the bee and the butterfly are each a `compose` of ellipsoids, spheres, curves and ovals, and the mark is its SVG path made solid with `fromPath`. The parts are moved with `.at`, `.rotate` and `.mirror` and coloured with `.tone` and `.stripes`.
+- **Remold draws it.** `<Remold.Particles>` takes the shape and a `count`, turns it with `camera`, and makes overlapping dots glow with `blend="add"`. Colours come from a named `palette`, so each part says `"gold"` or `"wing"` rather than a number.
+- **A scatter in between.** `transition="scatter"` dissolves each shape into a glittering cloud that spreads through the depth too, holds a moment, then gathers into the next.
+- **One flow, not a swarm.** `pairing="flow"` pairs dots by where they sit along each shape, so the galaxy's core becomes the top of the helix and the path's start becomes the bee's tail.
+- **Cheap when it can be.** It only draws while on screen, stops turning when paused (`camera={{ spin: 0 }}`), and uses fewer dots on narrow screens. Behind it, a `<Remold.Canvas>` paints a still field of faint stars once.

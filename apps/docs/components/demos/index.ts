@@ -1,8 +1,8 @@
 export { FeedbackFaceDemo } from "./feedback-face";
 export { FilesDemo } from "./files";
 export { IconsDemo, PlayPauseDemo } from "./icons";
-export { LayoutDemo } from "./layout";
-export { LibraryLayoutDemo } from "./library-layout";
+export { MorphDemo } from "./morph";
+export { LibraryMorphDemo } from "./library-morph";
 export { ParticlesDemo } from "./particles";
 export { CanvasDemo } from "./canvas";
 export { GlobeDemo } from "./globe";
@@ -17,16 +17,12 @@ export { ProjectSetupDemo } from "./project-setup";
 export { SignatureDemo } from "./signature";
 export { WorldDemo } from "./world";
 export { EmblemDemo } from "./emblem";
-export { MorphIconsDemo } from "./morph-icons";
 export { CourseOutlineDemo } from "./course-outline";
 export { CommentThreadDemo } from "./comment-thread";
-export { HoldToRecordDemo } from "./hold-to-record";
 export { TableBookingDemo } from "./table-booking";
 export { OtpInputDemo } from "./otp-input";
-export { LiveRoomDemo } from "./live-room";
-export { StepProgressDemo } from "./step-progress";
+export { MorphingDialogDemo } from "./morphing-dialog";
 export { ShareLinkDemo } from "./share-link";
-export { SaveButtonDemo } from "./save-button";
 export { CommandPaletteDemo } from "./command-palette";
 export { ProductTourDemo } from "./product-tour";
 export { LogoMorphDemo } from "./logo-morph";
@@ -41,6 +37,9 @@ export { StreakDemo } from "./streak";
 export { SendMessageDemo } from "./send-message";
 export { KitchenTicketDemo } from "./kitchen-ticket";
 export { OrderTrackerDemo } from "./order-tracker";
+export { PaymentStatusDemo } from "./payment-status";
+export { ParticleShapesDemo } from "./particle-shapes";
+export { VoiceAssistantDemo } from "./voice-assistant";
 export { SendMoneyDemo } from "./send-money";
 export { CurrencyConverterDemo } from "./currency-converter";
 export { DonationGoalDemo } from "./donation-goal";
@@ -51,15 +50,12 @@ export { OnboardingChecklistDemo } from "./onboarding-checklist";
 export { BulkSelectDemo } from "./bulk-select";
 export { FilterBarDemo } from "./filter-bar";
 export { LabelPickerDemo } from "./label-picker";
-export { ParticlesStory } from "../home/particles-story/particles-story";
 export { FocusTimerDemo } from "./focus-timer";
-export { VisitorsGlobeDemo } from "./visitors-globe";
-export { DotGridHeroDemo } from "./dot-grid-hero";
 export { UnitChartDemo } from "./unit-chart";
 export { InboxTriageDemo } from "./inbox-triage";
-export { TransactionRoute } from "./transaction-route";
-export { WalletSecurityMap } from "./wallet-security-map";
-export { CareJourney } from "./care-journey";
+export { TransactionRoute, TransactionRouteDemo } from "./transaction-route";
+export { WalletSecurityMap, WalletSecurityMapDemo } from "./wallet-security-map";
+export { CareJourney, CareJourneyDemo } from "./care-journey";
 export {
   DomainConnection,
   DataPrivacyBoundary,
@@ -71,21 +67,15 @@ export {
 export { AmountInput, AmountInputDemo } from "./amount-input";
 export { PhoneInputDemo } from "./phone-input";
 export { TagInputDemo } from "./tag-input";
-export { AddressAutocompleteDemo } from "./address-autocomplete";
 export { QuantityStepperDemo } from "./quantity-stepper";
 export { PromoCodeDemo } from "./promo-code";
 export { EventRsvpDemo } from "./event-rsvp";
-export { PriceFilterDemo } from "./price-filter";
+export { StepperSliderDemo } from "./stepper-slider";
 export { RangeSliderDemo } from "./range-slider";
-export { UploadRowDemo } from "./upload-row";
 export { SplitAmountDemo } from "./split-amount";
 export { CenterFlow } from "./center-flow";
 export { AppleMusicBadge } from "./apple-music-badge";
-export {
-  NotificationStackCardDemo,
-  PermissionCardDemo,
-  SelectableOptionCardDemo,
-} from "./cards";
 export { PopoverMenuDemo } from "./popover-menu";
-export { ExportPreparationDemo } from "./export-preparation";
-export { UploadRecoveryDemo } from "./upload-recovery";
+export { FeedbackPromptDemo } from "./feedback-prompt";
+export { ExpandingSearchDemo } from "./expanding-search";
+export { BookingStepsDemo } from "./booking-steps";

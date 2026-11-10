@@ -19,16 +19,14 @@ const ORDER = [
   "signature",
   "task-list",
   "comment-thread",
-  "hold-to-record",
   "table-booking",
   "otp-input",
-  "live-room",
+  "morphing-dialog",
   "course-outline",
   "podcast-player",
   "two-factor",
   "invite-team",
   "logo-morph",
-  "morph-icons",
   "voice-orb",
 ];
 

@@ -5,6 +5,7 @@ const CONTROL: AutoplayControlAttribute = "data-rm-autoplay-control";
 
 /**
  * Steps through a sequence by itself while it's on screen, and stops when someone takes over.
+ * `active` also lets nested work pause with the sequence rather than continuing offscreen.
  * Anything that moves by itself for more than five seconds needs a way to pause it (WCAG 2.2.2):
  * `toggleProps` makes any button that control.
  *
@@ -13,7 +14,7 @@ const CONTROL: AutoplayControlAttribute = "data-rm-autoplay-control";
  * const autoplay = useAutoplay(VIEWS.length, { every: 2000 });
  *
  * <section ref={autoplay.ref}>
- *   <Remold.Layout trigger={autoplay.step}>{renderView(VIEWS[autoplay.step])}</Remold.Layout>
+ *   <Remold.Morph trigger={autoplay.step}>{renderView(VIEWS[autoplay.step])}</Remold.Morph>
  *   <button {...autoplay.toggleProps}>{autoplay.playing ? "Pause" : "Play"}</button>
  * </section>
  * ```
@@ -43,15 +44,16 @@ export function useAutoplay(count: number, options: AutoplayOptions = {}): Autop
 
   const shown = Math.min(step, Math.max(0, count - 1));
   const delay = typeof every === "function" ? every(shown) : every;
+  const active = playing && visible;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: shown restarts the timer for each visible step.
   useEffect(() => {
-    if (!playing || !visible || count < 2) return;
+    if (!active || count < 2) return;
 
     const timer = setTimeout(() => setStep((s) => (s + 1) % count), delay);
 
     return () => clearTimeout(timer);
-  }, [playing, visible, count, delay, shown]);
+  }, [active, count, delay, shown]);
 
   useEffect(() => {
     if (!element || !stopOnInteraction || !playing) return;
@@ -80,6 +82,7 @@ export function useAutoplay(count: number, options: AutoplayOptions = {}): Autop
     setStep,
     next,
     playing,
+    active,
     setPlaying,
     toggleProps: { [CONTROL]: "", "aria-pressed": playing, onClick: toggle },
   };

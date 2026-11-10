@@ -85,6 +85,83 @@ dots.to(next, { transition: { type: "scatter", spread: 1.6, hold: 0.5, stagger: 
 
 `spread` is how wide the cloud gets, `hold` how long it stays spread, and `stagger` how unevenly the dots set off again. See [particles()](/docs/canvas/particles#scatter) for each one. With reduced motion the dots go straight to the new shape.
 
+### 3D shapes
+
+Build a shape from `shapes` in `@remold-ui/core` and pass it straight in. Give it a `camera` and it turns, with far dots drawn smaller. Shapes are built from a few primitives, moved and coloured with chained methods, and combined with `compose`:
+
+```tsx tab="React" tab-group="lang"
+import { shapes } from '@remold-ui/core';
+import { Remold } from '@remold-ui/react/canvas';
+
+const galaxy = shapes.spiral({ arms: 3 }).tone(({ group }) => (group === 3 ? 'core' : 'arm'));
+
+const planet = shapes.compose([
+  { shape: shapes.sphere().tone('rock') },
+  { shape: shapes.oval({ radii: [1.8, 1.8], edge: 1 }).rotate({ x: 75 }).tone('ice') },
+]);
+
+const vase = shapes.revolve({ profile: [[0.3, -1], [0.7, -0.4], [0.35, 0.5], [0.5, 1]] });
+const flower = shapes.oval({ radii: [0.5, 0.18] }).at([0.5, 0, 0]).repeat({ copies: 6, around: 'y' });
+const logo = shapes.fromPath(LOGO_PATH, { depth: 0.4 });
+
+<Remold.Particles
+  shape={next ? planet : galaxy}
+  count={3000}
+  palette={{ core: '#fff1d6', arm: '#8b5cf6', rock: '#f59e0b', ice: '#bae6fd' }}
+  pairing="flow"
+  camera
+  blend="add"
+/>
+```
+
+```js tab="JavaScript"
+import { shapes } from "@remold-ui/core";
+import { particles } from "@remold-ui/canvas";
+
+const dots = particles(canvas, { points: galaxy.points(3000), palette, camera: true, blend: "add" });
+
+dots.to(planet.points(3000), { pairing: "flow" });
+```
+
+| Shape                                                     | What it is                                                         |
+| --------------------------------------------------------- | ------------------------------------------------------------------ |
+| `sphere({ radius, solid })`                               | A ball's surface, or through its volume with `solid`.              |
+| `ellipsoid({ radii, solid })`                             | A ball stretched along x, y and z.                                 |
+| `oval({ radii, edge })`                                   | A flat oval, lined at its edge: wings, rings, leaves.              |
+| `curve({ through })`                                      | A smooth curve through your points: stems, antennae, paths.        |
+| `torus({ radius, tube })`                                 | A ring-shaped tube, lying flat.                                    |
+| `revolve({ profile })`                                    | A side view spun round the y axis: vases, bottles, bells, lamps.  |
+| `fromPath(svgPath, { depth })`                            | Any SVG path made solid: an icon, a logo, a drawing.               |
+| `fromPixels(pixels, { depth, bulge, colors, by })`        | A photo as a relief in its own colours, found for you (`.palette`). |
+| `spiral({ arms, twist, core })`                           | A spiral galaxy, lying flat.                                       |
+| `helix({ strands, turns, radius, height, rungs })`        | Twisting strands, with rungs between them.                         |
+| `attractor("lorenz")`                                     | The Lorenz attractor's two wings, as one long path.                |
+| `compose([{ shape, share? }, …])`                         | One shape from several, drawn equally densely, or weighted by `share`. |
+
+Every shape has `.at([x, y, z])`, `.scale(by)`, `.rotate({ x, y, z })` in degrees, `.mirror(axis)`, `.tone(name or rule)`, `.stripes({ every, tones })`, `.fuzz(amount)`, `.warp(point => [x, y, z])` for ripples and bulges, and `.repeat({ copies, around, step })` for petals, teeth and stacks, each returning a new shape. `compose` shares the dots by each part's `area`, so a big wing and a small eye come out equally dense; a `share` weights a part by hand. A tone rule sees each point's position, how far `along` its shape it is, and its `group` (an arm, a strand, a part of a composition). Shapes are built with y pointing up and sampled the same way every time, so one shape can be 800 dots on a phone and 4000 on a desktop.
+
+- **`pairing="flow"`** pairs dots by where they sit along each shape (out from a spiral's core, down a helix, from one end of a composition to the other), so a change sweeps through as one movement instead of swarming.
+- **A named `palette`** lets points name their colour. Tones still spring, so a dot changes colour on the way.
+- **`camera`** takes `true` for the default, or `{ spin, tilt, distance, sway }`. Change `spin` to `0` to pause it where it is. `sway` swings it back and forth that many degrees instead of turning all the way round, which suits flat things like photos.
+
+### Photos in 3D
+
+Give an image shape a `depth` (and a `bulge` to dome it) and it becomes a relief of dots in the image's own colours. `Remold.Particles` loads it, finds its main colours and uses them as the palette, unless you pass one.
+
+```tsx tab="React" tab-group="lang"
+<Remold.Particles shape={{ image: '/dahlia.png', depth: 0.25, bulge: 0.5 }} count={5000} camera={{ sway: 28 }} />
+```
+
+```js tab="JavaScript"
+import { loadPixels, particles } from "@remold-ui/canvas";
+import { shapes } from "@remold-ui/core";
+
+const photo = shapes.fromPixels(await loadPixels("/dahlia.png"), { depth: 0.25, bulge: 0.5, colors: 12 });
+const dots = particles(canvas, { points: photo.points(5000), palette: photo.palette, camera: { sway: 28 } });
+```
+
+A photo from another site needs to allow it (CORS), or the browser won't let its pixels be read. In plain JavaScript, `dots.setPalette(next.palette)` before `dots.to(next.points(5000))` swaps to the next photo's colours.
+
 Image `details` use normalized source-image coordinates from `0` to `1` and count toward `count`. A `tone` of `1` uses the last color in the palette, useful for eye reflections or other tiny highlights.
 
 <Callout>Shapes are sampled in the browser. On the server the canvas renders empty and fills in on load.</Callout>
