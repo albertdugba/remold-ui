@@ -1,3 +1,5 @@
+// The interface parts, so one import covers a screen that mixes them with canvas.
+export * from "./index.parts.js";
 export { RemoldScene as Scene } from "./scene/remold-scene.js";
 export { RemoldStory as Story } from "./story/remold-story.js";
 export { RemoldParticles as Particles } from "./particles/remold-particles.js";

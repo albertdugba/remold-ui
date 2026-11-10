@@ -4,22 +4,17 @@ export const API_GLYPH =
   "M9 4.5c-2 0-3 1-3 3v2c0 1.5-.8 2.5-2.5 2.5 1.7 0 2.5 1 2.5 2.5v2c0 2 1 3 3 3M15 4.5c2 0 3 1 3 3v2c0 1.5.8 2.5 2.5 2.5-1.7 0-2.5 1-2.5 2.5v2c0 2-1 3-3 3";
 export const GLOBE_GLYPH =
   "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18ZM3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z";
-export const SERVER_GLYPH =
-  "M4.5 5h15v5h-15ZM4.5 14h15v5h-15ZM8 7.5h.01M8 16.5h.01M12 7.5h4M12 16.5h4";
+export const SERVER_GLYPH = "M4.5 5h15v5h-15ZM4.5 14h15v5h-15ZM8 7.5h.01M8 16.5h.01M12 7.5h4M12 16.5h4";
 export const BROWSER_GLYPH = "M3.5 5h17v14h-17ZM3.5 9h17M6.5 7h.01M9 7h.01";
 export const TEAM_GLYPH =
   "M16 19v-1a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v1M10 11a3 3 0 1 0 0-6a3 3 0 1 0 0 6M20 19v-1a3 3 0 0 0-2.2-2.9M15.5 5.2a3 3 0 0 1 0 5.6";
 export const CREDIT_CARD_GLYPH = "M3.5 7.5h17v10h-17ZM3.5 10.5h17M7 14.5h3";
-export const RECEIPT_GLYPH =
-  "M6 3.5h12v17l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5ZM9 8h6M9 11.5h6M9 15h3";
-export const LOCK_GLYPH =
-  "M7.5 11V8a4.5 4.5 0 0 1 9 0v3M5.5 11h13v9h-13ZM12 14.5v2";
+export const RECEIPT_GLYPH = "M6 3.5h12v17l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5ZM9 8h6M9 11.5h6M9 15h3";
+export const LOCK_GLYPH = "M7.5 11V8a4.5 4.5 0 0 1 9 0v3M5.5 11h13v9h-13ZM12 14.5v2";
 export const MAIL_GLYPH = "M3.5 6.5h17v11h-17ZM3.5 7l8.5 6 8.5-6";
 export const CHAT_GLYPH = "M4 5.5h16v10H10l-4.5 3.5v-3.5H4Z";
-export const BELL_GLYPH =
-  "M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 1.5H5ZM10 20.5h4";
-export const CODE_GLYPH =
-  "M9 7.5 4.5 12 9 16.5M15 7.5l4.5 4.5-4.5 4.5M13.5 5l-3 14";
+export const BELL_GLYPH = "M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 1.5H5ZM10 20.5h4";
+export const CODE_GLYPH = "M9 7.5 4.5 12 9 16.5M15 7.5l4.5 4.5-4.5 4.5M13.5 5l-3 14";
 export const SPREADSHEET_GLYPH = "M4 4.5h16v15H4ZM4 9.5h16M4 14.5h16M10 4.5v15";
 export const CHART_GLYPH = "M4.5 19.5h15M7 16v-4M11 16V8M15 16v-6M19 16V5";
 export const SUN_GLYPH =

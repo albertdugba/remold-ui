@@ -4,15 +4,11 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { CheckIcon } from "@hugeicons/core-free-icons";
 import { Checkbox } from "@base-ui/react/checkbox";
 import { extrude } from "@remold-ui/canvas";
-import { Remold } from "@remold-ui/react";
-import { useEffect, useState } from "react";
-import {
-  API_GLYPH,
-  DATASTORE_GLYPH,
-  GLOBE_GLYPH,
-  TEAM_GLYPH,
-} from "./demo-glyphs";
+import { Remold } from "@remold-ui/react/canvas";
+import { useEffect, useState, type Ref } from "react";
+import { API_GLYPH, DATASTORE_GLYPH, GLOBE_GLYPH, TEAM_GLYPH } from "./demo-glyphs";
 import { Frame } from "./frame";
+import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 
 type SceneProps = Remold.Scene.Props;
@@ -91,8 +87,7 @@ const LINES: readonly NonNullable<SceneProps["links"]>[number][] = [
 
 const IDS = STEPS.map((step) => step.id);
 
-const nameOf = (done: ReadonlySet<string>) =>
-  IDS.filter((id) => done.has(id)).join("+") || "none";
+const nameOf = (done: ReadonlySet<string>) => IDS.filter((id) => done.has(id)).join("+") || "none";
 
 const SETS: string[][] = Array.from({ length: 1 << IDS.length }, (_, mask) =>
   IDS.filter((_, index) => mask & (1 << index)),
@@ -129,12 +124,7 @@ const LAYOUTS: SceneProps["layouts"] = Object.fromEntries(
         objects: Object.fromEntries(
           IDS.map((id) => {
             const { shape: _, ...box } = PLACES[id]!;
-            return [
-              id,
-              built.has(id)
-                ? { ...box, z: 0, arc: 40 }
-                : { ...box, z: 46, ghost: 1 },
-            ];
+            return [id, built.has(id) ? { ...box, z: 0, arc: 40 } : { ...box, z: 46, ghost: 1 }];
           }),
         ),
       },
@@ -144,9 +134,9 @@ const LAYOUTS: SceneProps["layouts"] = Object.fromEntries(
 
 const LINKS: SceneProps["links"] = LINES.map((line) => ({
   ...line,
-  layouts: SETS.filter(
-    (done) => done.includes(line.from) && done.includes(line.to),
-  ).map((done) => nameOf(new Set(done))),
+  layouts: SETS.filter((done) => done.includes(line.from) && done.includes(line.to)).map((done) =>
+    nameOf(new Set(done)),
+  ),
 }));
 
 const NIGHT = {
@@ -157,33 +147,22 @@ const NIGHT = {
   text: "#f5f5f5",
 } as const;
 
-interface State {
+export interface ProjectSetupValue {
   done: readonly string[];
 }
 
-const BEATS: readonly (State & { ms: number })[] = [
-  { done: [], ms: 1600 },
-  { done: ["database"], ms: 1300 },
-  { done: ["database", "api"], ms: 1300 },
-  { done: ["database", "api", "domain"], ms: 1300 },
-  { done: IDS, ms: 3000 },
-];
-
-const fromBeat = (step: number): State => ({ done: BEATS[step]!.done });
-
-interface ProjectSetupDemoProps {
-  framed?: boolean;
-
-  playing?: boolean;
+export interface ProjectSetupProps {
+  /** The ids of the steps that are done. */
+  value?: ProjectSetupValue;
+  defaultValue?: ProjectSetupValue;
+  onValueChange?: (value: ProjectSetupValue) => void;
+  ref?: Ref<HTMLElement>;
 }
 
-export function ProjectSetupDemo({
-  framed = true,
-  playing,
-}: ProjectSetupDemoProps) {
-  const scene = useScene(BEATS, fromBeat, playing);
-  const { state, take } = scene;
-  const done = new Set(state.done);
+/** A project's setup checklist: each finished step lights its line on the way to launch. */
+export function ProjectSetup({ value, defaultValue = { done: [] }, onValueChange, ref }: ProjectSetupProps) {
+  const [setup, setSetup] = useControllableState({ value, defaultValue, onValueChange });
+  const done = new Set(setup.done);
   const finished = done.size === IDS.length;
   const [dark, setDark] = useState(false);
 
@@ -197,18 +176,24 @@ export function ProjectSetupDemo({
   }, []);
 
   const toggle = (id: string) =>
-    take((current) => ({
+    setSetup((current) => ({
       done: current.done.includes(id)
         ? current.done.filter((stepId) => stepId !== id)
         : [...current.done, id],
     }));
 
-  const body = (
-    <section ref={scene.ref} className="grid w-[min(100%,680px)] font-sans text-[13px] text-(--ps-ink) [--ps-faint:#a3a3a3] [--ps-fill:#f4f4f4] [--ps-ink:#111111] [--ps-line:rgb(0_0_0/0.08)] [--ps-muted:#737373] [--ps-surface:#ffffff] dark:[--ps-faint:#6b6b6b] dark:[--ps-fill:#222222] dark:[--ps-ink:#f5f5f5] dark:[--ps-line:rgb(255_255_255/0.1)] dark:[--ps-muted:#a3a3a3] dark:[--ps-surface:#171717]" aria-label="Project setup">
+  return (
+    <section
+      ref={ref}
+      className="grid w-[min(100%,680px)] font-sans text-[13px] text-(--ps-ink) [--ps-faint:#a3a3a3] [--ps-fill:#f4f4f4] [--ps-ink:#111111] [--ps-line:rgb(0_0_0/0.08)] [--ps-muted:#737373] [--ps-surface:#ffffff] dark:[--ps-faint:#6b6b6b] dark:[--ps-fill:#222222] dark:[--ps-ink:#f5f5f5] dark:[--ps-line:rgb(255_255_255/0.1)] dark:[--ps-muted:#a3a3a3] dark:[--ps-surface:#171717]"
+      aria-label="Project setup"
+    >
       <div className="grid grid-cols-[minmax(0,250px)_minmax(0,1fr)] overflow-hidden rounded-[18px] bg-(--ps-surface) in-[.rm-stage]:shadow-[inset_0_0_0_1px_var(--ps-line)] max-[560px]:grid-cols-1">
         <div className="grid content-start gap-3.5 px-5 py-[22px] shadow-[1px_0_0_var(--ps-line)] max-[560px]:shadow-[0_1px_0_var(--ps-line)]">
           <header className="grid gap-0.5">
-            <strong className="text-[15px] font-semibold">{finished ? "Lumen is ready" : "Set up Lumen"}</strong>
+            <strong className="text-[15px] font-semibold">
+              {finished ? "Lumen is ready" : "Set up Lumen"}
+            </strong>
             <span className="text-(--ps-muted) tabular-nums">{`${done.size} of ${IDS.length} done`}</span>
           </header>
           <div className="h-[3px] overflow-hidden rounded-full bg-(--ps-fill)" aria-hidden="true">
@@ -227,11 +212,16 @@ export function ProjectSetupDemo({
                     checked={on}
                     onCheckedChange={() => toggle(step.id)}
                   >
-                    <Checkbox.Indicator className="mt-px grid size-[18px] flex-none place-items-center rounded-full text-(--ps-surface) shadow-[inset_0_0_0_1.5px_var(--ps-faint)] transition-[background-color,box-shadow] duration-250 data-checked:bg-(--ps-ink) data-checked:shadow-none [&_svg]:size-[11px]" keepMounted>
+                    <Checkbox.Indicator
+                      className="mt-px grid size-[18px] flex-none place-items-center rounded-full text-(--ps-surface) shadow-[inset_0_0_0_1.5px_var(--ps-faint)] transition-[background-color,box-shadow] duration-250 data-checked:bg-(--ps-ink) data-checked:shadow-none [&_svg]:size-[11px]"
+                      keepMounted
+                    >
                       <HugeiconsIcon icon={CheckIcon} strokeWidth={3} />
                     </Checkbox.Indicator>
                     <span className="grid gap-px">
-                      <strong className="font-medium transition-colors duration-250 group-data-checked/step:text-(--ps-muted)">{step.title}</strong>
+                      <strong className="font-medium transition-colors duration-250 group-data-checked/step:text-(--ps-muted)">
+                        {step.title}
+                      </strong>
                       <span className="text-[12px] text-(--ps-muted)">{step.detail}</span>
                     </span>
                   </Checkbox.Root>
@@ -255,6 +245,28 @@ export function ProjectSetupDemo({
       </div>
     </section>
   );
+}
 
-  return framed ? <Frame>{body}</Frame> : body;
+// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
+
+const BEATS: readonly (ProjectSetupValue & { ms: number })[] = [
+  { done: [], ms: 1600 },
+  { done: ["database"], ms: 1300 },
+  { done: ["database", "api"], ms: 1300 },
+  { done: ["database", "api", "domain"], ms: 1300 },
+  { done: IDS, ms: 3000 },
+];
+
+const fromBeat = (step: number): ProjectSetupValue => ({ done: BEATS[step]!.done });
+
+interface ProjectSetupDemoProps {
+  framed?: boolean;
+
+  playing?: boolean;
+}
+
+export function ProjectSetupDemo({ framed = true, playing }: ProjectSetupDemoProps) {
+  const scene = useScene(BEATS, fromBeat, playing);
+  const element = <ProjectSetup ref={scene.ref} value={scene.state} onValueChange={scene.onValueChange} />;
+  return framed ? <Frame>{element}</Frame> : element;
 }

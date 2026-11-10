@@ -1,18 +1,18 @@
 ---
 title: "Promo code"
-description: "A promo code field in an order summary: apply a code and the field springs down into a green ticket chip with the code and what it's worth, while the discount line opens and the total rolls down. A code that doesn't work shakes the field and says why."
+description: "A promo code field on a cinema ticket: apply a code and the field springs down into a green ticket chip with the code and what it's worth, while the discount line opens and the total rolls down. A code that doesn't work shakes the field and says why."
 status: "new"
 tags: ["Base UI", "Motion"]
 ---
 
-<Stage name="promo-code" code={<Source demo="promo-code" />} minHeight={420}>
+<Stage name="promo-code" code={<Source demo="promo-code" />} minHeight={520}>
   <PromoCodeDemo />
 </Stage>
 
 ## Things to try
 
 - **Try SUMMER.** The field gives a small shake and says the code has ended, keeping what you typed.
-- **Try SAVE20.** It checks the code, then the field springs down into a green ticket chip, “SAVE20 · 20% off”, the discount line opens and the total rolls down, with the old price struck through.
+- **Try SAVE20.** It checks the code, then the field springs down into a green ticket chip, “SAVE20 · 20% off”, the discount line opens and the total rolls down, with the old price struck through and a “Saved” badge beside it.
 - **Press ×.** The chip springs back out into the empty field and the total rolls back up.
 
 ## Install
@@ -30,6 +30,7 @@ The install command adds these for you. If you copy the code by hand, install th
 - **Built on Base UI.** `Field` handles the invalid state and the error message; the code box is its `Control`.
 - **One box.** The field and the chip are the same element. It springs its real width, height and radius and clips what's inside, so the text never stretches while it shrinks. The field's contents blur out quickly as the chip's arrive.
 - **Choreographed, not all at once.** Apply checks the code first, then the box springs into the chip, and the chip's ticket, code, offer and × arrive one after another. The discount line opens a beat later, the old total slides in and is struck through, and only then does the new total roll down. Removing runs back at once and puts focus back in the field.
+- **Torn like a ticket.** The total sits on a stub: a dashed tear line between two notches cut into the card with a CSS mask.
 - **One spring.** Everything that changes shape shares it, with a little bounce. The total rolls with the Odometer, and the shake runs on a wrapper so it never fights the spring.
 
 <Callout>SAVE20 and WELCOME10 work; SUMMER has expired. Swap the timeout in `apply` for a request to your own API.</Callout>

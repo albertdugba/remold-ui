@@ -3,11 +3,9 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeftRightIcon } from "@hugeicons/core-free-icons";
 import type { PainterFrame } from "@remold-ui/canvas";
-import { Remold, useAutoplay } from "@remold-ui/react";
+import { Remold, useAutoplay } from "@remold-ui/react/canvas";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import "./voice-orb.css";
 
 export type OrbState = "idle" | "listening" | "thinking" | "speaking";
@@ -22,10 +20,7 @@ const LOOKS: Record<OrbState, Look> = {
   speaking: { scale: 1, flow: 0.7, breath: 0.006, gather: 0 },
 };
 
-const PALETTES: Record<
-  OrbTheme,
-  { sky: string; mid: string; deep: string; cloud: string }
-> = {
+const PALETTES: Record<OrbTheme, { sky: string; mid: string; deep: string; cloud: string }> = {
   aurora: { sky: "#e3f1ff", mid: "#8cc8ff", deep: "#2563eb", cloud: "#ffffff" },
   ember: { sky: "#fff3e3", mid: "#ffc58a", deep: "#ea580c", cloud: "#fffaf3" },
   mono: { sky: "#f5f5f5", mid: "#c4c4c4", deep: "#3f3f46", cloud: "#ffffff" },
@@ -40,9 +35,8 @@ const CLOUDS = [
 ] as const;
 
 const SOFT = { duration: 0.7, bounce: 0 };
-const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
-const rgb = (hex: string) =>
-  [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16)).join(", ");
+const clamp01 = (amount: number) => Math.max(0, Math.min(1, amount));
+const rgb = (hex: string) => [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16)).join(", ");
 
 export interface VoiceOrbProps {
   state?: OrbState;
@@ -69,98 +63,72 @@ export function VoiceOrb({
   const loudness = (time: number) => {
     if (level != null) return clamp01(level);
     if (state === "speaking")
-      return (
-        0.3 +
-        0.5 *
-          Math.abs(Math.sin(time * 6.3)) *
-          (0.6 + 0.4 * Math.sin(time * 1.7))
-      );
+      return 0.3 + 0.5 * Math.abs(Math.sin(time * 6.3)) * (0.6 + 0.4 * Math.sin(time * 1.7));
     if (state === "listening")
-      return (
-        0.1 +
-        0.2 *
-          Math.abs(Math.sin(time * 2.9)) *
-          (0.5 + 0.5 * Math.sin(time * 0.9))
-      );
+      return 0.1 + 0.2 * Math.abs(Math.sin(time * 2.9)) * (0.5 + 0.5 * Math.sin(time * 0.9));
     return 0;
   };
 
   const draw = (
     ctx: CanvasRenderingContext2D,
-    { width, values: v, time, dt, still }: PainterFrame<Look>,
+    { width, values: look, time, dt, still }: PainterFrame<Look>,
   ) => {
     const target = still ? 0 : loudness(time);
-    voice.current.loud +=
-      (target - voice.current.loud) *
-      (target > voice.current.loud ? 0.3 : 0.07);
-    voice.current.drift += (v.flow + 0.6 * voice.current.loud) * dt;
+    voice.current.loud += (target - voice.current.loud) * (target > voice.current.loud ? 0.3 : 0.07);
+    voice.current.drift += (look.flow + 0.6 * voice.current.loud) * dt;
     const { loud, drift } = voice.current;
-    const p = PALETTES[theme];
-    const c = width / 2;
-    const R =
-      width *
-      0.42 *
-      v.scale *
-      (1 + v.breath * Math.sin(time * 1.6) + 0.07 * loud);
+    const palette = PALETTES[theme];
+    const center = width / 2;
+    const R = width * 0.42 * look.scale * (1 + look.breath * Math.sin(time * 1.6) + 0.07 * loud);
     const fill = (style: CanvasGradient) => {
       ctx.fillStyle = style;
-      ctx.fillRect(c - R, c - R, R * 2, R * 2);
+      ctx.fillRect(center - R, center - R, R * 2, R * 2);
     };
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(c, c, R, 0, Math.PI * 2);
+    ctx.arc(center, center, R, 0, Math.PI * 2);
     ctx.clip();
 
-    const sky = ctx.createLinearGradient(0, c - R, 0, c + R);
-    sky.addColorStop(0, p.sky);
-    sky.addColorStop(0.55, p.mid);
-    sky.addColorStop(1, p.deep);
+    const sky = ctx.createLinearGradient(0, center - R, 0, center + R);
+    sky.addColorStop(0, palette.sky);
+    sky.addColorStop(0.55, palette.mid);
+    sky.addColorStop(1, palette.deep);
     fill(sky);
 
     for (const cloud of CLOUDS) {
-      const a = drift * cloud.speed + cloud.phase;
-      const orbit = cloud.orbit * (1 - 0.55 * v.gather) * R;
-      const x = c + Math.cos(a) * orbit;
-      const y = c + Math.sin(a * 0.8) * orbit * 0.85 - R * 0.08;
-      const r =
-        R *
-        cloud.size *
-        (1 + 0.18 * loud + 0.05 * Math.sin(time * 1.3 + cloud.phase));
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, `rgba(${rgb(p.cloud)}, ${cloud.alpha})`);
-      g.addColorStop(0.55, `rgba(${rgb(p.cloud)}, ${cloud.alpha * 0.35})`);
-      g.addColorStop(1, `rgba(${rgb(p.cloud)}, 0)`);
-      fill(g);
+      const angle = drift * cloud.speed + cloud.phase;
+      const orbit = cloud.orbit * (1 - 0.55 * look.gather) * R;
+      const x = center + Math.cos(angle) * orbit;
+      const y = center + Math.sin(angle * 0.8) * orbit * 0.85 - R * 0.08;
+      const r = R * cloud.size * (1 + 0.18 * loud + 0.05 * Math.sin(time * 1.3 + cloud.phase));
+      const puff = ctx.createRadialGradient(x, y, 0, x, y, r);
+      puff.addColorStop(0, `rgba(${rgb(palette.cloud)}, ${cloud.alpha})`);
+      puff.addColorStop(0.55, `rgba(${rgb(palette.cloud)}, ${cloud.alpha * 0.35})`);
+      puff.addColorStop(1, `rgba(${rgb(palette.cloud)}, 0)`);
+      fill(puff);
     }
 
-    const dx = c + Math.cos(drift * 0.4) * R * 0.3;
-    const depth = ctx.createRadialGradient(
-      dx,
-      c + R * 0.75,
-      0,
-      dx,
-      c + R * 0.75,
-      R * 0.9,
-    );
-    depth.addColorStop(0, `rgba(${rgb(p.deep)}, 0.55)`);
-    depth.addColorStop(1, `rgba(${rgb(p.deep)}, 0)`);
+    const dx = center + Math.cos(drift * 0.4) * R * 0.3;
+    const depth = ctx.createRadialGradient(dx, center + R * 0.75, 0, dx, center + R * 0.75, R * 0.9);
+    depth.addColorStop(0, `rgba(${rgb(palette.deep)}, 0.55)`);
+    depth.addColorStop(1, `rgba(${rgb(palette.deep)}, 0)`);
     fill(depth);
 
     const shine = ctx.createRadialGradient(
-      c - R * 0.35,
-      c - R * 0.45,
+      center - R * 0.35,
+      center - R * 0.45,
       0,
-      c - R * 0.35,
-      c - R * 0.45,
+      center - R * 0.35,
+      center - R * 0.45,
       R * 0.8,
     );
     shine.addColorStop(0, "rgba(255, 255, 255, 0.55)");
     shine.addColorStop(1, "rgba(255, 255, 255, 0)");
     fill(shine);
-    const shade = ctx.createRadialGradient(c, c, R * 0.7, c, c, R);
-    shade.addColorStop(0, `rgba(${rgb(p.deep)}, 0)`);
-    shade.addColorStop(1, `rgba(${rgb(p.deep)}, 0.22)`);
+    const shade = ctx.createRadialGradient(center, center, R * 0.7, center, center, R);
+    shade.addColorStop(0, `rgba(${rgb(palette.deep)}, 0)`);
+    shade.addColorStop(1, `rgba(${rgb(palette.deep)}, 0.22)`);
     fill(shade);
     ctx.restore();
   };
@@ -185,10 +153,7 @@ const LANGUAGES = [
 
 type Translator = { translate(text: string): Promise<string> };
 type TranslatorApi = {
-  create(options: {
-    sourceLanguage: string;
-    targetLanguage: string;
-  }): Promise<Translator>;
+  create(options: { sourceLanguage: string; targetLanguage: string }): Promise<Translator>;
 };
 
 type Phase = "idle" | "listening" | "hearing" | "translating" | "speaking";
@@ -280,7 +245,6 @@ type Turn = {
 };
 
 export function VoiceOrbDemo({ index }: { index?: number } = {}) {
-  // Waits to be tapped on its docs page; the scripted scene only plays when there's no microphone.
   const auto = useAutoplay(SCENE.length, { every: (index) => SCENE[index]!.ms, autoStart: false });
   const scripted = SCENE[index != null ? index % SCENE.length : auto.step]!;
   const speech = useSpeechRecognition();
@@ -292,19 +256,13 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
   const line: Line = turn
     ? {
         from: turn.from,
-        phase: speech.listening
-          ? speech.transcript
-            ? "hearing"
-            : "listening"
-          : turn.phase,
+        phase: speech.listening ? (speech.transcript ? "hearing" : "listening") : turn.phase,
         heard: speech.transcript,
         said: turn.said,
       }
     : scripted;
-  const [source, target] =
-    line.from === 0 ? LANGUAGES : ([LANGUAGES[1], LANGUAGES[0]] as const);
-  const update = (patch: Partial<Turn>) =>
-    setTurn((t) => t && { ...t, ...patch });
+  const [source, target] = line.from === 0 ? LANGUAGES : ([LANGUAGES[1], LANGUAGES[0]] as const);
+  const update = (patch: Partial<Turn>) => setTurn((current) => current && { ...current, ...patch });
 
   useEffect(() => {
     if (!turn || !speech.transcript || !translator.current) return;
@@ -325,9 +283,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
     wasListening.current = speech.listening;
     if (!stopped || !turn) return;
     if (!speech.isMicrophoneAvailable)
-      setNote(
-        "Microphone access was refused. Allow it for this site and tap the orb again.",
-      );
+      setNote("Microphone access was refused. Allow it for this site and tap the orb again.");
     if (!speech.transcript) return update({ phase: "idle" });
     update({ phase: "translating" });
     void translation.current
@@ -362,9 +318,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
       setTurn(null);
       auto.setStep(0);
       auto.setPlaying(true);
-      return setNote(
-        "Live listening needs speech recognition, which this browser doesn't have. Try Chrome.",
-      );
+      return setNote("Live listening needs speech recognition, which this browser doesn't have. Try Chrome.");
     }
     setTurn({ from: line.from, said: "", phase: "idle" });
     void SpeechRecognition.startListening({
@@ -373,9 +327,8 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
     });
     const api = (globalThis as { Translator?: TranslatorApi }).Translator;
     translator.current =
-      (await api
-        ?.create({ sourceLanguage: source.code, targetLanguage: target.code })
-        .catch(() => null)) ?? null;
+      (await api?.create({ sourceLanguage: source.code, targetLanguage: target.code }).catch(() => null)) ??
+      null;
     setNote(
       translator.current
         ? null
@@ -406,15 +359,11 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
           speech.listening
             ? "Stop listening"
             : line.phase === "speaking"
-            ? "Stop speaking"
-            : `Speak ${source.name}`
+              ? "Stop speaking"
+              : `Speak ${source.name}`
         }
       >
-        <VoiceOrb
-          state={ORB[line.phase]}
-          level={line.phase === "listening" ? 0.04 : undefined}
-          size={220}
-        />
+        <VoiceOrb state={ORB[line.phase]} level={line.phase === "listening" ? 0.04 : undefined} size={220} />
       </button>
       <p className="vo-status" aria-live="polite">
         {STATUS[line.phase]}

@@ -1,12 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { RemoldMark } from "@/components/brand/remold-mark";
-import { CopyCommand } from "@/components/copy-command";
+import { InstallCommand } from "@/components/home/install-command";
 import { Faq } from "@/components/home/faq";
 import { Flavors } from "@/components/home/flavors";
 import { Parts } from "@/components/home/parts";
 import { Points } from "@/components/home/points";
-import { HeroGrid } from "@/components/home/hero-grid";
 import { HeroWord } from "@/components/home/hero-word";
 import { FLAVOR_NAMES, FLAVORS, type Flavor } from "@/components/home/flavors-code";
 import { highlight } from "fumadocs-core/highlight";
@@ -45,30 +44,33 @@ export default async function HomePage() {
   return (
     <main className="hm">
       <div className="hm-hero-band">
-        <HeroGrid />
         <div className="hm-frame">
-          <section className="hm-hero center">
-            <Link href="/docs/components/otp-input" className="hm-new">
-              <span>New</span> Watch a code verify itself <span aria-hidden="true">→</span>
-            </Link>
-            <h1 aria-label="Interfaces that remold themselves.">
-              <span aria-hidden="true">Interfaces that</span>
-              <br />
-              <HeroWord />
-            </h1>
-            <p className="hm-lead">
-              Animated components for the screens you actually ship, ready to copy into your app. Under them, a small engine for layouts,
-              text, SVG and canvas. React or plain JavaScript.
-            </p>
-            <div className="hm-actions">
-              <Link className="hm-cta primary" href="/docs/quick-start">
-                Get started <span aria-hidden="true">→</span>
+          <section className="hm-hero split">
+            <div className="hm-hero-title">
+              <Link href="/docs/components/otp-input" className="hm-new">
+                <span>New</span> Watch a code verify itself <span aria-hidden="true">→</span>
               </Link>
-              <Link className="hm-cta" href="/docs/components">
-                Explore morphs
-              </Link>
+              <h1 aria-label="Interfaces that remold themselves.">
+                <span aria-hidden="true">Interfaces that</span>
+                <br />
+                <HeroWord />
+              </h1>
+            </div>
+            <div className="hm-hero-side">
+              <p className="hm-lead">
+                React components for the screens you actually ship, animated with Motion and Remold and ready to copy into your app.
+                Underneath sits the Remold engine, which morphs one state into the next in React, the DOM, SVG and canvas.
+              </p>
+              <div className="hm-actions">
+                <Link className="hm-cta primary" href="/docs/quick-start">
+                  Get started <span aria-hidden="true">→</span>
+                </Link>
+                <Link className="hm-cta" href="/docs/components">
+                  Browse components
+                </Link>
+              </div>
               <div className="hm-install">
-                <CopyCommand command="npm i @remold-ui/react" />
+                <InstallCommand />
               </div>
             </div>
           </section>
@@ -76,24 +78,12 @@ export default async function HomePage() {
       </div>
 
       <div className="hm-frame">
-        <Section kicker="The same idea, in every form" className="first">
-          <header className="hm-head row">
-            <div>
-              <h2>Watch one state become the next.</h2>
-              <p>
-                Layouts, words, icons and particles can all carry a change. These live examples show the engine at work; pick a state or
-                watch them play.
-              </p>
-            </div>
-            <Link className="hm-link" href="/docs/primitives">
-              Explore the primitives <span aria-hidden="true">→</span>
-            </Link>
-          </header>
+        <Section className="first">
           <Parts />
         </Section>
 
         <Section kicker="Build with it">
-          <div className="hm-split">
+          <div className="hm-split code">
             <div className="hm-head">
               <h2>Use the engine at the level you need.</h2>
               <p>

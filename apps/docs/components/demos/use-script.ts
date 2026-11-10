@@ -10,7 +10,11 @@ export type ScriptStep = readonly [ms: number, run: () => void];
  * cards do, so it animates exactly as it would for a person. A real press or key inside `root`
  * hands it over to them until it's played again.
  */
-export function useScript(root: RefObject<HTMLElement | null>, playing: boolean | undefined, steps: readonly ScriptStep[]) {
+export function useScript(
+  root: RefObject<HTMLElement | null>,
+  playing: boolean | undefined,
+  steps: readonly ScriptStep[],
+) {
   const [touched, setTouched] = useState(false);
   const latest = useRef(steps);
   latest.current = steps;
@@ -23,12 +27,12 @@ export function useScript(root: RefObject<HTMLElement | null>, playing: boolean 
   useEffect(() => {
     const element = root.current;
     if (!element || !playing) return;
-    const take = (event: Event) => event.isTrusted && setTouched(true);
-    element.addEventListener("pointerdown", take);
-    element.addEventListener("keydown", take);
+    const handOver = (event: Event) => event.isTrusted && setTouched(true);
+    element.addEventListener("pointerdown", handOver);
+    element.addEventListener("keydown", handOver);
     return () => {
-      element.removeEventListener("pointerdown", take);
-      element.removeEventListener("keydown", take);
+      element.removeEventListener("pointerdown", handOver);
+      element.removeEventListener("keydown", handOver);
     };
   }, [root, playing]);
 
@@ -36,13 +40,13 @@ export function useScript(root: RefObject<HTMLElement | null>, playing: boolean 
     if (!live) return;
     let index = 0;
     let timer: ReturnType<typeof setTimeout>;
-    const next = () => {
+    const runStep = () => {
       const [ms, run] = latest.current[index % latest.current.length]!;
       run();
       index++;
-      timer = setTimeout(next, ms);
+      timer = setTimeout(runStep, ms);
     };
-    timer = setTimeout(next, 600);
+    timer = setTimeout(runStep, 600);
     return () => clearTimeout(timer);
   }, [live]);
 

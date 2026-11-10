@@ -199,11 +199,6 @@
   font-weight: 500;
 }
 
-.flt-count .odo {
-  color: var(--flt-ink);
-  font-weight: 650;
-}
-
 .flt-sep {
   color: var(--flt-quiet);
 }

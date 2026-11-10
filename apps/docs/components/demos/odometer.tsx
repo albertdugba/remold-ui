@@ -1,26 +1,23 @@
 "use client";
-/**
- * A number that rolls like a mechanical counter: each digit is a strip of 0–9 that spins to its new
- * place, so 288 → 384 turns the wheels rather than swapping the text. Columns are named by their
- * place from the right, so the units stay the units as the number grows and new places slide in at
- * the front.
- */
 import { AnimatePresence, motion } from "motion/react";
 
 const DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const SPIN = { type: "spring" as const, duration: 0.7, bounce: 0.12 };
 
 export function Odometer({ value, className }: { value: string; className?: string }) {
-  const chars = value.split("");
+  const characters = value.split("");
   return (
-    <span className={`inline-flex whitespace-nowrap leading-none tabular-nums ${className ?? ""}`} aria-label={value}>
+    <span
+      className={`inline-flex whitespace-nowrap leading-none tabular-nums ${className ?? ""}`}
+      aria-label={value}
+    >
       <AnimatePresence initial={false} mode="popLayout">
-        {chars.map((char, index) => {
-          const place = chars.length - index;
-          const digit = /\d/.test(char) ? Number(char) : null;
+        {characters.map((character, index) => {
+          const place = characters.length - index;
+          const digit = /\d/.test(character) ? Number(character) : null;
           return (
             <motion.span
-              key={digit === null ? `s${place}${char}` : `d${place}`}
+              key={digit === null ? `s${place}${character}` : `d${place}`}
               layout="position"
               className="inline-block"
               aria-hidden="true"
@@ -30,14 +27,20 @@ export function Odometer({ value, className }: { value: string; className?: stri
               transition={SPIN}
             >
               {digit === null ? (
-                char
+                character
               ) : (
                 <span className="relative inline-block align-top overflow-hidden">
-                  {/* Sized by a hidden digit, so the column is exactly one character tall. */}
                   <span className="invisible">0</span>
-                  <motion.span className="absolute top-0 left-0 flex w-full flex-col" initial={false} animate={{ y: `${-digit * 10}%` }} transition={SPIN}>
-                    {DIGITS.map((d) => (
-                      <span key={d} className="block h-[1em] text-center leading-none">{d}</span>
+                  <motion.span
+                    className="absolute top-0 left-0 flex w-full flex-col"
+                    initial={false}
+                    animate={{ y: `${-digit * 10}%` }}
+                    transition={SPIN}
+                  >
+                    {DIGITS.map((reelDigit) => (
+                      <span key={reelDigit} className="block h-[1em] text-center leading-none">
+                        {reelDigit}
+                      </span>
                     ))}
                   </motion.span>
                 </span>

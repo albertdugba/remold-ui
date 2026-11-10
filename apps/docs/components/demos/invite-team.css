@@ -1,120 +1,173 @@
+/* Invite teammates: a "To" line of recipient tokens, a grouped list, and monograms that are grey
+   until someone is on the team. Neutral ink throughout; colour only means something happened. */
 .iv {
   --iv-surface: #ffffff;
-  --iv-fill: #f4f4f5;
-  --iv-chip: rgb(24 24 27 / 0.06);
-  --iv-ring: rgb(24 24 27 / 0.14);
-  --iv-halo: rgb(24 24 27 / 0.05);
+  --iv-well: #f4f4f5;
+  --iv-token: #e8e8eb;
   --iv-ink: #18181b;
   --iv-muted: #71717a;
   --iv-faint: #a1a1aa;
-  --iv-wait: #b45309;
-  --iv-wait-bg: #fef3c7;
-  --iv-line: rgb(24 24 27 / 0.07);
+  --iv-line: rgb(24 24 27 / 0.08);
+  --iv-border: rgb(24 24 27 / 0.12);
   --iv-good: #16a34a;
-  --iv-bad: #dc2626;
+  --iv-bad: #e5484d;
   display: grid;
   align-content: start;
-  width: min(100%, 440px);
-
-  min-height: 413px;
+  width: 480px;
+  max-width: 100%;
+  min-height: 470px;
   color: var(--iv-ink);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
-    system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
 .dark .iv {
-  --iv-surface: #232327;
-  --iv-fill: #2c2c31;
-  --iv-chip: rgb(255 255 255 / 0.08);
-  --iv-ring: rgb(255 255 255 / 0.18);
-  --iv-halo: rgb(255 255 255 / 0.06);
+  --iv-surface: #1c1c1f;
+  --iv-well: #26262b;
+  --iv-token: #313137;
   --iv-ink: #fafafa;
   --iv-muted: #a1a1aa;
-  --iv-faint: #71717a;
-  --iv-wait: #fbbf24;
-  --iv-wait-bg: rgb(251 191 36 / 0.14);
+  --iv-faint: #63636b;
   --iv-line: rgb(255 255 255 / 0.07);
+  --iv-border: rgb(255 255 255 / 0.14);
   --iv-good: #4ade80;
-  --iv-bad: #f87171;
+  --iv-bad: #ff6369;
 }
 
-.iv p {
+.iv p,
+.iv h4 {
   margin: 0;
 }
 
+/* The card springs its height to fit what's inside and clips while it does; nothing is scaled */
 .iv-card {
-  display: grid;
-  gap: 14px;
-  padding: 18px 18px 14px;
-  border-radius: 18px;
+  overflow: clip;
+  border-radius: 22px;
   background: var(--iv-surface);
 }
 
+.iv-content {
+  display: grid;
+  gap: 16px;
+  padding: 18px 16px 16px;
+}
+
+/* The header: the team, and how many are on it */
+.iv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+}
+
+.iv-title {
+  display: grid;
+  gap: 1px;
+}
+
+.iv-title strong {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.iv-count {
+  color: var(--iv-muted);
+  font-size: 12.5px;
+}
+
+/* A monogram: white initials on a soft top-to-bottom gradient of the person's colour. Grey until
+   they're on the team; then their colour fades in underneath. */
 .iv-avatar {
+  position: relative;
   display: grid;
   flex: none;
   place-items: center;
+  overflow: hidden;
   border-radius: 50%;
-  background: oklch(0.9 0.06 var(--hue));
-  color: oklch(0.38 0.1 var(--hue));
+  background: linear-gradient(180deg, oklch(0.74 0.09 var(--hue)), oklch(0.6 0.1 var(--hue)));
+  color: #fff;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 
-.dark .iv-avatar {
-  background: oklch(0.42 0.08 var(--hue));
-  color: oklch(0.94 0.04 var(--hue));
+.iv-avatar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #b4b4bc, #8e8e96);
+  transition: opacity 0.6s ease;
 }
 
-.iv-head strong {
-  font-size: 15px;
-  font-weight: 600;
+.dark .iv-avatar::before {
+  background: linear-gradient(180deg, #6b6b73, #4f4f56);
 }
 
+.iv-avatar[data-member]::before {
+  opacity: 0;
+}
+
+.iv-avatar > span {
+  position: relative;
+}
+
+/* The "To" line. It grows a line at a time as recipients wrap, and Invite rides at the end of the
+   last line. */
 .iv-invite {
-  display: block;
+  display: grid;
 }
 
-/* The field holds the emails, the typing and the Invite button. It grows a line at a time as emails
-   wrap, and the button rides at the end of the last line, so it always lines up with the typing. */
+.iv-shaker {
+  display: grid;
+}
+
 .iv-field {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 5px;
   min-width: 0;
-  min-height: 46px;
-  padding: 6px 6px 6px 10px;
+  min-height: 48px;
+  padding: 6px 6px 6px 12px;
+  border: 1.8px solid var(--iv-border);
   border-radius: 14px;
-  background: var(--iv-fill);
-  font-size: 13px;
+  background: var(--iv-surface);
+  font-size: 14px;
   cursor: text;
+  transition: border-color 0.18s;
 }
 
+/* Focused, the border darkens; no glow around it */
 .iv-field:focus-within {
-  background: var(--iv-surface);
-  box-shadow:
-    inset 0 0 0 1px var(--iv-ring),
-    0 0 0 3px var(--iv-halo);
+  border-color: var(--iv-ink);
 }
 
 .iv-field[data-invalid] {
-  box-shadow: inset 0 0 0 1px var(--iv-bad);
+  border-color: var(--iv-bad);
+}
+
+.iv-to {
+  margin-right: 3px;
+  color: var(--iv-faint);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .iv-entry {
   display: flex;
-  flex: 1 1 220px;
+  flex: 1 1 180px;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
 }
 
 .iv-input {
   flex: 1;
   min-width: 0;
-  height: 26px;
-  padding: 0 4px;
+  height: 32px;
+  padding: 0 2px;
   border: 0;
   outline: 0;
   background: none;
@@ -127,35 +180,28 @@
   color: var(--iv-faint);
 }
 
+/* A recipient token, with the person's monogram */
 .iv-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   max-width: 100%;
-  height: 26px;
-  padding: 0 3px 0 2px;
+  height: 28px;
+  padding: 0 4px 0 3px;
   border-radius: 999px;
-  background: var(--iv-chip);
+  background: var(--iv-token);
 }
 
 .iv-chip-avatar {
   width: 22px;
   height: 22px;
-  font-size: 9px;
+  font-size: 8.5px;
 }
 
 .iv-chip-email {
   overflow: hidden;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.iv-name {
-  overflow: hidden;
-  font-size: 13.5px;
-  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -176,210 +222,242 @@
 
 @media (hover: hover) and (pointer: fine) {
   .iv-chip-remove:hover {
-    background: var(--iv-chip);
+    background: color-mix(in oklab, var(--iv-ink) 8%, transparent);
     color: var(--iv-ink);
   }
 }
 
 .iv-chip-remove svg {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
 }
 
 .iv-send {
   display: grid;
   flex: none;
   place-items: center;
-  height: 32px;
-  padding: 0 14px;
+  height: 34px;
+  padding: 0 15px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--iv-ink);
   color: var(--iv-surface);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 0.25s,
+    color 0.25s;
 }
 
 .iv-send:disabled {
-  opacity: 0.35;
+  background: color-mix(in oklab, var(--iv-ink) 8%, transparent);
+  color: var(--iv-faint);
   cursor: default;
+}
+
+.iv-send[data-sent] {
+  background: var(--iv-good);
+  color: #fff;
+}
+
+.dark .iv-send[data-sent] {
+  color: #0a0a0b;
 }
 
 .iv-send:focus-visible,
 .iv-chip-remove:focus-visible,
-.iv-row-revoke:focus-visible {
+.iv-person-revoke:focus-visible {
   outline: 2px solid var(--iv-ink);
   outline-offset: 2px;
 }
 
-.iv-rows {
+/* Why it was refused: opens under the field, and morphs when the reason changes */
+.iv-error {
+  overflow: clip;
+  color: var(--iv-bad);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.iv-error > span {
+  display: block;
+  padding: 8px 4px 0;
+}
+
+/* The people: one list, straight on the card. A row lights up softly under the pointer. */
+.iv-people {
   position: relative;
   display: grid;
-  margin: 0;
+  margin: 0 -8px;
   padding: 0;
   list-style: none;
 }
 
-/* Every row has the same shape, invited or joined, split by a hairline rather than boxed */
-.iv-row {
+.iv-person {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   min-height: 56px;
-  padding: 8px 0;
+  padding: 0 10px 0 8px;
+  border-radius: 14px;
+  transition: background-color 0.2s;
 }
 
-.iv-row + .iv-row {
-  box-shadow: 0 -1px 0 var(--iv-line);
+@media (hover: hover) and (pointer: fine) {
+  .iv-person:hover {
+    background: var(--iv-well);
+  }
 }
 
-.iv-row-avatar {
-  width: 34px;
-  height: 34px;
-  font-size: 11px;
+.iv-person-face {
+  position: relative;
+  display: grid;
+  flex: none;
 }
 
-.iv-row[data-pending] .iv-row-avatar {
-  background: none;
-  box-shadow: inset 0 0 0 1px var(--iv-ring);
-  color: var(--iv-muted);
+/* An invite waits inside a slowly turning dashed ring. Accepted, the ring turns solid green and
+   the monogram warms into the person's colour; then the ring fades as the row settles in. */
+.iv-person-face::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 1.5px dashed var(--iv-faint);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.5s ease,
+    border-color 0.3s ease;
 }
 
-.iv-row-copy {
+.iv-person[data-invited] .iv-person-face::after {
+  opacity: 1;
+  animation: iv-wait 9s linear infinite;
+}
+
+.iv-person[data-joined] .iv-person-face::after {
+  border-style: solid;
+  border-color: var(--iv-good);
+  opacity: 1;
+}
+
+@keyframes iv-wait {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.iv-person-avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 12.5px;
+}
+
+.iv-person-copy {
   display: grid;
   flex: 1;
-  gap: 1px;
   min-width: 0;
 }
 
-.iv-row-email {
+.iv-person-name {
   overflow: hidden;
-  color: var(--iv-muted);
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.iv-person-email {
+  overflow: hidden;
+  color: var(--iv-muted);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-/* An invite that hasn't been accepted yet: a soft chip at the end of the row */
-.iv-invited {
+.iv-person-role {
   flex: none;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--iv-wait-bg);
-  color: var(--iv-wait);
-  font-size: 11.5px;
+  color: var(--iv-muted);
+  font-size: 13px;
+  transition: color 0.3s;
+}
+
+.iv-person[data-invited] .iv-person-role {
+  color: var(--iv-faint);
+}
+
+.iv-person[data-joined] .iv-person-role {
+  color: var(--iv-good);
   font-weight: 600;
 }
 
-.iv-row-revoke {
+/* Revoke sits at the end of an invite's row, shown when you point at it or tab to it */
+.iv-person-revoke {
   display: grid;
   flex: none;
   place-items: center;
   width: 24px;
   height: 24px;
-  margin-right: -4px;
+  margin-left: -4px;
   padding: 0;
   border: 0;
   border-radius: 50%;
   background: none;
   color: var(--iv-faint);
   cursor: pointer;
+  transition:
+    opacity 0.15s,
+    background-color 0.15s,
+    color 0.15s;
 }
 
-.iv-row-revoke svg {
-  width: 13px;
-  height: 13px;
+.iv-person-revoke svg {
+  width: 11px;
+  height: 11px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .iv-row-revoke:hover {
-    background: var(--iv-fill);
+  .iv-person-revoke {
+    opacity: 0;
+  }
+
+  .iv-person:hover .iv-person-revoke,
+  .iv-person-revoke:focus-visible {
+    opacity: 1;
+  }
+
+  .iv-person-revoke:hover {
+    background: color-mix(in oklab, var(--iv-bad) 12%, transparent);
     color: var(--iv-bad);
   }
 }
 
+/* The footnote: what just happened, or a quiet note when nothing has */
 .iv-status {
-  display: flex;
   min-height: 16px;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
+  padding: 0 12px;
+  overflow: hidden;
   color: var(--iv-muted);
   font-size: 12px;
-}
-
-.iv-note {
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color 0.3s;
 }
 
-.iv-dot {
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--iv-faint);
-}
-
-.iv-status[data-tone="wait"] .iv-dot {
-  background: var(--iv-wait);
-}
-
-.iv-status[data-tone="good"] .iv-dot {
-  background: var(--iv-good);
-}
-
-.iv-status[data-tone="bad"] {
-  color: var(--iv-bad);
-}
-
-.iv-status[data-tone="bad"] .iv-dot {
-  background: var(--iv-bad);
-}
-
-
-/* Invite says what it sent for a moment */
-.iv-send {
-  transition: background-color 0.2s;
-}
-
-.iv-send[data-sent] {
-  background: var(--iv-good);
-}
-
-.dark .iv-send[data-sent] {
-  color: #18181b;
-}
-
-/* Someone who just joined: their new row is tinted for a moment, past its edges so nothing moves */
-.iv-row {
-  position: relative;
-  isolation: isolate;
-}
-
-.iv-row::after {
-  position: absolute;
-  inset: 2px -8px;
-  z-index: -1;
-  border-radius: 12px;
-  background: color-mix(in oklab, var(--iv-good) 10%, transparent);
-  content: "";
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.7s;
-}
-
-.iv-row[data-joined]::after {
-  opacity: 1;
+.iv-status[data-tone="good"] {
+  color: var(--iv-good);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .iv-person[data-invited] .iv-person-face::after {
+    animation: none;
+  }
+
   .iv-send,
-  .iv-row::after {
+  .iv-avatar::before,
+  .iv-status {
     transition: none;
   }
 }

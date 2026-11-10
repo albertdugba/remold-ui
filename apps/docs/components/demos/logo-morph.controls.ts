@@ -41,8 +41,7 @@ export const logoMorphControls: Customizable = {
       type: "toggle",
       label: "Autoplay",
       default: false,
-      description:
-        "Play name → logo → name through the brands while on screen, until someone takes over.",
+      description: "Play name → logo → name through the brands while on screen, until someone takes over.",
     },
   },
 };

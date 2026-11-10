@@ -1,10 +1,12 @@
-/**
- * The warm, daylight look the story illustrations share: paper-white tops, soft clay sides, and a
- * few bright pieces that carry the story. Pair it with the `.day-stage` backdrop in `day-stage.css`.
- */
 import "./day-stage.css";
 
-type Palette = { top: string; sides: readonly [string, string, string]; line: string; glow: string; text: string };
+type Palette = {
+  top: string;
+  sides: readonly [string, string, string];
+  line: string;
+  glow: string;
+  text: string;
+};
 
 const tone = (top: string, sides: [string, string, string], glow: string, text = "#ffffff"): Palette => ({
   top,

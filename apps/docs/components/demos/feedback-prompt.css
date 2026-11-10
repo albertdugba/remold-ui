@@ -1,0 +1,425 @@
+/* Feedback prompt. Styling only: Motion springs the card's size, flies the thumb into its corner
+   and fades the contents in; Remold.Icon turns the thumb into a check. */
+.fbp {
+  --fbp-surface: #ffffff;
+  --fbp-ink: #0a0a0b;
+  --fbp-muted: #71717a;
+  --fbp-well: #f4f4f5;
+  --fbp-line: rgb(10 10 11 / 0.08);
+  --fbp-good: #16a34a;
+  --fbp-good-soft: #dcfce7;
+  --fbp-bad: #dc2626;
+  --fbp-bad-soft: #fee2e2;
+  position: relative;
+  display: inline-flex;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--fbp-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.dark .fbp {
+  --fbp-surface: #1f1f23;
+  --fbp-ink: #fafafa;
+  --fbp-muted: #a1a1aa;
+  --fbp-well: #2a2a2f;
+  --fbp-line: rgb(255 255 255 / 0.1);
+  --fbp-good: #4ade80;
+  --fbp-good-soft: rgb(74 222 128 / 0.16);
+  --fbp-bad: #f87171;
+  --fbp-bad-soft: rgb(248 113 113 / 0.16);
+}
+
+/* The card. It only changes size and corner radius; its contents sit at its top left. */
+.fbp-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--fbp-surface);
+  /* A hairline and the faintest lift: it sits on the page rather than floating over it */
+  box-shadow:
+    inset 0 0 0 1px var(--fbp-line),
+    0 1px 2px rgb(0 0 0 / 0.03),
+    0 4px 14px -8px rgb(0 0 0 / 0.08);
+  outline: none;
+}
+
+/* The content sits at the card's centre, so as the card grows and shrinks around it, it's revealed
+   and hidden evenly from the middle instead of sliding about inside. */
+.fbp-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max-content;
+  transform: translate(-50%, -50%);
+}
+
+.fbp-content[data-phase="form"] {
+  width: 340px;
+}
+
+/* The pill: the question and two thumbs */
+.fbp-idle,
+.fbp-thanks {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 48px;
+  padding: 0 6px 0 18px;
+  white-space: nowrap;
+}
+
+.fbp-thanks {
+  gap: 10px;
+  padding: 0 18px 0 10px;
+}
+
+.fbp-question {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+/* A hairline between the question and its answers */
+.fbp-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 8px 0 14px;
+  background: var(--fbp-line);
+}
+
+.fbp-thanks .fbp-question {
+  margin-right: 0;
+}
+
+.fbp-rate {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fbp-muted);
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    transform 0.15s;
+}
+
+.fbp-rate:active {
+  transform: scale(0.92);
+}
+
+.fbp-rate:focus-visible {
+  box-shadow: 0 0 0 2px var(--fbp-surface), 0 0 0 4px var(--fbp-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fbp-rate[data-rating="up"]:hover {
+    background: var(--fbp-good-soft);
+    color: var(--fbp-good);
+  }
+
+  .fbp-rate[data-rating="down"]:hover {
+    background: var(--fbp-bad-soft);
+    color: var(--fbp-bad);
+  }
+}
+
+/* The thumb, and later the check: a round badge that keeps one identity across the steps */
+.fbp-thumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.fbp-thumb svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fbp-head .fbp-thumb,
+.fbp-thanks .fbp-thumb {
+  background: var(--fbp-good-soft);
+  color: var(--fbp-good);
+}
+
+.fbp-card[data-rating="down"] .fbp-head .fbp-thumb {
+  background: var(--fbp-bad-soft);
+  color: var(--fbp-bad);
+}
+
+.fbp-thanks .fbp-thumb {
+  width: 28px;
+  height: 28px;
+  background: var(--fbp-good);
+  color: #ffffff;
+}
+
+.fbp-thanks .fbp-thumb svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* The card's contents */
+.fbp-form {
+  display: grid;
+  gap: 14px;
+  padding: 12px 12px 12px;
+}
+
+.fbp-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fbp-title {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.fbp-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fbp-muted);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.15s;
+}
+
+.fbp-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+.fbp-close:focus-visible {
+  box-shadow: 0 0 0 2px var(--fbp-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fbp-close:hover {
+    background: var(--fbp-well);
+    color: var(--fbp-ink);
+  }
+}
+
+.fbp-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fbp-reason {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--fbp-line);
+  color: var(--fbp-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color 0.18s,
+    color 0.18s,
+    box-shadow 0.18s,
+    padding 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* A chosen reason gains a tick that slides in from its left */
+.fbp-reason-tick {
+  display: grid;
+  place-items: center;
+  width: 0;
+  margin-right: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    width 0.22s cubic-bezier(0.32, 0.72, 0, 1),
+    margin-right 0.22s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.18s;
+}
+
+.fbp-reason-tick svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+
+.fbp-reason[data-pressed] {
+  padding-left: 10px;
+  background: var(--fbp-ink);
+  box-shadow: inset 0 0 0 1px var(--fbp-ink);
+  color: var(--fbp-surface);
+}
+
+.fbp-reason[data-pressed] .fbp-reason-tick {
+  width: 12px;
+  margin-right: 5px;
+  opacity: 1;
+}
+
+.fbp-reason:focus-visible {
+  box-shadow: 0 0 0 2px var(--fbp-surface), 0 0 0 4px var(--fbp-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fbp-reason:not([data-pressed]):hover {
+    background: var(--fbp-well);
+  }
+}
+
+.fbp-field {
+  display: grid;
+}
+
+.fbp-comment {
+  width: 100%;
+  min-height: 76px;
+  padding: 10px 12px;
+  border: 1.8px solid transparent;
+  border-radius: 14px;
+  background: var(--fbp-well);
+  color: var(--fbp-ink);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  resize: none;
+  outline: none;
+  transition:
+    border-color 0.18s,
+    background-color 0.18s;
+}
+
+.fbp-comment::placeholder {
+  color: var(--fbp-muted);
+}
+
+.fbp-comment:focus {
+  border-color: var(--fbp-ink);
+  background: var(--fbp-surface);
+}
+
+.fbp-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fbp-note {
+  padding-left: 2px;
+  color: var(--fbp-muted);
+  font-size: 12px;
+}
+
+.fbp-send {
+  display: grid;
+  place-items: center;
+  min-width: 68px;
+  height: 32px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fbp-ink);
+  color: var(--fbp-surface);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.15s;
+}
+
+.fbp-send[data-sending] {
+  cursor: progress;
+}
+
+.fbp-spinner {
+  display: grid;
+  place-items: center;
+}
+
+.fbp-spinner svg {
+  width: 16px;
+  height: 16px;
+  animation: fbp-spin 0.75s linear infinite;
+}
+
+@keyframes fbp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* While sending, the rest of the card steps back */
+.fbp-card:has(.fbp-send[data-sending]) :is(.fbp-reasons, .fbp-field, .fbp-close) {
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+.fbp-send:active {
+  transform: scale(0.96);
+}
+
+.fbp-send:focus-visible {
+  box-shadow: 0 0 0 2px var(--fbp-surface), 0 0 0 4px var(--fbp-ink);
+}
+
+.fbp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+
+/* The demo: the prompt sits where it would at the end of a page, near the top of its stage */
+/* The demo: the prompt in the middle of its stage, with room to open in every direction */
+.fbp-demo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 380px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fbp-spinner svg {
+    animation-duration: 2.4s;
+  }
+
+  .fbp-reason,
+  .fbp-reason-tick {
+    transition: none;
+  }
+}

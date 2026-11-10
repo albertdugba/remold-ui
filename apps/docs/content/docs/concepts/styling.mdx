@@ -8,7 +8,7 @@ description: "Every part renders plain elements you can style, and exposes its s
 `className` takes a string, or a function of the part's state.
 
 ```tsx tab="React" tab-group="lang"
-<Remold.Layout trigger={view} className={(state) => (state.animating ? 'list busy' : 'list')}>
+<Remold.Morph trigger={view} className={(state) => (state.animating ? 'list busy' : 'list')}>
 ```
 
 ```js tab="JavaScript"
@@ -35,7 +35,7 @@ In plain JavaScript you style the element yourself. The transition's `finished` 
 `render` replaces the default element and keeps Remold's props and ref. Pass an element, or a function of the props and state.
 
 ```tsx
-<Remold.Layout trigger={view} render={<ul className="grid" />}>
+<Remold.Morph trigger={view} render={<ul className="grid" />}>
 ```
 
 In plain JavaScript there is nothing to replace: `transition()` animates whichever element you pass it.

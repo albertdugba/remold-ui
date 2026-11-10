@@ -2,13 +2,13 @@
 
 import { Popover } from "@base-ui/react/popover";
 import {
+  AlbumIcon,
   Cancel01Icon,
-  FileAttachmentIcon,
-  Folder01Icon,
-  Link01Icon,
+  Delete02Icon,
+  FavouriteIcon,
   MoreHorizontalIcon,
-  Settings01Icon,
-  UserAdd01Icon,
+  Share08Icon,
+  ViewOffSlashIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Remold } from "@remold-ui/react";
@@ -16,18 +16,16 @@ import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useRef, useState, type MouseEvent } from "react";
 import { useScript } from "./use-script";
 
-type Action = { label: string; icon: IconSvgElement };
+type Action = { label: string; icon: IconSvgElement; destructive?: boolean };
 
 const actions: readonly Action[] = [
-  { label: "Open files", icon: Folder01Icon },
-  { label: "Add files", icon: FileAttachmentIcon },
-  { label: "Copy review link", icon: Link01Icon },
-  { label: "Invite reviewers", icon: UserAdd01Icon },
-  { label: "Project settings", icon: Settings01Icon },
+  { label: "Share", icon: Share08Icon },
+  { label: "Favourite", icon: FavouriteIcon },
+  { label: "Add to Album", icon: AlbumIcon },
+  { label: "Hide", icon: ViewOffSlashIcon },
+  { label: "Delete", icon: Delete02Icon, destructive: true },
 ];
 
-// The open tray grows when a consumer adds an action, instead of hiding rows
-// below a hard-coded viewport.
 const MENU_WIDTH = 300;
 const MENU_HEIGHT = 76 + actions.length * 44;
 
@@ -55,9 +53,7 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
   ]);
 
   const rise = (delay = 0) => ({
-    initial: reduceMotion
-      ? { opacity: 0 }
-      : { opacity: 0, y: 10, filter: "blur(4px)" },
+    initial: reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10, filter: "blur(4px)" },
     animate: { opacity: 1, y: 0, filter: "blur(0px)" },
     transition: {
       delay: reduceMotion ? 0 : delay,
@@ -68,10 +64,7 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
 
   return (
     <div className="grid w-full place-items-center py-10">
-      <div
-        className="relative shrink-0"
-        style={{ width: MENU_WIDTH, height: MENU_HEIGHT }}
-      >
+      <div className="relative shrink-0" style={{ width: MENU_WIDTH, height: MENU_HEIGHT }}>
         <Popover.Root open={open} onOpenChange={close} modal={false}>
           <motion.div
             ref={shellRef}
@@ -80,7 +73,6 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
                 ? { width: MENU_WIDTH, height: MENU_HEIGHT, borderRadius: 27 }
                 : { width: 54, height: 54, borderRadius: 27 }
             }
-            // Closing waits for the rows to blur out, so the tray never shrinks over them.
             transition={
               reduceMotion
                 ? { duration: 0.12 }
@@ -92,26 +84,18 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
                     delay: open ? 0 : 0.09,
                   }
             }
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden border border-black/[0.06] bg-white text-[#1f1f1d] shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] dark:border-white/[0.07] dark:bg-[#252420] dark:text-[#f2f1ec] dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)]"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden border border-black/[0.06] bg-white text-[#1f1f1d] shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] dark:border-white/[0.07] dark:bg-[#1c1c1f] dark:text-[#fafafa] dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)]"
           >
             <Popover.Trigger
-              aria-label={open ? "Close project menu" : "Open project menu"}
-              className={`absolute z-10 grid place-items-center text-[#1f1f1d] transition-[background-color,border-radius,color,transform] duration-150 ease-out active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-fd-ring dark:text-[#f2f1ec] ${
+              aria-label={open ? "Close photo menu" : "Open photo menu"}
+              className={`absolute z-10 grid place-items-center text-[#1f1f1d] transition-[background-color,border-radius,color,transform] duration-150 ease-out active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-fd-ring dark:text-[#fafafa] ${
                 open
-                  ? "right-[5px] top-[5px] size-11 rounded-full bg-[#efefeb] hover:bg-[#e6e6e0] dark:bg-[#3c3b35] dark:hover:bg-[#47463f]"
-                  : "right-0 top-0 size-[52px] rounded-full hover:bg-[#efefeb] dark:hover:bg-[#3c3b35]"
+                  ? "right-[5px] top-[5px] size-11 rounded-full bg-[#efefeb] hover:bg-[#e6e6e0] dark:bg-[#2c2c31] dark:hover:bg-[#36363c]"
+                  : "right-0 top-0 size-[52px] rounded-full hover:bg-[#efefeb] dark:hover:bg-[#2c2c31]"
               }`}
             >
               <Remold.Icon
-                icon={
-                  <HugeiconsIcon
-                    icon={
-                      open
-                        ? Cancel01Icon
-                        : MoreHorizontalIcon
-                    }
-                  />
-                }
+                icon={<HugeiconsIcon icon={open ? Cancel01Icon : MoreHorizontalIcon} />}
                 className="size-5"
                 strokeWidth={2.15}
                 spring={{ duration: 0.32, bounce: 0.08 }}
@@ -120,19 +104,13 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
             </Popover.Trigger>
 
             <Popover.Portal container={shellRef}>
-              <Popover.Positioner
-                side="bottom"
-                align="end"
-                className="!absolute !inset-0 !transform-none"
-              >
+              <Popover.Positioner side="bottom" align="end" className="!absolute !inset-0 !transform-none">
                 <Popover.Popup
                   initialFocus={false}
                   className="absolute inset-0 outline-none transition-[opacity,filter] duration-100 ease-out data-ending-style:opacity-0 data-ending-style:blur-[3px] motion-reduce:data-ending-style:blur-none"
                 >
                   <motion.div
-                    initial={
-                      reduceMotion ? { opacity: 0 } : { opacity: 0, y: 18 }
-                    }
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
                       delay: reduceMotion ? 0 : 0.08,
@@ -147,30 +125,32 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
                     }}
                     className="absolute inset-x-1 top-2"
                   >
-                    <div className="flex h-[52px] items-center px-5 pr-16 text-[16px] font-semibold leading-5 tracking-[-0.015em] text-[#1f1f1d] dark:text-[#f2f1ec]">
-                      <span className="truncate">Launch assets</span>
+                    <div className="flex h-[52px] items-center px-5 pr-16 text-[16px] font-semibold leading-5 tracking-[-0.015em] text-[#1f1f1d] dark:text-[#fafafa]">
+                      <span className="truncate">Sunset at Labadi</span>
                     </div>
                     <LayoutGroup id="popover-menu">
                       <div onPointerLeave={() => setHoveredAction(null)}>
                         {actions.map((action, index) => (
                           <motion.a
                             key={action.label}
-                            href={`#${action.label
-                              .toLowerCase()
-                              .replace(" ", "-")}`}
+                            href={`#${action.label.toLowerCase().replace(" ", "-")}`}
                             {...rise(0.11 + index * 0.045)}
                             whileTap={{ scale: 0.99 }}
-                            onPointerEnter={(event) => event.pointerType === "mouse" &&
-                              setHoveredAction(action.label)
+                            onPointerEnter={(event) =>
+                              event.pointerType === "mouse" && setHoveredAction(action.label)
                             }
                             onFocus={() => setHoveredAction(action.label)}
                             onClick={choose}
-                            className="relative flex h-11 w-full items-center gap-3 rounded-xl px-5 text-left text-[15px] font-medium leading-5 tracking-[-0.01em] text-[#1f1f1d] focus-visible:outline-none dark:text-[#f2f1ec]"
+                            className={`relative flex h-11 w-full items-center gap-3 rounded-xl px-5 text-left text-[15px] font-medium leading-5 tracking-[-0.01em] focus-visible:outline-none ${
+                              action.destructive
+                                ? "text-[#e5484d] dark:text-[#ff6369]"
+                                : "text-[#1f1f1d] dark:text-[#fafafa]"
+                            }`}
                           >
                             {hoveredAction === action.label && (
                               <motion.span
                                 layoutId="popover-menu-hover"
-                                className="pointer-events-none absolute inset-0 rounded-xl bg-[#f5f5f1] dark:bg-[#33322d]"
+                                className="pointer-events-none absolute inset-0 rounded-xl bg-[#f5f5f1] dark:bg-[#2a2a2f]"
                                 transition={{
                                   type: "spring",
                                   stiffness: 460,
@@ -181,13 +161,13 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
                             )}
                             <Remold.Icon
                               icon={<HugeiconsIcon icon={action.icon} />}
-                              className="relative size-[18px] text-[#817f77] dark:text-[#aaa79e]"
+                              className={`relative size-[18px] ${
+                                action.destructive ? "text-current" : "text-[#817f77] dark:text-[#a1a1aa]"
+                              }`}
                               strokeWidth={2.15}
                               aria-hidden="true"
                             />
-                            <span className="relative whitespace-nowrap">
-                              {action.label}
-                            </span>
+                            <span className="relative whitespace-nowrap">{action.label}</span>
                           </motion.a>
                         ))}
                       </div>

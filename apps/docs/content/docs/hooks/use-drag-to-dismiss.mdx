@@ -13,8 +13,8 @@ function CardPage({ card, onClose }) {
   return <div ref={drag.ref}>{/* the card */}</div>;
 }
 
-// The view swap is a Layout transition, so the card flies home from where the finger let go.
-<Remold.Layout trigger={open}>{open ? <CardPage card={open} onClose={close} /> : <Wallet />}</Remold.Layout>;
+// The view swap is a Morph transition, so the card flies home from where the finger let go.
+<Remold.Morph trigger={open}>{open ? <CardPage card={open} onClose={close} /> : <Wallet />}</Remold.Morph>;
 ```
 
 ```js tab="JavaScript"
@@ -32,7 +32,7 @@ Without React, `dragToDismiss` takes the element and returns `reset()` and `dest
 
 - It follows the finger along one axis. Pulling the wrong way stretches with resistance instead of moving freely.
 - Let go past `distance`, or flick faster than `velocity`, and `onDismiss` runs. Otherwise it springs back, starting at the speed of your finger.
-- After a dismiss the offset stays on the element, so the `Layout` transition that follows flies it from exactly there.
+- After a dismiss the offset stays on the element, so the `Morph` transition that follows flies it from exactly there.
 - Taps and clicks inside still work: a press only becomes a drag after a few pixels, and a drag never ends in a click. Text fields and anything marked `data-rm-no-drag` never start one.
 - The page can still scroll along the other axis (it sets `touch-action` for you).
 - With reduced motion it jumps back instead of springing.

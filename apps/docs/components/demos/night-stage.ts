@@ -1,7 +1,3 @@
-/**
- * The dark build-tool look the canvas illustrations share: near-black tops, violet sides, grey
- * wire, a violet glow. Pair it with the `.night-stage` backdrop in `night-stage.css`.
- */
 import "./night-stage.css";
 
 export const NIGHT = {

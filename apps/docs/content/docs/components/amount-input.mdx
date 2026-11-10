@@ -13,7 +13,7 @@ tags: ["Motion", "Text morph"]
 
 - **Type an amount.** Each digit rises into place, and the comma slides along as the number grows.
 - **Ask for too much precision.** A third decimal or an eighth digit is refused with a small shake rather than ignored.
-- **Go over your balance.** The field turns red once, and "Balance $2,410.50" morphs into how far over you are.
+- **Go over your balance.** The field turns red once, and "Balance £2,410.50" morphs into how far over you are.
 - **Press Max.** It fills in your whole balance.
 
 ## Install
@@ -31,13 +31,13 @@ The install command adds these for you. If you copy the code by hand, install th
 ```tsx
 const [amount, setAmount] = useState("");
 
-<AmountInput value={amount} onValueChange={setAmount} balance={2410.5} />
+<AmountInput value={amount} onValueChange={setAmount} balance={2410.5} symbol="£" currency="GBP" />
 ```
 
-`value` is the amount as typed, digits and at most one point. Set `symbol`, `decimals` and `maxDigits` for other currencies; `decimals={0}` refuses the point altogether.
+`value` is the amount as typed, digits and at most one point. Set `symbol`, `currency` (the code shown at the end of the field), `decimals` and `maxDigits` for other currencies; `decimals={0}` refuses the point altogether.
 
 ## How it works
 
-- **A real input underneath.** An invisible input covers the number, so typing, pasting, the mobile number pad and screen readers behave as they do on a plain field. The digits you see are drawn from its value.
+- **A real input underneath.** An invisible Base UI `Input` covers the number, so typing, pasting, the mobile number pad and screen readers behave as they do on a plain field. The digits you see are drawn from its value.
 - **Digits stay put.** Whole digits are keyed from the left and separators by their place from the right, so typing adds one digit at the end and only the comma moves.
 - **The helper morphs.** It's `Remold.Text`, so "Balance" becomes the shortfall by keeping the letters the two lines share.

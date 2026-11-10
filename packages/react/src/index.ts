@@ -1,18 +1,21 @@
+/**
+ * React bindings for Remold's interface primitives. Canvas-drawn parts (Scene, Story, Particles,
+ * Canvas, Globe, DotGrid) and `useDust` live in `@remold-ui/react/canvas`, so an interface-only
+ * bundle never carries canvas code.
+ */
 export * as Remold from "./index.parts.js";
 export { useRemold } from "./use-remold/use-remold.js";
-export { useRemoldLayout } from "./use-remold-layout/use-remold-layout.js";
+export { useRemoldMorph } from "./use-remold-morph/use-remold-morph.js";
 export type {
-  UseRemoldLayoutOptions,
-  UseRemoldLayoutReturnValue,
-} from "./use-remold-layout/types.js";
+  UseRemoldMorphOptions,
+  UseRemoldMorphReturnValue,
+} from "./use-remold-morph/types.js";
 export { useViewTransition } from "./use-view-transition/use-view-transition.js";
 export { MorphPath } from "./morph-path/morph-path.js";
 export type { MorphPathProps } from "./morph-path/types.js";
 export { useConnectorMotion } from "./use-connector-motion/use-connector-motion.js";
 export type { UseConnectorMotion } from "./use-connector-motion/types.js";
 export { useAutoplay } from "./use-autoplay/use-autoplay.js";
-export { useDust, type UseDust } from "./use-dust/use-dust.js";
-export type { Dust, DustOptions } from "@remold-ui/canvas";
 export type { Autoplay, AutoplayOptions } from "./use-autoplay/types.js";
 export { useDragToDismiss } from "./use-drag-to-dismiss/use-drag-to-dismiss.js";
 export type {
@@ -25,9 +28,6 @@ export type {
   UseSpringPressOptions,
 } from "./use-spring-press/types.js";
 export type { BaseProps, RenderProp } from "./utils/use-render-element.js";
-export type { ParticleShape } from "./particles/types.js";
-export type { GlobeArcEvent, GlobePulse } from "./globe/types.js";
-export type { RemoldDotGridActions as DotGridActions } from "./dot-grid/types.js";
 export type {
   Choreography,
   Transition,

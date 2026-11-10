@@ -35,6 +35,9 @@ export {
   type PathSampleOptions,
   type SampleOptions,
 } from "./points/sampling";
+export * as shapes from "./points/shapes";
+export type { PixelShape, Shape, ShapePoint, ShapeSample, ToneRule, Vec3 } from "./points/shapes";
+export type { PixelSubject, Pixels } from "./points/pixels";
 export {
   pointCloud,
   STRIDE as CLOUD_STRIDE,

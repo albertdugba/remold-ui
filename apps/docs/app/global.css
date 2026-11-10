@@ -194,14 +194,15 @@ body {
   color: var(--color-fd-foreground);
 }
 
-#nd-page .prose h2 {
+/* Docs headings only, never a heading inside a demo */
+#nd-page .prose h2:not(.not-prose *) {
   margin-top: 2.6em;
   font-size: 1.375rem;
   font-weight: 620;
   letter-spacing: -0.02em;
 }
 
-#nd-page .prose h3 {
+#nd-page .prose h3:not(.not-prose *) {
   font-size: 1.0625rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -725,160 +726,258 @@ html > body[data-scroll-locked] {
   container-type: inline-size;
 }
 
+/* The toolbar: search and sort on one line, the categories as tabs under it. Everything sits on the
+   same soft fill as the cards, with no borders, so the row reads as one quiet surface. */
+.rm-browser {
+  --rm-bar-fill: color-mix(in oklab, var(--color-fd-foreground) 4.5%, var(--color-fd-background));
+  --rm-bar-raised: var(--color-fd-background);
+  --rm-bar-line: color-mix(in oklab, var(--color-fd-foreground) 8%, transparent);
+  --rm-bar-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.dark .rm-browser {
+  --rm-bar-fill: color-mix(in oklab, var(--color-fd-foreground) 6%, var(--color-fd-background));
+  --rm-bar-raised: color-mix(in oklab, var(--color-fd-foreground) 12%, var(--color-fd-background));
+}
+
 .rm-browser-tools {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 1rem 0 12px;
-}
-
-.rm-browser-filters {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-/* Category chips, each with its count */
-.rm-browser-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.rm-browser-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 11px;
-  border: 1px solid var(--color-fd-border);
-  border-radius: 9px;
-  background: var(--color-fd-background);
-  color: var(--color-fd-muted-foreground);
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background-color 150ms ease-out,
-    color 150ms ease-out,
-    border-color 150ms ease-out;
-}
-
-.rm-browser-chip span {
-  color: color-mix(in oklab, var(--color-fd-muted-foreground) 65%, transparent);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .rm-browser-chip:hover {
-    color: var(--color-fd-foreground);
-  }
-}
-
-.rm-browser-chip[data-pressed] {
-  border-color: var(--color-fd-foreground);
-  background: var(--color-fd-foreground);
-  color: var(--color-fd-background);
-}
-
-.rm-browser-chip[data-pressed] span {
-  color: color-mix(in oklab, var(--color-fd-background) 65%, transparent);
-}
-
-/* Featured or A–Z */
-.rm-browser-sort {
-  display: flex;
-  flex: none;
-  gap: 2px;
-  height: 38px;
-  padding: 3px;
-  border: 1px solid var(--color-fd-border);
-  border-radius: 11px;
-  background: var(--color-fd-background);
-}
-
-.rm-browser-sort-item {
-  padding: 0 11px;
-  border: 0;
-  border-radius: 8px;
-  background: none;
-  color: var(--color-fd-muted-foreground);
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.rm-browser-sort-item[data-pressed] {
-  background: var(--color-fd-muted);
-  color: var(--color-fd-foreground);
-}
-
-.rm-browser-chip:focus-visible,
-.rm-browser-sort-item:focus-visible {
-  outline: 2px solid var(--color-fd-foreground);
-  outline-offset: 2px;
-}
-
-.rm-browser-count {
-  flex: none;
-  margin: 0;
-  color: var(--color-fd-muted-foreground);
-  font-size: 12.5px;
-  font-variant-numeric: tabular-nums;
-}
-
-.rm-browser-count b {
-  font-weight: 600;
-  color: var(--color-fd-foreground);
+  gap: 8px;
+  margin: 1.25rem 0 14px;
 }
 
 .rm-browser-search {
   display: flex;
   flex: 1;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  height: 38px;
-  padding: 0 13px;
-  border: 1px solid var(--color-fd-border);
-  border-radius: 11px;
-  background: var(--color-fd-background);
+  gap: 10px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 8px 0 15px;
+  border-radius: 14px;
+  background: var(--rm-bar-fill);
+  box-shadow: inset 0 0 0 1px transparent;
+  cursor: text;
   transition:
-    border-color 160ms ease-out,
-    box-shadow 160ms ease-out;
+    background-color 200ms ease-out,
+    box-shadow 200ms ease-out;
 }
 
 .rm-browser-search svg {
-  width: 15px;
-  height: 15px;
+  flex: none;
+  width: 16px;
+  height: 16px;
   color: var(--color-fd-muted-foreground);
 }
 
 .rm-browser-search input {
   flex: 1;
   min-width: 0;
+  height: 100%;
   border: 0;
   background: transparent;
-  font-size: 13px;
+  color: var(--color-fd-foreground);
+  font-size: 14px;
   outline: none;
 }
 
-.rm-browser-search:focus-within {
-  border-color: color-mix(
-    in oklab,
-    var(--color-fd-foreground) 35%,
-    transparent
-  );
-  box-shadow: 0 0 0 3px
-    color-mix(in oklab, var(--color-fd-foreground) 8%, transparent);
+.rm-browser-search input::placeholder {
+  color: color-mix(in oklab, var(--color-fd-muted-foreground) 80%, transparent);
 }
 
-.rm-card:focus-visible {
+.rm-browser-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.rm-browser-search:focus-within {
+  background: var(--color-fd-background);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-fd-foreground) 22%, transparent),
+    0 0 0 4px color-mix(in oklab, var(--color-fd-foreground) 6%, transparent);
+}
+
+.rm-browser-key {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  margin-right: 2px;
+  border-radius: 7px;
+  background: var(--rm-bar-raised);
+  box-shadow: inset 0 0 0 1px var(--rm-bar-line);
+  color: var(--color-fd-muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11.5px;
+}
+
+.rm-browser-search:focus-within .rm-browser-key {
+  opacity: 0;
+}
+
+.rm-browser-clear {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--color-fd-muted-foreground);
+  cursor: pointer;
+}
+
+.rm-browser-clear svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Featured or A–Z: a track with the chosen option raised out of it. */
+.rm-browser-sort {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  height: 44px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--rm-bar-fill);
+}
+
+.rm-browser-sort-item {
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--color-fd-muted-foreground);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease-out,
+    color 200ms ease-out,
+    box-shadow 200ms ease-out;
+}
+
+.rm-browser-sort-item[data-pressed] {
+  background: var(--rm-bar-raised);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 0 0 1px var(--rm-bar-line);
+  color: var(--color-fd-foreground);
+}
+
+/* The categories: a track like the sort's, with the chosen one raised and sliding between them. */
+.rm-browser-filters {
+  display: flex;
+  margin-bottom: 22px;
+}
+
+.rm-browser-tabs {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--rm-bar-fill);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* When the categories don't all fit, the row scrolls and its far edge fades to say so. */
+.rm-browser-tabs[data-overflow] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
+
+.rm-browser-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.rm-browser-tab {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--color-fd-muted-foreground);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 200ms ease-out;
+}
+
+.rm-browser-tab-count {
+  color: color-mix(in oklab, var(--color-fd-muted-foreground) 70%, transparent);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  transition: color 200ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rm-browser-tab:hover,
+  .rm-browser-clear:hover,
+  .rm-browser-sort-item:hover {
+    color: var(--color-fd-foreground);
+  }
+}
+
+.rm-browser-tab[data-active] {
+  color: var(--color-fd-foreground);
+}
+
+.rm-browser-tab[data-active] .rm-browser-tab-count {
+  color: var(--color-fd-muted-foreground);
+}
+
+.rm-browser-indicator {
+  position: absolute;
+  z-index: -1;
+  top: var(--active-tab-top);
+  left: var(--active-tab-left);
+  width: var(--active-tab-width);
+  height: var(--active-tab-height);
+  border-radius: 10px;
+  background: var(--rm-bar-raised);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 0 0 1px var(--rm-bar-line);
+  transition:
+    left 320ms var(--rm-bar-ease),
+    width 320ms var(--rm-bar-ease);
+}
+
+.rm-browser-tab:focus-visible,
+.rm-browser-sort-item:focus-visible,
+.rm-browser-clear:focus-visible {
   outline: 2px solid var(--color-fd-foreground);
   outline-offset: 2px;
+}
+
+.rm-browser-panel:focus-visible {
+  outline: 2px solid var(--color-fd-foreground);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+
+.rm-browser-results {
+  flex: none;
+  color: var(--color-fd-muted-foreground);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rm-browser-indicator {
+    transition: none;
+  }
 }
 
 .rm-browser-grid {
@@ -1007,6 +1106,11 @@ html > body[data-scroll-locked] {
   border-radius: 0 !important;
 }
 
+/* The particle pieces bring their own dark stage: in a cover card it's the card's picture, square-cornered. */
+.rm-card .rm-preview[data-cover] :is(.vas, .pts) {
+  border-radius: 0;
+}
+
 /* Media embeds already provide their own visual field. Let that field be the card's screen rather
    than showing it inside a second pale preview tile. */
 .rm-card:has(.rm-preview[data-cover]) .rm-card-stage {
@@ -1041,8 +1145,7 @@ html > body[data-scroll-locked] {
 
 .rm-card-meta {
   display: grid;
-  gap: 3px;
-  padding: 11px 14px 13px;
+  padding: 11px 14px 12px;
 }
 
 .rm-card-meta strong {
@@ -1052,23 +1155,9 @@ html > body[data-scroll-locked] {
   color: var(--color-fd-foreground);
 }
 
-.rm-card-meta span {
-  display: -webkit-box;
-  overflow: hidden;
-  color: var(--color-fd-muted-foreground);
-  font-size: 12px;
-  line-height: 1.45;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-}
-
 @container (max-width: 620px) {
-  .rm-browser-filters {
-    display: grid;
-    gap: 10px;
-  }
-  .rm-browser-search {
-    max-width: none;
+  .rm-browser-sort-item {
+    padding: 0 11px;
   }
   .rm-browser-grid {
     grid-template-columns: 1fr;

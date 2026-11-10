@@ -2,7 +2,6 @@
 import type { CSSProperties } from "react";
 import { useInPreview } from "./portal-container";
 
-/** The Apple logo, as one glyph: the leaf, then the apple. */
 const LEAF =
   "M11.703 5.616c.03-.905.278-2.237 1.145-3.112c.805-.813 1.785-1.209 2.395-1.39a.347.347 0 0 1 .45.353c-.04.866-.268 2.158-.856 2.85c-.554.652-1.444 1.516-2.749 1.662a.348.348 0 0 1-.385-.363";
 const APPLE =
@@ -18,7 +17,8 @@ const BADGE: CSSProperties = {
   background: "#000",
   boxShadow: "inset 0 0 0 1px #a6a6a6",
   color: "#fff",
-  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif',
+  fontFamily:
+    '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif',
   lineHeight: 1,
   textDecoration: "none",
 };
@@ -30,7 +30,13 @@ const BADGE: CSSProperties = {
 export function AppleMusicBadge() {
   const badge = (
     <span style={BADGE}>
-      <svg viewBox="0 0 24 24" width={20} height={20} aria-hidden="true" style={{ flex: "none", marginTop: -2 }}>
+      <svg
+        viewBox="0 0 24 24"
+        width={20}
+        height={20}
+        aria-hidden="true"
+        style={{ flex: "none", marginTop: -2 }}
+      >
         <path fill="currentColor" d={LEAF} />
         <path fill="currentColor" d={APPLE} />
       </svg>
@@ -40,7 +46,6 @@ export function AppleMusicBadge() {
       </span>
     </span>
   );
-  // In a preview card (itself a link) it's just the badge: a link can't hold another link.
   if (useInPreview()) return <span aria-label="Listen on Apple Music">{badge}</span>;
   return (
     <a

@@ -34,7 +34,7 @@ export function toReact(doc: SceneDocument): string {
   return `"use client";
 // ${doc.title}: made in the Remold studio.
 import { extrude } from "@remold-ui/canvas";
-import { Remold } from "@remold-ui/react";
+import { Remold } from "@remold-ui/react/canvas";
 import { useEffect, useState } from "react";
 
 type SceneProps = Remold.Scene.Props;

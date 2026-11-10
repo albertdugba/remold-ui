@@ -1,7 +1,14 @@
 "use client";
 
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { ArrowRight01Icon, BookOpen01Icon, CheckmarkCircle01Icon, CircleIcon, HelpCircleIcon, Video01Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowRight01Icon,
+  BookOpen01Icon,
+  CheckmarkCircle01Icon,
+  CircleIcon,
+  HelpCircleIcon,
+  Video01Icon,
+} from "@hugeicons/core-free-icons";
 import { Remold, useConnectorMotion } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
@@ -113,117 +120,245 @@ const SCENES: { open: string[]; done: string[]; show: Show }[] = [
 
 const LAYOUT_SPRING = { type: "spring" as const, duration: 0.32, bounce: 0.08 };
 
+type ConnectorMotion = ReturnType<typeof useConnectorMotion>;
+
+function withToggled(ids: Set<string>, id: string) {
+  const next = new Set(ids);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  return next;
+}
+
+function visibleRows(open: Set<string>, done: Set<string>, show: Show) {
+  const rows: Row[] = [];
+
+  for (const courseModule of COURSE) {
+    const left = courseModule.lessons.filter((lesson) => !done.has(lesson.id));
+    if (show === "Remaining" && left.length === 0) continue;
+
+    rows.push({ id: courseModule.id, parent: null, module: courseModule });
+    if (!open.has(courseModule.id)) continue;
+
+    for (const lesson of show === "Remaining" ? left : courseModule.lessons) {
+      rows.push({ id: lesson.id, parent: courseModule.id, lesson });
+    }
+  }
+
+  return rows;
+}
+
+function CourseHeader({ finished, total }: { finished: number; total: number }) {
+  return (
+    <div className="co-head">
+      <div>
+        <p className="co-eyebrow">Course</p>
+        <h4>Product Design Foundations</h4>
+      </div>
+      <div className="co-progress" aria-label={`${finished} of ${total} lessons done`}>
+        <span className="co-progress-count">{`${finished} of ${total} lessons`}</span>
+        <span className="co-bar" aria-hidden="true">
+          <span style={{ width: `${(finished / total) * 100}%` }} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ShowFilter({
+  show,
+  upNext,
+  onChange,
+}: {
+  show: Show;
+  upNext?: Lesson;
+  onChange: (show: Show) => void;
+}) {
+  return (
+    <div className="co-tools">
+      <ToggleGroup
+        className="co-seg"
+        aria-label="Show"
+        value={[show]}
+        onValueChange={(values) => values[0] && onChange(values[0] as Show)}
+      >
+        {SHOW.map((option) => (
+          <Toggle key={option} value={option}>
+            {option}
+          </Toggle>
+        ))}
+      </ToggleGroup>
+
+      {upNext && (
+        <span className="co-next">
+          Up next: <span>{upNext.title}</span>
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ModuleRow({
+  courseModule,
+  done,
+  open,
+  focused,
+  connectorMotion,
+  onToggle,
+  onKeyDown,
+}: {
+  courseModule: Module;
+  done: Set<string>;
+  open: boolean;
+  focused: boolean;
+  connectorMotion: ConnectorMotion;
+  onToggle: () => void;
+  onKeyDown: (event: KeyboardEvent) => void;
+}) {
+  const count = courseModule.lessons.filter((lesson) => done.has(lesson.id)).length;
+  const minutes = courseModule.lessons.reduce((total, lesson) => total + lesson.minutes, 0);
+
+  return (
+    <motion.button
+      layout
+      {...connectorMotion}
+      transition={LAYOUT_SPRING}
+      type="button"
+      role="treeitem"
+      aria-level={1}
+      aria-expanded={open}
+      data-co-row={courseModule.id}
+      tabIndex={focused ? 0 : -1}
+      className="co-module"
+      onClick={onToggle}
+      onKeyDown={onKeyDown}
+    >
+      <span className="co-chevron" aria-hidden="true">
+        <HugeiconsIcon
+          icon={ArrowRight01Icon}
+          strokeWidth={2}
+          aria-hidden="true"
+          data-open={open ? "" : undefined}
+        />
+      </span>
+      <span
+        className="co-number"
+        data-rm-anchor={courseModule.id}
+        data-complete={count === courseModule.lessons.length || undefined}
+      >
+        {COURSE.indexOf(courseModule) + 1}
+      </span>
+      <span className="co-title">{courseModule.title}</span>
+      <span className="co-meta">{`${count}/${courseModule.lessons.length} · ${minutes} min`}</span>
+    </motion.button>
+  );
+}
+
+function LessonRow({
+  lesson,
+  parent,
+  done,
+  next,
+  focused,
+  connectorMotion,
+  onToggle,
+  onKeyDown,
+}: {
+  lesson: Lesson;
+  parent: string;
+  done: boolean;
+  next: boolean;
+  focused: boolean;
+  connectorMotion: ConnectorMotion;
+  onToggle: () => void;
+  onKeyDown: (event: KeyboardEvent) => void;
+}) {
+  const KindIcon = KIND_ICONS[lesson.kind];
+
+  return (
+    <motion.div
+      layout
+      {...connectorMotion}
+      transition={LAYOUT_SPRING}
+      role="treeitem"
+      aria-level={2}
+      aria-selected={focused}
+      className={`co-lesson${next ? " next" : ""}`}
+    >
+      <button
+        type="button"
+        className="co-tick"
+        data-co-row={lesson.id}
+        tabIndex={focused ? 0 : -1}
+        aria-label={done ? `Mark "${lesson.title}" not done` : `Mark "${lesson.title}" done`}
+        aria-pressed={done}
+        data-rm-anchor={lesson.id}
+        data-rm-link={parent}
+        onClick={onToggle}
+        onKeyDown={onKeyDown}
+      >
+        <Remold.Icon
+          icon={<HugeiconsIcon icon={done ? CheckmarkCircle01Icon : CircleIcon} />}
+          strokeWidth={1.8}
+          aria-hidden="true"
+        />
+      </button>
+      <span className="co-lesson-title">{lesson.title}</span>
+      <span className="co-kind" aria-label={lesson.kind}>
+        <HugeiconsIcon icon={KindIcon} aria-hidden="true" />
+      </span>
+      <span className="co-minutes">{lesson.minutes} min</span>
+    </motion.div>
+  );
+}
+
 export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
   const connectorRoot = useRef<HTMLDivElement>(null);
   const connectorMotion = useConnectorMotion(connectorRoot);
-  const [open, setOpen] = useState<Set<string>>(
-    () => new Set(["research", "interface"]),
-  );
-  const [done, setDone] = useState<Set<string>>(
-    () => new Set(["welcome", "how", "setup", "users", "jobs"]),
-  );
+  const [open, setOpen] = useState<Set<string>>(() => new Set(["research", "interface"]));
+  const [done, setDone] = useState<Set<string>>(() => new Set(["welcome", "how", "setup", "users", "jobs"]));
   const [show, setShow] = useState<Show>("All");
-  useEffect(() => {
-    if (scene === undefined) return;
-    const s = SCENES[scene % SCENES.length]!;
-    setOpen(new Set(s.open));
-    setDone(new Set(s.done));
-    setShow(s.show);
-  }, [scene]);
   const [focus, setFocus] = useState("synthesis");
 
-  const lessons = COURSE.flatMap((m) => m.lessons);
-  const next = lessons.find((l) => !done.has(l.id));
-  const rows = useMemo(() => {
-    const out: Row[] = [];
-    for (const module of COURSE) {
-      const left = module.lessons.filter((l) => !done.has(l.id));
+  useEffect(() => {
+    if (scene === undefined) return;
+    const preset = SCENES[scene % SCENES.length]!;
+    setOpen(new Set(preset.open));
+    setDone(new Set(preset.done));
+    setShow(preset.show);
+  }, [scene]);
 
-      if (show === "Remaining" && left.length === 0) continue;
-      out.push({ id: module.id, parent: null, module });
-      if (!open.has(module.id)) continue;
-      for (const lesson of show === "Remaining" ? left : module.lessons)
-        out.push({ id: lesson.id, parent: module.id, lesson });
-    }
-    return out;
-  }, [open, done, show]);
+  const lessons = COURSE.flatMap((courseModule) => courseModule.lessons);
+  const upNext = lessons.find((lesson) => !done.has(lesson.id));
+  const finished = lessons.filter((lesson) => done.has(lesson.id)).length;
+  const rows = useMemo(() => visibleRows(open, done, show), [open, done, show]);
 
-  const toggle = (
-    set: (f: (s: Set<string>) => Set<string>) => void,
-    id: string,
-  ) =>
-    set((current) => {
-      const nextSet = new Set(current);
-      if (nextSet.has(id)) nextSet.delete(id);
-      else nextSet.add(id);
-      return nextSet;
-    });
+  const toggleOpen = (id: string) => setOpen((current) => withToggled(current, id));
+  const toggleDone = (id: string) => setDone((current) => withToggled(current, id));
+
+  const moveFocus = (id: string) => {
+    setFocus(id);
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>(`[data-co-row="${CSS.escape(id)}"]`)?.focus(),
+    );
+  };
 
   const onKey = (event: KeyboardEvent, row: Row) => {
-    const i = rows.findIndex((r) => r.id === row.id);
-    const move = (id: string) => {
-      setFocus(id);
-      requestAnimationFrame(
-        () =>
-          document
-            .querySelector<HTMLElement>(`[data-co-row="${CSS.escape(id)}"]`)
-            ?.focus(),
-      );
-    };
-    if (event.key === "ArrowDown" && rows[i + 1]) move(rows[i + 1]!.id);
-    else if (event.key === "ArrowUp" && rows[i - 1]) move(rows[i - 1]!.id);
-    else if (event.key === "ArrowRight" && row.module && !open.has(row.id))
-      toggle(setOpen, row.id);
-    else if (event.key === "ArrowLeft" && row.module && open.has(row.id))
-      toggle(setOpen, row.id);
-    else if (event.key === "ArrowLeft" && row.parent) move(row.parent);
+    const index = rows.findIndex((candidate) => candidate.id === row.id);
+
+    if (event.key === "ArrowDown" && rows[index + 1]) moveFocus(rows[index + 1]!.id);
+    else if (event.key === "ArrowUp" && rows[index - 1]) moveFocus(rows[index - 1]!.id);
+    else if (event.key === "ArrowRight" && row.module && !open.has(row.id)) toggleOpen(row.id);
+    else if (event.key === "ArrowLeft" && row.module && open.has(row.id)) toggleOpen(row.id);
+    else if (event.key === "ArrowLeft" && row.parent) moveFocus(row.parent);
     else return;
+
     event.preventDefault();
   };
 
-  const finished = lessons.filter((l) => done.has(l.id)).length;
   return (
     <div className="co not-prose">
-      <div className="co-head">
-        <div>
-          <p className="co-eyebrow">Course</p>
-          <h4>Product Design Foundations</h4>
-        </div>
-        <div
-          className="co-progress"
-          aria-label={`${finished} of ${lessons.length} lessons done`}
-        >
-          <span className="co-progress-count">{`${finished} of ${lessons.length} lessons`}</span>
-          <span className="co-bar" aria-hidden="true">
-            <span style={{ width: `${(finished / lessons.length) * 100}%` }} />
-          </span>
-        </div>
-      </div>
-      <div className="co-tools">
-        <ToggleGroup
-          className="co-seg"
-          aria-label="Show"
-          value={[show]}
-          onValueChange={(values) => {
-            const next = values[0] as Show | undefined;
-            if (next) setShow(next);
-          }}
-        >
-          {SHOW.map((option) => (
-            <Toggle
-              key={option}
-              value={option}
-            >
-              {option}
-            </Toggle>
-          ))}
-        </ToggleGroup>
-        {next && (
-          <span className="co-next">
-            Up next: <span>{next.title}</span>
-          </span>
-        )}
-      </div>
+      <CourseHeader finished={finished} total={lessons.length} />
+      <ShowFilter show={show} upNext={upNext} onChange={setShow} />
 
       <Remold.Connectors ref={connectorRoot} className="co-lines" radius={10} gap={3}>
         <motion.div
@@ -234,93 +369,38 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
           aria-label="Course outline"
           className="co-tree"
         >
-          {rows.map((row) => {
-            if (row.module) {
-              const m = row.module;
-              const count = m.lessons.filter((l) => done.has(l.id)).length;
-              const isOpen = open.has(m.id);
-              const minutes = m.lessons.reduce((n, l) => n + l.minutes, 0);
-              return (
-                <motion.button
-                  layout
-                  {...connectorMotion}
-                  transition={LAYOUT_SPRING}
-                  key={m.id}
-                  type="button"
-                  role="treeitem"
-                  aria-level={1}
-                  aria-expanded={isOpen}
-                  data-co-row={m.id}
-                  tabIndex={focus === m.id ? 0 : -1}
-                  className="co-module"
-                  onClick={() => {
-                    setFocus(m.id);
-                    toggle(setOpen, m.id);
-                  }}
-                  onKeyDown={(event) => onKey(event, row)}
-                >
-                  <span className="co-chevron" aria-hidden="true">
-                    <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} aria-hidden="true" data-open={isOpen ? "" : undefined} />
-                  </span>
-                  <span
-                    className="co-number"
-                    data-rm-anchor={m.id}
-                    data-complete={count === m.lessons.length || undefined}
-                  >
-                    {COURSE.indexOf(m) + 1}
-                  </span>
-                  <span className="co-title">{m.title}</span>
-                  <span className="co-meta">{`${count}/${m.lessons.length} · ${minutes} min`}</span>
-                </motion.button>
-              );
-            }
-            const l = row.lesson!;
-            const isDone = done.has(l.id);
-            const KindIcon = KIND_ICONS[l.kind];
-            return (
-              <motion.div
-                layout
-                {...connectorMotion}
-                transition={LAYOUT_SPRING}
-                key={l.id}
-                role="treeitem"
-                aria-level={2}
-                aria-selected={focus === l.id}
-                className={`co-lesson${next?.id === l.id ? " next" : ""}`}
-              >
-                <button
-                  type="button"
-                  className="co-tick"
-                  data-co-row={l.id}
-                  tabIndex={focus === l.id ? 0 : -1}
-                  aria-label={
-                    isDone
-                      ? `Mark "${l.title}" not done`
-                      : `Mark "${l.title}" done`
-                  }
-                  aria-pressed={isDone}
-                  data-rm-anchor={l.id}
-                  data-rm-link={row.parent!}
-                  onClick={() => {
-                    setFocus(l.id);
-                    toggle(setDone, l.id);
-                  }}
-                  onKeyDown={(event) => onKey(event, row)}
-                >
-                  <Remold.Icon
-                    icon={<HugeiconsIcon icon={isDone ? CheckmarkCircle01Icon : CircleIcon} />}
-                    strokeWidth={1.8}
-                    aria-hidden="true"
-                  />
-                </button>
-                <span className="co-lesson-title">{l.title}</span>
-                <span className="co-kind" aria-label={l.kind}>
-                  <HugeiconsIcon icon={KindIcon} aria-hidden="true" />
-                </span>
-                <span className="co-minutes">{l.minutes} min</span>
-              </motion.div>
-            );
-          })}
+          {rows.map((row) =>
+            row.module ? (
+              <ModuleRow
+                key={row.id}
+                courseModule={row.module}
+                done={done}
+                open={open.has(row.id)}
+                focused={focus === row.id}
+                connectorMotion={connectorMotion}
+                onToggle={() => {
+                  setFocus(row.id);
+                  toggleOpen(row.id);
+                }}
+                onKeyDown={(event) => onKey(event, row)}
+              />
+            ) : (
+              <LessonRow
+                key={row.id}
+                lesson={row.lesson!}
+                parent={row.parent!}
+                done={done.has(row.id)}
+                next={upNext?.id === row.id}
+                focused={focus === row.id}
+                connectorMotion={connectorMotion}
+                onToggle={() => {
+                  setFocus(row.id);
+                  toggleDone(row.id);
+                }}
+                onKeyDown={(event) => onKey(event, row)}
+              />
+            ),
+          )}
         </motion.div>
       </Remold.Connectors>
     </div>

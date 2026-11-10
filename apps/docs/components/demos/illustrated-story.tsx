@@ -1,17 +1,4 @@
 "use client";
-/**
- * The engine behind the illustrated stories (the order tracker, the payment, the connection and
- * the rest): a short sequence told like a film. Each stage plays live, then its drawing reshapes
- * into the next stage's and that one comes alive. A caption under it says where things are, and a
- * row of steps lets you jump.
- *
- * A drawing is a stack of `Remold.Icon` layers on one 160 × 128 frame, one per colour: the soft
- * grey behind, then the object (ink, sheen, brand, light) and its moving part on top (top,
- * topSoft, topBrand, topLight). Each layer morphs its own shapes, so every colour keeps its place
- * while the drawing changes; a layer a stage doesn't use shrinks to a point and grows back out of
- * it. The live motion is plain CSS that each story writes against `data-stage`, held still while
- * the layers reshape so the two never fight.
- */
 import { Remold } from "@remold-ui/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useScene } from "./use-scene";
@@ -40,11 +27,9 @@ export interface StoryStage {
 }
 
 const VIEW_BOX = "0 0 160 128";
-/** Where an unused layer waits: a speck at the middle of the frame. */
 const POINT = "M80 64h0.1v0.1h-0.1Z";
 const BODY: readonly StoryLayer[] = ["ink", "sheen", "brand", "light"];
 const PART: readonly StoryLayer[] = ["topSoft", "top", "topBrand", "topLight"];
-/** How long the layers take to reshape; the live motion waits for them. */
 const MORPH_MS = 600;
 
 export interface IllustratedStoryProps {
@@ -61,6 +46,8 @@ export interface IllustratedStoryProps {
   extras?: ReactNode;
   /** Drawn over everything (a ping). */
   over?: ReactNode;
+  /** Whether to show the step bars under the words. Leave them out for a status that isn't a sequence. */
+  steps?: boolean;
 }
 
 function Layer({ layer, d }: { layer: StoryLayer; d?: string }) {
@@ -93,9 +80,9 @@ export function IllustratedStory({
   under,
   extras,
   over,
+  steps = true,
 }: IllustratedStoryProps) {
   const current = stages[stage]!;
-  // Still while the layers reshape, so the live motion never fights the morph.
   const [morphing, setMorphing] = useState(false);
   useEffect(() => {
     setMorphing(true);
@@ -136,6 +123,7 @@ export function IllustratedStory({
         <Remold.Text className="ils-line">{current.line}</Remold.Text>
       </div>
 
+      {steps && (
       <ol className="ils-steps" style={{ gridTemplateColumns: `repeat(${stages.length}, 40px)` }}>
         {stages.map((entry, index) => (
           <li key={entry.id}>
@@ -150,6 +138,7 @@ export function IllustratedStory({
           </li>
         ))}
       </ol>
+      )}
     </section>
   );
 }
@@ -161,6 +150,6 @@ const fromBeat = (step: number) => step;
  * long each stage plays, its morph in and then its live motion.
  */
 export function useStory(ms: readonly number[], playing?: boolean) {
-  const [beats] = useState(() => ms.map((m) => ({ ms: m })));
+  const [beats] = useState(() => ms.map((duration) => ({ ms: duration })));
   return useScene(beats, fromBeat, playing ?? true);
 }

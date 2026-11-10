@@ -1,13 +1,4 @@
 "use client";
-/**
- * A price range slider with the prices over it. While you drag a handle, its price lifts out of the
- * label and rides above the handle, so you read the number where your finger is; let go and it
- * flies back into the label. The bars behind the track show how many stays sit at each price,
- * darkening inside your range.
- *
- * Built on Base UI's Slider, with a thumb for each end of the range. Motion carries each price
- * between the label and its handle.
- */
 import { Slider } from "@base-ui/react/slider";
 import { LayoutGroup, motion } from "motion/react";
 import { useScene } from "./use-scene";
@@ -17,7 +8,6 @@ import "./range-slider.css";
 const MIN = 0;
 const MAX = 400;
 const STEP = 5;
-/** How many stays sit in each $20 band, for the bars behind the track. */
 const SPREAD = [2, 5, 9, 16, 24, 31, 35, 33, 28, 24, 19, 15, 12, 9, 7, 5, 4, 3, 2, 2];
 
 const FLY = { type: "spring" as const, duration: 0.42, bounce: 0.16 };
@@ -64,16 +54,34 @@ export function RangeSlider({ value, onValueChange, active, onActiveChange }: Ra
         <span className="rng-head">
           <Slider.Label className="fk-label">Price per night</Slider.Label>
           <span className="rng-values" aria-hidden="true">
-            {active === 0 ? <span className="rng-price" data-ghost="">${lo}</span> : <Price index={0} value={lo} />}
+            {active === 0 ? (
+              <span className="rng-price" data-ghost="">
+                ${lo}
+              </span>
+            ) : (
+              <Price index={0} value={lo} />
+            )}
             <span className="rng-dash">–</span>
-            {active === 1 ? <span className="rng-price" data-ghost="">${hi}</span> : <Price index={1} value={hi} />}
+            {active === 1 ? (
+              <span className="rng-price" data-ghost="">
+                ${hi}
+              </span>
+            ) : (
+              <Price index={1} value={hi} />
+            )}
           </span>
         </span>
 
         <span className="rng-bars" aria-hidden="true">
-          {SPREAD.map((n, index) => {
+          {SPREAD.map((stays, index) => {
             const from = (index / SPREAD.length) * MAX;
-            return <i key={index} style={{ height: `${(n / 35) * 100}%` }} data-in={(from >= lo && from < hi) || undefined} />;
+            return (
+              <i
+                key={index}
+                style={{ height: `${(stays / 35) * 100}%` }}
+                data-in={(from >= lo && from < hi) || undefined}
+              />
+            );
           })}
         </span>
 
@@ -81,7 +89,12 @@ export function RangeSlider({ value, onValueChange, active, onActiveChange }: Ra
           <Slider.Track className="rng-track">
             <Slider.Indicator className="rng-indicator" />
             {[0, 1].map((index) => (
-              <Slider.Thumb key={index} index={index} className="rng-thumb" aria-label={index === 0 ? "Lowest price" : "Highest price"}>
+              <Slider.Thumb
+                key={index}
+                index={index}
+                className="rng-thumb"
+                aria-label={index === 0 ? "Lowest price" : "Highest price"}
+              >
                 {active === index && <Price index={index} value={value[index]!} bubble />}
               </Slider.Thumb>
             ))}
@@ -117,19 +130,18 @@ const fromBeat = (step: number): State => {
 };
 
 interface RangeSliderDemoProps {
-  /** Plays and pauses the scene from outside, as the home page's card does. Leave it out to play until touched. */
   playing?: boolean;
 }
 
 export function RangeSliderDemo({ playing }: RangeSliderDemoProps = {}) {
-  const { ref, state, take } = useScene(BEATS, fromBeat, playing);
+  const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing);
   return (
     <div ref={ref} className="fk-stage not-prose">
       <RangeSlider
         value={state.value}
-        onValueChange={(value) => take((current) => ({ ...current, value }))}
+        onValueChange={(value) => takeOver((current) => ({ ...current, value }))}
         active={state.active}
-        onActiveChange={(active) => take((current) => ({ ...current, active }))}
+        onActiveChange={(active) => takeOver((current) => ({ ...current, active }))}
       />
     </div>
   );

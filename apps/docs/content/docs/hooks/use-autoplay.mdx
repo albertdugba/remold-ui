@@ -12,7 +12,7 @@ function Showcase() {
   const autoplay = useAutoplay(VIEWS.length, { every: 2000 });
   return (
     <section ref={autoplay.ref}>
-      <Remold.Layout trigger={autoplay.step}>{renderView(VIEWS[autoplay.step])}</Remold.Layout>
+      <Remold.Morph trigger={autoplay.step}>{renderView(VIEWS[autoplay.step])}</Remold.Morph>
       <button {...autoplay.toggleProps}>{autoplay.playing ? "Pause" : "Play"}</button>
     </section>
   );

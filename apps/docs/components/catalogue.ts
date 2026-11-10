@@ -20,13 +20,6 @@ export const CATALOGUE: Record<"home", { title: string; items: CatalogueItem[] }
     title: "From the home page",
     items: [
       {
-        id: "home/world",
-        category: "Motion",
-        title: "World",
-        description: "Hundreds of dots that curl from a flat map into a globe you can spin.",
-        href: "/docs/core/motion",
-      },
-      {
         id: "home/particles",
         category: "Particles",
         title: "Dot morph",
@@ -39,13 +32,6 @@ export const CATALOGUE: Record<"home", { title: string; items: CatalogueItem[] }
         title: "SVG morph",
         description: "Filled artwork that reshapes into the next symbol, pieces and holes included.",
         href: "/docs/primitives/icon",
-      },
-      {
-        id: "home/scene",
-        category: "Canvas",
-        title: "Scene",
-        description: "A small isometric diagram that springs between layouts, camera and links included.",
-        href: "/docs/primitives/scene",
       },
       {
         id: "home/feedback",

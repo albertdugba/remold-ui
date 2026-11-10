@@ -15,11 +15,7 @@ export function Frame({
   compact?: boolean;
 }) {
   return (
-    <div
-      className={`rm-demo not-prose${tone === "dark" ? " dark-stage" : ""}${
-        compact ? " compact" : ""
-      }`}
-    >
+    <div className={`rm-demo not-prose${tone === "dark" ? " dark-stage" : ""}${compact ? " compact" : ""}`}>
       {children}
     </div>
   );
@@ -42,9 +38,9 @@ export function Segmented<T extends string>({
       aria-label={label}
       value={[value]}
       onValueChange={(values) => {
-        const next = values[0];
+        const picked = values[0];
 
-        if (next) onChange(next as T);
+        if (picked) onChange(picked as T);
       }}
     >
       {options.map((option) => {

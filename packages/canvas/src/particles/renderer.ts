@@ -13,6 +13,8 @@ export function createParticleRenderer({
   color,
   getPalette,
   shape,
+  blend,
+  project,
   pointerEffect,
   reducedMotion,
   isDestroyed,
@@ -26,6 +28,9 @@ export function createParticleRenderer({
   color: ParticleFill | ((context: CanvasRenderingContext2D, size: CanvasSize) => ParticleFill) | undefined;
   getPalette: () => readonly string[] | undefined;
   shape: "circle" | "square";
+  blend: "normal" | "add";
+  /** Where a point lands on screen and how big it draws there, for a 3D camera; null draws points where they are. */
+  project: ((x: number, y: number, z: number) => { x: number; y: number; scale: number }) | null;
   pointerEffect: { radius: number; strength: number } | null;
   reducedMotion: () => boolean;
   isDestroyed: () => boolean;
@@ -45,7 +50,8 @@ export function createParticleRenderer({
 
     context.setTransform(size.pixelRatio, 0, 0, size.pixelRatio, 0, 0);
     context.clearRect(0, 0, size.width, size.height);
-    const drawParticle = createParticleDrawer({ context, cloud, radius, pointer, shape, pointerEffect, reducedMotion });
+    context.globalCompositeOperation = blend === "add" ? "lighter" : "source-over";
+    const drawParticle = createParticleDrawer({ context, cloud, radius, pointer, shape, project, pointerEffect, reducedMotion });
     const palette = getPalette();
 
     if (!palette || palette.length === 1) {
@@ -58,10 +64,10 @@ export function createParticleRenderer({
       context.beginPath();
       drawAll({ count: cloud.length, drawParticle });
       context.fill();
-
-      return;
+    } else {
+      drawPalette({ context, cloud, palette, drawParticle });
     }
-    drawPalette({ context, cloud, palette, drawParticle });
+    context.globalCompositeOperation = "source-over";
   };
   return { render, resetFill: () => (fill = null) };
 }
@@ -72,6 +78,7 @@ function createParticleDrawer({
   radius,
   pointer,
   shape,
+  project,
   pointerEffect,
   reducedMotion,
 }: {
@@ -80,6 +87,7 @@ function createParticleDrawer({
   radius: AnimatedValue;
   pointer: ParticlePointer;
   shape: "circle" | "square";
+  project: ((x: number, y: number, z: number) => { x: number; y: number; scale: number }) | null;
   pointerEffect: { radius: number; strength: number } | null;
   reducedMotion: () => boolean;
 }) {
@@ -93,8 +101,16 @@ function createParticleDrawer({
 
     if (scale < 0.02) return;
 
-    const point = leanPoint({ x: cloud.data[offset]!, y: cloud.data[offset + 1]!, pointer, leaning, reach, strength });
-    const particleRadius = radius.current * scale;
+    const seen = project ? project(cloud.data[offset]!, cloud.data[offset + 1]!, cloud.data[offset + 4]!) : null;
+    const point = leanPoint({
+      x: seen ? seen.x : cloud.data[offset]!,
+      y: seen ? seen.y : cloud.data[offset + 1]!,
+      pointer,
+      leaning,
+      reach,
+      strength,
+    });
+    const particleRadius = radius.current * scale * (seen ? seen.scale : 1);
 
     if (shape === "square") context.rect(point.x - particleRadius, point.y - particleRadius, particleRadius * 2, particleRadius * 2);
     else {

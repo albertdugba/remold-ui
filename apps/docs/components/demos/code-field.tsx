@@ -1,11 +1,4 @@
 "use client";
-/**
- * A one-time code field: a row of cells over one real input, so typing, pasting and one-time-code
- * autofill all work. Shared by the sign-in card (`otp-input`) and the two-factor setup
- * (`two-factor`), so both ask for a code the same way.
- *
- * `invalid` turns the cells red in place, digits kept, for a code that didn't work.
- */
 import type { FocusEvent, Ref } from "react";
 
 export interface CodeFieldProps {
@@ -45,9 +38,7 @@ export function CodeField({
         className="absolute inset-0 z-[1] w-full border-0 bg-transparent text-base text-transparent caret-transparent outline-0"
         value={value}
         disabled={disabled}
-        onChange={(event) =>
-          onChange(event.target.value.replace(/\D/g, "").slice(0, length))
-        }
+        onChange={(event) => onChange(event.target.value.replace(/\D/g, "").slice(0, length))}
         onFocus={onFocus}
         inputMode="numeric"
         autoComplete="one-time-code"

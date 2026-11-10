@@ -8,6 +8,9 @@
  * Each point can carry a `tone` (any number, say 0 to 1), which springs along with it: map it to a
  * colour to recolour dots as they move, for categories, colourways or heat.
  *
+ * Points can also carry a depth, `z`, which springs too, so a cloud can be a 3D shape, and
+ * pairing measures distance in all three.
+ *
  * Pass `scatter` to `to` and the change has a middle: every point first drifts out into a loose,
  * glittering cloud around both shapes, holds there a moment, then gathers into the new shape, each
  * point setting off at a slightly different time.
@@ -20,9 +23,11 @@ import { matchPoints, type MatchPointsOptions, type PointMatches } from "../matc
 import type { SpringConfig } from "../motion/spring";
 import { values } from "../motion/values";
 
-/** A point in a cloud, with an optional tone that springs along with it (default 0). */
+/** A point in a cloud, with an optional tone and depth that spring along with it (both default 0). */
 export interface CloudPoint extends Point {
   tone?: number;
+  /** Depth, in the same units as `x` and `y`. */
+  z?: number;
 }
 
 export interface PointCloudOptions {
@@ -30,8 +35,8 @@ export interface PointCloudOptions {
   spring?: SpringConfig;
   /** How close counts as arrived, in your units. Default 0.05 (a twentieth of a pixel). */
   precision?: number;
-  /** Where arriving points start, relative to where they land. Default `{ x: 0, y: 12 }`: a short rise. */
-  enter?: { x?: number; y?: number };
+  /** Where arriving points start, relative to where they land. Default `{ x: 0, y: 12, z: 0 }`: a short rise. */
+  enter?: { x?: number; y?: number; z?: number };
   /** Passed to `matchPoints`, for example `{ maxDistance }`. */
   match?: MatchPointsOptions;
 }
@@ -50,8 +55,8 @@ export interface PointCloudScatter {
 
 export interface PointCloud {
   /**
-   * Every point being drawn as `[x, y, size, tone, x, y, size, tone, …]` (`STRIDE` numbers per
-   * point), with size from 0 (gone) to 1. A live view: read it each frame, don't write to it.
+   * Every point being drawn as `[x, y, size, tone, z, x, y, size, tone, z, …]` (`STRIDE` numbers
+   * per point), with size from 0 (gone) to 1. A live view: read it each frame, don't write to it.
    * Its length changes after `to` and as leaving points finish, so read `length` alongside.
    */
   readonly data: Float64Array;
@@ -62,10 +67,10 @@ export interface PointCloud {
   /** True when nothing is moving. */
   readonly settled: boolean;
   /**
-   * Where the current shape's points are heading, as `{ x, y }`. Pairing is done from here, so
+   * Where the current shape's points are heading, as `{ x, y, z }`. Pairing is done from here, so
    * a caller that works out `matches` elsewhere (in a worker, say) should start from this.
    */
-  heading(): { x: number; y: number }[];
+  heading(): { x: number; y: number; z: number }[];
   /**
    * Rebuild into `points`. Returns the pairing it used. `instant` jumps there (for reduced
    * motion). `matches`, from `matchPoints(cloud.heading(), points)`, skips the pairing here.
@@ -104,13 +109,19 @@ function withGoal(target: Float64Array, goal: Float64Array, live: number): Float
   return out;
 }
 
-/** How many numbers each point takes in `PointCloud.data`: x, y, size, tone. */
-export const STRIDE = 4;
+/** How many numbers each point takes in `PointCloud.data`: x, y, size, tone, z. */
+export const STRIDE = 5;
 
 const toneOf = (p: CloudPoint, where: string) => {
   const tone = p.tone ?? 0;
   if (!Number.isFinite(tone)) throw new RangeError(`pointCloud: ${where} tone must be a finite number, got ${tone}`);
   return tone;
+};
+
+const depthOf = (p: CloudPoint, where: string) => {
+  const z = p.z ?? 0;
+  if (!Number.isFinite(z)) throw new RangeError(`pointCloud: ${where} z must be a finite number, got ${z}`);
+  return z;
 };
 
 /** A small seeded random generator (mulberry32), so a seeded scatter spreads the same way every time. */
@@ -140,8 +151,9 @@ function scatterSettings(scatter: true | PointCloudScatter) {
 export function pointCloud(initial: readonly CloudPoint[] = [], options: PointCloudOptions = {}): PointCloud {
   const enterX = options.enter?.x ?? 0;
   const enterY = options.enter?.y ?? 12;
-  if (!Number.isFinite(enterX) || !Number.isFinite(enterY)) {
-    throw new RangeError(`pointCloud: enter must be finite numbers, got (${enterX}, ${enterY})`);
+  const enterZ = options.enter?.z ?? 0;
+  if (!Number.isFinite(enterX) || !Number.isFinite(enterY) || !Number.isFinite(enterZ)) {
+    throw new RangeError(`pointCloud: enter must be finite numbers, got (${enterX}, ${enterY}, ${enterZ})`);
   }
   const start = new Float64Array(initial.length * STRIDE);
   initial.forEach((p, i) => {
@@ -149,6 +161,7 @@ export function pointCloud(initial: readonly CloudPoint[] = [], options: PointCl
     start[i * STRIDE + 1] = p.y;
     start[i * STRIDE + 2] = 1;
     start[i * STRIDE + 3] = toneOf(p, `initial[${i}]`);
+    start[i * STRIDE + 4] = depthOf(p, `initial[${i}]`);
   });
   const batch = values(start, {
     spring: options.spring ?? { duration: 0.9, bounce: 0.2 },
@@ -178,7 +191,7 @@ export function pointCloud(initial: readonly CloudPoint[] = [], options: PointCl
   const heading = () => {
     // While points are spread out, they're still heading for the shape, not for the cloud.
     const target = gather ? gather.goal : batch.target;
-    return Array.from({ length: live }, (_, i) => ({ x: target[i * STRIDE]!, y: target[i * STRIDE + 1]! }));
+    return Array.from({ length: live }, (_, i) => ({ x: target[i * STRIDE]!, y: target[i * STRIDE + 1]!, z: target[i * STRIDE + 4]! }));
   };
 
   return {
@@ -218,14 +231,17 @@ export function pointCloud(initial: readonly CloudPoint[] = [], options: PointCl
       const goal = new Float64Array(sources.length * STRIDE);
       points.forEach((p, j) => {
         const tone = toneOf(p, `points[${j}]`);
+        const z = depthOf(p, `points[${j}]`);
         fill[j * STRIDE] = p.x + enterX;
         fill[j * STRIDE + 1] = p.y + enterY;
         // New points arrive already in their colour.
         fill[j * STRIDE + 3] = tone;
+        fill[j * STRIDE + 4] = z + enterZ;
         goal[j * STRIDE] = p.x;
         goal[j * STRIDE + 1] = p.y;
         goal[j * STRIDE + 2] = 1;
         goal[j * STRIDE + 3] = tone;
+        goal[j * STRIDE + 4] = z;
       });
       for (let k = points.length; k < sources.length; k++) {
         // Leaving points shrink where they're heading, keeping their colour.
@@ -233,6 +249,7 @@ export function pointCloud(initial: readonly CloudPoint[] = [], options: PointCl
         goal[k * STRIDE] = target[old * STRIDE]!;
         goal[k * STRIDE + 1] = target[old * STRIDE + 1]!;
         goal[k * STRIDE + 3] = target[old * STRIDE + 3]!;
+        goal[k * STRIDE + 4] = target[old * STRIDE + 4]!;
       }
 
       if (spreadOut && !instant && sources.length > 0) {
@@ -242,18 +259,25 @@ export function pointCloud(initial: readonly CloudPoint[] = [], options: PointCl
         let minY = Infinity;
         let maxX = -Infinity;
         let maxY = -Infinity;
-        const include = (x: number, y: number) => {
+        let minZ = Infinity;
+        let maxZ = -Infinity;
+        const include = (x: number, y: number, z: number) => {
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
           if (y < minY) minY = y;
           if (y > maxY) maxY = y;
+          if (z < minZ) minZ = z;
+          if (z > maxZ) maxZ = z;
         };
-        for (let i = 0; i < items; i++) include(current[i * STRIDE]!, current[i * STRIDE + 1]!);
-        for (let j = 0; j < points.length; j++) include(goal[j * STRIDE]!, goal[j * STRIDE + 1]!);
+        for (let i = 0; i < items; i++) include(current[i * STRIDE]!, current[i * STRIDE + 1]!, current[i * STRIDE + 4]!);
+        for (let j = 0; j < points.length; j++) include(goal[j * STRIDE]!, goal[j * STRIDE + 1]!, goal[j * STRIDE + 4]!);
         const centreX = (minX + maxX) / 2;
         const centreY = (minY + maxY) / 2;
+        const centreZ = (minZ + maxZ) / 2;
         const reachX = Math.max(((maxX - minX) / 2) * spreadOut.spread, 1);
         const reachY = Math.max(((maxY - minY) / 2) * spreadOut.spread, 1);
+        // A flat cloud stays flat, and draws the same random numbers it always has.
+        const reachZ = ((maxZ - minZ) / 2) * spreadOut.spread;
         const random = seeded(spreadOut.seed ?? changes * 2654435761);
 
         // Each point drifts to a random spot in the cloud (evenly over its area), at a random size,
@@ -269,9 +293,12 @@ export function pointCloud(initial: readonly CloudPoint[] = [], options: PointCl
           spread[k * STRIDE + 1] = y;
           spread[k * STRIDE + 2] = arriving ? 0.35 + 0.65 * random() : 0;
           spread[k * STRIDE + 3] = goal[k * STRIDE + 3]!;
+          const z = reachZ > 0 ? centreZ + (random() * 2 - 1) * reachZ : centreZ;
+          spread[k * STRIDE + 4] = z;
           if (arriving && partner[k] === -1) {
             fill[k * STRIDE] = x;
             fill[k * STRIDE + 1] = y;
+            fill[k * STRIDE + 4] = z;
           }
         }
         const release = new Float64Array(points.length);

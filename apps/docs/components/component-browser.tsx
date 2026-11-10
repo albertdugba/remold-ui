@@ -1,10 +1,11 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
+import { Tabs } from "@base-ui/react/tabs";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import Link from "next/link";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { ComponentPreview, type CustomPreview } from "./component-preview";
 import { landingCards } from "./home/parts";
 
@@ -20,9 +21,23 @@ export interface BrowserItem {
 }
 
 /** The landing page's small technical kicker is useful there, but this shelf needs the interaction's payoff. */
+/** Landing cards whose lone control would look oversized at the default enlargement. */
+const LANDING_ZOOM: Record<string, number> = {
+  "event-rsvp": 1,
+  "feedback-prompt": 1,
+};
+
+/** Landing cards drawn on their own dark stage, which should fill the card's picture edge to edge. */
+const LANDING_COVER = new Set(["voice-assistant", "particle-shapes"]);
+
+/** Landing cards whose part fills whatever box it's in, so the preview gives it a height to fill. */
+const LANDING_HEIGHT: Record<string, number> = {
+  "mini-player-to-full": 480,
+};
+
 const LANDING_COPY: Record<string, string> = {
   mentions: "Type @ and a person leaves the picker to become part of the message.",
-  "stack-to-live-room": "A compact stack of faces fans out into a live room, then folds back down.",
+  "button-to-dialog": "The New trip button grows into the dialog, and the dialog shrinks into the trip it planned.",
   "post-and-comments": "A reply grows from the composer into the conversation it belongs to.",
   "code-to-verified": "Six code cells fold into one verifying state, then resolve as a check.",
   "voice-states": "One orb changes its texture and pace as a voice interaction moves forward.",
@@ -32,15 +47,17 @@ const LANDING_COPY: Record<string, string> = {
   "send-a-message": "The composer becomes the sent message, then makes room for the reply.",
   "kitchen-ticket": "A ticket's ring fills as the order cooks, then closes with a check or a cross.",
   "order-tracker": "The pot becomes the bag, the scooter, then your front door as the order moves along.",
+  "voice-assistant": "An orb of dots that ripples as it listens, swirls into a ring as it thinks, and pulses as it speaks.",
+  "particle-shapes": "A galaxy unwinds into a double helix, traces the Lorenz attractor, then becomes a honeybee, a butterfly and the Remold mark, all in turning 3D dots.",
+  "payment-status": "The card becomes a lock while the bank confirms, then a receipt or a warning.",
   "send-money": "Digits, commas and the Send state all move with the amount you enter.",
   "currency-converter": "What they receive rolls with the amount you type, and the two currencies trade places when you swap.",
-  "visitors-globe": "A glowing planet rises from the card while signups pulse at their cities and invites fly between them.",
   "focus-timer": "A particle hourglass whose sand really falls, freezes on pause, and flips into the break.",
-  "dot-grid-hero": "A landing page background that wakes up under the cursor, with a ripple on every click.",
   "donation-goal": "Every gift streams up as dots and fills the drop, until it bursts into a thank you.",
   "api-keys": "A secret appears once, then folds into a newly masked row.",
-  "price-filter": "Drag the price sideways and the stepper stretches into a slider over the price histogram.",
+  "stepper-slider": "A stepper for small nudges that stretches into a slider when you drag the number sideways.",
   "event-rsvp": "The RSVP button grows into your answer, then travels down into your spot.",
+  "feedback-prompt": "Pick a thumb and the pill grows into a card, sends with a spinner, then folds into a thank-you.",
   "promo-code": "The code field springs down into a ticket chip as the discount opens and the total rolls.",
   "seat-calculator": "Team size changes the people, plan, price and features together.",
   "usage-meter": "Usage crosses limits, changes tone and rolls into the projected bill.",
@@ -49,9 +66,7 @@ const LANDING_COPY: Record<string, string> = {
   "filter-bar": "Filtering reshapes both the tokens and the transaction list beneath them.",
   "label-picker": "A searchable picker adds a label where it belongs and makes room for it.",
   "one-person-three-components": "The same person stays recognisable while every surrounding layout changes.",
-  "from-first-look-to-front-door": "One field of particles tells the journey from product to delivery.",
   "turn-on-two-factor": "A settings row opens into setup, then resolves into its enabled state.",
-  "hold-to-record": "Holding one control stretches it into recording, then sends it away.",
   "option-to-booking": "A table that fell through offers two times; the one you pick carries into the updated booking.",
   "email-to-teammate": "An email becomes an invite, then becomes the teammate it represents.",
   "artwork-in-motion": "The pieces of an illustration flow into new artwork instead of fading away.",
@@ -101,7 +116,9 @@ export function ComponentBrowser({ extras }: { extras: BrowserItem[] }) {
         every: card.every,
         width: card.wide ? 760 : 520,
         bare: card.bare,
-        cover: card.bleed,
+        cover: card.bleed || LANDING_COVER.has(card.slug),
+        maxZoom: LANDING_ZOOM[card.slug],
+        height: LANDING_HEIGHT[card.slug],
       },
     }));
     const rest = extras.filter((item) => !covered.has(item.id));
@@ -112,6 +129,31 @@ export function ComponentBrowser({ extras }: { extras: BrowserItem[] }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("featured");
   const value = useDeferredValue(query.trim().toLowerCase());
+  const search = useRef<HTMLInputElement>(null);
+  const tabs = useRef<HTMLDivElement>(null);
+
+  // The category row scrolls when it can't fit; mark it so its far edge can fade.
+  useEffect(() => {
+    const row = tabs.current;
+    if (!row) return;
+    const check = () => row.toggleAttribute("data-overflow", row.scrollWidth > row.clientWidth + 1);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, []);
+
+  // "/" jumps to the search, as it does on most docs sites, unless you're already typing somewhere.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || target.closest("input, textarea, [contenteditable]")) return;
+      event.preventDefault();
+      search.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   const inFilter = (item: BrowserItem, f: Filter) => f === "all" || (f === "new" ? Boolean(item.isNew) : groupOf(item.category) === f);
   const counts = useMemo(() => {
@@ -134,11 +176,34 @@ export function ComponentBrowser({ extras }: { extras: BrowserItem[] }) {
     return sort === "az" ? [...matched].sort((a, b) => a.title.localeCompare(b.title)) : matched;
   }, [items, value, filter, sort]);
   return (
-    <div className="rm-browser not-prose">
+    <Tabs.Root className="rm-browser not-prose" value={filter} onValueChange={(next) => setFilter(next as Filter)}>
       <div className="rm-browser-tools">
         <label className="rm-browser-search">
-          <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
-          <input type="search" placeholder="Search components…" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search components" />
+          <HugeiconsIcon icon={Search01Icon} strokeWidth={2} aria-hidden="true" />
+          <input
+            ref={search}
+            type="search"
+            placeholder="Search components"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => event.key === "Escape" && setQuery("")}
+            aria-label="Search components"
+          />
+          {query && (
+            <span className="rm-browser-results" aria-live="polite">
+              {shown.length === 1 ? "1 result" : `${shown.length} results`}
+            </span>
+          )}
+          {query ? (
+            <button type="button" className="rm-browser-clear" aria-label="Clear the search" onClick={() => {
+              setQuery("");
+              search.current?.focus();
+            }}>
+              <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} aria-hidden="true" />
+            </button>
+          ) : (
+            <kbd className="rm-browser-key" aria-hidden="true">/</kbd>
+          )}
         </label>
         <ToggleGroup
           className="rm-browser-sort"
@@ -151,23 +216,17 @@ export function ComponentBrowser({ extras }: { extras: BrowserItem[] }) {
         </ToggleGroup>
       </div>
       <div className="rm-browser-filters">
-        <ToggleGroup
-          className="rm-browser-chips"
-          aria-label="Category"
-          value={[filter]}
-          onValueChange={(next) => setFilter((next[0] as Filter | undefined) ?? "all")}
-        >
+        <Tabs.List ref={tabs} className="rm-browser-tabs" aria-label="Category">
           {chips.map((chip) => (
-            <Toggle key={chip.value} value={chip.value} className="rm-browser-chip">
+            <Tabs.Tab key={chip.value} value={chip.value} className="rm-browser-tab">
               {chip.label}
-              <span>{counts[chip.value]}</span>
-            </Toggle>
+              <span className="rm-browser-tab-count">{counts[chip.value]}</span>
+            </Tabs.Tab>
           ))}
-        </ToggleGroup>
-        <p className="rm-browser-count">
-          Showing <b>{shown.length}</b> of {items.length}
-        </p>
+          <Tabs.Indicator className="rm-browser-indicator" />
+        </Tabs.List>
       </div>
+      <Tabs.Panel value={filter} className="rm-browser-panel">
       {shown.length === 0 ? (
         <p className="rm-browser-empty">{query ? `Nothing matches “${query}”.` : "Nothing here yet."}</p>
       ) : (
@@ -180,12 +239,12 @@ export function ComponentBrowser({ extras }: { extras: BrowserItem[] }) {
               </span>
               <span className="rm-card-meta">
                 <strong>{item.title}</strong>
-                <span>{item.description}</span>
               </span>
             </Link>
           ))}
         </div>
       )}
-    </div>
+      </Tabs.Panel>
+    </Tabs.Root>
   );
 }

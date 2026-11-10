@@ -41,7 +41,7 @@
     }
   },
   "scripts": {
-    "build": "tsup && cp dist/index.d.cts dist/index.d.ts && cp dist/canvas.d.cts dist/canvas.d.ts",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup && cp dist/index.d.cts dist/index.d.ts && cp dist/canvas.d.cts dist/canvas.d.ts",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo",

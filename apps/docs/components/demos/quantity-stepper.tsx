@@ -1,13 +1,4 @@
 "use client";
-/**
- * An add-to-cart button that becomes a quantity stepper. Press Add and the button stretches into
- * minus, count and plus; the count rolls up and down like a counter. At one, the minus becomes a
- * bin, so the next press takes the item out and the stepper folds back into Add.
- *
- * Built on Base UI's NumberField (Group, Decrement, Input, Increment), so the arrow keys, typing a
- * number and the min and max all behave as a number field should. Motion stretches the button; the
- * minus reshapes into the bin with `Remold.Icon`; the count rolls with the Odometer.
- */
 import { NumberField } from "@base-ui/react/number-field";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, Delete02Icon, MinusSignIcon } from "@hugeicons/core-free-icons";
@@ -17,7 +8,6 @@ import { Odometer } from "./odometer";
 import { useScene } from "./use-scene";
 import "./form-kit.css";
 import "./quantity-stepper.css";
-
 
 const STRETCH = { type: "spring" as const, duration: 0.45, bounce: 0.16 };
 
@@ -39,7 +29,12 @@ export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepp
           onClick={() => onValueChange(1)}
           transition={STRETCH}
         >
-          <motion.span className="stq-add-label" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.span
+            className="stq-add-label"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} />
             Add
           </motion.span>
@@ -54,8 +49,15 @@ export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepp
           render={<motion.div layoutId="stq-pill" className="stq" transition={STRETCH} />}
         >
           <NumberField.Group className="stq-group">
-            <NumberField.Decrement className="stq-btn" aria-label={value === 1 ? "Remove from cart" : "Decrease quantity"} data-remove={value === 1 || undefined}>
-              <Remold.Icon icon={<HugeiconsIcon icon={value === 1 ? Delete02Icon : MinusSignIcon} />} strokeWidth={2} />
+            <NumberField.Decrement
+              className="stq-btn"
+              aria-label={value === 1 ? "Remove from cart" : "Decrease quantity"}
+              data-remove={value === 1 || undefined}
+            >
+              <Remold.Icon
+                icon={<HugeiconsIcon icon={value === 1 ? Delete02Icon : MinusSignIcon} />}
+                strokeWidth={2}
+              />
             </NumberField.Decrement>
             <span className="stq-count">
               <Odometer value={String(value)} />
@@ -71,7 +73,6 @@ export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepp
   );
 }
 
-/** The back of a phone with its camera plateau, drawn so nothing is fetched. */
 function Phone() {
   return (
     <svg viewBox="0 0 40 64" className="stq-phone">
@@ -115,12 +116,11 @@ const fromBeat = (step: number): State => {
 };
 
 interface QuantityStepperDemoProps {
-  /** Plays and pauses the scene from outside, as the home page's card does. Leave it out to play until touched. */
   playing?: boolean;
 }
 
 export function QuantityStepperDemo({ playing }: QuantityStepperDemoProps = {}) {
-  const { ref, state, take } = useScene(BEATS, fromBeat, playing);
+  const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing);
   return (
     <div ref={ref} className="fk-stage not-prose">
       <div className="fk stq-product">
@@ -131,7 +131,7 @@ export function QuantityStepperDemo({ playing }: QuantityStepperDemoProps = {}) 
           <b>iPhone 17 Pro</b>
           <span>256 GB · Deep Blue · £1,099</span>
         </span>
-        <QuantityStepper value={state.quantity} onValueChange={(quantity) => take({ quantity })} />
+        <QuantityStepper value={state.quantity} onValueChange={(quantity) => takeOver({ quantity })} />
       </div>
     </div>
   );

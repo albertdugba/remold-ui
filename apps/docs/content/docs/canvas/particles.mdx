@@ -20,7 +20,7 @@ Each dot pairs with a nearby spot in the next shape and springs there; spare dot
 
 <TypeTable
   type={{
-    points: { type: "CloudPoint[]", description: "The first shape. A point’s tone picks its palette colour." },
+    points: { type: "ParticlePoint[]", description: "The first shape: points with x, y and an optional z for depth. A point’s tone picks its palette colour, by number or by name. shape.points(count) from shapes in @remold-ui/core gives these." },
     fit: {
       type: '"contain" | "none" | { width, height, x?, y? }',
       default: '"contain"',
@@ -30,7 +30,12 @@ Each dot pairs with a nearby spot in the next shape and springs there; spare dot
     radius: { type: "number", default: "2.5", description: "Dot radius at full size." },
     shape: { type: '"circle" | "square"', default: '"circle"', description: "Squares are cheaper for very large clouds." },
     color: { type: "fill | ((ctx, size) => fill)", default: "CSS color", description: "One fill for every dot, such as a gradient." },
-    palette: { type: "string[]", description: "Colours by tone, from 0 (first) to 1 (last). Any CSS colour, var(--name) included, which is read from the canvas and follows theme changes." },
+    palette: { type: "string[] | Record<string, string>", description: "Colours by tone: a list a numeric tone picks from, 0 (first) to 1 (last), or colours by name that points name in their tone. Any CSS colour, var(--name) included, which is read from the canvas and follows theme changes." },
+    camera: {
+      type: "true | { spin, angle, tilt, distance }",
+      description: "Turn the cloud in 3D and draw it with perspective: spin in turns a second (default 0.04), angle and tilt in degrees (default 0 and 20), distance in shape radii (default 4), and sway, degrees to swing either side instead of turning round. Not with a frame fit. Change it later with setCamera, and the palette with setPalette.",
+    },
+    blend: { type: '"normal" | "add"', default: '"normal"', description: "Add brightens where dots overlap, for glowing dots on a dark ground." },
     pointer: {
       type: "false | { radius, strength }",
       default: "{ radius: 90, strength: 22 }",
@@ -49,7 +54,11 @@ Each dot pairs with a nearby spot in the next shape and springs there; spare dot
   type={{
     label: { type: "string", description: "The canvas’s new accessible name." },
     radius: { type: "number", description: "Spring every dot to this radius." },
-    pairing: { type: '"match" | "index"', default: '"match"', description: "Pair each dot with its nearest spot, or by position in the list." },
+    pairing: {
+      type: '"match" | "index" | "flow"',
+      default: '"match"',
+      description: "Pair each dot with its nearest spot, by position in the list, or by where it sits along each shape (its order, or its place along the longest side), so the change sweeps through as one movement.",
+    },
     transition: {
       type: '"direct" | "scatter" | { type: "scatter", spread, hold, stagger, seed }',
       default: '"direct"',
@@ -82,6 +91,7 @@ With reduced motion the dots go straight to the new shape, scatter or not. In co
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `samplePath(d, options)`            | An SVG path's inside, or its outline with `mode: "outline"`.                                                                                                                    |
 | `sampleTextPoints(text, options)`   | Text in a CSS font. Load web fonts first.                                                                                                                                       |
+| `loadPixels(source, { size })` | An image's RGBA pixels, from a URL, a picked file or an image on the page, for `shapes.fromPixels` in `@remold-ui/core`. |
 | `sampleImagePoints(image, options)` | An image's opaque, dark, light, or saturated pixels; pass the same `palette` (any CSS colours) to sample colour tones. Optional normalized `details` preserve tiny features outside the mask. |
 | `sampleElementPoints(element, options)` | A piece of the page as it looks: backgrounds, text and images, each dot toned from `palette`. Positions are in `relativeTo`'s CSS pixels, so they land on the element under an overlay canvas with `fit: "none"`. |
 | `sampleMask(mask, options)`         | Any pixel data, such as `ImageData`.                                                                                                                                            |

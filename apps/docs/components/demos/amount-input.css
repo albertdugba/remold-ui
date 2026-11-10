@@ -8,7 +8,7 @@
   --amt-focus: #0a0a0b;
   --amt-bad: #e5484d;
   display: grid;
-  gap: 10px;
+  gap: 8px;
   width: min(100%, 340px);
   color: var(--amt-ink);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
@@ -28,28 +28,24 @@
 }
 
 .amt-field {
-  display: grid;
-  gap: 4px;
-  padding: 14px 16px 12px;
-  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 14px 0 16px;
+  border-radius: 14px;
   background: var(--amt-surface);
-  box-shadow:
-    inset 0 0 0 1.5px var(--amt-line),
-    0 1px 2px rgb(0 0 0 / 0.04);
+  border: 1.8px solid var(--amt-line);
   cursor: text;
-  transition: box-shadow 0.2s;
+  transition: border-color 0.18s;
 }
 
 .amt[data-focused] .amt-field {
-  box-shadow:
-    inset 0 0 0 1.5px color-mix(in oklab, var(--amt-ink) 22%, transparent),
-    0 1px 2px rgb(0 0 0 / 0.04);
+  border-color: var(--amt-ink);
 }
 
 .amt[data-over] .amt-field {
-  box-shadow:
-    inset 0 0 0 1.5px color-mix(in oklab, var(--amt-bad) 70%, transparent),
-    0 1px 2px rgb(0 0 0 / 0.04);
+  border-color: var(--amt-bad);
 }
 
 .amt-top {
@@ -57,6 +53,7 @@
   align-items: center;
   justify-content: space-between;
   min-height: 22px;
+  padding: 0 2px;
 }
 
 .amt-label {
@@ -67,39 +64,40 @@
 }
 
 .amt-max {
-  height: 22px;
-  padding: 0 8px;
+  padding: 0;
   border: 0;
-  border-radius: 7px;
-  background: color-mix(in oklab, var(--amt-ink) 6%, transparent);
-  color: var(--amt-ink);
+  background: none;
+  color: var(--amt-muted);
   font: inherit;
-  font-size: 11.5px;
-  font-weight: 650;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: color 0.15s;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .amt-max:hover {
-    background: color-mix(in oklab, var(--amt-ink) 11%, transparent);
+    color: var(--amt-ink);
   }
 }
 
 .amt-row {
   position: relative;
   display: flex;
+  flex: 1;
   align-items: baseline;
-  gap: 3px;
+  gap: 5px;
+  min-width: 0;
   height: 48px;
   overflow: hidden;
+  line-height: 48px;
 }
 
+/* The symbol is the field's quiet prefix: always grey, fainter still while empty */
 .amt-symbol {
-  color: var(--amt-ink);
-  font-size: 24px;
+  color: var(--amt-muted);
+  font-size: 18px;
   font-weight: 500;
-  transform: translateY(-1px);
   transition: color 0.2s;
 }
 
@@ -110,11 +108,40 @@
 .amt-number {
   display: inline-flex;
   align-items: baseline;
-  font-size: 40px;
+  font-size: 18px;
   font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 48px;
+  letter-spacing: -0.015em;
   white-space: pre;
+}
+
+.amt[data-over] .amt-number {
+  color: var(--amt-bad);
+}
+
+/* The currency, set off from the amount by a hairline */
+.amt-code {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  height: 22px;
+  padding-left: 12px;
+  border-left: 1px solid var(--amt-line);
+  color: var(--amt-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.amt-flag {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 50%;
+  font-size: 24px;
+  line-height: 1;
 }
 
 .amt-char {
@@ -122,7 +149,7 @@
 }
 
 .amt[data-selected] .amt-number {
-  border-radius: 6px;
+  border-radius: 4px;
   background: color-mix(in oklab, #3b82f6 22%, transparent);
 }
 
@@ -132,9 +159,9 @@
 
 .amt-caret {
   align-self: center;
-  width: 2px;
-  height: 30px;
-  margin-left: 3px;
+  width: 1.5px;
+  height: 20px;
+  margin-left: 2px;
   border-radius: 1px;
   background: var(--amt-ink);
   animation: amt-blink 1.1s steps(1) infinite;
@@ -166,7 +193,7 @@
 }
 
 .amt-help {
-  padding: 0 4px;
+  padding: 0 2px;
   color: var(--amt-muted);
   font-size: 12.5px;
   transition: color 0.2s;

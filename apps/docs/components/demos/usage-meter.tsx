@@ -1,11 +1,19 @@
 "use client";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { ArrowUpRight01Icon, DatabaseIcon, FlashIcon, GlobeIcon, InformationCircleIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import {
+  ArrowUpRight01Icon,
+  DatabaseIcon,
+  FlashIcon,
+  GlobeIcon,
+  InformationCircleIcon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import { Meter } from "@base-ui/react/meter";
 import { Tooltip } from "@base-ui/react/tooltip";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
 import { Odometer } from "./odometer";
+import type { Ref } from "react";
+import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 import "./usage-meter.css";
 import { usePortalContainer } from "./portal-container";
@@ -20,70 +28,89 @@ const PLANS: Record<Plan, { name: string; price: number; limits: Record<Metric, 
 type Metric = "api" | "storage" | "seats" | "bandwidth";
 
 const METRICS: { id: Metric; label: string; unit: string; icon: IconSvgElement; tip: string }[] = [
-  { id: "api", label: "API requests", unit: "", icon: FlashIcon, tip: "Over the limit, requests cost $2 per 1,000." },
-  { id: "bandwidth", label: "Bandwidth", unit: " GB", icon: GlobeIcon, tip: "Data served from the edge this month." },
-  { id: "storage", label: "Storage", unit: " GB", icon: DatabaseIcon, tip: "Files, images and database backups." },
-  { id: "seats", label: "Seats", unit: "", icon: UserGroupIcon, tip: "People in your workspace, invited or active." },
+  {
+    id: "api",
+    label: "API requests",
+    unit: "",
+    icon: FlashIcon,
+    tip: "Over the limit, requests cost $2 per 1,000.",
+  },
+  {
+    id: "bandwidth",
+    label: "Bandwidth",
+    unit: " GB",
+    icon: GlobeIcon,
+    tip: "Data served from the edge this month.",
+  },
+  {
+    id: "storage",
+    label: "Storage",
+    unit: " GB",
+    icon: DatabaseIcon,
+    tip: "Files, images and database backups.",
+  },
+  {
+    id: "seats",
+    label: "Seats",
+    unit: "",
+    icon: UserGroupIcon,
+    tip: "People in your workspace, invited or active.",
+  },
 ];
 
 const DAYS = 31;
-/** What's been used by a given day of the month. */
 const usedBy = (day: number): Record<Metric, number> => ({
   api: day * 3600,
   bandwidth: Math.round(day * 2.1),
   storage: Math.round((4.2 + day * 0.1) * 10) / 10,
   seats: 4,
 });
-/** Requests over the limit, charged per thousand. */
 const OVERAGE = 2 / 1000;
 
 const tone = (ratio: number) => (ratio >= 1 ? "over" : ratio >= 0.85 ? "low" : undefined);
 const format = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 1 });
 
-interface State {
+export interface UsageMeterValue {
   day: number;
   plan: Plan;
 }
 
-const BEATS: readonly (State & { ms: number })[] = [
-  { day: 16, plan: "pro", ms: 1500 },
-  { day: 21, plan: "pro", ms: 1300 },
-  { day: 25, plan: "pro", ms: 1500 },
-  { day: 28, plan: "pro", ms: 2400 },
-  { day: 28, plan: "scale", ms: 3000 },
-];
-
-const fromBeat = (step: number): State => ({ day: BEATS[step]!.day, plan: BEATS[step]!.plan });
-
 const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.15 };
 const POP = { type: "spring" as const, duration: 0.4, bounce: 0.35 };
 
-interface UsageMeterDemoProps {
-  /** Plays and pauses the scene from outside, as the home page's card does. Leave it out to play until touched. */
-  playing?: boolean;
+export interface UsageMeterProps {
+  /** The day of the month and the plan. */
+  value?: UsageMeterValue;
+  defaultValue?: UsageMeterValue;
+  onValueChange?: (value: UsageMeterValue) => void;
+  ref?: Ref<HTMLElement>;
 }
 
-export function UsageMeterDemo({ playing }: UsageMeterDemoProps = {}) {
-  const scene = useScene(BEATS, fromBeat, playing);
-  const { state, take } = scene;
+/** A usage meter for the month so far: API calls and seats against the plan, with a projection and an upgrade. */
+export function UsageMeter({
+  value,
+  defaultValue = { day: 16, plan: "pro" },
+  onValueChange,
+  ref,
+}: UsageMeterProps) {
+  const [usage, setUsage] = useControllableState({ value, defaultValue, onValueChange });
   const portal = usePortalContainer();
 
-  const plan = PLANS[state.plan];
-  const used = usedBy(state.day);
-  // Where the month will land at today's pace.
-  const projectedApi = Math.round((used.api / state.day) * DAYS);
+  const plan = PLANS[usage.plan];
+  const used = usedBy(usage.day);
+  const projectedApi = Math.round((used.api / usage.day) * DAYS);
   const overage = Math.max(0, projectedApi - plan.limits.api) * OVERAGE;
   const bill = plan.price + overage;
   const over = used.api >= plan.limits.api;
-  const upgraded = state.plan === "scale";
+  const upgraded = usage.plan === "scale";
 
   return (
     <Tooltip.Provider delay={250}>
-      <section ref={scene.ref} className="um um-layer not-prose" aria-label="Usage this month">
+      <section ref={ref} className="um um-layer not-prose" aria-label="Usage this month">
         <header className="um-head">
           <span className="um-title">
             <b>Usage</b>
-            <span className="um-plan" data-plan={state.plan}>
+            <span className="um-plan" data-plan={usage.plan}>
               <AnimatePresence initial={false} mode="popLayout">
                 <motion.span
                   key={plan.name}
@@ -98,11 +125,11 @@ export function UsageMeterDemo({ playing }: UsageMeterDemoProps = {}) {
             </span>
           </span>
           <span className="um-cycle">
-            Resets in <Odometer value={String(DAYS - state.day)} /> days
+            Resets in <Odometer value={String(DAYS - usage.day)} /> days
           </span>
         </header>
         <div className="um-month" aria-hidden="true">
-          <motion.span initial={false} animate={{ scaleX: state.day / DAYS }} transition={SPRING} />
+          <motion.span initial={false} animate={{ scaleX: usage.day / DAYS }} transition={SPRING} />
         </div>
 
         <ul className="um-rows">
@@ -113,7 +140,12 @@ export function UsageMeterDemo({ playing }: UsageMeterDemoProps = {}) {
             const status = tone(ratio);
             return (
               <li key={id} className="um-row" data-tone={status}>
-                <Meter.Root value={Math.min(value, limit)} max={limit} className="um-meter" getAriaValueText={() => `${format(value)}${unit} of ${format(limit)}${unit}`}>
+                <Meter.Root
+                  value={Math.min(value, limit)}
+                  max={limit}
+                  className="um-meter"
+                  getAriaValueText={() => `${format(value)}${unit} of ${format(limit)}${unit}`}
+                >
                   <div className="um-row-top">
                     <Meter.Label className="um-label">
                       <HugeiconsIcon icon={Icon} aria-hidden="true" />
@@ -184,7 +216,11 @@ export function UsageMeterDemo({ playing }: UsageMeterDemoProps = {}) {
                     <span>
                       <b>You're on Scale.</b> The new limits apply straight away.
                     </span>
-                    <button type="button" className="um-link" onClick={() => take((current) => ({ ...current, plan: "pro" }))}>
+                    <button
+                      type="button"
+                      className="um-link"
+                      onClick={() => setUsage((current) => ({ ...current, plan: "pro" }))}
+                    >
                       Undo
                     </button>
                   </motion.div>
@@ -203,7 +239,7 @@ export function UsageMeterDemo({ playing }: UsageMeterDemoProps = {}) {
                     <motion.button
                       type="button"
                       className="um-upgrade"
-                      onClick={() => take((current) => ({ ...current, plan: "scale" }))}
+                      onClick={() => setUsage((current) => ({ ...current, plan: "scale" }))}
                       whileTap={{ scale: 0.96 }}
                     >
                       Upgrade
@@ -246,4 +282,25 @@ export function UsageMeterDemo({ playing }: UsageMeterDemoProps = {}) {
       </section>
     </Tooltip.Provider>
   );
+}
+
+// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
+
+const BEATS: readonly (UsageMeterValue & { ms: number })[] = [
+  { day: 16, plan: "pro", ms: 1500 },
+  { day: 21, plan: "pro", ms: 1300 },
+  { day: 25, plan: "pro", ms: 1500 },
+  { day: 28, plan: "pro", ms: 2400 },
+  { day: 28, plan: "scale", ms: 3000 },
+];
+
+const fromBeat = (step: number): UsageMeterValue => ({ day: BEATS[step]!.day, plan: BEATS[step]!.plan });
+
+interface UsageMeterDemoProps {
+  playing?: boolean;
+}
+
+export function UsageMeterDemo({ playing }: UsageMeterDemoProps = {}) {
+  const scene = useScene(BEATS, fromBeat, playing);
+  return <UsageMeter ref={scene.ref} value={scene.state} onValueChange={scene.onValueChange} />;
 }

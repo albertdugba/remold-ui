@@ -1,0 +1,32 @@
+---
+title: "Expanding search"
+description: "A search that takes over its screen, the way it does in the apps you use every day: the greeting folds away, the field rises to the top with Cancel beside it, and the shop gives way to results."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="expanding-search" code={<Source demo="expanding-search" />} minHeight={640}>
+  <ExpandingSearchDemo />
+</Stage>
+
+## Things to try
+
+- **Tap the search field.** The greeting above it folds away, the field rises to the top, Cancel slides in beside it, and the shop gives way to your recent searches and what's popular.
+- **Type "oa".** The list narrows to oat milk, sourdough loaf and rolled oats. What you typed stays quiet and the rest of each name is picked out, and the rows that stay slide into place.
+- **Press a +.** It turns into a green tick as the product goes in your basket.
+- **Use the arrow keys.** One highlight slides from row to row, and Enter picks it.
+- **Press Cancel or Escape.** The greeting unfolds and the shop comes back.
+
+## Install
+
+<AddCommand name="expanding-search" />
+
+## Dependencies
+
+<Dependencies demo="expanding-search" />
+
+## How it works
+
+- **Nothing stretches.** The greeting only folds its height, the field only shortens to make room for Cancel, and Cancel only grows its width from nothing. The shop and the results cross-fade in place.
+- **Results where the shop was.** It's Base UI's Autocomplete, with the matches rendered into the screen itself rather than a floating menu, so it reads as the screen changing rather than something opening over it.
+- **Built for the keyboard.** The field is a combobox, the first match is highlighted as you type so Enter picks it, Escape closes, and the recent searches are buttons that fill the field. Each add button says what it adds.

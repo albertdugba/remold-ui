@@ -29,6 +29,12 @@
   background: var(--rsvp-surface);
 }
 
+/* The compact trigger is its own surface. Keeping the tray transparent here
+   prevents a square surface from peeking out behind the pill while it morphs. */
+.rsvp[data-face="button"] {
+  background: transparent;
+}
+
 .rsvp-content {
   position: relative;
   width: max-content;
@@ -475,8 +481,6 @@
 
 .rsvp-close:focus-visible,
 .rsvp-info:focus-visible,
-.rsvp-radio:focus-visible,
-.rsvp-checkbox:focus-visible,
 .rsvp-main:focus-visible {
   outline: 2px solid var(--rsvp-ink);
   outline-offset: 2px;

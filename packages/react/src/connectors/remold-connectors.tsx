@@ -22,7 +22,7 @@ const overlayStyles: CSSProperties = {
  * @example
  * ```tsx
  * <Remold.Connectors radius={12}>
- *   <Remold.Layout trigger={thread}>{comments.map(renderComment)}</Remold.Layout>
+ *   <Remold.Morph trigger={thread}>{comments.map(renderComment)}</Remold.Morph>
  * </Remold.Connectors>
  * ```
  */

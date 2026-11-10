@@ -5,9 +5,7 @@ export interface MentionPerson {
   online?: boolean;
 }
 
-export type MentionSegment =
-  | { kind: "text"; text: string }
-  | { kind: "mention"; id: string; key: string };
+export type MentionSegment = { kind: "text"; text: string } | { kind: "mention"; id: string; key: string };
 
 export interface MentionPost {
   id: string;
@@ -88,15 +86,11 @@ export function matchingPeople(query: string): MentionPerson[] {
 
 function appendText(segs: MentionSegment[], text: string): MentionSegment[] {
   const last = segs.at(-1);
-  if (last?.kind === "text")
-    return [...segs.slice(0, -1), { kind: "text", text: last.text + text }];
+  if (last?.kind === "text") return [...segs.slice(0, -1), { kind: "text", text: last.text + text }];
   return [...segs, { kind: "text", text }];
 }
 
-export function reduceMentions(
-  state: MentionsState,
-  action: MentionsAction,
-): MentionsState {
+export function reduceMentions(state: MentionsState, action: MentionsAction): MentionsState {
   switch (action.type) {
     case "type": {
       if (state.query !== null) {
@@ -116,14 +110,11 @@ export function reduceMentions(
           : { ...state, query: null };
       const last = state.segs.at(-1);
       if (!last) return state;
-      if (last.kind === "mention")
-        return { ...state, segs: state.segs.slice(0, -1) };
+      if (last.kind === "mention") return { ...state, segs: state.segs.slice(0, -1) };
       const text = last.text.slice(0, -1);
       return {
         ...state,
-        segs: text
-          ? [...state.segs.slice(0, -1), { kind: "text", text }]
-          : state.segs.slice(0, -1),
+        segs: text ? [...state.segs.slice(0, -1), { kind: "text", text }] : state.segs.slice(0, -1),
       };
     }
     case "move": {
@@ -145,11 +136,7 @@ export function reduceMentions(
         query: null,
         active: 0,
         made: state.made + 1,
-        segs: [
-          ...state.segs,
-          { kind: "mention", id, key: `m${state.made}` },
-          { kind: "text", text: " " },
-        ],
+        segs: [...state.segs, { kind: "mention", id, key: `m${state.made}` }, { kind: "text", text: " " }],
       };
     }
     case "dismiss":
@@ -161,9 +148,7 @@ export function reduceMentions(
             segs: appendText(state.segs, `@${state.query}`),
           };
     case "send": {
-      const segs = state.segs.filter(
-        (segment) => segment.kind === "mention" || segment.text.trim(),
-      );
+      const segs = state.segs.filter((segment) => segment.kind === "mention" || segment.text.trim());
       if (!segs.length) return state;
       const post: MentionPost = {
         id: `p${state.posts.length}-${state.made}`,
@@ -183,7 +168,6 @@ export function reduceMentions(
 
 /** A concise caption for the people who will be notified. */
 export function notificationLabel(names: readonly string[]): string {
-  if (names.length <= 3)
-    return new Intl.ListFormat("en-GB", { type: "conjunction" }).format(names);
+  if (names.length <= 3) return new Intl.ListFormat("en-GB", { type: "conjunction" }).format(names);
   return `${names.slice(0, 2).join(", ")} and ${names.length - 2} others`;
 }

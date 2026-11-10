@@ -7,7 +7,7 @@
  * to the one step it's set on.
  */
 import { extrude, type ExtrudeOptions, type LayoutBox } from "@remold-ui/canvas";
-import type { Remold } from "@remold-ui/react";
+import type { Remold } from "@remold-ui/react/canvas";
 import { BLOOM, CLAY, LEAF, MINT, ORANGE, PAPER, SKY, STREET, SUN } from "../demos/day-stage";
 import { NIGHT } from "../demos/night-stage";
 
