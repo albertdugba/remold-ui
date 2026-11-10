@@ -2,7 +2,7 @@
 title: "Onboarding checklist"
 description: "The getting-started checklist a new account sees first: tick a step and the next one opens, and finishing the last folds the whole card into a small \"All set\" pill."
 status: "new"
-tags: ["Layout", "Base UI"]
+tags: ["Morph", "Base UI"]
 ---
 
 <Stage name="onboarding-checklist" code={<Source demo="onboarding-checklist" />} minHeight={600}>
@@ -27,5 +27,5 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **Card to pill.** The card and the pill are two different pieces of markup, so [Layout](/docs/primitives/layout) animates the change: it pairs the ring, the title and the count across both shapes, with no ids.
+- **Card to pill.** The card and the pill are two different pieces of markup, so [Morph](/docs/primitives/morph) animates the change: it pairs the ring, the title and the count across both shapes, with no ids.
 - The ring and the ticks are Motion; the checkboxes are Base UI's Checkbox.

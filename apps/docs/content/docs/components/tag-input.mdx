@@ -12,7 +12,7 @@ tags: ["Base UI", "Motion"]
 ## Things to try
 
 - **Type a word and press comma.** The chip forms around the word without it moving.
-- **Pick a suggestion.** Existing tags are offered as you type; a new word is offered as a new tag.
+- **Pick a suggestion.** It flies up into the field. A new word is offered as “Create”.
 - **Press Backspace in an empty field.** The last tag comes off.
 
 ## Install
@@ -28,6 +28,9 @@ The install command adds these for you. If you copy the code by hand, install th
 ## How it works
 
 - **Built on Base UI.** `Combobox` in `multiple` mode gives the chips, the suggestions, keyboard navigation and removal.
-- **The text becomes the chip.** A new chip starts with no padding and no fill, exactly where the typed text sat, then both grow in with Motion.
+- **The text becomes the chip.** A new chip starts with no padding, no tint and no dot, exactly where the typed text sat, then all three grow in with Motion.
+- **Every tag keeps its colour.** Known tags have one; a new tag gets one from its letters, so it's the same every time. The chip is a soft tint of it, and fills with it when you arrow back onto it to remove it.
+- **Picked tags fly in.** Each suggestion is the tag's dot and word. Pick one and the word lifts out of its row and flies up into the field as a chip; its remove button grows in once it lands. Added tags leave the list, and come back when removed.
+- **A limit you can see.** The counter under the field rolls as tags come and go, and turns amber at six, when the field stops taking more.
 
-<Callout>The suggested tags are examples.</Callout>
+<Callout>The suggested tags and their colours are examples. Pass your own.</Callout>

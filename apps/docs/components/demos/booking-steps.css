@@ -1,0 +1,553 @@
+/* Booking steps. Styling only: Motion flies each chosen option's dark surface up into its chip,
+   cross-fades the steps and springs the panel's height. */
+.bks-demo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bks {
+  --bks-surface: #ffffff;
+  --bks-ink: #0a0a0b;
+  --bks-soft: #3f3f46;
+  --bks-muted: #71717a;
+  --bks-well: #f4f4f5;
+  --bks-line: rgb(10 10 11 / 0.07);
+  --bks-edge: rgb(0 0 0 / 0.06);
+  --bks-dash: rgb(10 10 11 / 0.16);
+  --bks-good: #16a34a;
+  display: grid;
+  gap: 18px;
+  width: min(100%, 380px);
+  padding: 22px 18px 18px;
+  border-radius: 36px;
+  background: var(--bks-surface);
+  /* The same edge and lift as the popover menu */
+  border: 1px solid var(--bks-edge);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.05),
+    0 12px 28px -20px rgb(0 0 0 / 0.16);
+  color: var(--bks-ink);
+  font-size: 14px;
+  letter-spacing: -0.006em;
+}
+
+.dark .bks {
+  --bks-surface: #18181b;
+  --bks-ink: #fafafa;
+  --bks-soft: #d4d4d8;
+  --bks-muted: #a1a1aa;
+  --bks-well: #27272a;
+  --bks-line: rgb(255 255 255 / 0.08);
+  --bks-edge: rgb(255 255 255 / 0.07);
+  --bks-dash: rgb(255 255 255 / 0.2);
+  --bks-good: #4ade80;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.28),
+    0 12px 28px -20px rgb(0 0 0 / 0.48);
+}
+
+/* Who you're booking */
+.bks-host {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bks-host img {
+  flex: none;
+  border-radius: 50%;
+}
+
+.bks-host-copy {
+  display: grid;
+}
+
+.bks-host-kicker {
+  color: var(--bks-muted);
+  font-size: 12.5px;
+}
+
+.bks-host-name {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.bks-host-role {
+  color: var(--bks-muted);
+  font-size: 13px;
+}
+
+.bks-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: -4px;
+}
+
+.bks-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px 0 9px;
+  border-radius: 999px;
+  background: var(--bks-well);
+  color: var(--bks-soft);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.bks-meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* The summary: three slots that fill as you choose */
+.bks-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--bks-well);
+}
+
+.bks-slot {
+  display: grid;
+}
+
+.bks-placeholder,
+.bks-chip {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.bks-placeholder {
+  color: var(--bks-muted);
+  font-weight: 500;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
+}
+
+/* The slot you're choosing for */
+.bks-placeholder[data-active] {
+  background: var(--bks-surface);
+  box-shadow:
+    0 0 0 1px var(--bks-line),
+    0 1px 2px rgb(0 0 0 / 0.06);
+  color: var(--bks-ink);
+}
+
+.bks-chip {
+  border: 0;
+  background: transparent;
+  color: var(--bks-surface);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.bks-chip:disabled {
+  cursor: default;
+}
+
+.bks-chip:focus-visible {
+  box-shadow: 0 0 0 2px var(--bks-well), 0 0 0 4px var(--bks-ink);
+}
+
+.bks-chip-text {
+  position: relative;
+}
+
+/* The travelling surface: dark, behind whatever it belongs to */
+.bks-pick {
+  position: absolute;
+  inset: 0;
+  background: var(--bks-ink);
+  pointer-events: none;
+}
+
+/* The steps */
+.bks-panel {
+  overflow: hidden;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.bks-panel-content {
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.bks-step {
+  display: grid;
+  gap: 14px;
+}
+
+.bks-step-head {
+  display: grid;
+  gap: 2px;
+}
+
+.bks-step-count {
+  color: var(--bks-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.bks-step-title {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+/* An option: a quiet tile until it's chosen, when it sits on the dark surface */
+.bks-visit,
+.bks-day,
+.bks-time {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: var(--bks-well);
+  color: var(--bks-ink);
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.bks-visit:active,
+.bks-day:active,
+.bks-time:active {
+  transform: scale(0.97);
+}
+
+.bks-visit[data-checked],
+.bks-day[data-checked],
+.bks-time[data-checked] {
+  color: var(--bks-surface);
+}
+
+.bks-visit:focus-visible,
+.bks-day:focus-visible,
+.bks-time:focus-visible {
+  box-shadow: 0 0 0 2px var(--bks-surface), 0 0 0 4px var(--bks-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bks-visit:not([data-checked]):hover,
+  .bks-day:not([data-checked]):not([data-disabled]):hover,
+  .bks-time:not([data-checked]):not([data-disabled]):hover {
+    background: color-mix(in oklab, var(--bks-well) 86%, var(--bks-ink));
+  }
+}
+
+.bks-option-body {
+  position: relative;
+  display: grid;
+}
+
+/* Kinds of visit */
+.bks-visits {
+  display: grid;
+  gap: 8px;
+}
+
+.bks-visit {
+  height: 62px;
+  border-radius: 18px;
+}
+
+.bks-visit .bks-option-body {
+  justify-items: start;
+  align-content: center;
+  gap: 2px;
+  height: 100%;
+  padding: 0 16px;
+  text-align: left;
+}
+
+.bks-visit-name {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.bks-visit-note {
+  color: var(--bks-muted);
+  font-size: 12.5px;
+  transition: color 0.2s;
+}
+
+.bks-visit[data-checked] .bks-visit-note {
+  color: rgb(255 255 255 / 0.65);
+}
+
+/* Days */
+.bks-days {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.bks-day {
+  height: 86px;
+  border-radius: 18px;
+}
+
+.bks-day .bks-option-body {
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  height: 100%;
+}
+
+.bks-day-weekday {
+  color: var(--bks-muted);
+  font-size: 12px;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.bks-day-date {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.bks-day-free {
+  color: var(--bks-good);
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.bks-day[data-checked] .bks-day-weekday,
+.bks-day[data-checked] .bks-day-free {
+  color: rgb(255 255 255 / 0.7);
+}
+
+.bks-day[data-disabled] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--bks-line);
+  cursor: default;
+}
+
+.bks-day[data-disabled] .bks-day-date,
+.bks-day[data-disabled] .bks-day-free {
+  color: var(--bks-muted);
+}
+
+/* Times */
+.bks-times {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.bks-time {
+  height: 48px;
+  border-radius: 14px;
+}
+
+.bks-time .bks-option-body {
+  place-items: center;
+  height: 100%;
+}
+
+.bks-time-text {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.bks-time[data-disabled] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--bks-line);
+  color: var(--bks-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--bks-dash);
+  cursor: default;
+}
+
+/* Look it over, then book */
+.bks-review {
+  display: grid;
+  gap: 14px;
+}
+
+.bks-lines {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--bks-well);
+  list-style: none;
+}
+
+.bks-lines li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  color: var(--bks-soft);
+  font-weight: 500;
+}
+
+.bks-lines li + li {
+  border-top: 1px solid var(--bks-line);
+}
+
+.bks-lines svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--bks-muted);
+}
+
+.bks-book {
+  display: grid;
+  place-items: center;
+  height: 52px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bks-ink);
+  color: var(--bks-surface);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.15s;
+}
+
+.bks-book:active {
+  transform: scale(0.98);
+}
+
+.bks-book:focus-visible {
+  box-shadow: 0 0 0 2px var(--bks-surface), 0 0 0 4px var(--bks-ink);
+}
+
+.bks-book[aria-busy] {
+  cursor: progress;
+}
+
+.bks-spinner {
+  display: grid;
+  place-items: center;
+}
+
+.bks-spinner svg {
+  width: 19px;
+  height: 19px;
+  animation: bks-spin 0.75s linear infinite;
+}
+
+@keyframes bks-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Booked */
+.bks-done {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 16px 8px 6px;
+  text-align: center;
+}
+
+.bks-done-badge {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: var(--bks-good);
+  color: #ffffff;
+}
+
+.bks-done-badge svg {
+  width: 26px;
+  height: 26px;
+}
+
+.bks-done-title {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.bks-done-detail {
+  max-width: 270px;
+  color: var(--bks-muted);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.bks-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  margin-top: 10px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bks-well);
+  color: var(--bks-ink);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.bks-ghost svg {
+  width: 16px;
+  height: 16px;
+}
+
+.bks-ghost:focus-visible {
+  box-shadow: 0 0 0 2px var(--bks-ink);
+}
+
+.bks-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bks-spinner svg {
+    animation-duration: 2.4s;
+  }
+}

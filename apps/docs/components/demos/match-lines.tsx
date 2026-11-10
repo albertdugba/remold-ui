@@ -22,29 +22,24 @@ const SHORTEST = 6;
 export function useMatchLines(
   enabled = true,
   { select }: { select?: string } = {},
-): { onTransition: (t: Transition) => void; overlay: ReactNode } {
-  const box = useRef<SVGSVGElement>(null);
+): { onTransition: (transition: Transition) => void; overlay: ReactNode } {
+  const overlayRef = useRef<SVGSVGElement>(null);
   const [drawing, setDrawing] = useState<Drawing | null>(null);
-  const count = useRef(0);
+  const drawings = useRef(0);
 
   const onTransition = useCallback(
-    (t: Transition) => {
+    (transition: Transition) => {
       if (!enabled) return;
-      t.ready
+      transition.ready
         .then(({ before, after, matches }) => {
-          const frame = box.current?.getBoundingClientRect();
+          const frame = overlayRef.current?.getBoundingClientRect();
           if (!frame) return;
-          const centre = (b: {
-            x: number;
-            y: number;
-            width: number;
-            height: number;
-          }) => ({
-            x: b.x + b.width / 2 - frame.left,
-            y: b.y + b.height / 2 - frame.top,
+          const centre = (rect: { x: number; y: number; width: number; height: number }) => ({
+            x: rect.x + rect.width / 2 - frame.left,
+            y: rect.y + rect.height / 2 - frame.top,
           });
 
-          const matchedAfter = new Set(matches.pairs.map((p) => p.to));
+          const matchedAfter = new Set(matches.pairs.map((pair) => pair.to));
           const lines: Line[] = [];
           for (const pair of matches.pairs) {
             if (select) {
@@ -53,26 +48,22 @@ export function useMatchLines(
               const parent = after.nodes[pair.to]?.parent ?? -1;
               if (parent >= 0 && matchedAfter.has(parent)) continue;
             }
-            const a = before.boxes[pair.from];
-            const b = after.boxes[pair.to];
-            if (!a || !b) continue;
-            const p = centre(a);
-            const q = centre(b);
-            if (Math.hypot(q.x - p.x, q.y - p.y) < SHORTEST) continue;
-            lines.push({ x1: p.x, y1: p.y, x2: q.x, y2: q.y });
+            const beforeBox = before.boxes[pair.from];
+            const afterBox = after.boxes[pair.to];
+            if (!beforeBox || !afterBox) continue;
+            const from = centre(beforeBox);
+            const to = centre(afterBox);
+            if (Math.hypot(to.x - from.x, to.y - from.y) < SHORTEST) continue;
+            lines.push({ x1: from.x, y1: from.y, x2: to.x, y2: to.y });
           }
           const arrivals = matches.added.flatMap((index) => {
             if (select && !after.elements[index]?.matches(select)) return [];
             const parent = after.nodes[index]?.parent ?? -1;
-            if (
-              parent >= 0 &&
-              (matchedAfter.has(parent) || matches.added.includes(parent))
-            )
-              return [];
-            const b = after.boxes[index];
-            return b ? [centre(b)] : [];
+            if (parent >= 0 && (matchedAfter.has(parent) || matches.added.includes(parent))) return [];
+            const arrived = after.boxes[index];
+            return arrived ? [centre(arrived)] : [];
           });
-          setDrawing({ id: ++count.current, lines, arrivals });
+          setDrawing({ id: ++drawings.current, lines, arrivals });
         })
         .catch(() => {});
     },
@@ -80,18 +71,18 @@ export function useMatchLines(
   );
 
   const overlay = (
-    <svg ref={box} className="ml-overlay" aria-hidden="true">
+    <svg ref={overlayRef} className="ml-overlay" aria-hidden="true">
       {enabled && drawing && (
         <g key={drawing.id} className="ml-drawing">
-          {drawing.lines.map((l, index) => (
+          {drawing.lines.map((segment, index) => (
             <g key={index}>
-              <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} pathLength={1} />
-              <circle cx={l.x1} cy={l.y1} r={2.5} className="ml-from" />
-              <circle cx={l.x2} cy={l.y2} r={3.5} className="ml-to" />
+              <line x1={segment.x1} y1={segment.y1} x2={segment.x2} y2={segment.y2} pathLength={1} />
+              <circle cx={segment.x1} cy={segment.y1} r={2.5} className="ml-from" />
+              <circle cx={segment.x2} cy={segment.y2} r={3.5} className="ml-to" />
             </g>
           ))}
-          {drawing.arrivals.map((p, index) => (
-            <circle key={`a${index}`} cx={p.x} cy={p.y} r={5} className="ml-new" />
+          {drawing.arrivals.map((arrival, index) => (
+            <circle key={`a${index}`} cx={arrival.x} cy={arrival.y} r={5} className="ml-new" />
           ))}
         </g>
       )}

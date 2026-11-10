@@ -1,6 +1,6 @@
 ---
 title: "Popover menu"
-description: "A compact project-actions menu that grows out of its trigger, with Base UI handling all of the popover behavior."
+description: "A compact photo-actions menu that grows out of its trigger, with Base UI handling all of the popover behavior."
 status: "new"
 tags: ["Base UI", "Motion"]
 ---
@@ -16,7 +16,7 @@ tags: ["Base UI", "Motion"]
 
 ## The split of responsibilities
 
-Use Base UI's `Popover` for the things that must be correct: anchored positioning, focus, Escape, and outside-click dismissal. Motion drives one clipped tray: the ellipsis key expands into the project menu, ending up in its top-right corner as the close button, then the rows rise out from beneath it.
+Use Base UI's `Popover` for the things that must be correct: anchored positioning, focus, Escape, and outside-click dismissal. Motion drives one clipped tray: the ellipsis key expands into the photo menu, ending up in its top-right corner as the close button, then the rows rise out from beneath it.
 
 The rows are action links, so a product can attach its own navigation or side effect without the menu inventing a selected state. In this demo they use placeholder targets and simply close the menu.
 

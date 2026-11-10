@@ -16,6 +16,7 @@
   overflow: clip;
   box-sizing: border-box;
   width: min(100%, 420px);
+  min-width: 0;
   padding: 18px;
   border-radius: 22px;
   background: var(--ak-surface);
@@ -45,11 +46,13 @@
   position: relative;
   display: grid;
   gap: 14px;
+  min-width: 0;
 }
 
 .ak-view {
   display: grid;
   gap: 10px;
+  min-width: 0;
 }
 
 .ak-title {
@@ -211,6 +214,7 @@
 .ak-secret {
   display: grid;
   gap: 12px;
+  min-width: 0;
   padding: 14px;
   border-radius: 16px;
   background: var(--ak-vault);
@@ -237,6 +241,8 @@
   align-items: center;
   gap: 8px;
   height: 44px;
+  min-width: 0;
+  overflow: hidden;
   padding: 0 6px 0 12px;
   border-radius: 10px;
   background: rgb(255 255 255 / 0.06);
@@ -250,6 +256,7 @@
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 13px;
   letter-spacing: 0.01em;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -283,6 +290,38 @@
   border-radius: 12px;
   background: var(--ak-field);
   color: var(--ak-ink);
+}
+
+/* Gallery cards can become far narrower than the viewport. Keep the key
+   readable there by letting the token truncate before it pushes the Copy
+   control or its dark vault beyond the card. */
+@container (max-width: 520px) {
+  .ak {
+    width: min(100%, 360px);
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .ak-secret {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .ak-secret-line {
+    height: 40px;
+    padding: 0 5px 0 10px;
+  }
+
+  .ak-secret-key {
+    font-size: 12px;
+  }
+
+  .ak-copy {
+    gap: 5px;
+    height: 30px;
+    padding: 0 9px 0 8px;
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {

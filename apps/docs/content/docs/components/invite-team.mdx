@@ -1,6 +1,6 @@
 ---
 title: "Invite teammates"
-description: "A team's members panel, where one person takes four forms: an email, a chip, a pending invite and a member. Each travels into the next, matched with no ids."
+description: "A team's members panel, where one person takes four forms: an email, a chip, a pending invite and a member. Motion keeps each person continuous as they travel into the next."
 status: "new"
 tags: ["Motion"]
 ---
@@ -13,9 +13,9 @@ tags: ["Motion"]
 
 - **Type an email and press Enter, Space or a comma.** It becomes a chip with the person's initials.
 - **Paste several at once.** A list separated by commas, spaces or new lines becomes a chip each. Backspace in an empty field takes the last one back.
-- **Press Invite.** It says "Sent to 2" for a moment, and each chip moves down into the list as an invite. They accept one at a time, and each invite travels on into its place among the team, by name, where it's picked out in green before it settles in.
+- **Press Invite.** It says "Sent to 2" for a moment, and each chip moves down into the list as an invite. They accept one at a time, and each invite travels on into its place among the team, by name, where it says "Joined" before it settles in.
 - **Revoke one while it's pending.** It leaves the list and never joins.
-- **Try a bad address, or someone already invited.** The status line says what's wrong.
+- **Try a bad address, or someone already invited.** The field shakes and says what's wrong under it.
 
 ## Install
 
@@ -30,6 +30,9 @@ tags: ["Motion"]
 - The chip, pending row and member row use Motion layout and a shared identity, so a person stays legible while moving between each state.
 - The team is listed by name, so someone who joins moves to their place, and the rows around them make room.
 - **Invite lives inside the field**, at the end of its last line. However many lines the emails wrap onto, the button stays level with the typing instead of hanging off the first line.
-- **It says what just happened.** Invite turns into "Sent" (or "Sent to 2") for a moment, and someone who joins is tinted in their new row, so you can find them among the team. The tint sits behind the row and reaches past its edges, so nothing moves to make room for it.
+- **It says what just happened.** Invite turns green and says "Sent" (or "Sent to 2") for a moment, and someone who joins says "Joined" in green where their role goes, then settles into it.
+- **Refusals shake.** A bad address, or someone already invited, gives the field a small shake and opens the reason under it; a new reason morphs from the old one.
+- **The card springs to fit.** Its height follows what's inside with one spring, and it clips while it moves, so nothing in it is ever stretched. Sent chips step out of the field at once, so it doesn't grow and then shrink.
+- **Monograms say who's in.** Grey while someone is only an email or an invite, warming into their own colour as they join. The member count in the header morphs as the team grows.
 - Motion runs when people change: a chip added, an invite sent, someone joining or revoked. Typing in the field doesn't animate anything.
 - The invites are pretend. Send your real ones in `send` and call `join` when someone accepts.

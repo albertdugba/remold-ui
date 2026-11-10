@@ -2,7 +2,7 @@
 
 .hm {
   /* A generous desktop frame leaves the three-column demo gallery room to breathe. */
-  --hm-max: 1440px;
+  --hm-max: 1680px;
   --hm-pad: 16px;
   --hm-ink: var(--color-fd-foreground);
   --hm-muted: var(--color-fd-muted-foreground);
@@ -329,6 +329,10 @@
 
 .hm-split.faq {
   align-items: start;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+}
+
+.hm-split.code {
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
 }
 
@@ -781,7 +785,8 @@
   }
 
   .hm-split,
-  .hm-split.faq {
+  .hm-split.faq,
+  .hm-split.code {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -838,80 +843,249 @@
 
 /* The frame: dashed guides down both sides, like a blueprint, with a × where sections meet. */
 
-/* Layers: a code panel whose lines animate between versions */
-.fx {
-  border: 1px solid var(--color-fd-border);
-  border-radius: 16px;
-  background: var(--color-fd-card);
+/* Layers: a dark code window, in light mode and dark, whose lines animate between versions */
+.hmc {
+  --hmc-bg: #0c0c0e;
+  --hmc-bar: #131316;
+  --hmc-line: rgb(255 255 255 / 0.07);
+  --hmc-ink: #ededef;
+  --hmc-muted: #8b8b94;
+  --hmc-quiet: #4d4d55;
+  position: relative;
+  width: 100%;
   overflow: hidden;
+  border-radius: 22px;
+  background: var(--hmc-bg);
+  color: var(--hmc-ink);
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.9),
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 2px 4px rgb(0 0 0 / 0.08),
+    0 40px 80px -40px rgb(0 0 0 / 0.55);
 }
 
-.fx-bar {
+.dark .hmc {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 40px 80px -40px rgb(0 0 0 / 0.9);
+}
+
+.hmc-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--color-fd-border);
+  gap: 14px;
+  padding: 12px 12px 12px 18px;
+  border-bottom: 1px solid var(--hmc-line);
+  background: var(--hmc-bar);
 }
 
-.fx-tabs {
+.hmc-dots {
   display: flex;
-  padding: 2px;
-  border: 1px solid var(--color-fd-border);
+  flex: none;
+  gap: 7px;
+}
+
+.hmc-dots i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.12);
+}
+
+.hmc-tabs {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+}
+
+.hmc-tab {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
   border-radius: 9px;
-  background: var(--color-fd-background);
-}
-
-.fx-tabs button {
-  padding: 4px 11px;
-  border-radius: 7px;
-  font-size: 13px;
-  color: var(--color-fd-muted-foreground);
-}
-
-.fx-tabs button[aria-selected="true"] {
-  background: var(--color-fd-accent);
-  color: var(--color-fd-foreground);
+  background: none;
+  color: var(--hmc-muted);
+  font: inherit;
+  font-size: 13.5px;
   font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease-out;
 }
 
-.fx-file {
-  margin-left: auto;
+.hmc-tab[data-active] {
+  color: var(--hmc-ink);
+}
+
+.hmc-indicator {
+  position: absolute;
+  z-index: -1;
+  top: var(--active-tab-top);
+  left: var(--active-tab-left);
+  width: var(--active-tab-width);
+  height: var(--active-tab-height);
+  border-radius: 9px;
+  background: rgb(255 255 255 / 0.09);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  transition:
+    left 320ms cubic-bezier(0.32, 0.72, 0, 1),
+    width 320ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.hmc-copy {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: rgb(255 255 255 / 0.06);
+  color: var(--hmc-muted);
+  font: inherit;
   font-size: 13px;
-  color: var(--color-fd-muted-foreground);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.16s,
+    color 0.16s;
 }
 
-.fx-copy {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  color: var(--color-fd-muted-foreground);
+.hmc-copy svg {
+  width: 15px;
+  height: 15px;
+}
+
+.hmc-copy[data-copied] {
+  color: #4ade80;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .fx-copy:hover {
-    background: var(--color-fd-accent);
-    color: var(--color-fd-foreground);
+  .hmc-tab:hover:not([data-active]),
+  .hmc-copy:hover {
+    color: var(--hmc-ink);
+  }
+
+  .hmc-copy:hover {
+    background: rgb(255 255 255 / 0.1);
   }
 }
 
-.fx-code {
-  display: grid;
-  /* Lines keep their own height; shorter snippets don't stretch to fill the panel. */
-  align-content: start;
-  min-height: 260px;
-  margin: 0;
-  /* The highlighted lines bring their own side padding. */
-  padding: 16px 4px;
-  overflow-x: auto;
-  background: var(--color-fd-background);
-  font-size: 13px;
-  line-height: 1.75;
+.hmc-file {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 24px 0;
+  color: var(--hmc-muted);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12.5px;
 }
 
-.fx-code pre {
+.hmc-file svg {
+  width: 14px;
+  height: 14px;
+  color: var(--hmc-quiet);
+}
+
+.hmc-code {
+  display: grid;
+  align-content: start;
+  min-height: 340px;
   margin: 0;
-  background: transparent;
+  padding: 12px 24px 28px 12px;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.8;
+  tab-size: 2;
+}
+
+.hmc-code pre {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent !important;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The panel is always dark, so it always reads the dark palette. */
+.hmc-code pre,
+.hmc-code pre span {
+  color: var(--shiki-dark) !important;
+  background: transparent !important;
+}
+
+.hmc .hmc-code pre code {
+  counter-reset: line;
+}
+
+.hmc .hmc-code pre code .line {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  min-height: 1.8em;
+  padding-left: 3em !important;
+}
+
+.hmc .hmc-code pre code .line::before {
+  position: absolute;
+  left: 0;
+  width: 2em;
+  color: var(--hmc-quiet) !important;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  content: counter(line);
+  counter-increment: line;
+  user-select: none;
+}
+
+.hmc-tab:focus-visible,
+.hmc-copy:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 0.7);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hmc-indicator {
+    transition: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .hmc-bar {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .hmc-dots {
+    display: none;
+  }
+
+  .hmc-tabs {
+    justify-content: flex-start;
+  }
+
+  .hmc-tab {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .hmc-copy span {
+    display: none;
+  }
+
+  .hmc-file {
+    padding: 12px 16px 0;
+  }
+
+  .hmc-code {
+    min-height: 0;
+    padding: 10px 16px 22px 4px;
+    font-size: 12.5px;
+  }
 }
 
 /* FAQ */
@@ -1381,23 +1555,6 @@
   isolation: isolate;
 }
 
-.hm-hero-grid {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  width: 100%;
-  height: 100%;
-  color: color-mix(in oklab, var(--hm-ink) 11%, transparent);
-  accent-color: #6d5dfc;
-  pointer-events: none;
-  -webkit-mask-image: radial-gradient(ellipse 70% 90% at 50% 40%, #000 35%, transparent 90%);
-  mask-image: radial-gradient(ellipse 70% 90% at 50% 40%, #000 35%, transparent 90%);
-}
-
-.dark .hm-hero-grid {
-  accent-color: #a99dff;
-}
-
 /* "New: …", a small pill above the headline */
 .hm-new {
   display: inline-flex;
@@ -1439,7 +1596,7 @@
   border-radius: 28px;
   background: radial-gradient(
       120% 90% at 50% -10%,
-      color-mix(in oklab, #6d5dfc 7%, transparent),
+      color-mix(in oklab, var(--hm-ink) 5%, transparent),
       transparent 55%
     ),
     color-mix(in oklab, var(--hm-ink) 3%, var(--color-fd-background));
@@ -1567,8 +1724,8 @@
 @keyframes hst-changed {
   0%,
   25% {
-    background: color-mix(in oklab, #6366f1 16%, transparent);
-    box-shadow: inset 2px 0 0 #6366f1;
+    background: color-mix(in oklab, var(--hm-ink) 12%, transparent);
+    box-shadow: inset 2px 0 0 var(--hm-ink);
   }
   100% {
     background: transparent;
@@ -1579,7 +1736,7 @@
 @media (prefers-reduced-motion: reduce) {
   .hst-line.hst-changed {
     animation: none;
-    background: color-mix(in oklab, #6366f1 10%, transparent);
+    background: color-mix(in oklab, var(--hm-ink) 8%, transparent);
   }
 }
 
@@ -1608,7 +1765,6 @@
   align-items: start;
 }
 
-/* The gallery only exposes filters the examples actually describe: category and search. */
 .hp-filter {
   margin-top: 28px;
 }
@@ -1637,239 +1793,57 @@
   margin-top: 0;
 }
 
-.hp-filter-controls {
+.hp-chips {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 8px;
 }
 
-.hp-filter-slot {
-  position: relative;
-  display: inline-flex;
-}
-
-.hp-filter-select {
+.hp-chip {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  border: 1px solid var(--hm-line);
-  border-radius: 999px;
-  background: var(--color-fd-card);
-  color: var(--hm-ink);
-}
-
-.hp-filter-select {
   gap: 6px;
-  padding: 0 10px 0 13px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-}
-
-.hp-filter-label {
-  color: var(--hm-muted);
-}
-
-.hp-filter-value {
-  color: var(--hm-ink);
-  font-weight: 600;
-}
-
-.hp-filter-select svg {
-  width: 13px;
-  height: 13px;
-  color: var(--hm-muted);
-  transition: transform 160ms ease;
-}
-
-.hp-filter-select[data-popup-open] svg {
-  transform: rotate(180deg);
-}
-
-
-/* With something picked the pill becomes a chip: the choice in bold, a firm outline, and room
-   for the clear button inside its right end. */
-.hp-filter-select[data-picked] {
-  padding-right: 36px;
-  border: 1.5px solid var(--hm-ink);
-}
-
-.hp-filter-clear {
-  position: absolute;
-  top: 50%;
-  right: 7px;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  margin-top: -10px;
-  padding: 0;
+  height: 38px;
+  padding: 0 16px;
   border: 0;
-  border-radius: 50%;
-  background: var(--hm-ink);
-  color: var(--color-fd-background);
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-
-.hp-filter-clear:active {
-  transform: scale(0.9);
-}
-
-.hp-filter-clear svg {
-  width: 10px;
-  height: 10px;
-}
-
-.hp-filter-clear:focus-visible {
-  outline: 2px solid var(--hm-ink);
-  outline-offset: 2px;
-}
-
-/* The pill's menu: one shell just beneath the pill that springs out to the menu and back. */
-.hp-filter-shell {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  border-radius: 22px;
-  z-index: 40;
-  display: none;
-  overflow: clip;
-  border: 1px solid rgb(255 255 255 / 0.08);
-  background: #393939;
-  color: #f5f5f5;
-  box-shadow: 0 24px 56px -18px rgb(0 0 0 / 0.48);
-}
-
-.hp-filter-shell[data-shown] {
-  display: block;
-}
-
-.hp-filter-shell[data-from-right] {
-  right: 0;
-  left: auto;
-}
-
-.hp-filter-menu {
-  outline: none;
-  transition:
-    opacity 100ms ease-out,
-    filter 100ms ease-out;
-}
-
-.hp-filter-menu[data-ending-style] {
-  opacity: 0;
-  filter: blur(3px);
-}
-
-.hp-filter-menu-inner {
-  width: min(260px, calc(100vw - 24px));
-  padding: 6px;
-  box-sizing: border-box;
-}
-
-.hp-filter-options {
-  display: grid;
-  gap: 2px;
-  max-height: 360px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(255 255 255 / 0.22) transparent;
-}
-
-.hp-filter-option {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  min-height: 40px;
-  width: 100%;
-  padding: 0 10px;
-  border: 0;
-  border-radius: 12px;
-  outline: 0;
-  background: transparent;
-  color: #f5f5f5;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-fd-foreground) 6%, var(--color-fd-background));
+  color: color-mix(in oklab, var(--color-fd-foreground) 80%, transparent);
   font: inherit;
   font-size: 14px;
   font-weight: 500;
-  text-align: left;
+  white-space: nowrap;
   cursor: pointer;
-}
-
-.hp-filter-option:focus-visible {
-  background: rgb(255 255 255 / 0.08);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .hp-filter-option:hover {
-    background: rgb(255 255 255 / 0.08);
-  }
-}
-
-.hp-filter-option-mark {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 6px;
-  background: rgb(255 255 255 / 0.14);
   transition:
-    background-color 0.15s,
-    box-shadow 0.15s;
+    background-color 160ms ease-out,
+    color 160ms ease-out,
+    transform 160ms ease-out;
 }
 
-.hp-filter-option[aria-pressed="true"] .hp-filter-option-mark {
-  background: #f5f5f5;
-  color: #252525;
+.hp-chip svg {
+  margin-right: -4px;
+  opacity: 0.7;
 }
 
-.hp-filter-option-mark svg {
-  width: 12px;
-  height: 12px;
+.hp-chip[data-pressed] {
+  background: var(--color-fd-foreground);
+  color: var(--color-fd-background);
 }
 
-.hp-filter-select:focus-visible {
-  border-color: color-mix(in oklab, var(--hm-ink) 45%, var(--hm-line));
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--hm-ink) 10%, transparent);
-}
-
-.hp-filter-summary {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-  color: var(--hm-muted);
-  font-size: 12px;
-}
-
-.hp-filter-summary button {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--hm-ink);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
+.hp-chip:active {
+  transform: scale(0.97);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .hp-filter-summary button:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
+  .hp-chip:not([data-pressed]):hover {
+    background: color-mix(in oklab, var(--color-fd-foreground) 10%, var(--color-fd-background));
+    color: var(--color-fd-foreground);
   }
 }
 
-.hp-filter-empty {
-  grid-column: 1 / -1;
-  margin: 28px 0;
-  color: var(--hm-muted);
-  text-align: center;
+.hp-chip:focus-visible {
+  outline: 2px solid var(--color-fd-foreground);
+  outline-offset: 2px;
 }
 
 .hp-gallery-end {
@@ -1936,12 +1910,21 @@
 .hp-card {
   display: grid;
   grid-template-rows: 1fr;
-  min-height: 420px;
+  min-height: 456px;
   overflow: hidden;
   border: 1px solid color-mix(in oklab, var(--hm-ink) 3%, transparent);
   border-radius: 24px;
   background: color-mix(in oklab, var(--hm-ink) 3%, var(--color-fd-background));
   container-type: inline-size;
+}
+
+/* A full interaction can still be compact when it is only a gallery preview. */
+.hp-card.short {
+  min-height: 380px;
+}
+
+.hp-card.short .hp-stage {
+  padding: 64px 40px;
 }
 
 /* Masonry, once the cards are measured: tiny rows, each card spanning as many as its height needs.
@@ -1997,9 +1980,9 @@
   grid-template-columns: minmax(0, 1fr);
   place-items: center;
   min-width: 0;
-  /* The play button occupies the top-right corner (14px inset, 34px across).
-     Keep the demo clear of it, with the side insets matched so it stays centred. */
-  padding: 58px 58px 28px;
+  /* The gallery controls occupy the top-right corner. Reserve that space in every regular
+     preview so a full-size product UI can stay centred without sitting underneath them. */
+  padding: 84px 64px 40px;
 }
 
 /* A part keeps its own fill (a white card stays white on the grey); its outer border and shadow go. */
@@ -2027,8 +2010,65 @@
   background: var(--otp-surface) !important;
 }
 
+/* The mentions demo has a playback wrapper; make it span the stage so its panel centres within
+   the card rather than inheriting the panel's own intrinsic width. */
+.hp-stage > .em-demo {
+  display: grid;
+  width: 100%;
+  place-items: center;
+}
+
 .hp-card {
   position: relative;
+}
+
+/* One quiet route into the full example. Playback belongs to the component page, never the gallery. */
+.hp-card-action {
+  position: absolute;
+  z-index: 2;
+  top: 16px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid color-mix(in oklab, var(--hm-ink) 15%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hm-ink);
+  text-decoration: none;
+  transition:
+    background-color 150ms ease-out,
+    transform 150ms ease-out;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.hp-card-action svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hp-card-action:hover {
+    background: var(--color-fd-accent);
+  }
+}
+
+.hp-card-action:active {
+  transform: scale(0.96);
+}
+
+.hp-card-action:focus-visible {
+  outline: 2px solid var(--hm-ink);
+  outline-offset: 2px;
+}
+
+.hp-open {
+  right: 16px;
+}
+
+.hp-play {
+  right: 62px;
 }
 
 /* Separate the outer demo frames from the dark page, without recoloring demos. */
@@ -2089,69 +2129,7 @@
   border-radius: 2px;
 }
 
-/* Play / pause, a round button in the corner whose icon morphs between the two */
-.hp-play {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 3;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--hm-line);
-  border-radius: 50%;
-  background: var(--color-fd-card);
-  color: var(--hm-ink);
-  transition:
-    background-color 0.2s,
-    transform 0.2s;
-}
-
-.hp-play svg {
-  width: 14px;
-  height: 14px;
-}
-
-.hp-view {
-  right: 56px;
-}
-
-@media (pointer: coarse) {
-  .hp-play {
-    width: 44px;
-    height: 44px;
-  }
-  .hp-view {
-    right: 66px;
-  }
-  .hp-card .hp-stage {
-    padding-top: 72px;
-  }
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .hp-play:hover {
-    background: var(--color-fd-accent);
-  }
-}
-
-.hp-play:active {
-  transform: scale(0.94);
-}
-
-.hp-play:focus-visible {
-  outline: 2px solid var(--hm-ink);
-  outline-offset: 2px;
-}
-
-.hp-card.dark .hp-play {
-  background: rgb(255 255 255 / 0.08);
-  border-color: rgb(255 255 255 / 0.14);
-  color: #fafafa;
-}
-
-/* The diagram's own buttons go: the card's play / pause runs it. */
+/* Gallery cards are static; diagrams keep their own local controls where applicable. */
 .hp-card .gx-seg {
   display: none;
 }
@@ -2200,16 +2178,12 @@
   .hp-filter-bar::before {
     display: none;
   }
-  .hp-filter-controls {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .hp-filter-slot,
-  .hp-filter-select {
-    width: 100%;
-  }
-  .hp-filter-select svg {
-    margin-left: auto;
+  .hp-chips {
+    flex-wrap: nowrap;
+    margin: 0 -16px;
+    padding: 0 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
   .hp-card:not(.wide, .full, .tall) {
     aspect-ratio: auto;
@@ -2224,51 +2198,6 @@
 @media (max-width: 640px) {
   .hp-filter-bar {
     top: auto;
-  }
-
-  .hp-filter-select {
-    min-height: 48px;
-    padding-inline: 14px;
-    font-size: 14px;
-    touch-action: manipulation;
-  }
-
-  .hp-filter-select[data-picked] {
-    padding-right: 48px;
-  }
-
-  .hp-filter-clear {
-    right: 2px;
-    width: 44px;
-    height: 44px;
-    margin-top: -22px;
-    background: transparent;
-    color: var(--hm-ink);
-    touch-action: manipulation;
-  }
-
-  .hp-filter-clear svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .hp-filter-option {
-    min-height: 48px;
-    padding: 10px 12px;
-    font-size: 16px;
-    touch-action: manipulation;
-  }
-
-  .hp-filter-options {
-    gap: 4px;
-    max-height: min(360px, 50dvh);
-    overscroll-behavior: contain;
-  }
-
-  .hp-filter-summary button {
-    min-height: 44px;
-    padding-inline: 8px;
-    touch-action: manipulation;
   }
 
   .hm {
@@ -2323,13 +2252,7 @@
 }
 
 .hp-card.tall .hp-stage {
-  padding: 58px 58px 24px;
-}
-
-/* The comment thread across two columns: the post keeps its reading width, centred in the card. */
-.hp-card.wide.tall .hp-stage > .cx {
-  justify-self: center;
-  width: min(100%, 760px);
+  padding: 84px 64px 40px;
 }
 
 .hp-card.tall .hp-stage {
@@ -2341,11 +2264,27 @@
   height: 100% !important;
 }
 
-/* A narrow card gives the side padding back to the demo. The play button only needs the top corner. */
+/* Put the reading-width comment panel in the true centre after the tall-card fill rule. */
+.hp-card.wide.tall .hp-stage {
+  place-items: center;
+}
+
+.hp-card.wide.tall .hp-stage > .cx {
+  align-self: center;
+  justify-self: center;
+  width: min(100%, 760px);
+  height: auto !important;
+}
+
+/* A narrow card gives the side padding back to the demo. */
 @container (max-width: 560px) {
   .hp-stage,
   .hp-card.tall .hp-stage {
-    padding: 52px 18px 20px;
+    padding: 72px 18px 28px;
+  }
+
+  .hp-card.short .hp-stage {
+    padding: 54px 18px;
   }
 }
 
@@ -2377,7 +2316,7 @@
   border-radius: 20px;
 }
 
-/* The headline's moving word: one solid accent colour (a gradient clipped to text repaints on every
+/* The headline's moving word: one solid ink colour (a gradient clipped to text repaints on every
    letter frame and stutters), and a line that springs as the word changes length. */
 .hm-hero h1 span {
   color: inherit;
@@ -2389,7 +2328,7 @@
 
 .hm-hero h1 .hm-word,
 .hm-hero h1 .hm-word span {
-  color: #6d5dfc;
+  color: var(--hm-ink);
 }
 
 .hm-hero h1 .hm-word {
@@ -2432,4 +2371,136 @@
   border-color: transparent !important;
   background: transparent !important;
   box-shadow: none !important;
+}
+
+/* Hero: the headline large on the left, the pitch and the way in beside it, both on one baseline. */
+.hm-hero.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(32px, 5vw, 96px);
+  padding: clamp(64px, 9vw, 128px) 0 clamp(48px, 6vw, 80px);
+  border-bottom: 1px solid var(--hm-line);
+}
+
+.hm-hero.split h1 {
+  max-width: none;
+  margin-top: 28px;
+  font-size: clamp(48px, 7.2vw, 112px);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+  text-wrap: nowrap;
+}
+
+.hm-hero.split h1 > span:first-child {
+  color: var(--hm-muted);
+}
+
+.hm-hero-side {
+  display: grid;
+  justify-items: start;
+  max-width: 460px;
+  padding-bottom: 6px;
+}
+
+.hm-hero.split .hm-lead {
+  margin: 0;
+  color: var(--hm-ink);
+  font-size: clamp(16px, 1.3vw, 18px);
+  line-height: 1.55;
+}
+
+.hm-hero.split .hm-actions {
+  margin-top: 28px;
+}
+
+.hm-hero.split .hm-cta {
+  height: 46px;
+  padding: 0 22px;
+}
+
+.hm-hero.split .hm-install {
+  margin: 14px 0 0;
+}
+
+.hm-hero.split .hm-install .rm-command {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--hm-muted);
+}
+
+.hm-hero.split .hm-install .rm-command button {
+  padding: 4px 8px;
+}
+
+.hm-section.first {
+  padding-top: clamp(16px, 2vw, 28px);
+}
+
+.hm-section.first .hp-filter {
+  margin-top: 0;
+}
+
+@media (max-width: 1000px) {
+  .hm-hero.split {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .hm-hero.split h1 {
+    font-size: clamp(44px, 11vw, 88px);
+    text-wrap: balance;
+  }
+}
+
+/* The changing word sits in a selection box, like a shape picked in a design tool, and the box follows its width. */
+.hm-hero.split h1 .hm-word {
+  --hm-select: oklch(0.6 0.2 255);
+  --hm-handle: 10px;
+  margin-inline: 0.08em;
+}
+
+.hm-hero.split h1 .hm-word::before,
+.hm-hero.split h1 .hm-word::after {
+  position: absolute;
+  inset: 0.06em -0.08em -0.02em;
+  pointer-events: none;
+  content: "";
+}
+
+.hm-hero.split h1 .hm-word::before {
+  z-index: -1;
+  border: 1.5px solid var(--hm-select);
+  background: color-mix(in oklab, var(--hm-select) 7%, transparent);
+}
+
+/* Four handles: a white square with a blue edge on each corner. */
+.hm-hero.split h1 .hm-word::after {
+  --hm-half: calc(var(--hm-handle) / -2 + 0.75px);
+  inset: calc(0.06em + var(--hm-half)) calc(-0.08em + var(--hm-half)) calc(-0.02em + var(--hm-half));
+  --hm-inner: linear-gradient(var(--color-fd-background), var(--color-fd-background));
+  --hm-outer: linear-gradient(var(--hm-select), var(--hm-select));
+  background:
+    var(--hm-inner) 1.5px 1.5px / calc(var(--hm-handle) - 3px) calc(var(--hm-handle) - 3px) no-repeat,
+    var(--hm-inner) calc(100% - 1.5px) 1.5px / calc(var(--hm-handle) - 3px) calc(var(--hm-handle) - 3px) no-repeat,
+    var(--hm-inner) 1.5px calc(100% - 1.5px) / calc(var(--hm-handle) - 3px) calc(var(--hm-handle) - 3px) no-repeat,
+    var(--hm-inner) calc(100% - 1.5px) calc(100% - 1.5px) / calc(var(--hm-handle) - 3px) calc(var(--hm-handle) - 3px) no-repeat,
+    var(--hm-outer) 0 0 / var(--hm-handle) var(--hm-handle) no-repeat,
+    var(--hm-outer) 100% 0 / var(--hm-handle) var(--hm-handle) no-repeat,
+    var(--hm-outer) 0 100% / var(--hm-handle) var(--hm-handle) no-repeat,
+    var(--hm-outer) 100% 100% / var(--hm-handle) var(--hm-handle) no-repeat;
+}
+
+@media (max-width: 640px) {
+  .hm-hero.split h1 .hm-word {
+    --hm-handle: 8px;
+  }
+}
+
+/* The install line: the package's name, the part that morphs, in ink. */
+.hm-hero.split .hm-install-command > span {
+  color: var(--hm-ink);
+  font-weight: 500;
 }

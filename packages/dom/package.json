@@ -31,18 +31,16 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean --treeshake --splitting",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch --treeshake --splitting",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo",
     "test": "vitest run"
   },
   "dependencies": {
-    "@remold-ui/core": "workspace:*",
-    "culori": "4.0.2"
+    "@remold-ui/core": "workspace:*"
   },
   "devDependencies": {
-    "@types/culori": "^4.0.1",
     "happy-dom": "20.14.5"
   }
 }

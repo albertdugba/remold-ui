@@ -1,11 +1,11 @@
 /**
  * SVG path data parsing.
  *
- * Reads a path's `d` attribute into absolute commands. `svgpath` handles the SVG grammar,
- * relative coordinates, and smooth-curve shorthand; this module keeps the public command
- * format used by the rest of the engine.
+ * Reads a path's `d` attribute into absolute commands, following the SVG grammar: compact numbers
+ * (`1e2-5`, `.5.5`), arc flags squashed together by minifiers (`0110`), implicit repeats (extra
+ * pairs after `M` are lines), relative commands, and the `S` and `T` shorthands, which become full
+ * curves. Mistakes are reported with where they are, rather than guessed around.
  */
-import svgpath from "svgpath";
 
 export type PathCommand =
   | { type: "M"; x: number; y: number }
@@ -25,73 +25,159 @@ export type PathCommand =
     }
   | { type: "Z" };
 
-type SvgPath = ReturnType<typeof svgpath> & { err: string };
-type SvgSegment = Parameters<Parameters<SvgPath["iterate"]>[0]>[0];
+/** How many numbers each command takes. */
+const PARAMETERS: Record<string, number> = { m: 2, l: 2, h: 1, v: 1, c: 6, s: 4, q: 4, t: 2, a: 7, z: 0 };
 
-function explainParseError(error: string, source: string): string {
-  if (error.includes("string should start with")) return "Invalid path data: a path must start with M";
+const NUMBER = /[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/y;
+const SEPARATOR = /[\s,]*/y;
 
-  const position = /at pos (\d+)/.exec(error)?.[1];
-  const where = position === undefined ? "an unknown position" : Number(position) === source.length ? "the end" : `position ${position}`;
+/** Where the reader is, for messages: a position, or the end. */
+const where = (source: string, at: number) => (at >= source.length ? "the end" : `position ${at}`);
 
-  if (error.includes("arc flag")) return `Invalid path data: expected an arc flag (0 or 1) at ${where}`;
-  if (error.includes("missed param") || error.includes("param should start")) {
-    return `Invalid path data: expected a number at ${where}`;
-  }
-  if (error.includes("bad command")) {
-    const command = /bad command (.)/.exec(error)?.[1];
-    return command && /[0-9]/.test(command)
-      ? `Invalid path data: expected a command at ${where}`
-      : `Invalid path data: unexpected "${command}" at ${where}`;
-  }
-
-  return `Invalid path data: ${error}`;
+/**
+ * Reads path data one token at a time. `index` is where it has got to; every read skips the
+ * spaces and commas before the token.
+ */
+export function pathReader(source: string) {
+  let index = 0;
+  const skip = () => {
+    SEPARATOR.lastIndex = index;
+    SEPARATOR.exec(source);
+    index = SEPARATOR.lastIndex;
+  };
+  return {
+    get index() {
+      return index;
+    },
+    skip,
+    /** The next character, after any spaces and commas. */
+    peek() {
+      skip();
+      return source[index];
+    },
+    /** Moves past one character: a command letter. */
+    advance() {
+      index++;
+    },
+    /** The next number, or a throw that says where one was expected. */
+    number(): { value: number; text: string } {
+      skip();
+      NUMBER.lastIndex = index;
+      const match = NUMBER.exec(source);
+      if (!match) throw new Error(`Invalid path data: expected a number at ${where(source, index)}`);
+      index = NUMBER.lastIndex;
+      return { value: Number(match[0]), text: match[0] };
+    },
+    /** An arc flag: a single 0 or 1, which minifiers write with nothing after it. */
+    flag(): boolean {
+      skip();
+      const character = source[index];
+      if (character !== "0" && character !== "1") {
+        throw new Error(`Invalid path data: expected an arc flag (0 or 1) at ${where(source, index)}`);
+      }
+      index++;
+      return character === "1";
+    },
+  };
 }
 
-function toPathCommand(segment: SvgSegment, currentX: number, currentY: number): PathCommand {
-  switch (segment[0]) {
-    case "M":
-    case "L":
-      return { type: segment[0], x: segment[1], y: segment[2] };
-    case "H":
-      return { type: "L", x: segment[1], y: currentY };
-    case "V":
-      return { type: "L", x: currentX, y: segment[1] };
-    case "C":
-      return { type: "C", x1: segment[1], y1: segment[2], x2: segment[3], y2: segment[4], x: segment[5], y: segment[6] };
-    case "Q":
-      return { type: "Q", x1: segment[1], y1: segment[2], x: segment[3], y: segment[4] };
-    case "A":
-      return {
-        type: "A",
-        rx: segment[1],
-        ry: segment[2],
-        rotation: segment[3],
-        largeArc: segment[4] === 1,
-        sweep: segment[5] === 1,
-        x: segment[6],
-        y: segment[7],
-      };
-    case "Z":
-    case "z":
-      return { type: "Z" };
-    default:
-      throw new Error(`Invalid path data: unsupported command "${segment[0]}"`);
-  }
-}
+/** The last curve's handle reflected through the pen, for S and T; the pen itself if there wasn't one. */
+const mirror = (handle: [number, number] | null, x: number, y: number): [number, number] =>
+  handle ? [2 * x - handle[0], 2 * y - handle[1]] : [x, y];
+
+const startsNumber = (character: string | undefined) => character !== undefined && /[\d+\-.]/.test(character);
 
 /** Parse path data into absolute M, L, C, Q, A and Z commands. Throws on malformed input. */
 export function parsePath(source: string): PathCommand[] {
-  const path = svgpath(source) as SvgPath;
-  if (path.err) throw new Error(explainParseError(path.err, source));
-
+  const reader = pathReader(source);
   const commands: PathCommand[] = [];
-  path
-    .abs()
-    .unshort()
-    .iterate((segment, _index, x, y) => {
-      commands.push(toPathCommand(segment, x, y));
-    });
+  if (reader.peek() === undefined) return commands;
+  if (!/[mM]/.test(reader.peek()!)) throw new Error("Invalid path data: a path must start with M");
+
+  // The pen, where the current shape started, and the last curve's second handle, for S and T.
+  let [x, y, startX, startY] = [0, 0, 0, 0];
+  let cubic: [number, number] | null = null;
+  let quadratic: [number, number] | null = null;
+  let command = "";
+
+  for (;;) {
+    const next = reader.peek();
+    if (next === undefined) break;
+    if (/[a-zA-Z]/.test(next)) {
+      if (PARAMETERS[next.toLowerCase()] === undefined) {
+        throw new Error(`Invalid path data: unexpected "${next}" at ${where(source, reader.index)}`);
+      }
+      command = next;
+      reader.advance();
+    } else if (!startsNumber(next)) {
+      throw new Error(`Invalid path data: unexpected "${next}" at ${where(source, reader.index)}`);
+    } else if (command === "" || command.toLowerCase() === "z") {
+      throw new Error(`Invalid path data: expected a command at ${where(source, reader.index)}`);
+    } else if (command === "M") {
+      // Pairs after a move are lines.
+      command = "L";
+    } else if (command === "m") {
+      command = "l";
+    }
+
+    const relative = command === command.toLowerCase();
+    const [offsetX, offsetY] = relative ? [x, y] : [0, 0];
+    const kind = command.toUpperCase();
+    const read = () => reader.number().value;
+    const point = (): [number, number] => [read() + offsetX, read() + offsetY];
+
+    switch (kind) {
+      case "M": {
+        [x, y] = point();
+        [startX, startY] = [x, y];
+        commands.push({ type: "M", x, y });
+        break;
+      }
+      case "L":
+        [x, y] = point();
+        commands.push({ type: "L", x, y });
+        break;
+      case "H":
+        x = read() + offsetX;
+        commands.push({ type: "L", x, y });
+        break;
+      case "V":
+        y = read() + offsetY;
+        commands.push({ type: "L", x, y });
+        break;
+      case "C":
+      case "S": {
+        const [x1, y1]: [number, number] = kind === "C" ? point() : mirror(cubic, x, y);
+        const [x2, y2] = point();
+        [x, y] = point();
+        commands.push({ type: "C", x1, y1, x2, y2, x, y });
+        cubic = [x2, y2];
+        quadratic = null;
+        continue;
+      }
+      case "Q":
+      case "T": {
+        const [x1, y1]: [number, number] = kind === "Q" ? point() : mirror(quadratic, x, y);
+        [x, y] = point();
+        commands.push({ type: "Q", x1, y1, x, y });
+        quadratic = [x1, y1];
+        cubic = null;
+        continue;
+      }
+      case "A": {
+        const [rx, ry, rotation] = [read(), read(), read()];
+        const [largeArc, sweep] = [reader.flag(), reader.flag()];
+        [x, y] = point();
+        commands.push({ type: "A", rx, ry, rotation, largeArc, sweep, x, y });
+        break;
+      }
+      default:
+        [x, y] = [startX, startY];
+        commands.push({ type: "Z" });
+    }
+    cubic = null;
+    quadratic = null;
+  }
 
   return commands;
 }

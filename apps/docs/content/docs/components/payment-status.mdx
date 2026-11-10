@@ -1,0 +1,33 @@
+---
+title: "Payment status"
+description: "A payment's status as one drawing: the card becomes a lock while the bank confirms, then a receipt when it's paid, or the card again with a warning when it's declined."
+status: "new"
+tags: ["Remold", "SVG"]
+---
+
+<Stage name="payment-status" code={<Source demo="payment-status" />} minHeight={480}>
+  <PaymentStatusDemo />
+</Stage>
+
+## Things to try
+
+- **Watch it play.** The card floats, becomes a lock whose shackle clicks shut, comes back with a warning when the bank says no, then goes through and becomes a receipt.
+- **Pick a status.** It stops playing and jumps there. Go from Card to Paid and the card reshapes straight into the receipt.
+
+## Install
+
+<AddCommand name="payment-status" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="payment-status" />
+
+## How it works
+
+- **Status in, drawing out.** Pass `status` as `card`, `processing`, `declined` or `paid`, straight from your payment's state, along with the `amount`, the `card` and the receipt `email`.
+- **Layers that reshape.** The card, the lock and the receipt are the same `Remold.Icon` layers drawn differently, so each change morphs instead of swapping. The accent turns red for a refusal and green once it's paid.
+- **Motion that says what's happening.** The shackle clicks while the bank confirms, and the card shakes its head when it's declined. Both are plain CSS and hold still while the drawing reshapes.
+
+<Callout>The amount, the card and the email are made up.</Callout>

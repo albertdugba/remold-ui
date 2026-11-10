@@ -10,9 +10,7 @@ import "./feedback-face.css";
 const r1 = (n: number) => Math.round(n * 10) / 10;
 
 const ellipse = (cx: number, cy: number, rx: number, ry = rx) =>
-  `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${rx * 2} 0a${rx} ${ry} 0 1 0 ${
-    -rx * 2
-  } 0Z`;
+  `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${rx * 2} 0a${rx} ${ry} 0 1 0 ${-rx * 2} 0Z`;
 
 const heart = (cx: number, cy: number, s: number) =>
   `M${cx} ${r1(cy + s * 0.95)}C${r1(cx - s * 1.35)} ${r1(cy + s * 0.05)} ${r1(
@@ -23,12 +21,9 @@ const heart = (cx: number, cy: number, s: number) =>
   )} ${cx} ${r1(cy + s * 0.95)}Z`;
 
 const arch = (cx: number, cy: number) =>
-  `M${cx - 13} ${cy + 5}Q${cx} ${cy - 14} ${cx + 13} ${cy + 5}Q${cx} ${
-    cy - 3
-  } ${cx - 13} ${cy + 5}Z`;
+  `M${cx - 13} ${cy + 5}Q${cx} ${cy - 14} ${cx + 13} ${cy + 5}Q${cx} ${cy - 3} ${cx - 13} ${cy + 5}Z`;
 
-const pair = (make: (cx: number, cy: number) => string) =>
-  make(72, 96) + make(128, 96);
+const pair = (make: (cx: number, cy: number) => string) => make(72, 96) + make(128, 96);
 
 const FACE = ellipse(100, 104, 80);
 
@@ -75,18 +70,10 @@ const RATINGS = [
   },
 ] as const;
 
-export function FeedbackFaceDemo({
-  framed = true,
-  index,
-}: {
-  framed?: boolean;
-  index?: number;
-}) {
-  const [own, setOwn] = useState(4);
+export function FeedbackFaceDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
+  const [chosenRating, setChosenRating] = useState(4);
   const rating =
-    index === undefined
-      ? own
-      : ((index % RATINGS.length) + RATINGS.length) % RATINGS.length;
+    index === undefined ? chosenRating : ((index % RATINGS.length) + RATINGS.length) % RATINGS.length;
   const shown = RATINGS[rating]!;
   const body = (
     <div className="ff" data-rating={rating + 1}>
@@ -94,9 +81,7 @@ export function FeedbackFaceDemo({
         className="ff-art"
         viewBox="0 0 200 200"
         role="img"
-        aria-label={`A face that looks ${shown.label
-          .toLowerCase()
-          .replace("!", "")}`}
+        aria-label={`A face that looks ${shown.label.toLowerCase().replace("!", "")}`}
         spring={{ duration: 0.55, bounce: 0.25 }}
         paths={[
           { id: "face", path: FACE, className: "ff-face" },
@@ -122,8 +107,8 @@ export function FeedbackFaceDemo({
         aria-label="Rating"
         value={[String(rating)]}
         onValueChange={(values) => {
-          const next = values[0];
-          if (next) setOwn(Number(next));
+          const picked = values[0];
+          if (picked) setChosenRating(Number(picked));
         }}
       >
         {RATINGS.map((item, position) => (

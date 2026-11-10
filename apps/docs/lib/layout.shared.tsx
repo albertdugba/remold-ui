@@ -3,6 +3,7 @@ import { RemoldMark } from "@/components/brand/remold-mark";
 
 export function baseOptions(): BaseLayoutProps {
   return {
+    githubUrl: "https://github.com/albertdugba/remold-ui",
     nav: {
       title: <RemoldMark size={20} wordmark />,
     },

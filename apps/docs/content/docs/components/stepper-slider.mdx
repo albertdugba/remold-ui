@@ -1,0 +1,40 @@
+---
+title: "Stepper slider"
+description: "A number control that's a stepper for small nudges and a slider for big changes. Press − or + to move a step at a time, or drag the number sideways and the stepper stretches into a slider, then folds back when you let go."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="stepper-slider" code={<Source demo="stepper-slider" />} minHeight={320}>
+  <StepperSliderDemo />
+</Stage>
+
+## Things to try
+
+- **Press + or −.** The number moves a step at a time and rolls to its new value.
+- **Drag the number sideways.** The stepper stretches into a slider and the number rides on the thumb in a dark pill. Let go and it folds back into the stepper, the number springing back to the middle.
+- **Click the number and type one.** It's a real number field, kept within the range and to the step.
+
+## Install
+
+<AddCommand name="stepper-slider" />
+
+## Dependencies
+
+<Dependencies demo="stepper-slider" />
+
+## Usage
+
+```tsx
+const [months, setMonths] = useState(6);
+
+<StepperSlider value={months} onValueChange={setMonths} min={3} max={24} step={3} unit="months" label="Months" />
+```
+
+Use it anywhere people usually nudge a number but sometimes need a big jump: a quantity, a tip, a number of payments, a duration.
+
+## How it works
+
+- **One control, two shapes.** It's a Base UI Number Field until you drag the number, then a Base UI Slider. Only the control's width changes, so nothing in it stretches, and one value pill springs between the stepper's centre and the thumb.
+- **The drag starts where you are.** The slider takes over relative to where you started dragging, so the thumb begins under the value you already had rather than jumping.
+- **Built for every input.** − and + are buttons with clear labels, the number is a real input you can type in, the slider works with the arrow keys, and pass `stretched` to show it as a slider without dragging.

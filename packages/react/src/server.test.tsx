@@ -1,19 +1,19 @@
 // @vitest-environment node
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { Remold } from "./index.js";
+import { Remold } from "./canvas.js";
 
 describe("server rendering", () => {
   it("renders every part without a browser", () => {
     const html = renderToString(
-      <Remold.Layout trigger="list" className="stage">
+      <Remold.Morph trigger="list" className="stage">
         <p>Hello</p>
         <Remold.Text>Saving</Remold.Text>
         <Remold.Ignore>
           <b>Ad</b>
         </Remold.Ignore>
         <Remold.Scene label="Demo" objects={{}} layouts={{ only: { objects: {} } }} />
-      </Remold.Layout>,
+      </Remold.Morph>,
     );
     expect(html).toContain('class="stage"');
     expect(html).toContain("<span>Saving</span>");

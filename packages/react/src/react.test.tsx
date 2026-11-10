@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 import type { FrameCallback, FrameLoop } from "@remold-ui/dom";
+import { shapes } from "@remold-ui/core";
 import { act, StrictMode, createRef, useEffect, useRef, useState, type ReactNode } from "react";
 import { createRoot, type Root as ReactRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { Remold, useAutoplay, useDragToDismiss, useDust, useRemold, useRemoldLayout, useViewTransition, type Transition } from "./index.js";
+import { Remold, useAutoplay, useDragToDismiss, useDust, useRemold, useRemoldMorph, useViewTransition, type Transition } from "./canvas.js";
+import * as Interface from "./index.js";
 
 /** Every fill on any canvas: cubes and objects each fill their sides and top. */
 let fills = 0;
@@ -66,21 +68,21 @@ const Item = ({ text, y }: { text: string; y: number }) => (
 const find = (text: string) => [...container.querySelectorAll("p")].find((p) => p.textContent === text)!;
 const translateOf = (el: HTMLElement) => el.style.translate.split(" ").filter(Boolean).map(Number.parseFloat);
 
-describe("Remold.Layout", () => {
+describe("Remold.Morph", () => {
   function List(props: {
     order: string[];
     loop: FrameLoop;
     onTransition?: (t: Transition) => void;
-    className?: Remold.Layout.Props["className"];
+    className?: Remold.Morph.Props["className"];
   }) {
     const { order, ...rest } = props;
     return (
-      <Remold.Layout trigger={order.join()} reducedMotion="never" data-box="0 0 800 800" {...rest}>
+      <Remold.Morph trigger={order.join()} reducedMotion="never" data-box="0 0 800 800" {...rest}>
         {/* New keys on purpose: React rebuilds every element, and Remold still matches them. */}
         {order.map((text, i) => (
           <Item key={`${text}-${order.join()}`} text={text} y={i * 50} />
         ))}
-      </Remold.Layout>
+      </Remold.Morph>
     );
   }
 
@@ -110,9 +112,9 @@ describe("Remold.Layout", () => {
     const frames = manualLoop();
     const onTransition = vi.fn();
     const view = (sort: string, filter: string) => (
-      <Remold.Layout trigger={[sort, filter]} loop={frames.loop} onTransition={onTransition}>
+      <Remold.Morph trigger={[sort, filter]} loop={frames.loop} onTransition={onTransition}>
         <Item text="Alpha" y={0} />
-      </Remold.Layout>
+      </Remold.Morph>
     );
     await render(view("name", "all"));
     // A new array with the same items isn't a change.
@@ -128,16 +130,16 @@ describe("Remold.Layout", () => {
     await render(<List order={["Alpha"]} loop={frames.loop} onTransition={onTransition} />);
     await render(<List order={["Alpha"]} loop={frames.loop} onTransition={onTransition} />);
     await render(
-      <Remold.Layout trigger="other" disabled loop={frames.loop} onTransition={onTransition}>
+      <Remold.Morph trigger="other" disabled loop={frames.loop} onTransition={onTransition}>
         <Item text="Alpha" y={0} />
-      </Remold.Layout>,
+      </Remold.Morph>,
     );
     expect(onTransition).not.toHaveBeenCalled();
   });
 
   it("gives className and render the part's state", async () => {
     const frames = manualLoop();
-    const className = (state: Remold.Layout.State) => (state.animating ? "moving" : "still");
+    const className = (state: Remold.Morph.State) => (state.animating ? "moving" : "still");
     await render(<List order={["Alpha", "Beta"]} loop={frames.loop} className={className} />);
     expect(container.firstElementChild!.className).toBe("still");
     await render(<List order={["Beta", "Alpha"]} loop={frames.loop} className={className} />);
@@ -147,7 +149,7 @@ describe("Remold.Layout", () => {
   it("renders your own element, merging props and refs", async () => {
     const ref = createRef<HTMLDivElement>();
     const theirs = createRef<HTMLElement>();
-    await render(<Remold.Layout trigger={1} ref={ref} className="ours" render={<section ref={theirs} className="theirs" />} />);
+    await render(<Remold.Morph trigger={1} ref={ref} className="ours" render={<section ref={theirs} className="theirs" />} />);
     const section = container.querySelector("section")!;
     expect(section.className).toBe("ours theirs");
     expect(ref.current).toBe(section);
@@ -156,13 +158,13 @@ describe("Remold.Layout", () => {
 
   it("render can be a function of props and state", async () => {
     await render(
-      <Remold.Layout trigger={1} render={(props, state) => <ul {...(props as object)} data-busy={String(state.animating)} />} />,
+      <Remold.Morph trigger={1} render={(props, state) => <ul {...(props as object)} data-busy={String(state.animating)} />} />,
     );
     expect(container.querySelector("ul")!.getAttribute("data-busy")).toBe("false");
   });
 });
 
-describe("useRemoldLayout", () => {
+describe("useRemoldMorph", () => {
   it("animates any element that forwards its ref, like a library component", async () => {
     const frames = manualLoop();
     const onTransition = vi.fn<(t: Transition) => void>();
@@ -173,7 +175,7 @@ describe("useRemoldLayout", () => {
       </article>
     );
     function Sorted({ order }: { order: string[] }) {
-      const { ref, animating } = useRemoldLayout<HTMLElement>(order.join(), { reducedMotion: "never", loop: frames.loop, onTransition });
+      const { ref, animating } = useRemoldMorph<HTMLElement>(order.join(), { reducedMotion: "never", loop: frames.loop, onTransition });
       return (
         <Card ref={ref}>
           <span data-animating={String(animating)} />
@@ -280,6 +282,17 @@ describe("Remold.Ignore", () => {
     const wrapper = container.firstElementChild as HTMLElement;
     expect(wrapper.hasAttribute("data-rm-ignore")).toBe(true);
     expect(wrapper.style.display).toBe("contents");
+  });
+});
+
+describe("entry points", () => {
+  it("keeps canvas parts out of the main entry, and offers everything from /canvas", () => {
+    for (const part of ["Scene", "Story", "Particles", "Canvas", "Globe", "DotGrid"]) {
+      expect(part in Interface.Remold).toBe(false);
+      expect(part in Remold).toBe(true);
+    }
+    expect(Object.keys(Interface.Remold).every((part) => part in Remold)).toBe(true);
+    expect("useDust" in Interface).toBe(false);
   });
 });
 
@@ -685,6 +698,7 @@ describe("useAutoplay", () => {
     return (
       <div ref={autoplay.ref}>
         <p>step {autoplay.step}</p>
+        <output>{String(autoplay.active)}</output>
         <button {...autoplay.toggleProps}>{autoplay.playing ? "Pause" : "Play"}</button>
         <input aria-label="field" />
       </div>
@@ -695,15 +709,18 @@ describe("useAutoplay", () => {
 
   it("steps only while on screen, wrapping round", async () => {
     await render(<Demo />);
+    expect(container.querySelector("output")!.textContent).toBe("false");
     await tick(3000);
     expect(text()).toBe("step 0");
     await act(async () => visible!(true));
+    expect(container.querySelector("output")!.textContent).toBe("true");
     await tick(1000);
     expect(text()).toBe("step 1");
     await tick(1000);
     await tick(1000);
     expect(text()).toBe("step 0");
     await act(async () => visible!(false));
+    expect(container.querySelector("output")!.textContent).toBe("false");
     await tick(5000);
     expect(text()).toBe("step 0");
   });
@@ -772,6 +789,31 @@ describe("Remold.Particles", () => {
     await act(async () => frames.run());
     await render(<Remold.Particles shape={{ path: BAR }} count={40} loop={frames.loop} transition="scatter" />);
     expect(frames.running).toBe(true);
+    await act(async () => frames.run());
+    expect(frames.running).toBe(false);
+  });
+
+  it("draws a shape from shapes with as many dots as count, coloured by name", async () => {
+    const frames = manualLoop();
+    const ball = shapes.sphere().tone("sea");
+    fills = 0;
+    await render(<Remold.Particles shape={ball} count={30} palette={{ sea: "#0ea5e9" }} camera loop={frames.loop} />);
+    expect(fills).toBeGreaterThan(0);
+    await render(<Remold.Particles shape={ball} count={30} palette={{ sea: "#0ea5e9" }} camera={{ spin: 0 }} loop={frames.loop} />);
+    await act(async () => frames.run());
+    expect(frames.running).toBe(false);
+  });
+
+  it("turns 3D points with a camera, and pauses when its spin drops to 0", async () => {
+    const frames = manualLoop();
+    const points = [
+      { x: 0, y: 0, z: -10 },
+      { x: 10, y: 10, z: 10 },
+    ];
+    await render(<Remold.Particles shape={{ points }} camera={{ spin: 0.2 }} blend="add" loop={frames.loop} />);
+    await act(async () => frames.run());
+    expect(frames.running).toBe(true);
+    await render(<Remold.Particles shape={{ points }} camera={{ spin: 0 }} blend="add" loop={frames.loop} />);
     await act(async () => frames.run());
     expect(frames.running).toBe(false);
   });

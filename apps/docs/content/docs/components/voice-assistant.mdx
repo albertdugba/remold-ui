@@ -1,0 +1,34 @@
+---
+title: "Voice assistant"
+description: "A voice assistant's orb of 3D dots that breathes while idle, ripples with your voice as it listens, swirls into a ring as it thinks, and pulses as it speaks."
+status: "new"
+tags: ["Particles", "Base UI"]
+---
+
+<Stage name="voice-assistant" code={<Source demo="voice-assistant" />} minHeight={520}>
+  <VoiceAssistantDemo />
+</Stage>
+
+## Things to try
+
+- **Watch it play.** The orb breathes while it waits, ripples while you speak and your words appear under it, swirls into a spinning ring while it thinks, then pulses in lobes as it answers.
+- **Press the mic.** It stops playing and starts listening; press again and it goes off to think.
+
+## Install
+
+<AddCommand name="voice-assistant" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="voice-assistant" />
+
+## How it works
+
+- **One orb, four shapes.** Each state is a shape from `shapes` in `@remold-ui/core`: a `sphere` that breathes with `.scale`, the same sphere rippled or bulged with `.warp`, and a `torus` for thinking. `<Remold.Particles>` turns it with a `camera` and flows between them.
+- **Your voice, if you have it.** Pass `level` (0 to 1) from the microphone or the reply's audio, and the ripples follow it. Left out, the orb makes up a lively one.
+- **Dots that stay put.** Ripples use `pairing="index"`, so each dot keeps its place on the ball and only moves in and out. Going to or from the ring uses `pairing="flow"`, so the ball unrolls into it in one sweep.
+- **Base UI for the mic.** The mic is a Base UI `Toggle`, pressed while listening, and the status reads out to screen readers as it changes. It holds still with reduced motion, and offscreen.
+
+<Callout>The question and the answer are made up.</Callout>

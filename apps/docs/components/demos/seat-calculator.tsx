@@ -6,15 +6,15 @@ import { Slider } from "@base-ui/react/slider";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import { useId } from "react";
+import { useId, type Ref } from "react";
 import { Odometer } from "./odometer";
+import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 import "./seat-calculator.css";
 
 interface Tier {
   name: string;
   from: number;
-  /** Per seat, per month, billed monthly. Null means it's priced by talking to sales. */
   price: number | null;
   adds: string[];
 }
@@ -28,10 +28,6 @@ const TIERS: Tier[] = [
 
 const YEARLY_OFF = 0.2;
 
-/**
- * The slider isn't linear: each tier gets a fair share of the track, so 1–10 seats is as easy to
- * pick as 50–150. Positions run 0–1000; these are the seat counts at the bends.
- */
 const BENDS: [number, number][] = [
   [0, 1],
   [250, 10],
@@ -60,81 +56,103 @@ const positionOf = (seats: number) => {
 };
 const percentOf = (seats: number) => `${(positionOf(seats) / STOPS) * 100}%`;
 
-const tierOf = (seats: number) => [...TIERS].reverse().find((t) => seats >= t.from)!;
-const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+const tierOf = (seats: number) => [...TIERS].reverse().find((candidate) => seats >= candidate.from)!;
+const money = (amount: number) => `$${Math.round(amount).toLocaleString("en-US")}`;
 
-/** The faces that fill the team row; past the last one, a count. */
-const FACES = ["Ama Mensah", "Kwame Owusu", "Efua Addo", "Esi Ofori", "Kofi Agyeman", "Yaw Darko", "Abena Osei", "Kojo Amponsah"];
+const FACES = [
+  "Ama Mensah",
+  "Kwame Owusu",
+  "Efua Addo",
+  "Esi Ofori",
+  "Kofi Agyeman",
+  "Yaw Darko",
+  "Abena Osei",
+  "Kojo Amponsah",
+];
 const face = (name: string) =>
   `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=${["e0e7ff", "fce7f3", "d1fae5", "fef3c7"][name.length % 4]}`;
 
-interface State {
+export interface SeatCalculatorValue {
   seats: number;
   yearly: boolean;
 }
 
-const BEATS: readonly (State & { ms: number })[] = [
-  { seats: 6, yearly: false, ms: 1500 },
-  { seats: 14, yearly: false, ms: 1400 },
-  { seats: 32, yearly: false, ms: 1400 },
-  { seats: 64, yearly: false, ms: 1600 },
-  { seats: 64, yearly: true, ms: 2000 },
-  { seats: 180, yearly: true, ms: 2300 },
-  { seats: 24, yearly: false, ms: 1600 },
-];
-
-const fromBeat = (step: number): State => ({ seats: BEATS[step]!.seats, yearly: BEATS[step]!.yearly });
-
 const SPRING = { type: "spring" as const, duration: 0.45, bounce: 0.15 };
 const POP = { type: "spring" as const, duration: 0.4, bounce: 0.35 };
 
-interface SeatCalculatorDemoProps {
-  /** Plays and pauses the scene from outside, as the home page's card does. Leave it out to play until touched. */
-  playing?: boolean;
+export interface SeatCalculatorProps {
+  /** The team size and whether it's billed yearly. */
+  value?: SeatCalculatorValue;
+  defaultValue?: SeatCalculatorValue;
+  onValueChange?: (value: SeatCalculatorValue) => void;
+  ref?: Ref<HTMLElement>;
 }
 
-export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
-  const scene = useScene(BEATS, fromBeat, playing);
-  const { state, take } = scene;
-  const id = useId();
-  const { seats, yearly } = state;
+/** A per-seat pricing calculator: pick a team size and billing, and the tier, price and features follow. */
 
-  const tier = tierOf(seats);
-  const custom = tier.price === null;
+const RISE = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -16 },
+  transition: SPRING,
+};
+
+function priceFor(tier: Tier, seats: number, yearly: boolean) {
   const perSeat = tier.price === null ? 0 : tier.price * (yearly ? 1 - YEARLY_OFF : 1);
   const monthly = perSeat * seats;
   const full = (tier.price ?? 0) * seats;
-  const saving = (full - monthly) * 12;
-  const features = TIERS.filter((t) => t.from <= tier.from).flatMap((t) => t.adds.map((f) => ({ f, tier: t.name })));
-  const shown = Math.min(seats, 4);
-  const more = seats - shown;
+  return { perSeat, monthly, full, saving: (full - monthly) * 12 };
+}
 
-  const setSeats = (n: number) => take((current) => ({ ...current, seats: Math.max(1, Math.min(999, Math.round(n))) }));
+function featuresUpTo(tier: Tier) {
+  return TIERS.filter((included) => included.from <= tier.from).flatMap((included) =>
+    included.adds.map((feature) => ({ feature, tier: included.name })),
+  );
+}
 
+function SeatInput({ seats, onChange }: { seats: number; onChange: (seats: number) => void }) {
   return (
-    <section ref={scene.ref} className="sc not-prose" aria-label="Pricing calculator">
-      <div className="sc-top">
-        <span className="sc-label">
-          <b>How big is your team?</b>
-          <span>Pay only for the seats you use</span>
-        </span>
-        <NumberField.Root value={seats} onValueChange={(v) => v !== null && setSeats(v)} min={1} max={999} className="sc-number">
-          <NumberField.Group className="sc-number-group">
-            <NumberField.Decrement className="sc-step" aria-label="One fewer seat">
-              <HugeiconsIcon icon={MinusSignIcon} aria-hidden="true" />
-            </NumberField.Decrement>
-            <NumberField.Input className="sc-number-input" aria-label="Seats" />
-            <NumberField.Increment className="sc-step" aria-label="One more seat">
-              <HugeiconsIcon icon={Add01Icon} aria-hidden="true" />
-            </NumberField.Increment>
-          </NumberField.Group>
-        </NumberField.Root>
-      </div>
+    <div className="sc-top">
+      <span className="sc-label">
+        <b>How big is your team?</b>
+        <span>Pay only for the seats you use</span>
+      </span>
+      <NumberField.Root
+        value={seats}
+        onValueChange={(value) => value !== null && onChange(value)}
+        min={1}
+        max={999}
+        className="sc-number"
+      >
+        <NumberField.Group className="sc-number-group">
+          <NumberField.Decrement className="sc-step" aria-label="One fewer seat">
+            <HugeiconsIcon icon={MinusSignIcon} aria-hidden="true" />
+          </NumberField.Decrement>
+          <NumberField.Input className="sc-number-input" aria-label="Seats" />
+          <NumberField.Increment className="sc-step" aria-label="One more seat">
+            <HugeiconsIcon icon={Add01Icon} aria-hidden="true" />
+          </NumberField.Increment>
+        </NumberField.Group>
+      </NumberField.Root>
+    </div>
+  );
+}
 
+function SeatSlider({
+  seats,
+  tier,
+  onChange,
+}: {
+  seats: number;
+  tier: Tier;
+  onChange: (seats: number) => void;
+}) {
+  return (
+    <>
       <Slider.Root
         className="sc-slider"
         value={positionOf(seats)}
-        onValueChange={(v) => setSeats(seatsAt(Array.isArray(v) ? v[0]! : v))}
+        onValueChange={(value) => onChange(seatsAt(Array.isArray(value) ? value[0]! : value))}
         min={0}
         max={STOPS}
         aria-label="Seats"
@@ -142,12 +160,12 @@ export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
         <Slider.Control className="sc-control">
           <Slider.Track className="sc-track">
             <Slider.Indicator className="sc-indicator" />
-            {TIERS.slice(1).map((t) => (
+            {TIERS.slice(1).map((step) => (
               <span
-                key={t.name}
+                key={step.name}
                 className="sc-tick"
-                data-reached={seats >= t.from || undefined}
-                style={{ left: percentOf(t.from) }}
+                data-reached={seats >= step.from || undefined}
+                style={{ left: percentOf(step.from) }}
                 aria-hidden="true"
               />
             ))}
@@ -159,194 +177,257 @@ export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
           </Slider.Track>
         </Slider.Control>
       </Slider.Root>
+
       <div className="sc-tiers" aria-hidden="true">
-        {TIERS.map((t, index) => (
+        {TIERS.map((option, index) => (
           <span
-            key={t.name}
-            data-active={t === tier || undefined}
-            style={{ left: percentOf(t.from) }}
+            key={option.name}
+            data-active={option === tier || undefined}
             data-first={index === 0 || undefined}
+            style={{ left: percentOf(option.from) }}
           >
-            {t.name}
+            {option.name}
           </span>
         ))}
       </div>
+    </>
+  );
+}
 
-      <div className="sc-team" aria-label={`${seats} people`}>
-        <span className="sc-faces">
-          <AnimatePresence initial={false} mode="popLayout">
-            {FACES.slice(0, shown).map((name, index) => (
-              <motion.img
-                key={name}
-                src={face(name)}
-                alt=""
-                width={28}
-                height={28}
-                draggable={false}
-                layout="position"
-                style={{ zIndex: FACES.length - index }}
-                initial={{ opacity: 0, scale: 0.4, x: -8 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.15 } }}
-                transition={POP}
-              />
-            ))}
-            {more > 0 && (
-              <motion.span
-                key="more"
-                className="sc-more"
-                layout="position"
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.5 }}
-                transition={POP}
-              >
-                +<Odometer value={String(more)} />
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </span>
-        <LayoutGroup id={id}>
-          <ToggleGroup
-            className="sc-billing"
-            value={[yearly ? "yearly" : "monthly"]}
-            onValueChange={(v) => v.length && take((current) => ({ ...current, yearly: v[0] === "yearly" }))}
-            aria-label="Billing"
+function TeamFaces({ seats }: { seats: number }) {
+  const shown = Math.min(seats, 4);
+  const more = seats - shown;
+
+  return (
+    <span className="sc-faces">
+      <AnimatePresence initial={false} mode="popLayout">
+        {FACES.slice(0, shown).map((name, index) => (
+          <motion.img
+            key={name}
+            src={face(name)}
+            alt=""
+            width={28}
+            height={28}
+            draggable={false}
+            layout="position"
+            style={{ zIndex: FACES.length - index }}
+            initial={{ opacity: 0, scale: 0.4, x: -8 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.15 } }}
+            transition={POP}
+          />
+        ))}
+        {more > 0 && (
+          <motion.span
+            key="more"
+            className="sc-more"
+            layout="position"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={POP}
           >
-            {(["monthly", "yearly"] as const).map((b) => (
-              <Toggle key={b} value={b} className="sc-bill">
-                {(b === "yearly") === yearly && (
-                  <motion.span layoutId="bill" className="sc-bill-pill" transition={SPRING} aria-hidden="true" />
-                )}
-                <span className="sc-bill-label">
-                  {b === "monthly" ? "Monthly" : "Yearly"}
-                  {b === "yearly" && <em>−20%</em>}
-                </span>
-              </Toggle>
-            ))}
-          </ToggleGroup>
-        </LayoutGroup>
-      </div>
+            +<Odometer value={String(more)} />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+}
 
-      <div className="sc-plan" data-tier={tier.name}>
-        <div className="sc-plan-head">
-          <span className="sc-plan-name">
-            <AnimatePresence initial={false} mode="popLayout">
-              <motion.span
-                key={tier.name}
-                initial={{ opacity: 0, y: 10, filter: "blur(3px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -10, filter: "blur(3px)" }}
-                transition={SPRING}
-              >
-                {tier.name}
-              </motion.span>
-            </AnimatePresence>
-          </span>
-          <AnimatePresence initial={false}>
-            {yearly && !custom && saving > 0 && (
-              <motion.span
-                className="sc-save"
-                initial={{ opacity: 0, scale: 0.6, rotate: -6 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                exit={{ opacity: 0, scale: 0.7 }}
-                transition={POP}
-              >
-                Save <Odometer value={money(saving)} /> a year
-              </motion.span>
+function BillingToggle({ yearly, onChange }: { yearly: boolean; onChange: (yearly: boolean) => void }) {
+  const id = useId();
+
+  return (
+    <LayoutGroup id={id}>
+      <ToggleGroup
+        className="sc-billing"
+        value={[yearly ? "yearly" : "monthly"]}
+        onValueChange={(values) => values.length && onChange(values[0] === "yearly")}
+        aria-label="Billing"
+      >
+        {(["monthly", "yearly"] as const).map((billing) => (
+          <Toggle key={billing} value={billing} className="sc-bill">
+            {(billing === "yearly") === yearly && (
+              <motion.span layoutId="bill" className="sc-bill-pill" transition={SPRING} aria-hidden="true" />
             )}
-          </AnimatePresence>
-        </div>
+            <span className="sc-bill-label">
+              {billing === "monthly" ? "Monthly" : "Yearly"}
+              {billing === "yearly" && <em>−20%</em>}
+            </span>
+          </Toggle>
+        ))}
+      </ToggleGroup>
+    </LayoutGroup>
+  );
+}
 
-        <div className="sc-price">
-          <AnimatePresence initial={false} mode="popLayout">
-            {custom ? (
-              <motion.span
-                key="custom"
-                className="sc-custom"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={SPRING}
-              >
-                Let's talk
-              </motion.span>
-            ) : (
-              <motion.span
-                key="price"
-                className="sc-amount"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={SPRING}
-              >
-                <AnimatePresence initial={false}>
-                  {yearly && (
-                    <motion.s
-                      className="sc-was"
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: "auto" }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={SPRING}
-                    >
-                      {money(full)}
-                    </motion.s>
-                  )}
-                </AnimatePresence>
-                <Odometer value={money(monthly)} className="sc-big" />
-                <span className="sc-per">/ month</span>
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
-        <p className="sc-detail">
-          {custom
-            ? "Volume pricing, a custom contract and help moving your team over."
-            : `${money(perSeat)} per seat · billed ${yearly ? `yearly at ${money(monthly * 12)}` : "monthly"}`}
-        </p>
+function Plan({ tier, seats, yearly }: { tier: Tier; seats: number; yearly: boolean }) {
+  const custom = tier.price === null;
+  const { perSeat, monthly, full, saving } = priceFor(tier, seats, yearly);
+  const detail = custom
+    ? "Volume pricing, a custom contract and help moving your team over."
+    : `${money(perSeat)} per seat · billed ${yearly ? `yearly at ${money(monthly * 12)}` : "monthly"}`;
 
-        <ul className="sc-features">
-          <AnimatePresence initial={false}>
-            {features.map(({ f, tier: from }) => (
-              <motion.li
-                key={f}
-                data-new={from === tier.name && from !== "Starter" ? "" : undefined}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={SPRING}
-              >
-                <span className="sc-feature">
-                  <motion.span
-                    className="sc-check"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ ...POP, delay: 0.12 }}
-                  >
-                    <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
-                  </motion.span>
-                  {f}
-                </span>
-              </motion.li>
-            ))}
-          </AnimatePresence>
-        </ul>
-
-        <motion.button type="button" className="sc-cta" whileTap={{ scale: 0.98 }}>
+  return (
+    <div className="sc-plan" data-tier={tier.name}>
+      <div className="sc-plan-head">
+        <span className="sc-plan-name">
           <AnimatePresence initial={false} mode="popLayout">
             <motion.span
-              key={custom ? "sales" : "trial"}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              key={tier.name}
+              initial={{ opacity: 0, y: 10, filter: "blur(3px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10, filter: "blur(3px)" }}
               transition={SPRING}
             >
-              {custom ? "Contact sales" : "Start a 14-day trial"}
+              {tier.name}
             </motion.span>
           </AnimatePresence>
-          <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
-        </motion.button>
+        </span>
+
+        <AnimatePresence initial={false}>
+          {yearly && !custom && saving > 0 && (
+            <motion.span
+              className="sc-save"
+              initial={{ opacity: 0, scale: 0.6, rotate: -6 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={POP}
+            >
+              Save <Odometer value={money(saving)} /> a year
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
+
+      <div className="sc-price">
+        <AnimatePresence initial={false} mode="popLayout">
+          {custom ? (
+            <motion.span key="custom" className="sc-custom" {...RISE}>
+              Let's talk
+            </motion.span>
+          ) : (
+            <motion.span key="price" className="sc-amount" {...RISE}>
+              <AnimatePresence initial={false}>
+                {yearly && (
+                  <motion.s
+                    className="sc-was"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={SPRING}
+                  >
+                    {money(full)}
+                  </motion.s>
+                )}
+              </AnimatePresence>
+              <Odometer value={money(monthly)} className="sc-big" />
+              <span className="sc-per">/ month</span>
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <p className="sc-detail">{detail}</p>
+
+      <ul className="sc-features">
+        <AnimatePresence initial={false}>
+          {featuresUpTo(tier).map(({ feature, tier: from }) => (
+            <motion.li
+              key={feature}
+              data-new={from === tier.name && from !== "Starter" ? "" : undefined}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={SPRING}
+            >
+              <span className="sc-feature">
+                <motion.span
+                  className="sc-check"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ ...POP, delay: 0.12 }}
+                >
+                  <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
+                </motion.span>
+                {feature}
+              </span>
+            </motion.li>
+          ))}
+        </AnimatePresence>
+      </ul>
+
+      <motion.button type="button" className="sc-cta" whileTap={{ scale: 0.98 }}>
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.span
+            key={custom ? "sales" : "trial"}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={SPRING}
+          >
+            {custom ? "Contact sales" : "Start a 14-day trial"}
+          </motion.span>
+        </AnimatePresence>
+        <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
+      </motion.button>
+    </div>
+  );
+}
+
+export function SeatCalculator({
+  value,
+  defaultValue = { seats: 6, yearly: false },
+  onValueChange,
+  ref,
+}: SeatCalculatorProps) {
+  const [pricing, setPricing] = useControllableState({ value, defaultValue, onValueChange });
+  const { seats, yearly } = pricing;
+  const tier = tierOf(seats);
+
+  const setSeats = (count: number) =>
+    setPricing((current) => ({ ...current, seats: Math.max(1, Math.min(999, Math.round(count))) }));
+
+  const setYearly = (next: boolean) => setPricing((current) => ({ ...current, yearly: next }));
+
+  return (
+    <section ref={ref} className="sc not-prose" aria-label="Pricing calculator">
+      <SeatInput seats={seats} onChange={setSeats} />
+      <SeatSlider seats={seats} tier={tier} onChange={setSeats} />
+
+      <div className="sc-team" aria-label={`${seats} people`}>
+        <TeamFaces seats={seats} />
+        <BillingToggle yearly={yearly} onChange={setYearly} />
+      </div>
+
+      <Plan tier={tier} seats={seats} yearly={yearly} />
     </section>
   );
+}
+
+// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
+
+const BEATS: readonly (SeatCalculatorValue & { ms: number })[] = [
+  { seats: 6, yearly: false, ms: 1500 },
+  { seats: 14, yearly: false, ms: 1400 },
+  { seats: 32, yearly: false, ms: 1400 },
+  { seats: 64, yearly: false, ms: 1600 },
+  { seats: 64, yearly: true, ms: 2000 },
+  { seats: 180, yearly: true, ms: 2300 },
+  { seats: 24, yearly: false, ms: 1600 },
+];
+
+const fromBeat = (step: number): SeatCalculatorValue => ({
+  seats: BEATS[step]!.seats,
+  yearly: BEATS[step]!.yearly,
+});
+
+interface SeatCalculatorDemoProps {
+  playing?: boolean;
+}
+
+export function SeatCalculatorDemo({ playing }: SeatCalculatorDemoProps = {}) {
+  const scene = useScene(BEATS, fromBeat, playing);
+  return <SeatCalculator ref={scene.ref} value={scene.state} onValueChange={scene.onValueChange} />;
 }

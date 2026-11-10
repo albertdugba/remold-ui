@@ -5,6 +5,10 @@ const QUESTIONS = [
     a: "Not in the usual sense. Remold is an engine for connecting one interface state to the next. The components are ways to use it; the demos show what you can build with your own UI.",
   },
   {
+    q: "What do the components use besides Remold?",
+    a: "They're ordinary React components. Base UI gives them behaviour and accessibility, Motion runs most springs, enter and exit animations and shared-element moves, and Hugeicons supplies the icons. Remold does the morphing, the connector lines and the particles. The registry install adds whichever of these a component needs.",
+  },
+  {
     q: "Is Remold free?",
     a: "Yes. The engine and its primitives are open source under the MIT licence, including for commercial projects. A separate Pro editor may offer visual authoring and export tools later.",
   },

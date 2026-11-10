@@ -77,7 +77,7 @@
   cursor: pointer;
 }
 
-.uc-view[aria-checked="true"] {
+.uc-view[data-pressed] {
   color: var(--uc-ink);
 }
 

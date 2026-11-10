@@ -1,0 +1,131 @@
+/* The payment status's own colours and motion, on top of the illustrated story. */
+.pst .ils-art {
+  --ils-brand: #4f46e5;
+}
+
+.pst [data-stage="declined"] {
+  --ils-brand: #dc2626;
+}
+
+.pst [data-stage="paid"] {
+  --ils-brand: #16a34a;
+}
+
+.dark .pst .ils-art {
+  --ils-brand: #818cf8;
+}
+
+.dark .pst [data-stage="declined"] {
+  --ils-brand: #f87171;
+}
+
+.dark .pst [data-stage="paid"] {
+  --ils-brand: #4ade80;
+}
+
+.pst .ils-brand,
+.pst .ils-topBrand {
+  transition: color 0.4s ease-out;
+}
+
+/* Ready to pay: the card floats, waiting. */
+.pst [data-stage="card"] .ils-body {
+  animation: pst-float 3s ease-in-out infinite;
+}
+
+/* Processing: the shackle clicks shut, again and again, while the dots wait their turn. */
+.pst [data-stage="processing"] .ils-part {
+  animation: pst-lock 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+.pst [data-stage="processing"] .ils-soft {
+  animation: ils-pulse 1.4s ease-in-out infinite;
+}
+
+/* Declined: the card shakes its head, twice, then waits for another try. */
+.pst [data-stage="declined"] .ils-body {
+  animation: pst-shake 0.45s ease-in-out 2;
+}
+
+/* Paid: the receipt lands and the sparkles catch the light. */
+.pst [data-stage="paid"] .ils-body {
+  animation: ils-land 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.pst [data-stage="paid"] .ils-soft {
+  animation: ils-twinkle 2s ease-in-out infinite;
+}
+
+.pst-controls {
+  display: inline-flex;
+  max-width: 100%;
+  margin-top: 18px;
+  padding: 3px;
+  overflow-x: auto;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 10px;
+  background: var(--color-fd-muted);
+}
+
+.pst-control {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--color-fd-muted-foreground);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pst-control[data-pressed] {
+  background: var(--color-fd-background);
+  color: var(--color-fd-foreground);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.pst-control:focus-visible {
+  outline: 2px solid var(--color-fd-foreground);
+  outline-offset: 1px;
+}
+
+@keyframes pst-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(1deg);
+  }
+}
+
+@keyframes pst-lock {
+  0%,
+  20% {
+    transform: translateY(-6px);
+  }
+  45%,
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pst-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-7px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}

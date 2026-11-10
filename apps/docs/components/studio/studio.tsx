@@ -7,7 +7,7 @@ import { Slider } from "@base-ui/react/slider";
 import { Tabs } from "@base-ui/react/tabs";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { Toggle } from "@base-ui/react/toggle";
-import { Remold } from "@remold-ui/react";
+import { Remold } from "@remold-ui/react/canvas";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { PALETTES, resolvePoses, sceneKey, toSceneProps, validateDocument, type PaletteName, type Pose, type SceneDocument } from "./document";
 import { addStep, removeStep, setMotion, setPose, updateDocument, updateObject, updateStep, type Scope } from "./edit";

@@ -1,36 +1,66 @@
 ---
 title: "Installation"
-description: "Install the React package, or use Remold from plain JavaScript. The packages they build on come with them."
+description: "Install any component with the shadcn CLI, or add the engine as a package."
 ---
 
-## React
+Install any component with the shadcn CLI, or copy the source straight from its page. Either way, the code ends up in your project. To animate your own interface, add the engine as a package.
+
+## Requirements
+
+Components target React 18 or later, and TypeScript is recommended, since every file ships as typed source. Each component lists what it depends on (usually `@remold-ui/react`, `motion` and `@base-ui/react`), and the CLI installs them for you.
+
+## Install a component
+
+Every component has an entry in the registry. Replace the name at the end with any component's.
+
+<AddCommand name="phone-input" />
+
+The CLI drops the files into `components/remold/` in your project. If you haven't used shadcn before, run `npx shadcn@latest init` first.
+
+## Install manually
+
+Prefer not to use a CLI? Open the component's page, switch to its code, copy each file into your project, and install the packages listed under Dependencies.
+
+## Install the engine
+
+For React:
 
 <Install packages="@remold-ui/react" />
 
-React 18 or later. The package ships ES modules, CommonJS and TypeScript types.
-
-## JavaScript
-
-Not using React? `@remold-ui/dom` works on any element, with any framework or none: Vue, Svelte, Astro, server-rendered pages, or a plain `<script type="module">`.
+For any other framework, or none:
 
 <Install packages="@remold-ui/dom" />
 
-```js
-import { transition } from "@remold-ui/dom";
+`@remold-ui/canvas` adds scenes and particles, and `@remold-ui/core` is the matching and spring maths on its own, for a Web Worker or the server. In React, the canvas parts come from `@remold-ui/react/canvas`, so an interface that doesn't use them never ships canvas code.
 
-const list = document.querySelector("#inbox");
+## Use it
 
-sortButton.addEventListener("click", () => {
-  transition(list, () => {
-    list.replaceChildren(...sortByDate(messages).map(renderMessage));
-  });
-});
+Wrap the part of your interface that changes and give it a `trigger` that changes with it.
+
+```tsx
+import { Remold } from "@remold-ui/react";
+
+export function Files({ files, sort }) {
+  return (
+    <Remold.Morph trigger={sort}>
+      {files.map((file) => (
+        <Row key={file.name} file={file} />
+      ))}
+    </Remold.Morph>
+  );
+}
 ```
 
-`transition` reads the page, runs your update, and animates what changed. The [quick start](/docs/quick-start) shows each step in both.
+## Next steps
 
-## Canvas and core
-
-Install `@remold-ui/canvas` for scenes and particles, or `@remold-ui/core` on its own for the matching and spring maths, for example in a Web Worker or on the server.
-
-<Callout>Everything is tree-shakeable. Importing `Remold.Text` doesn't pull in the canvas code.</Callout>
+<Cards>
+  <Card title="Quick start" href="/docs/quick-start">
+    The common changes, in React and plain JavaScript.
+  </Card>
+  <Card title="shadcn registry" href="/docs/registry">
+    What's in the registry, and how its colours follow your theme.
+  </Card>
+  <Card title="Components" href="/docs/components">
+    Every component, live, ready to copy.
+  </Card>
+</Cards>

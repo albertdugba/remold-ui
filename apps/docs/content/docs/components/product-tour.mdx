@@ -2,7 +2,7 @@
 title: "Product tour"
 description: "A product tour where the spotlight springs from one control to the next, a line ties each tip to what it explains, and the tip grows out of the help button and folds back into it."
 status: "new"
-tags: ["Layout", "Connectors", "Text"]
+tags: ["Morph", "Connectors", "Text"]
 ---
 
 <Stage name="product-tour" code={<Source demo="product-tour" />} wide>
@@ -33,7 +33,7 @@ tags: ["Layout", "Connectors", "Text"]
 ## How it works
 
 - **The spotlight** is one element with a wide shadow that dims everything outside it. It springs to each control with a CSS transition whose easing is a spring curve, so it overshoots a touch and settles.
-- **The tip is the help button.** One element is both. When the tour starts, a [Layout](/docs/primitives/layout) grows it out of the corner into the tip. Each step, it moves the tip to its new place. At the end, it folds the tip back into the pill.
+- **The tip is the help button.** One element is both. When the tour starts, a [Morph](/docs/primitives/morph) grows it out of the corner into the tip. Each step, it moves the tip to its new place. At the end, it folds the tip back into the pill.
 - **The line** is [Connectors](/docs/primitives/connectors): each control is an anchor, and the tip links to the current one. Changing the link draws the old line out and the new one in, and `pulse={step}` sends a light along it on every step. It stays attached while the tip moves.
 - **The words** are [Text](/docs/primitives/text), so the title, the text and "1 of 4" change letter by letter instead of swapping.
 - **Every control is measured once,** and again on resize, so the spotlight and the tip are placed in the same render that changes the step.

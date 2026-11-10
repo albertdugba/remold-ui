@@ -1,7 +1,10 @@
 "use client";
 
-import { Remold, type GlobeArcEvent } from "@remold-ui/react";
-import { useEffect, useState } from "react";
+import { Remold, type GlobeArcEvent } from "@remold-ui/react/canvas";
+import { Toggle } from "@base-ui/react/toggle";
+import { ToggleGroup } from "@base-ui/react/toggle-group";
+import { useEffect, useState, type Ref } from "react";
+import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 
 const CITIES = [
@@ -22,7 +25,13 @@ const CITIES = [
 const LOOKS = {
   night: {
     label: "Night",
-    colors: { land: "#7d9be0", sphere: "#0c1633", glow: "#3d6bff", accent: "#ff7ac6", arc: ["#ff7ac6", "#5ab0ff"] },
+    colors: {
+      land: "#7d9be0",
+      sphere: "#0c1633",
+      glow: "#3d6bff",
+      accent: "#ff7ac6",
+      arc: ["#ff7ac6", "#5ab0ff"],
+    },
   },
   ink: {
     label: "Ink",
@@ -34,9 +43,15 @@ const LOOKS = {
   },
 } as const;
 
-type Look = keyof typeof LOOKS;
+export type GlobeLook = keyof typeof LOOKS;
+type Look = GlobeLook;
 
-const BEATS = Array.from({ length: 24 }, () => ({ ms: 900 }));
+const SURFACES: Record<Look, string> = {
+  night: "bg-[#070d1f] text-[#e6ecff] [--gb-muted:#8693b8] [--gb-soft:#121b36] [--gb-surface:#070d1f]",
+  paper: "bg-[#fffaf0] text-[#3b3427] [--gb-muted:#8a7f6a] [--gb-soft:#f1e9d6] [--gb-surface:#fffaf0]",
+  ink: "bg-white text-[#18181b] [--gb-muted:#71717a] [--gb-soft:#f4f4f5] [--gb-surface:#fff] dark:bg-[#1c1c1f] dark:text-[#fafafa] dark:[--gb-muted:#a1a1aa] dark:[--gb-soft:#27272a] dark:[--gb-surface:#1c1c1f]",
+};
+
 const MARKERS = CITIES.slice(0, 6).map((city) => ({ ...city, size: 2 }));
 
 const journey = (id: number): GlobeArcEvent => ({
@@ -45,22 +60,25 @@ const journey = (id: number): GlobeArcEvent => ({
   to: CITIES[(id * 7 + 3) % CITIES.length]!,
 });
 
-export function GlobeDemo({ playing }: { playing?: boolean }) {
-  const scene = useScene(BEATS, (step) => step, playing);
-  const [look, setLook] = useState<Look>("night");
-  const [arcs, setArcs] = useState<GlobeArcEvent[]>([]);
-  const surface = {
-    night: "bg-[#070d1f] text-[#e6ecff] [--gb-muted:#8693b8] [--gb-soft:#121b36] [--gb-surface:#070d1f]",
-    paper: "bg-[#fffaf0] text-[#3b3427] [--gb-muted:#8a7f6a] [--gb-soft:#f1e9d6] [--gb-surface:#fffaf0]",
-    ink: "bg-white text-[#18181b] [--gb-muted:#71717a] [--gb-soft:#f4f4f5] [--gb-surface:#fff] dark:bg-[#1c1c1f] dark:text-[#fafafa] dark:[--gb-muted:#a1a1aa] dark:[--gb-soft:#27272a] dark:[--gb-surface:#1c1c1f]",
-  }[look];
+export interface GlobeCardProps {
+  /** The colour scheme. */
+  value?: GlobeLook;
+  defaultValue?: GlobeLook;
+  onValueChange?: (look: GlobeLook) => void;
+  /** Journeys flying between cities; add one to the end to launch it. */
+  arcs?: GlobeArcEvent[];
+  ref?: Ref<HTMLDivElement>;
+}
 
-  useEffect(() => {
-    setArcs((items) => [...items.slice(-6), journey(Number(items.at(-1)?.id ?? -1) + 1)]);
-  }, [scene.step]);
+/** A globe with its own look switcher. */
+export function GlobeCard({ value, defaultValue = "night", onValueChange, arcs = [], ref }: GlobeCardProps) {
+  const [look, setLook] = useControllableState({ value, defaultValue, onValueChange });
 
   return (
-    <div className={`grid w-full max-w-[440px] justify-items-center gap-4 rounded-3xl p-5 font-sans transition-colors duration-300 ${surface}`} ref={scene.ref}>
+    <div
+      className={`grid w-full max-w-[440px] justify-items-center gap-4 rounded-3xl p-5 font-sans transition-colors duration-300 ${SURFACES[look]}`}
+      ref={ref}
+    >
       <Remold.Globe
         className="block aspect-square w-full text-current"
         start={-10}
@@ -70,13 +88,39 @@ export function GlobeDemo({ playing }: { playing?: boolean }) {
         arcs={arcs}
         label="Globe with arcs flying between cities"
       />
-      <div className="flex gap-0.5 rounded-full bg-[var(--gb-soft)] p-[3px]" role="group" aria-label="Look" data-rm-autoplay-control="">
+      <ToggleGroup
+        className="flex gap-0.5 rounded-full bg-[var(--gb-soft)] p-[3px]"
+        aria-label="Look"
+        data-rm-autoplay-control=""
+        value={[look]}
+        onValueChange={(values) => values[0] && setLook(values[0] as Look)}
+      >
         {(Object.keys(LOOKS) as Look[]).map((key) => (
-          <button key={key} type="button" className="rounded-full bg-transparent px-3.5 py-1.5 text-[13px] font-semibold text-[var(--gb-muted)] transition-[background-color,color] duration-200 aria-pressed:bg-current aria-pressed:text-[var(--gb-surface)] focus-visible:outline-2 focus-visible:outline-current focus-visible:outline-offset-2" aria-pressed={look === key} onClick={() => setLook(key)}>
+          <Toggle
+            key={key}
+            value={key}
+            className="rounded-full bg-transparent px-3.5 py-1.5 text-[13px] font-semibold text-[var(--gb-muted)] transition-[background-color,color] duration-200 aria-pressed:bg-current aria-pressed:text-[var(--gb-surface)] focus-visible:outline-2 focus-visible:outline-current focus-visible:outline-offset-2"
+          >
             {LOOKS[key].label}
-          </button>
+          </Toggle>
         ))}
-      </div>
+      </ToggleGroup>
     </div>
   );
+}
+
+// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
+
+const TICKS = Array.from({ length: 24 }, () => ({ ms: 900 }));
+
+/** Launches a journey on every tick while it plays. The look is the person's own throughout. */
+export function GlobeDemo({ playing }: { playing?: boolean }) {
+  const scene = useScene(TICKS, (step) => step, playing);
+  const [arcs, setArcs] = useState<GlobeArcEvent[]>([]);
+
+  useEffect(() => {
+    setArcs((items) => [...items.slice(-6), journey(Number(items.at(-1)?.id ?? -1) + 1)]);
+  }, [scene.step]);
+
+  return <GlobeCard ref={scene.ref} arcs={arcs} />;
 }

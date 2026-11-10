@@ -8,9 +8,7 @@
       "@remold-ui/dom",
       "@remold-ui/canvas",
       "@remold-ui/morph",
-      "@remold-ui/react",
-      "@remold-ui/vue",
-      "@remold-ui/angular"
+      "@remold-ui/react"
     ]
   ],
   "linked": [],

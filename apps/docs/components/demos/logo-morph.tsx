@@ -3,30 +3,15 @@
 import { Tabs } from "@base-ui/react/tabs";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { Toggle } from "@base-ui/react/toggle";
-import {
-  bounds,
-  createMorph,
-  parsePath,
-  toCubics,
-  value,
-  type Morph,
-  type Subpath,
-} from "@remold-ui/core";
+import { bounds, createMorph, parsePath, toCubics, value, type Morph, type Subpath } from "@remold-ui/core";
 import { frames, prefersReducedMotion } from "@remold-ui/dom";
 import { useAutoplay } from "@remold-ui/react";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { GLYPHS } from "./glyphs-data";
 import { MARKS } from "./logo-morph-marks";
 
 export interface LogoBrand {
   name: string;
-
   mark?: string;
 }
 
@@ -45,76 +30,58 @@ export type Form = "text" | "logo";
 const glyphs = GLYPHS.glyphs as Record<string, { d: string; adv: number }>;
 const kerning = GLYPHS.kern as Record<string, number>;
 
+type Point = { x: number; y: number };
+
+function mapPoints(subpaths: Subpath[], move: (point: Point) => Point): Subpath[] {
+  return subpaths.map((subpath) => ({
+    closed: subpath.closed,
+    segments: subpath.segments.map((segment) => ({
+      p0: move(segment.p0),
+      p1: move(segment.p1),
+      p2: move(segment.p2),
+      p3: move(segment.p3),
+    })),
+  }));
+}
+
 function word(text: string): Subpath[] {
-  const out: Subpath[] = [];
-  let x = 0;
-  for (let i = 0; i < text.length; i++) {
-    const ch = glyphs[text[i]!] ? text[i]! : "?";
-    const d = glyphs[ch]!.d;
-    const dx = x;
-    if (d) {
-      for (const sp of toCubics(parsePath(d))) {
-        const at = (p: { x: number; y: number }) => ({ x: p.x + dx, y: p.y });
-        out.push({
-          closed: sp.closed,
-          segments: sp.segments.map((c) => ({
-            p0: at(c.p0),
-            p1: at(c.p1),
-            p2: at(c.p2),
-            p3: at(c.p3),
-          })),
-        });
-      }
-    }
-    x += glyphs[ch]!.adv;
-    if (i < text.length - 1) x += kerning[ch + text[i + 1]] ?? 0;
+  const outline: Subpath[] = [];
+  let penX = 0;
+  for (let index = 0; index < text.length; index++) {
+    const character = glyphs[text[index]!] ? text[index]! : "?";
+    const glyph = glyphs[character]!;
+    const glyphX = penX;
+    if (glyph.d)
+      outline.push(
+        ...mapPoints(toCubics(parsePath(glyph.d)), (point) => ({ x: point.x + glyphX, y: point.y })),
+      );
+    penX += glyph.adv;
+    if (index < text.length - 1) penX += kerning[character + text[index + 1]] ?? 0;
   }
-  return out;
+  return outline;
 }
 
 export const BOX = { width: 640, height: 220 };
 
 export function fitted(brand: LogoBrand, form: Form): Subpath[] {
-  const raw =
-    form === "logo" && brand.mark
-      ? toCubics(parsePath(brand.mark))
-      : word(brand.name);
-  const b = bounds(raw) ?? { x: 0, y: 0, width: 1, height: 1 };
-  const w = Math.max(1e-6, b.width);
-  const h = Math.max(1e-6, b.height);
-  const k = Math.min(BOX.width / w, BOX.height / h);
-  const ox = (BOX.width - w * k) / 2 - b.x * k;
-  const oy = (BOX.height - h * k) / 2 - b.y * k;
-  const at = (p: { x: number; y: number }) => ({
-    x: p.x * k + ox,
-    y: p.y * k + oy,
-  });
-  return raw.map((sp) => ({
-    closed: sp.closed,
-    segments: sp.segments.map((c) => ({
-      p0: at(c.p0),
-      p1: at(c.p1),
-      p2: at(c.p2),
-      p3: at(c.p3),
-    })),
-  }));
+  const raw = form === "logo" && brand.mark ? toCubics(parsePath(brand.mark)) : word(brand.name);
+  const box = bounds(raw) ?? { x: 0, y: 0, width: 1, height: 1 };
+  const width = Math.max(1e-6, box.width);
+  const height = Math.max(1e-6, box.height);
+  const scale = Math.min(BOX.width / width, BOX.height / height);
+  const offsetX = (BOX.width - width * scale) / 2 - box.x * scale;
+  const offsetY = (BOX.height - height * scale) / 2 - box.y * scale;
+  return mapPoints(raw, (point) => ({ x: point.x * scale + offsetX, y: point.y * scale + offsetY }));
 }
 
 export interface LogoMorphProps {
   brands?: LogoBrand[];
-
   color?: string;
-
   every?: number;
-
   bounce?: number;
-
   autoplay?: boolean;
-
   height?: number;
-
   selected?: { brand: number; form: Form };
-
   controls?: boolean;
 }
 
@@ -123,15 +90,15 @@ export function LogoMorph({
   color = "currentColor",
   every = 1800,
   bounce = 0.12,
-  autoplay: play = false,
+  autoplay: shouldPlay = false,
   height = 300,
   selected,
   controls = true,
 }: LogoMorphProps) {
-  const scene = useMemo(
+  const sequence = useMemo(
     () =>
-      brands.flatMap((b, index): { brand: number; form: Form }[] =>
-        b.mark
+      brands.flatMap((item, index): { brand: number; form: Form }[] =>
+        item.mark
           ? [
               { brand: index, form: "text" },
               { brand: index, form: "logo" },
@@ -141,62 +108,59 @@ export function LogoMorph({
       ),
     [brands],
   );
-  const autoplay = useAutoplay(scene.length, {
+  const autoplay = useAutoplay(sequence.length, {
     every,
-    autoStart: play && !selected,
+    autoStart: shouldPlay && !selected,
   });
   const { setPlaying } = autoplay;
-  useEffect(() => setPlaying(play && !selected), [play, selected, setPlaying]);
+  useEffect(() => setPlaying(shouldPlay && !selected), [shouldPlay, selected, setPlaying]);
 
-  const [own, setShown] = useState<{ brand: number; form: Form }>({
+  const [chosen, setShown] = useState<{ brand: number; form: Form }>({
     brand: 0,
     form: "text",
   });
-  useEffect(
-    () => setShown(scene[autoplay.step] ?? { brand: 0, form: "text" }),
-    [autoplay.step, scene],
-  );
-  const shown = selected ?? own;
+  useEffect(() => setShown(sequence[autoplay.step] ?? { brand: 0, form: "text" }), [autoplay.step, sequence]);
+  const shown = selected ?? chosen;
   const brand = brands[shown.brand]!;
 
-  const path = useRef<SVGPathElement>(null);
+  const pathRef = useRef<SVGPathElement>(null);
 
-  const state = useRef<{
+  const morphing = useRef<{
     morph: Morph | null;
-    t: ReturnType<typeof value>;
+    progress: ReturnType<typeof value>;
     stop: (() => void) | null;
   } | null>(null);
 
   useEffect(() => {
-    const t = value(1, {
+    const progress = value(1, {
       spring: { duration: 0.75, bounce },
       precision: 0.0005,
     });
-    state.current = { morph: null, t, stop: null };
-    return () => state.current?.stop?.();
+    morphing.current = { morph: null, progress, stop: null };
+    return () => morphing.current?.stop?.();
   }, [bounce]);
 
   useEffect(() => {
-    const s = state.current;
-    const el = path.current;
-    if (!s || !el) return;
+    const current = morphing.current;
+    const pathElement = pathRef.current;
+    if (!current || !pathElement) return;
     const target = fitted(brand, shown.form);
-    const from = el.getAttribute("d");
-    s.morph = createMorph(from || target, target, {
+    const from = pathElement.getAttribute("d");
+    current.morph = createMorph(from || target, target, {
       pairing: "auto",
       padding: "collapse",
     });
     if (!from || prefersReducedMotion()) {
-      el.setAttribute("d", s.morph.d(1));
+      pathElement.setAttribute("d", current.morph.d(1));
       return;
     }
-    s.t.set(0);
-    s.t.to(1);
-    s.stop?.();
-    s.stop = frames((dt) => {
-      const moving = s.t.step(dt);
-      el.setAttribute("d", s.morph!.d(s.t.current));
-      if (!moving) s.stop = null;
+    current.progress.set(0);
+    current.progress.to(1);
+    current.stop?.();
+    current.stop = frames((dt) => {
+      const moving = current.progress.step(dt);
+      pathElement.setAttribute("d", current.morph!.d(current.progress.current));
+      if (!moving) current.stop = null;
       return moving;
     });
   }, [brand, shown.form]);
@@ -207,8 +171,8 @@ export function LogoMorph({
   return (
     <Tabs.Root
       value={shown.brand}
-      onValueChange={(next) => {
-        const brandIndex = Number(next);
+      onValueChange={(tab) => {
+        const brandIndex = Number(tab);
         const nextBrand = brands[brandIndex];
         if (!nextBrand) return;
         setShown({
@@ -225,43 +189,32 @@ export function LogoMorph({
         <Tabs.Panel value={shown.brand} keepMounted>
           <div className="grid place-items-center px-6" style={{ height }}>
             <svg
-              viewBox={`${-pad} ${-pad} ${BOX.width + pad * 2} ${
-                BOX.height + pad * 2
-              }`}
+              viewBox={`${-pad} ${-pad} ${BOX.width + pad * 2} ${BOX.height + pad * 2}`}
               className="h-full max-h-[78%] w-full"
               role="img"
-              aria-label={
-                shown.form === "logo" ? `${brand.name} logo` : brand.name
-              }
+              aria-label={shown.form === "logo" ? `${brand.name} logo` : brand.name}
             >
-              <path ref={path} fill="var(--lm-color)" fillRule="nonzero" />
+              <path ref={pathRef} fill="var(--lm-color)" fillRule="nonzero" />
             </svg>
           </div>
         </Tabs.Panel>
         {controls && (
           <div className="flex flex-wrap items-center gap-2 border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
-            <Tabs.List
-              aria-label="Brand"
-              className="flex flex-wrap gap-1"
-              activateOnFocus
-            >
-              {brands.map((b, index) => (
-                <Tabs.Tab key={b.name} value={index} className={chip}>
-                  {b.name}
+            <Tabs.List aria-label="Brand" className="flex flex-wrap gap-1" activateOnFocus>
+              {brands.map((item, index) => (
+                <Tabs.Tab key={item.name} value={index} className={chip}>
+                  {item.name}
                 </Tabs.Tab>
               ))}
             </Tabs.List>
-            <span
-              className="mx-1 h-4 w-px bg-zinc-200 dark:bg-zinc-700"
-              aria-hidden="true"
-            />
+            <span className="mx-1 h-4 w-px bg-zinc-200 dark:bg-zinc-700" aria-hidden="true" />
             <ToggleGroup
               className="flex gap-1"
               aria-label="Show"
               value={[shown.form]}
               onValueChange={(values) => {
-                const next = values[0] as Form | undefined;
-                if (next) setShown({ ...shown, form: next });
+                const form = values[0] as Form | undefined;
+                if (form) setShown({ ...shown, form });
               }}
             >
               <Toggle value="text" className={chip}>

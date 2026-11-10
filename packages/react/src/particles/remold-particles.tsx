@@ -1,39 +1,75 @@
 import { forwardRef, useMemo, useRef, useState, type CanvasHTMLAttributes, type ForwardedRef } from "react";
-import { particles as createParticles, sampleImagePoints, sampleTextPoints, type Particles, type ParticlesOptions } from "@remold-ui/canvas";
-import { samplePath, type CloudPoint } from "@remold-ui/core";
+import {
+  particles as createParticles,
+  loadPixels,
+  sampleImagePoints,
+  sampleTextPoints,
+  type ParticlePalette,
+  type ParticlePoint,
+  type Particles,
+  type ParticlesOptions,
+} from "@remold-ui/canvas";
+import { samplePath, shapes, type Shape } from "@remold-ui/core";
 import { useIsoLayoutEffect, useLatest } from "../utils/hooks.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { ParticleShape, RemoldParticlesProps, RemoldParticlesState } from "./types.js";
 
-/** Gives each points array a stable id, so a new array is a new shape but a re-render isn't. */
-const pointIds = new WeakMap<readonly CloudPoint[], number>();
+/** Gives each points array or shape a stable id, so a new one is a new shape but a re-render isn't. */
+const pointIds = new WeakMap<object, number>();
 let nextPointId = 0;
+
+const isShape = (shape: ParticleShape): shape is Shape => typeof shape === "object" && typeof (shape as Shape).points === "function";
+
+function idOf(source: object): number {
+  if (!pointIds.has(source)) pointIds.set(source, nextPointId++);
+  return pointIds.get(source)!;
+}
 
 function keyOf(shape: ParticleShape, count: number): string {
   if (typeof shape === "string") return `text:${count}:${shape}`;
+  if (isShape(shape)) return `shape:${count}:${idOf(shape)}`;
   if ("text" in shape) return `text:${count}:${shape.font ?? ""}:${shape.text}`;
   if ("path" in shape) return `path:${count}:${shape.fillRule ?? ""}:${shape.mode ?? ""}:${shape.path}`;
   if ("image" in shape) return `image:${count}:${JSON.stringify(shape)}`;
 
-  if (!pointIds.has(shape.points)) pointIds.set(shape.points, nextPointId++);
-
-  return `points:${pointIds.get(shape.points)}`;
+  return `points:${idOf(shape.points)}`;
 }
 
 function labelOf(shape: ParticleShape): string | undefined {
   if (typeof shape === "string") return shape;
-  return "text" in shape ? shape.text : undefined;
+  return !isShape(shape) && "text" in shape ? shape.text : undefined;
 }
 
 /** The longest side images are sampled at: plenty of detail for a few thousand dots, and quick. */
 const IMAGE_SIZE = 480;
 
-function sample(
-  shape: ParticleShape,
-  count: number,
-  palette?: readonly string[],
-): readonly CloudPoint[] | Promise<readonly CloudPoint[]> {
+/** A shape's points, and for an image in 3D, the colours found in it. */
+interface Sampled {
+  points: readonly ParticlePoint[];
+  palette?: ParticlePalette;
+}
+
+function sample(shape: ParticleShape, count: number, palette?: readonly string[]): Sampled | Promise<Sampled> {
+  if (!isShape(shape) && typeof shape === "object" && "image" in shape && (shape.depth !== undefined || shape.bulge !== undefined)) {
+    // In 3D: a relief of the image in its own colours.
+    return loadPixels(shape.image, { size: IMAGE_SIZE }).then((pixels) => {
+      const relief = shapes.fromPixels(pixels, {
+        by: shape.by,
+        threshold: shape.threshold,
+        depth: shape.depth,
+        bulge: shape.bulge,
+        colors: shape.colors,
+      });
+      return { points: relief.points(count), palette: relief.palette };
+    });
+  }
+  const points = flat(shape, count, palette);
+  return points instanceof Promise ? points.then((resolved) => ({ points: resolved })) : { points };
+}
+
+function flat(shape: ParticleShape, count: number, palette?: readonly string[]): readonly ParticlePoint[] | Promise<readonly ParticlePoint[]> {
   if (typeof shape === "string") return sampleTextPoints(shape, { count });
+  if (isShape(shape)) return shape.points(count);
   if ("text" in shape) return sampleTextPoints(shape.text, { count, font: shape.font });
   if ("path" in shape) return samplePath(shape.path, { count, fillRule: shape.fillRule, mode: shape.mode });
   if ("points" in shape) return shape.points;
@@ -98,6 +134,8 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
     reducedMotion,
     loop,
     maxPixelRatio,
+    camera,
+    blend,
     render,
     className,
     ...elementProps
@@ -120,6 +158,8 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
     reducedMotion,
     loop,
     maxPixelRatio,
+    camera,
+    blend,
     label: label ?? labelOf(shape),
   });
 
@@ -137,6 +177,14 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
     };
   }, [element]);
 
+  // A changed camera turns, tilts or pauses the cloud from where it is.
+  const { spin, tilt, distance, sway } = typeof camera === "object" ? camera : {};
+  useIsoLayoutEffect(() => {
+    if (!instance || !mountOptions.current.camera) return;
+
+    instance.setCamera({ spin, tilt, distance, sway });
+  }, [instance, spin, tilt, distance, sway]);
+
   // A new shape: sample it (images load first) and flow into it.
   const warned = useRef(false);
   useIsoLayoutEffect(() => {
@@ -145,8 +193,11 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
     let current = true;
     const { shape, count, label, pairing, transition, radius, palette } = latest.current;
 
-    const apply = (points: readonly CloudPoint[]) => {
-      if (current) instance.to(points, { label, pairing, transition, radius });
+    const apply = ({ points, palette: found }: Sampled) => {
+      if (!current) return;
+      // An image's own colours, unless you gave a palette.
+      if (found && !palette) instance.setPalette(found);
+      instance.to(points, { label, pairing, transition, radius });
     };
 
     const fail = (error: unknown) => {
@@ -155,7 +206,7 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
     };
 
     try {
-      const result = sample(shape, count, palette);
+      const result = sample(shape, count, palette && (Array.isArray(palette) ? palette : Object.values(palette)));
 
       if (result instanceof Promise) result.then(apply, fail);
       else apply(result);
