@@ -1,5 +1,11 @@
 # @remold-ui/core
 
+## 0.2.1
+
+### Patch Changes
+
+- beb4f14: Every package now has its own README on npm, with install steps, a working example and an overview of what's in it, and links back to the repository, issues and its folder in the repo.
+
 ## 0.2.0
 
 ### Minor Changes

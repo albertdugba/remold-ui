@@ -1,6 +1,6 @@
 {
   "name": "@remold-ui/dom",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Browser layer: reads what is on screen into plain data for the core.",
   "license": "MIT",
   "author": "Albert Dugba",
