@@ -3,9 +3,24 @@
   "version": "0.2.0",
   "description": "Framework-neutral SVG path matching and interpolation for Motion, GSAP or a custom renderer.",
   "license": "MIT",
+  "author": "Albert Dugba",
+  "homepage": "https://github.com/albertdugba/remold-ui/tree/main/packages/morph#readme",
+  "bugs": {
+    "url": "https://github.com/albertdugba/remold-ui/issues"
+  },
+  "keywords": [
+    "svg",
+    "path",
+    "morph",
+    "shape",
+    "interpolation",
+    "motion",
+    "gsap"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/albertdugba/remold-ui.git"
+    "url": "git+https://github.com/albertdugba/remold-ui.git",
+    "directory": "packages/morph"
   },
   "publishConfig": {
     "access": "public"
