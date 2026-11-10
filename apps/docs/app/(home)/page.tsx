@@ -9,11 +9,20 @@ import { Points } from "@/components/home/points";
 import { HeroWord } from "@/components/home/hero-word";
 import { FLAVOR_NAMES, FLAVORS, type Flavor } from "@/components/home/flavors-code";
 import { highlight } from "fumadocs-core/highlight";
+import type { Metadata } from "next";
+import { siteDescription, socialImage } from "@/lib/seo";
 
-export const metadata = {
-  title: "Remold UI · Change you can follow",
-  description:
-    "An open-source morph engine that finds what persists between interface states and animates what changes, across layouts, text, SVG and canvas.",
+export const metadata: Metadata = {
+  title: { absolute: "Remold UI · Change you can follow" },
+  description: siteDescription,
+  alternates: { canonical: "/" },
+  openGraph: {
+    url: "/",
+    title: "Remold UI · Change you can follow",
+    description: siteDescription,
+    images: [{ url: socialImage, width: 1200, height: 630, alt: "Remold UI interface cards connected by motion traces" }],
+  },
+  twitter: { card: "summary_large_image", images: [socialImage] },
 };
 
 function Section({ kicker, className, children }: { kicker?: string; className?: string; children: ReactNode }) {

@@ -5,6 +5,7 @@ import { getMDXComponents } from "@/components/mdx";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { getPageMarkdownUrl } from "@/lib/shared";
+import { socialImage } from "@/lib/seo";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
@@ -54,7 +55,16 @@ export async function generateMetadata(props: PageProps<"/docs/[[...slug]]">): P
   if (!page) notFound();
 
   return {
-    title: `${page.data.title} · Remold`,
+    title: page.data.title,
     description: page.data.description,
+    alternates: { canonical: page.url },
+    openGraph: {
+      type: "article",
+      url: page.url,
+      title: `${page.data.title} · Remold UI`,
+      description: page.data.description,
+      images: [{ url: socialImage, width: 1200, height: 630, alt: "Remold UI interface cards connected by motion traces" }],
+    },
+    twitter: { card: "summary_large_image", images: [socialImage] },
   };
 }
