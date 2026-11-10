@@ -1,5 +1,13 @@
 # @remold-ui/morph
 
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies [34f0fa4]
+- Updated dependencies [34f0fa4]
+  - @remold-ui/core@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

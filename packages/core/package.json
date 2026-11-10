@@ -1,6 +1,6 @@
 {
   "name": "@remold-ui/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Headless core: shapes, morphing and matching. No browser APIs.",
   "license": "MIT",
   "repository": {
@@ -37,6 +37,5 @@
     "clean": "rm -rf dist .turbo",
     "test": "vitest run"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
