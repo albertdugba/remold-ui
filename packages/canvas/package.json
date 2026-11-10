@@ -1,6 +1,6 @@
 {
   "name": "@remold-ui/canvas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Live canvas scenes: an isometric camera, looks, layouts that spring between each other, and keyless point clouds.",
   "license": "MIT",
   "repository": {
