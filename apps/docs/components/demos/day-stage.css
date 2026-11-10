@@ -49,16 +49,6 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-.day-chip-mark {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  font-size: 17px;
-}
-
 .day-chip-copy {
   display: grid;
   min-width: 0;
@@ -101,31 +91,3 @@
   font-variant-numeric: tabular-nums;
 }
 
-.day-cta {
-  height: 34px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 999px;
-  background: #2b2620;
-  color: #fffaf1;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
-}
-
-.day-cta:active {
-  transform: scale(0.97);
-}
-
-.day-cta:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.day-cta:focus-visible {
-  outline: 2px solid #e07a2e;
-  outline-offset: 2px;
-}

@@ -15,9 +15,12 @@ export default defineConfig([
     clean: true,
   },
   // CommonJS for older tools, as one file, with the type declarations for both.
+  // Tree-shaken with Rollup, and split so the two entries share code instead of each carrying a copy.
   {
     entry: ["src/index.ts", "src/canvas.ts"],
     format: ["cjs"],
+    treeshake: true,
+    splitting: true,
     dts: { entry: ["src/index.ts", "src/canvas.ts"], compilerOptions: { composite: false } },
     outDir: "dist",
     target: "es2022",

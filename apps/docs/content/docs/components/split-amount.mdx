@@ -1,6 +1,6 @@
 ---
 title: "Split amount"
-description: "Splitting a bill: tap the people at the table and each one takes an equal slice of the bar, while everyone's share rolls down to the new amount, cents and all."
+description: "Splitting a bill: tap someone at the table and their face flies into the split, the bar re-divides and every share rolls to the new amount, cents and all. Pick a tip, then request what you're owed. Built on Base UI's Button and Toggle Group."
 status: "new"
 tags: ["Base UI", "Motion"]
 ---
@@ -11,8 +11,10 @@ tags: ["Base UI", "Motion"]
 
 ## Things to try
 
-- **Add someone.** The bar re-divides and every share rolls down.
-- **Take someone out.** Their slice closes and the others grow.
+- **Add someone.** Tap a face under "Also at the table": it flies up into the split, the bar re-divides and every share rolls down.
+- **Leave someone out.** Press × on their row and they go back to the table; the others' shares grow.
+- **Change the tip.** The total and every share roll to the new amount.
+- **Request the money.** The button asks the others for what they owe, then says it's sent.
 - **Look at the cents.** The shares always add up to the bill exactly.
 
 ## Install
@@ -27,8 +29,7 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **Built on Base UI.** `ToggleGroup` with `multiple` is the row of people.
-- **The bill re-divides.** Each slice is a Motion flex item, so they resize together; shares roll with the Odometer.
+- **One face, two places.** Each person's face is the same Motion element in the tray and in the list, so it travels between them when they join or leave the split.
+- **The bill re-divides.** Each slice of the bar is a Motion flex item, so they resize together; the amounts roll with the Odometer.
+- **Built on Base UI.** `Button` for adding, removing and requesting; `ToggleGroup` for the tip. `SplitAmount` takes `value` / `onValueChange` (who's paying and the tip) or runs on its own, plus your `diners` and an `onRequest` hook.
 - **No lost cents.** What's left after an even split goes a cent at a time to the first people.
-
-

@@ -1,20 +1,9 @@
 "use client";
-/**
- * A leather card holder with three cards in it. Their tops show over the front pocket, and the
- * thumb notch shows a little more of the front one. Tap it and the cards slide up out of the
- * pocket, fanned so you can read each, still tucked in at the bottom; tap again and they slip back
- * in. Choose a card and it rises to the top while the holder sinks out of the way, as Apple Wallet
- * does, and its latest transactions fill the space between, with a switch to make it your default
- * card. The Default badge moves to it.
- *
- * Built with Motion: every card and the holder are placed by springs, a beat apart, so each change
- * is one movement, and the transactions arrive row by row. The switch is Base UI. The leather is
- * drawn in SVG: a pebbled grain from a noise filter, a burnished edge and close stitching. It plays a short scene while it's on screen. Touch it and it's yours.
- */
 import { Switch } from "@base-ui/react/switch";
 import { AnimatePresence, motion } from "motion/react";
-import { useId, useState } from "react";
+import { useId, useState, type Ref } from "react";
 import { BRANDS, type BrandId } from "./merchant-logos";
+import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 import "./wallet-stack.css";
 
@@ -24,11 +13,9 @@ interface Card {
   tier: string;
   last4: string;
   look: string;
-  /** Recent spending, newest first. */
   recent: { brand: BrandId; when: string; amount: string }[];
 }
 
-/** Back to front. */
 const CARDS: Card[] = [
   {
     id: "amex",
@@ -68,17 +55,14 @@ const CARDS: Card[] = [
   },
 ];
 
-/** The holder sits at the bottom; cards rest in it closed and slide up out of it open. */
 const HOLDER_TOP = 214;
 const CLOSED = [HOLDER_TOP + 10, HOLDER_TOP + 24, HOLDER_TOP + 38];
 const OPEN = [0, 64, 128];
-/** Hovering the closed holder nudges each card up a little, the back one most, so they fan. */
 const PEEK = [16, 11, 6];
 
-/** With a card chosen, the holder sinks right out of the frame: the card and its transactions get the stage. */
 const SUNK = 300;
 
-interface State {
+export interface WalletStackValue {
   open: boolean;
   /** The card lifted out to show its transactions, if any. */
   chosen: string | null;
@@ -86,22 +70,8 @@ interface State {
   primary: string;
 }
 
-const BEATS: readonly (State & { ms: number })[] = [
-  { open: false, chosen: null, primary: "amex", ms: 1700 },
-  { open: true, chosen: null, primary: "amex", ms: 1500 },
-  { open: true, chosen: "visa", primary: "amex", ms: 2300 },
-  { open: true, chosen: "visa", primary: "visa", ms: 1600 },
-  { open: true, chosen: null, primary: "visa", ms: 1300 },
-];
-
-const fromBeat = (step: number): State => {
-  const { ms: _, ...state } = BEATS[step]!;
-  return state;
-};
-
 const SPRING = { type: "spring" as const, duration: 0.7, bounce: 0.16 };
 
-/** The card networks' marks, drawn simply. */
 function Mark({ network }: { network: Card["network"] }) {
   if (network === "visa") return <span className="wa-visa">VISA</span>;
   if (network === "mastercard")
@@ -120,15 +90,25 @@ function Mark({ network }: { network: Card["network"] }) {
   );
 }
 
-/** The front pocket: a rounded panel with a thumb notch dipping in at the top. */
-const FRONT = "M0 72Q0 52 20 52H114C128 52 132 96 170 96C208 96 212 52 226 52H320Q340 52 340 72V206Q340 226 320 226H20Q0 226 0 206Z";
-const FRONT_STITCH = "M7 73Q7 59 21 59H112C122 59 127 103 170 103C213 103 218 59 228 59H319Q333 59 333 73V205Q333 219 319 219H21Q7 219 7 205Z";
+const FRONT =
+  "M0 72Q0 52 20 52H114C128 52 132 96 170 96C208 96 212 52 226 52H320Q340 52 340 72V206Q340 226 320 226H20Q0 226 0 206Z";
+const FRONT_STITCH =
+  "M7 73Q7 59 21 59H112C122 59 127 103 170 103C213 103 218 59 228 59H319Q333 59 333 73V205Q333 219 319 219H21Q7 219 7 205Z";
 const BACK = "M0 22Q0 0 22 0H318Q340 0 340 22V204Q340 226 318 226H22Q0 226 0 204Z";
 const BACK_STITCH = "M7 23Q7 7 23 7H317Q333 7 333 23V60";
 const BACK_STITCH_L = "M7 60V23";
 
-/** One piece of leather: its fill, the grain over it, its burnished edge and its stitching. */
-function Leather({ id, d, stitch, tone }: { id: string; d: string; stitch: string[]; tone: "back" | "front" }) {
+function Leather({
+  id,
+  d,
+  stitch,
+  tone,
+}: {
+  id: string;
+  d: string;
+  stitch: string[];
+  tone: "back" | "front";
+}) {
   return (
     <svg className="wa-leather" data-tone={tone} viewBox="0 0 340 226" aria-hidden="true">
       <defs>
@@ -141,8 +121,13 @@ function Leather({ id, d, stitch, tone }: { id: string; d: string; stitch: strin
         </clipPath>
       </defs>
       <path d={d} fill={`url(#${id}-${tone})`} />
-      {/* Pebbled grain: fine noise, clipped to the hide */}
-      <rect width="340" height="226" filter={`url(#${id}-grain)`} clipPath={`url(#${id}-${tone}-clip)`} className="wa-grain" />
+      <rect
+        width="340"
+        height="226"
+        filter={`url(#${id}-grain)`}
+        clipPath={`url(#${id}-${tone}-clip)`}
+        className="wa-grain"
+      />
       <path d={d} className="wa-edge" />
       {stitch.map((line) => (
         <path key={line} d={line} className="wa-stitch" />
@@ -151,23 +136,35 @@ function Leather({ id, d, stitch, tone }: { id: string; d: string; stitch: strin
   );
 }
 
-interface WalletStackDemoProps {
-  /** Plays and pauses the scene from outside, as the home page's card does. Leave it out to play until touched. */
-  playing?: boolean;
+export interface WalletStackProps {
+  /** Whether it's open, the card picked out, and the default card. */
+  value?: WalletStackValue;
+  defaultValue?: WalletStackValue;
+  onValueChange?: (value: WalletStackValue) => void;
+  ref?: Ref<HTMLElement>;
 }
 
-export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
-  const scene = useScene(BEATS, fromBeat, playing);
-  const { state, take } = scene;
-  const { open, chosen } = state;
+/** A wallet of cards: open it to fan them out, pick one to see its transactions and make it the default. */
+export function WalletStack({
+  value,
+  defaultValue = { open: false, chosen: null, primary: "amex" },
+  onValueChange,
+  ref,
+}: WalletStackProps) {
+  const [wallet, setWallet] = useControllableState({ value, defaultValue, onValueChange });
+  const { open, chosen } = wallet;
   const id = useId().replace(/:/g, "");
   const [hover, setHover] = useState(false);
   const peeking = hover && !open;
 
-  // The pocket takes the cards out or puts them all away; a card opens the wallet, or is chosen.
-  const togglePocket = () => take((current) => ({ ...current, open: current.chosen ? true : !current.open, chosen: null }));
+  const togglePocket = () =>
+    setWallet((current) => ({ ...current, open: current.chosen ? true : !current.open, chosen: null }));
   const pick = (card: Card) =>
-    take((current) => (!current.open ? { ...current, open: true } : { ...current, chosen: current.chosen === card.id ? null : card.id }));
+    setWallet((current) =>
+      !current.open
+        ? { ...current, open: true }
+        : { ...current, chosen: current.chosen === card.id ? null : card.id },
+    );
 
   const sunk = chosen ? SUNK : 0;
   const yOf = (card: Card, index: number) => {
@@ -176,12 +173,12 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
     if (!open) return CLOSED[index]! - (peeking ? PEEK[index]! : 0);
     return OPEN[index]!;
   };
-  const picked = CARDS.find((c) => c.id === chosen);
+  const picked = CARDS.find((card) => card.id === chosen);
   const nameOf = (card: Card) =>
     `${card.network === "amex" ? "American Express" : card.network === "visa" ? "Visa" : "Mastercard"} ${card.tier}`;
 
   return (
-    <section ref={scene.ref} className="wa not-prose" aria-label="Wallet">
+    <section ref={ref} className="wa not-prose" aria-label="Wallet">
       <svg width="0" height="0" aria-hidden="true" style={{ position: "absolute" }}>
         <filter id={`${id}-grain`} x="0" y="0" width="100%" height="100%">
           <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="3" seed="7" result="noise" />
@@ -192,8 +189,17 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
         </filter>
       </svg>
 
-      <div className="wa-scene" onPointerEnter={(event) => event.pointerType === "mouse" && setHover(true)} onPointerLeave={() => setHover(false)}>
-        <motion.div className="wa-back" initial={false} animate={{ y: sunk }} transition={{ ...SPRING, delay: chosen ? 0.04 : 0 }}>
+      <div
+        className="wa-scene"
+        onPointerEnter={(event) => event.pointerType === "mouse" && setHover(true)}
+        onPointerLeave={() => setHover(false)}
+      >
+        <motion.div
+          className="wa-back"
+          initial={false}
+          animate={{ y: sunk }}
+          transition={{ ...SPRING, delay: chosen ? 0.04 : 0 }}
+        >
           <Leather id={id} d={BACK} stitch={[BACK_STITCH, BACK_STITCH_L]} tone="back" />
         </motion.div>
 
@@ -206,14 +212,25 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
               type="button"
               className="wa-card"
               data-look={card.look}
-              // The chosen card rides above everything; the rest keep their order.
               style={{ zIndex: isChosen ? 30 : index + 1 }}
               initial={false}
               animate={{ y: yOf(card, index) }}
               whileHover={open && !chosen ? { y: OPEN[index]! - 6 } : undefined}
-              // Out and peeking back to front, in front to back: a beat apart either way.
-              transition={{ ...SPRING, delay: isChosen ? 0 : chosen ? 0.04 : open || peeking ? index * 0.05 : (CARDS.length - 1 - index) * 0.045 }}
-              aria-label={isChosen ? `${name}, ending ${card.last4}. Back to all cards` : `${name}, ending ${card.last4}`}
+              transition={{
+                ...SPRING,
+                delay: isChosen
+                  ? 0
+                  : chosen
+                    ? 0.04
+                    : open || peeking
+                      ? index * 0.05
+                      : (CARDS.length - 1 - index) * 0.045,
+              }}
+              aria-label={
+                isChosen
+                  ? `${name}, ending ${card.last4}. Back to all cards`
+                  : `${name}, ending ${card.last4}`
+              }
               aria-pressed={open ? isChosen : undefined}
               onClick={() => pick(card)}
             >
@@ -221,7 +238,7 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
                 <span className="wa-tier">
                   {card.tier}
                   <AnimatePresence initial={false}>
-                    {state.primary === card.id && (
+                    {wallet.primary === card.id && (
                       <motion.span
                         className="wa-badge"
                         initial={{ opacity: 0, scale: 0.6 }}
@@ -252,7 +269,6 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
           );
         })}
 
-        {/* The chosen card's latest transactions, in the space the holder left */}
         <AnimatePresence mode="popLayout">
           {picked && (
             <motion.div
@@ -268,16 +284,15 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
                 <span>See all</span>
               </p>
               <ul className="wa-txns">
-                {picked.recent.map((t, r) => {
-                  const brand = BRANDS[t.brand];
+                {picked.recent.map((transaction, row) => {
+                  const brand = BRANDS[transaction.brand];
                   return (
                     <motion.li
-                      key={t.brand}
+                      key={transaction.brand}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ ...SPRING, delay: 0.16 + r * 0.05 }}
+                      transition={{ ...SPRING, delay: 0.16 + row * 0.05 }}
                     >
-                      {/* The merchant's own mark, white on its own colour */}
                       <span className="wa-txn-logo" style={{ background: brand.color }} aria-hidden="true">
                         <svg viewBox="0 0 24 24">
                           <path d={brand.path} />
@@ -285,9 +300,9 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
                       </span>
                       <span className="wa-txn-copy">
                         <b>{brand.name}</b>
-                        <span>{t.when}</span>
+                        <span>{transaction.when}</span>
                       </span>
-                      <span className="wa-txn-amount">−{t.amount}</span>
+                      <span className="wa-txn-amount">−{transaction.amount}</span>
                     </motion.li>
                   );
                 })}
@@ -296,8 +311,8 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
                 <span>Default card</span>
                 <Switch.Root
                   className="wa-switch"
-                  checked={state.primary === picked.id}
-                  onCheckedChange={(on) => on && take((current) => ({ ...current, primary: picked.id }))}
+                  checked={wallet.primary === picked.id}
+                  onCheckedChange={(on) => on && setWallet((current) => ({ ...current, primary: picked.id }))}
                   aria-label={`Make ${nameOf(picked)} your default card`}
                 >
                   <Switch.Thumb className="wa-thumb" />
@@ -307,7 +322,6 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
           )}
         </AnimatePresence>
 
-        {/* The way back to the holder, while it's out of sight */}
         <AnimatePresence>
           {picked && (
             <motion.button
@@ -324,7 +338,6 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
           )}
         </AnimatePresence>
 
-        {/* The front pocket, in front of every card */}
         <motion.button
           type="button"
           className="wa-front"
@@ -340,4 +353,28 @@ export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
       </div>
     </section>
   );
+}
+
+// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
+
+const BEATS: readonly (WalletStackValue & { ms: number })[] = [
+  { open: false, chosen: null, primary: "amex", ms: 1700 },
+  { open: true, chosen: null, primary: "amex", ms: 1500 },
+  { open: true, chosen: "visa", primary: "amex", ms: 2300 },
+  { open: true, chosen: "visa", primary: "visa", ms: 1600 },
+  { open: true, chosen: null, primary: "visa", ms: 1300 },
+];
+
+const fromBeat = (step: number): WalletStackValue => {
+  const { ms: _, ...state } = BEATS[step]!;
+  return state;
+};
+
+interface WalletStackDemoProps {
+  playing?: boolean;
+}
+
+export function WalletStackDemo({ playing }: WalletStackDemoProps = {}) {
+  const scene = useScene(BEATS, fromBeat, playing);
+  return <WalletStack ref={scene.ref} value={scene.state} onValueChange={scene.onValueChange} />;
 }

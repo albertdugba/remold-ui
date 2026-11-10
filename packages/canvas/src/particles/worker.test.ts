@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import type { FrameCallback, FrameLoop } from "@remold-ui/dom";
 import { matchPoints } from "@remold-ui/core";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { particles } from "./index";
 
 /** A stand-in for the browser Worker: answers with the real matcher, but only when told to. */
@@ -47,13 +47,16 @@ const grid = (n: number, columns = 40) => Array.from({ length: n }, (_, i) => ({
 
 const flushed = () => new Promise((r) => setTimeout(r, 0));
 
+/** The worker's script loads the first time it's needed, so wait for requests to reach it. */
+const requested = (count: number) => vi.waitFor(() => expect(FakeWorker.last?.inbox.length ?? 0).toBe(count));
+
 describe("particles with big clouds", () => {
   it("pairs them in a worker, and only moves once the answer comes back", async () => {
     const frames = manualLoop();
     const dots = particles(document.createElement("canvas"), { points: grid(800), loop: frames.loop, reducedMotion: "never" });
     dots.to(grid(800, 20));
     // 800 × 800 is past the exact limit: the request went to the worker and nothing moved yet.
-    expect(FakeWorker.last!.inbox).toHaveLength(1);
+    await requested(1);
     expect(frames.running()).toBe(false);
     FakeWorker.last!.reply();
     await flushed();
@@ -66,8 +69,8 @@ describe("particles with big clouds", () => {
     const dots = particles(document.createElement("canvas"), { points: grid(800), loop: frames.loop, reducedMotion: "never" });
     dots.to(grid(800, 20));
     dots.to(grid(900, 60));
+    await requested(2);
     const worker = FakeWorker.last!;
-    expect(worker.inbox).toHaveLength(2);
     worker.reply();
     await flushed();
     // The first answer is stale: still waiting for the second.
@@ -82,6 +85,7 @@ describe("particles with big clouds", () => {
     const frames = manualLoop();
     const dots = particles(document.createElement("canvas"), { points: grid(800), loop: frames.loop, reducedMotion: "never" });
     dots.to(grid(820, 20));
+    await requested(1);
     FakeWorker.last!.onerror?.();
     await flushed();
     expect(dots.count).toBe(820);

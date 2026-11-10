@@ -1,0 +1,33 @@
+---
+title: "Morphing dialog"
+description: "A dialog that grows out of the button that opens it, and shrinks into the thing it creates. Cancel and it goes back into the button; plan a trip and it lands as the new row in your list of trips."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="morphing-dialog" code={<Source demo="morphing-dialog" />} minHeight={480}>
+  <MorphingDialogDemo />
+</Stage>
+
+## Things to try
+
+- **Press New trip.** The button's dark surface grows into the dialog while everything behind it dims, turning white as it arrives. Then the form fades in.
+- **Cancel, or press Escape.** The dialog shrinks back into the button it came from.
+- **Type a destination and press Create trip.** The button shows a spinner, then the dialog shrinks into the new trip at the top of the list, marked New. The other trips make room.
+- **Pick who's going.** The selection slides between Solo, Couple, Family and Friends.
+
+## Install
+
+<AddCommand name="morphing-dialog" />
+
+## Dependencies
+
+<Dependencies demo="morphing-dialog" />
+
+## How it works
+
+- **One surface, three places.** The button's background, the dialog's background and the new row's background share a layout id, so it's one surface moving between them. It's an empty shape, so growing it never stretches any words; the form fades in once it has arrived, and its colour and corners change on the way.
+- **The dialog becomes what it made.** On create, the surface is handed to the new row instead of back to the button, and the button gets a fresh one. Pass `surface` and bump it each time something is created.
+- **A real modal.** It's Base UI's Dialog: focus moves to the destination field and stays inside, Escape and Cancel close it, focus returns to the button, and the title and description are announced. The destination is a labelled Field and who's going a Toggle Group.
+- **It waits for the request.** While creating, the form locks and the button shows a spinner at the same width, so nothing shifts. In the demo a timeout stands in for the request.
+- **Mount it where you like.** By default it mounts on the page and dims all of it. The demo passes its own stage as `container`, so the dim covers just the frame it sits in, and it turns `modal` off until you touch it, so it can play on its own without taking over the page.

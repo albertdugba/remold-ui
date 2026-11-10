@@ -8,7 +8,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon, ArrowLeft01Icon, ArrowRight01Icon, Restaurant01Icon } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useMeasuredSize } from "./use-measured-size";
 import { useScript } from "./use-script";
 import "./table-booking.css";
 
@@ -54,16 +55,8 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
   const [picked, setPicked] = useState<Option>(OPTIONS[0]!);
   const [guests, setGuests] = useState(4);
   const card = useRef<HTMLDivElement>(null);
-  const content = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number | null>(null);
-
-  useEffect(() => {
-    const element = content.current;
-    if (!element) return;
-    const observer = new ResizeObserver(() => setHeight(element.offsetHeight));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+  const [content, contentSize] = useMeasuredSize<HTMLDivElement>();
+  const height = contentSize?.height ?? null;
 
   const choose = (option: Option) => {
     setPicked(option);
@@ -103,14 +96,18 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                         </span>
                         <span className="tbk-head-copy">
                           <b>{RESTAURANT.name}</b>
-                          <span>{RESTAURANT.date} · {guestsLabel(guests)}</span>
+                          <span>
+                            {RESTAURANT.date} · {guestsLabel(guests)}
+                          </span>
                         </span>
                       </motion.header>
                       <motion.div className="tbk-alert" role="status" {...part(0.05)}>
                         <HugeiconsIcon icon={Alert02Icon} strokeWidth={2} aria-hidden="true" />
                         <span className="tbk-alert-copy">
                           <b>Your 7:30 table is no longer free</b>
-                          <span>The kitchen closes early for a private event. Pick one of these instead.</span>
+                          <span>
+                            The kitchen closes early for a private event. Pick one of these instead.
+                          </span>
                         </span>
                       </motion.div>
                       <div className="tbk-options">
@@ -126,7 +123,12 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                               <b>{option.title}</b>
                               <span>{option.table}</span>
                             </span>
-                            <HugeiconsIcon icon={ArrowRight01Icon} className="tbk-chevron" strokeWidth={2} aria-hidden="true" />
+                            <HugeiconsIcon
+                              icon={ArrowRight01Icon}
+                              className="tbk-chevron"
+                              strokeWidth={2}
+                              aria-hidden="true"
+                            />
                           </Button>
                         ))}
                       </div>
@@ -136,7 +138,11 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                   {face === "booking" && (
                     <motion.div key="booking" className="tbk-face">
                       <motion.header className="tbk-bar" {...part(0.02)}>
-                        <Button className="tbk-back" aria-label="Back to the options" onClick={() => setFace("notice")}>
+                        <Button
+                          className="tbk-back"
+                          aria-label="Back to the options"
+                          onClick={() => setFace("notice")}
+                        >
                           <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} aria-hidden="true" />
                         </Button>
                         <b>Booking changed</b>
@@ -172,7 +178,9 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                                 </Tooltip.Trigger>
                                 <Tooltip.Portal>
                                   <Tooltip.Positioner sideOffset={6}>
-                                    <Tooltip.Popup className="tbk-tooltip">Show this at the door</Tooltip.Popup>
+                                    <Tooltip.Popup className="tbk-tooltip">
+                                      Show this at the door
+                                    </Tooltip.Popup>
                                   </Tooltip.Positioner>
                                 </Tooltip.Portal>
                               </Tooltip.Root>
@@ -186,7 +194,11 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                   {face === "guests" && (
                     <motion.div key="guests" className="tbk-face">
                       <motion.header className="tbk-bar" {...part(0.02)}>
-                        <Button className="tbk-back" aria-label="Back to the booking" onClick={() => setFace("booking")}>
+                        <Button
+                          className="tbk-back"
+                          aria-label="Back to the booking"
+                          onClick={() => setFace("booking")}
+                        >
                           <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} aria-hidden="true" />
                         </Button>
                         <b>How many of you?</b>
@@ -202,8 +214,15 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                         }}
                       >
                         {SIZES.map((size, index) => (
-                          <Toggle key={size} value={String(size)} className="tbk-size" render={<motion.button {...part(0.05 + index * 0.025)} />}>
-                            {guests === size && <motion.span layoutId="tbk-size-pick" className="tbk-size-pick" />}
+                          <Toggle
+                            key={size}
+                            value={String(size)}
+                            className="tbk-size"
+                            render={<motion.button {...part(0.05 + index * 0.025)} />}
+                          >
+                            {guests === size && (
+                              <motion.span layoutId="tbk-size-pick" className="tbk-size-pick" />
+                            )}
                             <span>{size}</span>
                           </Toggle>
                         ))}

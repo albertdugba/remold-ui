@@ -1,0 +1,31 @@
+---
+title: "Booking steps"
+description: "Booking a hospital appointment, where every choice becomes part of the booking. The option you pick fills in and flies up into the summary; tap it there to change it and it flies back down."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="booking-steps" code={<Source demo="booking-steps" />} minHeight={620}>
+  <BookingStepsDemo />
+</Stage>
+
+## Things to try
+
+- **Pick the kind of visit.** A check-up, a follow-up or a consultation. The option fills in dark, then that same dark shape flies up into the first slot of the summary and becomes a chip, and the next step slides in.
+- **Pick a day, then a time.** Full days and taken times can't be chosen. Each choice follows the first into the summary.
+- **Tap a chip.** You're back on that step, and the chip flies back down onto the option it came from.
+- **Confirm the booking.** After a short spinner, the steps give way to the confirmation, with the end time worked out from the kind of visit and a reminder promised by text.
+
+## Install
+
+<AddCommand name="booking-steps" />
+
+## Dependencies
+
+<Dependencies demo="booking-steps" />
+
+## How it works
+
+- **The choice is one shape that moves.** A chosen option sits on a dark surface that keeps one layout id from the option to its chip. It's an empty shape, so growing or shrinking it never stretches words; the chip's words fade in where it lands.
+- **The steps take turns.** Each step cross-fades sideways into the next, and the panel springs its height to fit, so the card changes size without jumping.
+- **Built on Base UI.** Each step is a Radio Group, so arrow keys move between options and unavailable ones are disabled. The chips are buttons that say what they hold, and the confirmation is announced.

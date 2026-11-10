@@ -31,8 +31,8 @@
     }
   },
   "scripts": {
-    "build": "node scripts/build-worker.mjs && tsup src/index.ts --format esm,cjs --dts --clean",
-    "dev": "node scripts/build-worker.mjs && tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "node scripts/build-worker.mjs && tsup src/index.ts --format esm,cjs --dts --clean --treeshake --splitting",
+    "dev": "node scripts/build-worker.mjs && tsup src/index.ts --format esm,cjs --dts --watch --treeshake --splitting",
     "typecheck": "node scripts/build-worker.mjs && tsc --noEmit",
     "clean": "rm -rf dist .turbo",
     "test": "node scripts/build-worker.mjs && vitest run",

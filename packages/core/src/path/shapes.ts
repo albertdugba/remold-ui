@@ -1,4 +1,4 @@
-import svgpath from "svgpath";
+import { pathReader } from "./parse";
 
 /**
  * SVG basic shapes as path data.
@@ -132,7 +132,10 @@ export function shapesToPath(nodes: Iterable<ShapeNode>): string {
  */
 function absoluteStart(d: string): string {
   if (!/^m/.test(d)) return d;
-  const path = svgpath(d) as ReturnType<typeof svgpath> & { err: string };
-  if (path.err) throw new Error(`Invalid path data: ${path.err}`);
-  return path.toString();
+  const reader = pathReader(d);
+  reader.advance();
+  const [x, y] = [reader.number().text, reader.number().text];
+  // Any pairs straight after the move are relative lines.
+  const rest = d.slice(reader.index).replace(/^[\s,]+/, "");
+  return `M${x} ${y}${rest && /^[\d+\-.]/.test(rest) ? `l${rest}` : rest}`;
 }

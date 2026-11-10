@@ -70,9 +70,7 @@ export const formatClock = (seconds: number) => {
   const minutes = Math.floor((seconds % 3600) / 60);
   const remainder = Math.floor(seconds % 60);
   return hours
-    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(
-        remainder,
-      ).padStart(2, "0")}`
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`
     : `${minutes}:${String(remainder).padStart(2, "0")}`;
 };
 
@@ -84,9 +82,7 @@ const fetchEpisodes = (source: string) => {
     request = fetch(source)
       .then((response) => (response.ok ? response.json() : null))
       .then((payload: { episodes?: Episode[] } | null) =>
-        payload?.episodes && payload.episodes.length >= 3
-          ? payload.episodes
-          : null,
+        payload?.episodes && payload.episodes.length >= 3 ? payload.episodes : null,
       )
       .catch(() => null);
     requests.set(source, request);
@@ -142,17 +138,14 @@ export function usePodcastPlayer({
 
   useEffect(() => {
     if (!playing || episode.audio) return;
-    const interval = setInterval(
-      () => setTime((current) => Math.min(episode.seconds, current + 1)),
-      1000,
-    );
+    const interval = setInterval(() => setTime((current) => Math.min(episode.seconds, current + 1)), 1000);
     return () => clearInterval(interval);
   }, [episode.audio, episode.seconds, playing]);
 
-  const seek = (nextTime: number) => {
-    const next = Math.max(0, Math.min(episode.seconds - 1, nextTime));
-    if (audio.current && episode.audio) audio.current.currentTime = next;
-    setTime(next);
+  const seek = (requested: number) => {
+    const clamped = Math.max(0, Math.min(episode.seconds - 1, requested));
+    if (audio.current && episode.audio) audio.current.currentTime = clamped;
+    setTime(clamped);
   };
 
   return {

@@ -1,23 +1,14 @@
 "use client";
-/**
- * The revenue card at the top of every SaaS dashboard. Switch between 7, 30 and 90 days and the
- * chart line doesn't redraw: it reshapes into the new range. The MRR rolls like a counter, and the
- * change badge rolls too, its arrow turning between up and down. Scrub along the chart and a dot
- * rides the line while the headline shows that day.
- *
- * Built with Base UI (toggle group) and Motion; the chart line reshapes with Remold's `createMorph`
- * and the badge arrow with `Remold.Icon`. It plays a short scene while it's on screen. Touch it and it's yours.
- * The numbers are made up.
- */
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowDown02Icon, ArrowUp02Icon } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import { useId, useRef, type KeyboardEvent, type PointerEvent } from "react";
+import { useId, useRef, type KeyboardEvent, type PointerEvent, type Ref } from "react";
 import { useMorphPath } from "./use-morph-path";
 import { Odometer } from "./odometer";
+import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 import "./revenue-card.css";
 
@@ -25,24 +16,23 @@ type Range = "7d" | "30d" | "90d";
 
 interface Series {
   label: string;
-  /** Days between points. */
   step: number;
   values: number[];
   signups: number[];
   stats: { added: number; churned: number; customers: number };
 }
 
-/** A believable curve from one value to another: a trend, some weekly wobble, and an optional dip. */
-function curve(n: number, from: number, to: number, wobble: number, dip = 0) {
-  return Array.from({ length: n }, (_, index) => {
+function curve(count: number, from: number, to: number, wobble: number, dip = 0) {
+  return Array.from({ length: count }, (_, index) => {
     if (index === 0) return from;
-    if (index === n - 1) return to;
-    const t = index / (n - 1);
+    if (index === count - 1) return to;
+    const progress = index / (count - 1);
     const noise = Math.sin(index * 1.7) * wobble + Math.sin(index * 0.43) * wobble * 1.6;
-    return Math.round(from + (to - from) * t + noise - dip * Math.sin(Math.PI * t) ** 2);
+    return Math.round(from + (to - from) * progress + noise - dip * Math.sin(Math.PI * progress) ** 2);
   });
 }
-const signups = (n: number, seed: number) => Array.from({ length: n }, (_, index) => 6 + ((index * 7 + seed) % 13));
+const signups = (count: number, seed: number) =>
+  Array.from({ length: count }, (_, index) => 6 + ((index * 7 + seed) % 13));
 
 const SERIES: Record<Range, Series> = {
   "7d": {
@@ -69,7 +59,6 @@ const SERIES: Record<Range, Series> = {
 };
 const RANGES = Object.keys(SERIES) as Range[];
 
-/** The chart's own coordinates; the SVG stretches to fit and the line keeps its weight. */
 const W = 300;
 const H = 120;
 const PAD = 12;
@@ -78,12 +67,14 @@ function points(values: number[]) {
   const lo = Math.min(...values);
   const hi = Math.max(...values);
   const span = hi - lo || 1;
-  return values.map((v, index) => [(index / (values.length - 1)) * W, PAD + (1 - (v - lo) / span) * (H - PAD * 2)] as const);
+  return values.map(
+    (value, index) =>
+      [(index / (values.length - 1)) * W, PAD + (1 - (value - lo) / span) * (H - PAD * 2)] as const,
+  );
 }
 
-/** A smooth line through the points (Catmull-Rom, as cubic Béziers). */
 function smooth(pts: readonly (readonly [number, number])[]) {
-  let d = `M${pts[0]![0]} ${pts[0]![1]}`;
+  let path = `M${pts[0]![0]} ${pts[0]![1]}`;
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[i - 1] ?? pts[i]!;
     const p1 = pts[i]!;
@@ -91,99 +82,97 @@ function smooth(pts: readonly (readonly [number, number])[]) {
     const p3 = pts[i + 2] ?? p2;
     const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
     const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
-    d += `C${c1[0]!.toFixed(2)} ${c1[1]!.toFixed(2)} ${c2[0]!.toFixed(2)} ${c2[1]!.toFixed(2)} ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+    path += `C${c1[0]!.toFixed(2)} ${c1[1]!.toFixed(2)} ${c2[0]!.toFixed(2)} ${c2[1]!.toFixed(2)} ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
   }
-  return d;
+  return path;
 }
 
 const TODAY = new Date(2026, 9, 27);
 const dateOf = (series: Series, index: number) => {
-  const d = new Date(TODAY);
-  d.setDate(d.getDate() - (series.values.length - 1 - index) * series.step);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const date = new Date(TODAY);
+  date.setDate(date.getDate() - (series.values.length - 1 - index) * series.step);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
-const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+const money = (amount: number) => `$${Math.round(amount).toLocaleString("en-US")}`;
 
-/** Two strokes each: an arrow's shaft and head, pointing up or down. */
-
-interface State {
+export interface RevenueCardValue {
   range: Range;
   /** The point being scrubbed, or null when the headline shows today. */
   hover: number | null;
 }
 
-const BEATS: readonly (State & { ms: number })[] = [
-  { range: "30d", hover: null, ms: 1800 },
-  { range: "30d", hover: 6, ms: 380 },
-  { range: "30d", hover: 13, ms: 380 },
-  { range: "30d", hover: 21, ms: 380 },
-  { range: "30d", hover: 27, ms: 800 },
-  { range: "30d", hover: null, ms: 700 },
-  { range: "90d", hover: null, ms: 2300 },
-  { range: "7d", hover: null, ms: 1700 },
-  { range: "7d", hover: 3, ms: 1300 },
-  { range: "7d", hover: null, ms: 900 },
-];
-
-const fromBeat = (step: number): State => ({ range: BEATS[step]!.range, hover: BEATS[step]!.hover });
-
 const RESHAPE = { type: "spring" as const, duration: 0.8, bounce: 0.12 };
 const FOLLOW = { type: "spring" as const, duration: 0.3, bounce: 0.1 };
 
-interface RevenueCardDemoProps {
-  /** Plays and pauses the scene from outside, as the home page's card does. Leave it out to play until touched. */
-  playing?: boolean;
+export interface RevenueCardProps {
+  /** The range shown, and the point being scrubbed. */
+  value?: RevenueCardValue;
+  defaultValue?: RevenueCardValue;
+  onValueChange?: (value: RevenueCardValue) => void;
+  ref?: Ref<HTMLElement>;
 }
 
-export function RevenueCardDemo({ playing }: RevenueCardDemoProps = {}) {
-  const scene = useScene(BEATS, fromBeat, playing);
-  const { state, take } = scene;
+/** A revenue card with a range switch and a chart you can scrub, by pointer or arrow keys. */
+export function RevenueCard({
+  value,
+  defaultValue = { range: "30d", hover: null },
+  onValueChange,
+  ref,
+}: RevenueCardProps) {
+  const [view, setView] = useControllableState({ value, defaultValue, onValueChange });
   const id = useId();
-  const chart = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
 
-  const series = SERIES[state.range];
+  const series = SERIES[view.range];
   const pts = points(series.values);
   const line = smooth(pts);
   const linePath = useMorphPath(line, RESHAPE);
   const areaPath = useMorphPath(`${line}L${W} ${H}L0 ${H}Z`, RESHAPE);
 
   const last = series.values.length - 1;
-  const at = state.hover ?? last;
-  const value = series.values[at]!;
-  const change = (value - series.values[0]!) / series.values[0]!;
+  const at = view.hover ?? last;
+  const amount = series.values[at]!;
+  const change = (amount - series.values[0]!) / series.values[0]!;
   const up = change >= 0;
   const [x, y] = pts[at]!;
 
   const scrub = (event: PointerEvent<HTMLDivElement>) => {
-    const box = chart.current!.getBoundingClientRect();
-    const t = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width));
-    const i = Math.round(t * last);
-    if (i !== state.hover) take((current) => ({ ...current, hover: i }));
+    const box = chartRef.current!.getBoundingClientRect();
+    const across = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width));
+    const hovered = Math.round(across * last);
+    if (hovered !== view.hover) setView((current) => ({ ...current, hover: hovered }));
   };
 
   const onKey = (event: KeyboardEvent) => {
     const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
     if (!step) return;
     event.preventDefault();
-    take((current) => ({ ...current, hover: Math.min(last, Math.max(0, (current.hover ?? last) + step)) }));
+    setView((current) => ({
+      ...current,
+      hover: Math.min(last, Math.max(0, (current.hover ?? last) + step)),
+    }));
   };
 
   return (
-    <section ref={scene.ref} className="rv not-prose" aria-label="Monthly recurring revenue">
+    <section ref={ref} className="rv not-prose" aria-label="Monthly recurring revenue">
       <header className="rv-head">
         <span className="rv-label">Monthly recurring revenue</span>
         <LayoutGroup id={id}>
           <ToggleGroup
             className="rv-ranges"
-            value={[state.range]}
-            onValueChange={(v) => v.length && take(() => ({ range: v[0] as Range, hover: null }))}
+            value={[view.range]}
+            onValueChange={(values) =>
+              values.length && setView(() => ({ range: values[0] as Range, hover: null }))
+            }
             aria-label="Range"
           >
-            {RANGES.map((r) => (
-              <Toggle key={r} value={r} className="rv-range">
-                {r === state.range && <motion.span layoutId="range" className="rv-range-pill" transition={FOLLOW} />}
-                <span>{r.toUpperCase()}</span>
+            {RANGES.map((option) => (
+              <Toggle key={option} value={option} className="rv-range">
+                {option === view.range && (
+                  <motion.span layoutId="range" className="rv-range-pill" transition={FOLLOW} />
+                )}
+                <span>{option.toUpperCase()}</span>
               </Toggle>
             ))}
           </ToggleGroup>
@@ -191,22 +180,25 @@ export function RevenueCardDemo({ playing }: RevenueCardDemoProps = {}) {
       </header>
 
       <div className="rv-figure">
-        <Odometer value={money(value)} className="rv-mrr" />
+        <Odometer value={money(amount)} className="rv-mrr" />
         <span className="rv-badge" data-down={up ? undefined : ""}>
-          <Remold.Icon icon={<HugeiconsIcon icon={up ? ArrowUp02Icon : ArrowDown02Icon} />} strokeWidth={2.6} />
+          <Remold.Icon
+            icon={<HugeiconsIcon icon={up ? ArrowUp02Icon : ArrowDown02Icon} />}
+            strokeWidth={2.6}
+          />
           <Odometer value={`${Math.abs(change * 100).toFixed(1)}%`} />
         </span>
       </div>
       <p className="rv-sub">
         <AnimatePresence initial={false} mode="popLayout">
           <motion.span
-            key={state.hover === null ? `vs-${state.range}` : `on-${at}`}
+            key={view.hover === null ? `vs-${view.range}` : `on-${at}`}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15 }}
           >
-            {state.hover === null
+            {view.hover === null
               ? `vs ${series.label} ago`
               : `${dateOf(series, at)} · ${series.signups[at]} new customers`}
           </motion.span>
@@ -214,16 +206,16 @@ export function RevenueCardDemo({ playing }: RevenueCardDemoProps = {}) {
       </p>
 
       <div
-        ref={chart}
+        ref={chartRef}
         className="rv-chart"
         role="img"
         tabIndex={0}
         aria-label={`Revenue over ${series.label}, ${up ? "up" : "down"} ${Math.abs(change * 100).toFixed(1)} percent`}
         onPointerMove={scrub}
         onPointerDown={scrub}
-        onPointerLeave={() => state.hover !== null && take((current) => ({ ...current, hover: null }))}
+        onPointerLeave={() => view.hover !== null && setView((current) => ({ ...current, hover: null }))}
         onKeyDown={onKey}
-        onBlur={() => state.hover !== null && take((current) => ({ ...current, hover: null }))}
+        onBlur={() => view.hover !== null && setView((current) => ({ ...current, hover: null }))}
         data-down={up ? undefined : ""}
       >
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
@@ -237,9 +229,8 @@ export function RevenueCardDemo({ playing }: RevenueCardDemoProps = {}) {
           <motion.path d={linePath} className="rv-line" />
         </svg>
 
-        {/* The scrubber lives in HTML on top, so the dot stays round however the chart stretches */}
         <AnimatePresence>
-          {state.hover !== null && (
+          {view.hover !== null && (
             <motion.div
               key="scrub"
               className="rv-scrub"
@@ -281,4 +272,33 @@ export function RevenueCardDemo({ playing }: RevenueCardDemoProps = {}) {
       </dl>
     </section>
   );
+}
+
+// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
+
+const BEATS: readonly (RevenueCardValue & { ms: number })[] = [
+  { range: "30d", hover: null, ms: 1800 },
+  { range: "30d", hover: 6, ms: 380 },
+  { range: "30d", hover: 13, ms: 380 },
+  { range: "30d", hover: 21, ms: 380 },
+  { range: "30d", hover: 27, ms: 800 },
+  { range: "30d", hover: null, ms: 700 },
+  { range: "90d", hover: null, ms: 2300 },
+  { range: "7d", hover: null, ms: 1700 },
+  { range: "7d", hover: 3, ms: 1300 },
+  { range: "7d", hover: null, ms: 900 },
+];
+
+const fromBeat = (step: number): RevenueCardValue => ({
+  range: BEATS[step]!.range,
+  hover: BEATS[step]!.hover,
+});
+
+interface RevenueCardDemoProps {
+  playing?: boolean;
+}
+
+export function RevenueCardDemo({ playing }: RevenueCardDemoProps = {}) {
+  const scene = useScene(BEATS, fromBeat, playing);
+  return <RevenueCard ref={scene.ref} value={scene.state} onValueChange={scene.onValueChange} />;
 }

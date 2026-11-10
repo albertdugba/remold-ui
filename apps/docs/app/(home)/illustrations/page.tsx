@@ -1,14 +1,14 @@
 import {
-  CareJourney,
+  CareJourneyDemo,
   CenterFlow,
   DataPrivacyBoundary,
   DomainConnection,
   RealtimeCollaboration,
   SubscriptionUpgrade,
   TeamWorkspace,
-  TransactionRoute,
+  TransactionRouteDemo,
   UptimeRouting,
-  WalletSecurityMap,
+  WalletSecurityMapDemo,
 } from "@/components/demos";
 
 export const metadata = {
@@ -29,9 +29,9 @@ export default function IllustrationsPage() {
       </header>
       <section className="ip-grid" aria-label="Interactive product illustrations">
         <CenterFlow />
-        <TransactionRoute />
-        <WalletSecurityMap />
-        <CareJourney />
+        <TransactionRouteDemo />
+        <WalletSecurityMapDemo />
+        <CareJourneyDemo />
         <DomainConnection />
         <DataPrivacyBoundary />
         <SubscriptionUpgrade />

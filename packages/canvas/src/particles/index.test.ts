@@ -293,3 +293,156 @@ describe("particles", () => {
     expect(() => dots.to(row(2), { transition: "explode" as "scatter" })).toThrow(/transition/);
   });
 });
+
+describe("particles with a camera", () => {
+  const corners = [-1, 1].flatMap((x) => [-1, 1].flatMap((y) => [-1, 1].map((z) => ({ x: x * 10, y: y * 10, z: z * 10 }))));
+
+  it("draws nearer points bigger than farther ones", () => {
+    particles(canvas, {
+      points: [
+        { x: 0, y: 0, z: 20 },
+        { x: 0, y: 0, z: -20 },
+      ],
+      camera: { spin: 0, tilt: 0 },
+      loop: frames.loop,
+    });
+    const [near, far] = drawing.frame.arcs;
+    expect(near!.r).toBeGreaterThan(2.5);
+    expect(far!.r).toBeLessThan(2.5);
+  });
+
+  it("keeps a contained shape inside the canvas at every angle", () => {
+    particles(canvas, { points: corners, camera: { spin: 0.5, tilt: 35, distance: 2 }, padding: 0, loop: frames.loop });
+    for (let n = 0; n < 120; n++) {
+      frames.step();
+      for (const { x, y } of drawing.frame.arcs) {
+        expect(x).toBeGreaterThanOrEqual(0);
+        expect(x).toBeLessThanOrEqual(400);
+        expect(y).toBeGreaterThanOrEqual(0);
+        expect(y).toBeLessThanOrEqual(200);
+      }
+    }
+  });
+
+  it("turns while it spins, and keeps drawing", () => {
+    particles(canvas, { points: corners, camera: { spin: 0.25 }, loop: frames.loop });
+    const before = drawing.frame.arcs.map(({ x }) => x);
+    frames.step();
+    frames.step();
+    expect(drawing.frame.arcs.map(({ x }) => x)).not.toEqual(before);
+    expect(frames.running).toBe(true);
+  });
+
+  it("holds still with reduced motion", () => {
+    particles(canvas, { points: corners, camera: { spin: 0.25 }, reducedMotion: "always", loop: frames.loop });
+    expect(frames.running).toBe(false);
+  });
+
+  it("settles once the shape stops, even while the camera turns", async () => {
+    const dots = particles(canvas, { points: corners, camera: { spin: 0.25 }, loop: frames.loop });
+    dots.to(corners.map((point) => ({ ...point, z: -point.z })), { pairing: "index" });
+    let done = false;
+    void dots.settled().then(() => (done = true));
+    frames.run(4);
+    await Promise.resolve();
+    expect(done).toBe(true);
+    expect(frames.running).toBe(true);
+  });
+
+  it("refuses a camera with a frame fit, or too close", () => {
+    expect(() => particles(canvas, { camera: {}, fit: { width: 10, height: 10 } })).toThrow(RangeError);
+    expect(() => particles(canvas, { camera: { distance: 1 } })).toThrow(RangeError);
+    expect(() => particles(canvas, { camera: { spin: Number.NaN } })).toThrow(RangeError);
+  });
+
+  it("refuses an unknown blend", () => {
+    expect(() => particles(canvas, { blend: "screen" as "add" })).toThrow(RangeError);
+  });
+});
+
+describe("particles setCamera", () => {
+  const corners = [-1, 1].flatMap((x) => [-1, 1].flatMap((y) => [-1, 1].map((z) => ({ x: x * 10, y: y * 10, z: z * 10 }))));
+
+  it("stops and restarts the turning, carrying on from the same angle", () => {
+    const dots = particles(canvas, { points: corners, camera: { spin: 0.25 }, loop: frames.loop });
+    frames.step();
+    dots.setCamera({ spin: 0 });
+    const held = drawing.frame.arcs.map(({ x }) => x);
+    frames.step();
+    expect(frames.running).toBe(false);
+    expect(drawing.frame.arcs.map(({ x }) => x)).toEqual(held);
+    dots.setCamera({ spin: 0.25 });
+    expect(frames.running).toBe(true);
+  });
+
+  it("needs a cloud made with a camera", () => {
+    const dots = particles(canvas, { points: corners, loop: frames.loop });
+    expect(() => dots.setCamera({ spin: 0 })).toThrow();
+  });
+});
+
+describe("particles with named tones and flow", () => {
+  it("colours points by name from a named palette", () => {
+    particles(canvas, {
+      points: [
+        { x: 0, y: 0, tone: "sky" },
+        { x: 10, y: 0, tone: "sun" },
+      ],
+      palette: { sky: "#0ea5e9", sun: "#fbbf24" },
+      loop: frames.loop,
+    });
+    expect(drawing.frame.fills).toEqual(expect.arrayContaining(["#0ea5e9", "#fbbf24"]));
+  });
+
+  it("says which names a palette has when a point asks for another", () => {
+    expect(() => particles(canvas, { points: [{ x: 0, y: 0, tone: "moon" }], palette: { sky: "#0ea5e9" } })).toThrow(/"sky"/);
+    expect(() => particles(canvas, { points: [{ x: 0, y: 0, tone: "moon" }], palette: ["#000"] })).toThrow(RangeError);
+  });
+
+  it("flows each dot to the point at the same place along the next shape", () => {
+    // A row left to right becomes a column ordered bottom to top: the leftmost dot (first along
+    // the row) heads for the bottom (first along the column), the rightmost for the top.
+    const dots = particles(canvas, { points: row(5), padding: 0, fit: "none", loop: frames.loop });
+    dots.to(
+      [40, 30, 20, 10, 0].map((y) => ({ x: 0, y, order: (40 - y) / 40 })),
+      { pairing: "flow" },
+    );
+    frames.step();
+    const [bottom, , , , top] = drawing.frame.arcs;
+    expect(bottom!.x).toBeLessThan(5);
+    expect(top!.x).toBeGreaterThan(35);
+  });
+
+  it("takes true for the default camera", () => {
+    particles(canvas, { points: [{ x: 0, y: 0, z: 1 }], camera: true, loop: frames.loop });
+    expect(frames.running).toBe(true);
+  });
+});
+
+describe("particles setPalette", () => {
+  it("swaps the colours, and later shapes can name the new ones", () => {
+    const dots = particles(canvas, { points: [{ x: 0, y: 0 }], palette: ["#111111"], loop: frames.loop });
+    dots.setPalette({ moss: "#4d7c0f", sand: "#fcd34d" });
+    expect(drawing.frame.fills).toContain("#4d7c0f");
+    dots.to([{ x: 0, y: 0, tone: "sand" }]);
+    frames.run();
+    expect(drawing.frame.fills.at(-1)).toBe("#fcd34d");
+    expect(() => dots.setPalette([])).toThrow(RangeError);
+  });
+});
+
+describe("particles with a swaying camera", () => {
+  it("swings either side of its angle instead of turning all the way round", () => {
+    const flat = [-1, 1].flatMap((x) => [-1, 1].map((y) => ({ x: x * 10, y: y * 10, z: 0 })));
+    particles(canvas, { points: flat, camera: { spin: 0.5, sway: 20, tilt: 0 }, padding: 0, loop: frames.loop });
+    const widths: number[] = [];
+    for (let n = 0; n < 240; n++) {
+      frames.step();
+      const xs = drawing.frame.arcs.map(({ x }) => x);
+      widths.push(Math.max(...xs) - Math.min(...xs));
+    }
+    // Never edge-on: at 20 degrees the square keeps most of its width.
+    const widest = Math.max(...widths);
+    expect(Math.min(...widths)).toBeGreaterThan(widest * 0.85);
+  });
+});

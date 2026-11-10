@@ -57,10 +57,20 @@ export function FilesDemo({ framed = true }: { framed?: boolean }) {
           ]}
         />
       </div>
-      <Remold.Layout trigger={`${sort}:${kind}`} choreography className="overflow-hidden rounded-[10px] border border-[var(--color-fd-border)] bg-[var(--color-fd-background)]">
+      <Remold.Morph
+        trigger={`${sort}:${kind}`}
+        choreography
+        className="overflow-hidden rounded-[10px] border border-[var(--color-fd-border)] bg-[var(--color-fd-background)]"
+      >
         {shown.map((file) => (
-          <div key={file.name} className="grid grid-cols-[16px_minmax(0,1fr)_64px_90px] items-center gap-3 border-b border-[var(--color-fd-border)] bg-[var(--color-fd-background)] px-3.5 py-2.5 text-sm last:border-b-0 max-[520px]:grid-cols-[16px_minmax(0,1fr)_64px]">
-            <span className={`h-[17px] w-3.5 rounded-[3px] bg-[var(--color-fd-muted)] shadow-[inset_0_0_0_1px_var(--color-fd-border)] ${file.kind === "Image" ? "bg-[#93c5fd]" : file.kind === "Video" ? "bg-[#fcd34d]" : ""}`} aria-hidden="true" />
+          <div
+            key={file.name}
+            className="grid grid-cols-[16px_minmax(0,1fr)_64px_90px] items-center gap-3 border-b border-[var(--color-fd-border)] bg-[var(--color-fd-background)] px-3.5 py-2.5 text-sm last:border-b-0 max-[520px]:grid-cols-[16px_minmax(0,1fr)_64px]"
+          >
+            <span
+              className={`h-[17px] w-3.5 rounded-[3px] bg-[var(--color-fd-muted)] shadow-[inset_0_0_0_1px_var(--color-fd-border)] ${file.kind === "Image" ? "bg-[#93c5fd]" : file.kind === "Video" ? "bg-[#fcd34d]" : ""}`}
+              aria-hidden="true"
+            />
             <span className="overflow-hidden text-ellipsis whitespace-nowrap">{file.name}</span>
             <span className="text-right text-[13px] tabular-nums text-[var(--color-fd-muted-foreground)]">
               {file.size < 1 ? `${Math.round(file.size * 1000)} KB` : `${file.size} MB`}
@@ -70,7 +80,7 @@ export function FilesDemo({ framed = true }: { framed?: boolean }) {
             </span>
           </div>
         ))}
-      </Remold.Layout>
+      </Remold.Morph>
     </div>
   );
 

@@ -4,7 +4,7 @@ import { Field } from "@base-ui/react/field";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, Loading03Icon, Ticket01Icon } from "@hugeicons/core-free-icons";
 import { AnimatePresence, MotionConfig, motion, useAnimate } from "motion/react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type Ref, type RefObject } from "react";
 import { Odometer } from "./odometer";
 import { typing, useScene } from "./use-scene";
 import "./form-kit.css";
@@ -16,8 +16,21 @@ const CODES: Record<string, { off: number; label: string } | { expired: true }> 
   SUMMER: { expired: true },
 };
 
-const SUBTOTAL = 84;
-const SHIPPING = 6;
+const SHOWING = {
+  title: "Prison Break",
+  episode: "Season 4",
+  when: "Thu 24 Dec · 8:15 pm",
+  where: "Cineworld · Screen 4",
+  row: "F",
+  seats: [7, 8],
+  poster:
+    "https://static.wikia.nocookie.net/prisonbreak/images/8/89/Prison-break-season-4-cast-promotional.jpg/revision/latest?cb=20080829043733",
+};
+
+const SEATS = SHOWING.seats.length;
+const PRICE = 13.5;
+const SUBTOTAL = SEATS * PRICE;
+const FEE = 1.5;
 const CHECKING_FOR = 550;
 const TOTAL_AFTER = 260;
 
@@ -28,13 +41,20 @@ const PART = {
   hidden: { opacity: 0, scale: 0.9, filter: "blur(4px)" },
   shown: { opacity: 1, scale: 1, filter: "blur(0px)" },
 };
+const SAVED = {
+  initial: { opacity: 0, scale: 0.6, filter: "blur(4px)" },
+  animate: { opacity: 1, scale: 1, filter: "blur(0px)" },
+  exit: { opacity: 0, scale: 0.8, filter: "blur(4px)", transition: QUICK },
+};
+const FIELD = { height: 48, radius: 14 };
+const CHIP = { height: 36, radius: 18 };
 const DISCOUNT_PART = {
   initial: { opacity: 0, x: -8, filter: "blur(4px)" },
   animate: { opacity: 1, x: 0, filter: "blur(0px)", transition: { ...SPRING, delay: 0.18 } },
   exit: BLUR_OUT,
 };
 
-const money = (amount: number) => `$${amount.toFixed(2)}`;
+const money = (amount: number) => `£${amount.toFixed(2)}`;
 
 export interface PromoCodeProps {
   draft: string;
@@ -45,7 +65,239 @@ export interface PromoCodeProps {
   onErrorChange: (error: string | null) => void;
 }
 
-export function PromoCode({ draft, onDraftChange, applied, onAppliedChange, error, onErrorChange }: PromoCodeProps) {
+type Offer = (typeof CODES)[string];
+
+function TicketLines({ discount }: { discount: number }) {
+  return (
+    <>
+      <header className="prm-poster">
+        <img src={SHOWING.poster} alt="" draggable={false} />
+        <span className="prm-poster-text">
+          <span className="prm-episode">{SHOWING.episode}</span>
+          <h3 className="prm-title">{SHOWING.title}</h3>
+          <span>
+            {SHOWING.when} · {SHOWING.where}
+          </span>
+        </span>
+      </header>
+
+      <dl className="prm-lines">
+        <div className="prm-seats">
+          <dt>
+            <span className="prm-seat-row" aria-hidden="true">
+              {SHOWING.seats.map((seat) => (
+                <span key={seat} className="prm-seat">
+                  {SHOWING.row}
+                  {seat}
+                </span>
+              ))}
+            </span>
+            <span className="prm-seat-text">
+              <b>{SEATS} × Standard</b>
+              <span>
+                Row {SHOWING.row} · {money(PRICE)} each
+              </span>
+            </span>
+          </dt>
+          <dd>{money(SUBTOTAL)}</dd>
+        </div>
+
+        <div className="prm-fee">
+          <dt>Booking fee</dt>
+          <dd>{money(FEE)}</dd>
+        </div>
+
+        <AnimatePresence initial={false}>
+          {discount > 0 && (
+            <motion.div
+              key="discount"
+              className="prm-discount"
+              initial={{ height: 0 }}
+              animate={{ height: "auto", transition: { ...SPRING, delay: 0.14 } }}
+              exit={{ height: 0, transition: { ...SPRING, bounce: 0 } }}
+            >
+              <motion.dt {...DISCOUNT_PART}>Discount</motion.dt>
+              <motion.dd {...DISCOUNT_PART}>−{money(discount)}</motion.dd>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </dl>
+    </>
+  );
+}
+
+function AppliedChip({
+  code,
+  offer,
+  onRemove,
+  ref,
+}: {
+  code: string | null;
+  offer: Offer | undefined;
+  onRemove: () => void;
+  ref?: Ref<HTMLDivElement>;
+}) {
+  return (
+    <motion.div
+      ref={ref}
+      className="prm-chip"
+      initial="hidden"
+      animate="shown"
+      exit={BLUR_OUT}
+      transition={{ staggerChildren: 0.045, delayChildren: 0.1 }}
+    >
+      <motion.span
+        variants={{
+          hidden: { opacity: 0, scale: 0.5, rotate: -25 },
+          shown: { opacity: 1, scale: 1, rotate: 0 },
+        }}
+      >
+        <HugeiconsIcon icon={Ticket01Icon} className="prm-ticket" strokeWidth={1.8} aria-hidden="true" />
+      </motion.span>
+      <motion.i variants={PART} className="prm-cut" aria-hidden="true" />
+      <motion.b variants={PART}>{code}</motion.b>
+      <motion.span variants={PART} className="prm-chip-label">
+        {offer && "label" in offer && offer.label}
+      </motion.span>
+      <motion.button
+        type="button"
+        variants={PART}
+        whileTap={{ scale: 0.88 }}
+        aria-label={`Remove ${code}`}
+        onClick={onRemove}
+      >
+        <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.2} aria-hidden="true" />
+      </motion.button>
+    </motion.div>
+  );
+}
+
+function ApplyButton({
+  checking,
+  disabled,
+  onApply,
+}: {
+  checking: boolean;
+  disabled: boolean;
+  onApply: () => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      className="prm-apply"
+      disabled={disabled}
+      aria-busy={checking || undefined}
+      whileTap={{ scale: 0.96 }}
+      onClick={onApply}
+    >
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.span
+          key={String(checking)}
+          className="prm-apply-label"
+          initial={{ opacity: 0, scale: 0.8, filter: "blur(3px)" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          exit={BLUR_OUT}
+        >
+          {checking ? (
+            <HugeiconsIcon
+              icon={Loading03Icon}
+              className="prm-spin"
+              strokeWidth={2.2}
+              aria-label="Checking"
+            />
+          ) : (
+            "Apply"
+          )}
+        </motion.span>
+      </AnimatePresence>
+    </motion.button>
+  );
+}
+
+function CodeEntry({
+  draft,
+  checking,
+  focusOnMount,
+  onDraftChange,
+  onApply,
+  ref,
+}: {
+  draft: string;
+  checking: boolean;
+  focusOnMount: RefObject<boolean>;
+  onDraftChange: (draft: string) => void;
+  onApply: () => void;
+  ref?: Ref<HTMLDivElement>;
+}) {
+  return (
+    <motion.div
+      ref={ref}
+      className="prm-entry"
+      initial={{ opacity: 0, scale: 0.97, filter: "blur(4px)" }}
+      animate={{ opacity: 1, scale: 1, filter: "blur(0px)", transition: { ...SPRING, delay: 0.06 } }}
+      exit={BLUR_OUT}
+    >
+      <Field.Control
+        ref={(node: HTMLInputElement | null) => {
+          if (node && focusOnMount.current) node.focus({ preventScroll: true });
+          focusOnMount.current = false;
+        }}
+        className="fk-input prm-input"
+        placeholder="Promo code"
+        aria-label="Promo code"
+        autoComplete="off"
+        spellCheck={false}
+        value={draft}
+        readOnly={checking}
+        onChange={(event) => onDraftChange(event.target.value.toUpperCase())}
+        onKeyDown={(event) => event.key === "Enter" && onApply()}
+      />
+      <ApplyButton checking={checking} disabled={!draft.trim()} onApply={onApply} />
+    </motion.div>
+  );
+}
+
+function Total({ discount }: { discount: number }) {
+  const saved = discount > 0;
+
+  return (
+    <div className="prm-total">
+      <span className="prm-total-label">
+        Total
+        <AnimatePresence initial={false}>
+          {saved && (
+            <motion.span key="saved" className="prm-saved" {...SAVED}>
+              Saved {money(discount)}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </span>
+      <span className="prm-total-value">
+        <s className="prm-was" data-shown={saved || undefined}>
+          {money(SUBTOTAL + FEE)}
+        </s>
+        <b>
+          <Odometer value={money(SUBTOTAL + FEE - discount)} />
+        </b>
+      </span>
+    </div>
+  );
+}
+
+function errorFor(code: string, offer: Offer | undefined) {
+  if (!offer) return `“${code}” isn’t a code we know.`;
+  if ("expired" in offer) return `“${code}” ended on 31 August.`;
+  return null;
+}
+
+export function PromoCode({
+  draft,
+  onDraftChange,
+  applied,
+  onAppliedChange,
+  error,
+  onErrorChange,
+}: PromoCodeProps) {
   const [shaker, animate] = useAnimate<HTMLDivElement>();
   const [checking, setChecking] = useState(false);
   const [totalOn, setTotalOn] = useState(false);
@@ -54,8 +306,8 @@ export function PromoCode({ draft, onDraftChange, applied, onAppliedChange, erro
   const chip = useRef<HTMLDivElement>(null);
 
   const offer = applied ? CODES[applied] : undefined;
-  const off = offer && "off" in offer ? SUBTOTAL * offer.off : 0;
-  const on = off > 0;
+  const discount = offer && "off" in offer ? SUBTOTAL * offer.off : 0;
+  const on = discount > 0;
 
   useEffect(() => {
     const timer = setTimeout(() => setTotalOn(on), on ? TOTAL_AFTER : 0);
@@ -64,8 +316,10 @@ export function PromoCode({ draft, onDraftChange, applied, onAppliedChange, erro
 
   useLayoutEffect(() => {
     if (!box.current || !shaker.current) return;
+
     const width = on && chip.current ? chip.current.offsetWidth : shaker.current.offsetWidth;
-    void animate(box.current, { width, height: on ? 38 : 46, borderRadius: on ? 19 : 12 }, SPRING);
+    const size = on ? CHIP : FIELD;
+    void animate(box.current, { width, height: size.height, borderRadius: size.radius }, SPRING);
   }, [on, animate, shaker]);
 
   useEffect(() => {
@@ -75,124 +329,57 @@ export function PromoCode({ draft, onDraftChange, applied, onAppliedChange, erro
   const apply = () => {
     const code = draft.trim();
     if (!code || checking) return;
+
     onErrorChange(null);
     setChecking(true);
     setTimeout(() => {
       setChecking(false);
-      const found = CODES[code];
-      if (!found) onErrorChange(`“${code}” isn’t a code we know.`);
-      else if ("expired" in found) onErrorChange(`“${code}” ended on 31 August.`);
+      const problem = errorFor(code, CODES[code]);
+      if (problem) onErrorChange(problem);
       else onAppliedChange(code);
     }, CHECKING_FOR);
   };
 
+  const onDraft = (next: string) => {
+    onDraftChange(next);
+    if (error) onErrorChange(null);
+  };
+
+  const remove = () => {
+    refocus.current = true;
+    onAppliedChange(null);
+  };
+
   return (
     <MotionConfig transition={SPRING} reducedMotion="user">
-      <section className="fk prm" aria-label="Order summary">
-        <h3 className="prm-title">Order summary</h3>
-        <dl className="prm-lines">
-          <div>
-            <dt>Subtotal</dt>
-            <dd>{money(SUBTOTAL)}</dd>
-          </div>
-          <div>
-            <dt>Shipping</dt>
-            <dd>{money(SHIPPING)}</dd>
-          </div>
-          <AnimatePresence initial={false}>
-            {on && (
-              <motion.div
-                key="discount"
-                className="prm-discount"
-                initial={{ height: 0 }}
-                animate={{ height: "auto", transition: { ...SPRING, delay: 0.14 } }}
-                exit={{ height: 0, transition: { ...SPRING, bounce: 0 } }}
-              >
-                <motion.dt {...DISCOUNT_PART}>Discount · {applied}</motion.dt>
-                <motion.dd {...DISCOUNT_PART}>−{money(off)}</motion.dd>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </dl>
+      <section className="fk prm" aria-label="Your cinema tickets">
+        <TicketLines discount={discount} />
 
         <Field.Root invalid={error !== null} className="prm-field">
           <div ref={shaker} className="prm-shaker">
-            <div ref={box} className="prm-box" data-state={on ? "applied" : "entry"} data-invalid={error ? "" : undefined}>
+            <div
+              ref={box}
+              className="prm-box"
+              data-state={on ? "applied" : "entry"}
+              data-invalid={error ? "" : undefined}
+            >
               <AnimatePresence initial={false} mode="popLayout">
                 {on ? (
-                  <motion.div
-                    key="chip"
-                    ref={chip}
-                    className="prm-chip"
-                    initial="hidden"
-                    animate="shown"
-                    exit={BLUR_OUT}
-                    transition={{ staggerChildren: 0.045, delayChildren: 0.1 }}
-                  >
-                    <motion.span variants={{ hidden: { opacity: 0, scale: 0.5, rotate: -25 }, shown: { opacity: 1, scale: 1, rotate: 0 } }}>
-                      <HugeiconsIcon icon={Ticket01Icon} className="prm-ticket" strokeWidth={1.8} aria-hidden="true" />
-                    </motion.span>
-                    <motion.b variants={PART}>{applied}</motion.b>
-                    <motion.span variants={PART} className="prm-chip-label">
-                      {offer && "label" in offer && offer.label}
-                    </motion.span>
-                    <motion.button
-                      type="button"
-                      variants={PART}
-                      whileTap={{ scale: 0.88 }}
-                      aria-label={`Remove ${applied}`}
-                      onClick={() => {
-                        refocus.current = true;
-                        onAppliedChange(null);
-                      }}
-                    >
-                      <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.2} aria-hidden="true" />
-                    </motion.button>
-                  </motion.div>
+                  <AppliedChip key="chip" ref={chip} code={applied} offer={offer} onRemove={remove} />
                 ) : (
-                  <motion.div
+                  <CodeEntry
                     key="entry"
-                    className="prm-entry"
-                    initial={{ opacity: 0, scale: 0.97, filter: "blur(4px)" }}
-                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)", transition: { ...SPRING, delay: 0.06 } }}
-                    exit={BLUR_OUT}
-                  >
-                    <Field.Control
-                      ref={(node: HTMLInputElement | null) => {
-                        if (node && refocus.current) node.focus({ preventScroll: true });
-                        refocus.current = false;
-                      }}
-                      className="fk-input prm-input"
-                      placeholder="Promo code"
-                      aria-label="Promo code"
-                      autoComplete="off"
-                      spellCheck={false}
-                      value={draft}
-                      readOnly={checking}
-                      onChange={(event) => {
-                        onDraftChange(event.target.value.toUpperCase());
-                        if (error) onErrorChange(null);
-                      }}
-                      onKeyDown={(event) => event.key === "Enter" && apply()}
-                    />
-                    <motion.button type="button" className="prm-apply" disabled={!draft.trim()} aria-busy={checking || undefined} whileTap={{ scale: 0.96 }} onClick={apply}>
-                      <AnimatePresence initial={false} mode="popLayout">
-                        <motion.span
-                          key={String(checking)}
-                          className="prm-apply-label"
-                          initial={{ opacity: 0, scale: 0.8, filter: "blur(3px)" }}
-                          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                          exit={BLUR_OUT}
-                        >
-                          {checking ? <HugeiconsIcon icon={Loading03Icon} className="prm-spin" strokeWidth={2.2} aria-label="Checking" /> : "Apply"}
-                        </motion.span>
-                      </AnimatePresence>
-                    </motion.button>
-                  </motion.div>
+                    draft={draft}
+                    checking={checking}
+                    focusOnMount={refocus}
+                    onDraftChange={onDraft}
+                    onApply={apply}
+                  />
                 )}
               </AnimatePresence>
             </div>
           </div>
+
           <AnimatePresence initial={false}>
             {error && (
               <motion.div
@@ -210,17 +397,7 @@ export function PromoCode({ draft, onDraftChange, applied, onAppliedChange, erro
           </AnimatePresence>
         </Field.Root>
 
-        <div className="prm-total">
-          <span>Total</span>
-          <span className="prm-total-value">
-            <s className="prm-was" data-shown={(totalOn && on) || undefined}>
-              {money(SUBTOTAL + SHIPPING)}
-            </s>
-            <b>
-              <Odometer value={money(SUBTOTAL + SHIPPING - (totalOn && on ? off : 0))} />
-            </b>
-          </span>
-        </div>
+        <Total discount={totalOn && on ? discount : 0} />
       </section>
     </MotionConfig>
   );
@@ -246,16 +423,18 @@ const fromBeat = (step: number): State => {
 };
 
 export function PromoCodeDemo({ playing }: { playing?: boolean } = {}) {
-  const { ref, state, take } = useScene(BEATS, fromBeat, playing);
+  const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing);
   return (
-    <div ref={ref} className="fk-stage not-prose">
+    <div ref={ref} className="fk-stage prm-stage not-prose">
       <PromoCode
         draft={state.draft}
-        onDraftChange={(draft) => take((current) => ({ ...current, draft }))}
+        onDraftChange={(draft) => takeOver((current) => ({ ...current, draft }))}
         applied={state.applied}
-        onAppliedChange={(applied) => take((current) => ({ ...current, applied, draft: applied ? current.draft : "" }))}
+        onAppliedChange={(applied) =>
+          takeOver((current) => ({ ...current, applied, draft: applied ? current.draft : "" }))
+        }
         error={state.error}
-        onErrorChange={(error) => take((current) => ({ ...current, error }))}
+        onErrorChange={(error) => takeOver((current) => ({ ...current, error }))}
       />
     </div>
   );

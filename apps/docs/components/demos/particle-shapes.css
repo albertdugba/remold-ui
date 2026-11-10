@@ -1,0 +1,81 @@
+/* Particle shapes: the dots on a dark stage, the shape names in a row under them. */
+.pts-stage {
+  display: grid;
+  width: 100%;
+}
+
+.pts {
+  position: relative;
+  display: grid;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: radial-gradient(120% 90% at 50% 40%, #15132a 0%, #07070b 70%);
+}
+
+.pts-canvas {
+  display: block;
+  grid-area: 1 / 1;
+  width: 100%;
+  height: clamp(340px, 52vw, 520px);
+}
+
+.pts-caption {
+  position: absolute;
+  right: 0;
+  bottom: 18px;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 12px;
+}
+
+.pts-shapes {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 4px;
+  overflow-x: auto;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.04);
+  backdrop-filter: blur(8px);
+  scrollbar-width: none;
+}
+
+.pts-shape {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: rgb(255 255 255 / 0.55);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease-out,
+    color 200ms ease-out;
+}
+
+.pts-shape[data-pressed] {
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pts-shape:not([data-pressed]):hover {
+    color: rgb(255 255 255 / 0.85);
+  }
+}
+
+.pts-shape:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 0.7);
+  outline-offset: 2px;
+}
+
+/* On the home page's wide card there's room to spare, so the dots get more height. */
+.hp-card.wide .pts-canvas {
+  height: clamp(480px, 52vw, 680px);
+}

@@ -1,7 +1,16 @@
 "use client";
 import { Remold } from "@remold-ui/react";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { Add01Icon, Cancel01Icon, Menu01Icon, PauseIcon, PlayIcon, CheckIcon, VolumeHighIcon, VolumeMuteIcon } from "@hugeicons/core-free-icons";
+import {
+  Add01Icon,
+  Cancel01Icon,
+  Menu01Icon,
+  PauseIcon,
+  PlayIcon,
+  CheckIcon,
+  VolumeHighIcon,
+  VolumeMuteIcon,
+} from "@hugeicons/core-free-icons";
 import { useState } from "react";
 import { Frame } from "./frame";
 
@@ -25,16 +34,10 @@ function isPairOn(step: number, pairIndex: number) {
   return toggles % 2 === 1;
 }
 
-export function IconsDemo({
-  framed = true,
-  index,
-}: {
-  framed?: boolean;
-  index?: number;
-}) {
-  const [own, setOn] = useState<boolean[]>(() => PAIRS.map(() => false));
+export function IconsDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
+  const [chosenOn, setOn] = useState<boolean[]>(() => PAIRS.map(() => false));
 
-  const on = index === undefined ? own : PAIRS.map((_, pairIndex) => isPairOn(index, pairIndex));
+  const on = index === undefined ? chosenOn : PAIRS.map((_, pairIndex) => isPairOn(index, pairIndex));
 
   const body = (
     <div className="flex flex-wrap justify-center gap-3">

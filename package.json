@@ -1,7 +1,7 @@
 {
   "name": "remold",
   "private": true,
-  "description": "Keeps track of what became what in an interface: headless core plus framework adapters.",
+  "description": "Keeps track of what became what in an interface: a headless core, React bindings and browser APIs.",
   "license": "MIT",
   "packageManager": "pnpm@10.34.6",
   "engines": {
@@ -15,6 +15,7 @@
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "verify:packages": "node scripts/verify-packages.mjs",
+    "size": "node scripts/size-report.mjs",
     "prepare": "husky",
     "changeset": "changeset",
     "version-packages": "changeset version",

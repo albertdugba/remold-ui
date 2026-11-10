@@ -20,17 +20,10 @@ const ITEMS = [
     "Popover menu",
     "A project-actions menu that grows from a compact trigger into an anchored popover.",
   ],
-  ["export-preparation", "Export preparation", "Configure and download a local CSV or JSON report from sample records."],
-  ["upload-recovery", "Upload recovery", "A simulated upload queue with resumable retries and a completed-file summary."],
   [
     "split-amount",
     "Split amount",
     "A bill splitter where toggling people re-divides the bar and rolls everyone's share, cents included. Built on Base UI's ToggleGroup.",
-  ],
-  [
-    "upload-row",
-    "Upload row",
-    "A file field whose progress chip grows into the file's row when the upload finishes. Built on Base UI's Field and Progress.",
   ],
   [
     "range-slider",
@@ -38,9 +31,9 @@ const ITEMS = [
     "A price range slider whose price rides above the handle while you drag and flies back into the label when you let go. Built on Base UI's Slider.",
   ],
   [
-    "price-filter",
-    "Price filter",
-    "A max-price filter: a stepper that stretches into a slider while you drag the price sideways, over a price histogram and a rolling count of what matches. Built on Base UI's Number Field and Slider.",
+    "stepper-slider",
+    "Stepper slider",
+    "A number control that's a − / + stepper for small nudges and stretches into a slider when you drag the number sideways. Built on Base UI's Number Field and Slider.",
   ],
   [
     "event-rsvp",
@@ -56,11 +49,6 @@ const ITEMS = [
     "quantity-stepper",
     "Quantity stepper",
     "An Add button that stretches into a quantity stepper whose count rolls, with the minus becoming a bin at one. Built on Base UI's NumberField.",
-  ],
-  [
-    "address-autocomplete",
-    "Address autocomplete",
-    "An address search whose chosen suggestion splits into street, area and postcode fields, each part moving into place. Built on Base UI's Autocomplete and Field.",
   ],
   [
     "tag-input",
@@ -88,11 +76,6 @@ const ITEMS = [
     "A post and the conversation under it, with live typing, lit reply paths and replies that fold away.",
   ],
   [
-    "hold-to-record",
-    "Hold to record",
-    "One pill you hold to record: the mic morphs into the record dot, the words into the time, and the waveform grows out of the pill, then it all folds back.",
-  ],
-  [
     "table-booking",
     "Table booking",
     "A restaurant booking that fell through offers two other times; the one you pick grows into the updated booking, whose party size opens a compact picker. Built on Base UI's Button, Toggle Group and Tooltip.",
@@ -103,14 +86,9 @@ const ITEMS = [
     "A sign-in card asking for an emailed code: the six cells fold into a Verifying pill, which turns green as its spinner becomes a check and the word becomes Verified.",
   ],
   [
-    "live-room",
-    "Live room",
-    "A live audio room: the speakers' stacked faces fan out onto the stage when it opens, and a listener who raises their hand moves up to speak.",
-  ],
-  [
-    "morph-icons",
-    "Morph icons",
-    "44 outline icons that morph into each other, any to any.",
+    "morphing-dialog",
+    "Morphing dialog",
+    "A New trip button that grows into its dialog, and a dialog that shrinks into the trip it created. Built on Base UI's Dialog, Field and Toggle Group.",
   ],
   [
     "podcast-player",
@@ -118,19 +96,24 @@ const ITEMS = [
     "A mini now-playing bar that opens into the full player: the artwork grows from a thumbnail into the cover and the title, show and play button settle into place, matched with no ids.",
   ],
   [
-    "step-progress",
-    "Step progress",
-    "Checkout steps joined by lines: finishing a step turns its dot into a check and fills the line to the next, and going back undoes both.",
-  ],
-  [
     "share-link",
     "Share link",
     "A Share pill with the faces of who can already open the file: it opens into the link, who it lets in and a Copy button, and copying folds it back. Built on Base UI's Button, Toggle Group and Tooltip.",
   ],
   [
-    "save-button",
-    "Save button",
-    "A save button that says what's happening: Saving with a spinner, Saved with a check, or a visible rollback and Retry when the save fails.",
+    "expanding-search",
+    "Expanding search",
+    "A search that takes over its screen: the greeting folds away, the field rises with Cancel beside it, and the shop gives way to results. Built on Base UI's Autocomplete.",
+  ],
+  [
+    "booking-steps",
+    "Booking steps",
+    "Booking a hospital appointment where each chosen option fills in and flies up into the summary as a chip, and flies back down to change. Built on Base UI's Radio Group.",
+  ],
+  [
+    "feedback-prompt",
+    "Feedback prompt",
+    "A \"Was this helpful?\" pill that grows into a small card with quick reasons and a comment, then draws back into a thank-you. Built on Base UI's Button, Toggle Group and Field.",
   ],
   [
     "product-tour",
@@ -213,6 +196,21 @@ const ITEMS = [
     "A food order told like a short film: each stage plays live, then its illustration reshapes into the next, from the pot to the bag, the scooter and your front door.",
   ],
   [
+    "voice-assistant",
+    "Voice assistant",
+    "A voice assistant's orb of 3D dots that breathes while idle, ripples with your voice as it listens, swirls into a ring as it thinks, and pulses as it speaks.",
+  ],
+  [
+    "particle-shapes",
+    "Particle shapes",
+    "Thousands of dots turning in 3D that flow from a spiral galaxy into a double helix, then the Lorenz attractor's two wings, a honeybee, a butterfly and the Remold mark, drawn with Remold's particles camera.",
+  ],
+  [
+    "payment-status",
+    "Payment status",
+    "A payment's status as one drawing: the card becomes a lock while the bank confirms, then a receipt when it's paid, or the card again with a warning when it's declined.",
+  ],
+  [
     "send-money",
     "Send money",
     "A keypad for sending money: digits roll in, an amount over your balance is refused with a shake, and Send becomes a spinner then a check.",
@@ -228,19 +226,9 @@ const ITEMS = [
     "A fundraising goal told in dots: every donation flies in as particles and fills the picture of what it pays for, until the water gathers into a heart.",
   ],
   [
-    "dot-grid-hero",
-    "Dot grid hero",
-    "A landing page hero on a dotted background that wakes up under the cursor: dots swell and lean away as you move, and a click sends a ripple across.",
-  ],
-  [
     "focus-timer",
     "Focus timer",
     "A Pomodoro focus timer drawn as a particle hourglass: the sand really falls as the session runs, freezes on pause, and the glass flips into the break.",
-  ],
-  [
-    "visitors-globe",
-    "Live visitors",
-    "A real-time visitors panel: a glowing planet rises from the bottom of the card while signups and upgrades pulse at their cities and invites fly between them.",
   ],
   [
     "unit-chart",
@@ -288,25 +276,19 @@ const ITEMS = [
     "A searchable label picker that drops chips onto an issue and offers to create labels that don't exist yet.",
   ],
   [
-    "particles-story",
-    "Particles story",
-    "A photo that breaks into dots and flows through a music note, a parcel and a delivered check.",
-    "home/particles-story",
-  ],
-  [
     "files",
     "Sortable list",
     "A file list that sorts and filters with every row moving to its place.",
   ],
   [
-    "layout",
+    "morph",
     "Grid and list",
     "People as cards or rows: different markup, matched without keys.",
   ],
   [
-    "library-layout",
+    "library-morph",
     "Base UI tabs",
-    "A pricing card built from Base UI tabs, animated through a ref with useRemoldLayout.",
+    "A pricing card built from Base UI tabs, animated through a ref with useRemoldMorph.",
   ],
   [
     "text",
@@ -393,9 +375,9 @@ function summariseSource(file) {
 
 /** A small first-use example for the docs. The full component source stays in its own tab below. */
 function usageExample(entry, file) {
-  const exported = [...file.code.matchAll(/export\s+(?:function|const|class)\s+([A-Z]\w*)/g)]
-    .map((match) => match[1])
-    .find(Boolean);
+  // A component, not an exported constant: the docs demo if there is one, else the first component.
+  const components = [...file.code.matchAll(/export\s+(?:function|class)\s+([A-Z]\w*)/g)].map((match) => match[1]);
+  const exported = components.find((name) => name.endsWith("Demo")) ?? components[0];
   const hook = [...file.code.matchAll(/export\s+(?:function|const)\s+(use[A-Z]\w*)/g)]
     .map((match) => match[1])
     .find(Boolean);

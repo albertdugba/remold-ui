@@ -1,6 +1,7 @@
 import type { CanvasHTMLAttributes } from "react";
 import type { ParticlesOptions, ParticlesToOptions } from "@remold-ui/canvas";
-import type { CloudPoint } from "@remold-ui/core";
+import type { ParticlePoint } from "@remold-ui/canvas";
+import type { Shape } from "@remold-ui/core";
 import type { BaseProps } from "../utils/use-render-element.js";
 
 /** What the dots make up. Change it to morph. */
@@ -15,16 +16,29 @@ export type ParticleShape =
       pattern?: "hex" | "grid";
       jitter?: number;
       details?: readonly { x: number; y: number; tone?: number }[];
+      /** Make it a 3D relief: lighter parts stand out by up to this much. Use with `camera`. */
+      depth?: number;
+      /** Round the picture into a dome this tall, like a flower head. Use with `camera`. */
+      bulge?: number;
+      /** In 3D, how many of the image's colours to find and draw it in. Default 10. */
+      colors?: number;
     }
-  | { points: readonly CloudPoint[] };
+  | { points: readonly ParticlePoint[] }
+  | Shape;
 
 export type RemoldParticlesState = Record<string, never>;
 
 export interface RemoldParticlesProps
   extends BaseProps<RemoldParticlesState, HTMLCanvasElement>,
     Omit<CanvasHTMLAttributes<HTMLCanvasElement>, "className" | "color">,
-    Pick<ParticlesOptions, "color" | "palette" | "fit" | "padding" | "pointer" | "spring" | "enter" | "reducedMotion" | "loop" | "maxPixelRatio"> {
-  /** What the dots show: words, `{ text, font }`, `{ path }`, `{ image, by, threshold, pattern, jitter, details }` or `{ points }`. Change it to morph. */
+    Pick<
+      ParticlesOptions,
+      "color" | "palette" | "fit" | "padding" | "pointer" | "spring" | "enter" | "reducedMotion" | "loop" | "maxPixelRatio" | "blend"
+    > {
+  /**
+   * What the dots show: words, `{ text, font }`, `{ path }`, `{ image, by, threshold, pattern, jitter, details }`,
+   * `{ points }`, or a 3D shape from `shapes` in `@remold-ui/core`. Change it to morph.
+   */
   shape: ParticleShape;
   /** How many dots. Default 1200. Ignored for `{ points }`, which brings its own. */
   count?: number;
@@ -42,4 +56,9 @@ export interface RemoldParticlesProps
   radius?: number;
   /** Dot shape. Default `"circle"`; squares are cheaper for very large clouds. Read once. */
   dot?: "circle" | "square";
+  /**
+   * Turn the dots in 3D and draw them with perspective; give `{ points }` a `z` for depth. Whether
+   * there's a camera is read once; its `spin`, `tilt`, `distance` and `sway` can change, `{ spin: 0 }` to pause.
+   */
+  camera?: ParticlesOptions["camera"];
 }

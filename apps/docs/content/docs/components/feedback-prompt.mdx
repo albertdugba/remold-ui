@@ -1,0 +1,33 @@
+---
+title: "Feedback prompt"
+description: "A \"Was this helpful?\" pill that opens in place. Your thumb flies into the corner as the pill grows into a small card with quick reasons and room to say more, then the card draws back into a thank-you."
+status: "new"
+tags: ["Base UI", "Motion", "Icon"]
+---
+
+<Stage name="feedback-prompt" code={<Source demo="feedback-prompt" />} minHeight={380}>
+  <FeedbackPromptDemo />
+</Stage>
+
+## Things to try
+
+- **Pick a thumb.** The pill grows into a card and your thumb travels into its top-left corner, tinted green or red. The reasons rise in one after another.
+- **Choose a few reasons.** Each one fills in and gains a tick that slides in from its left.
+- **Send.** The word gives way to a spinner while it sends and the card steps back, then the card draws into a pill that says thanks and the thumb turns into a check.
+- **Change your mind.** Press the close button or Escape, and the card folds back into the question.
+
+## Install
+
+<AddCommand name="feedback-prompt" />
+
+## Dependencies
+
+<Dependencies demo="feedback-prompt" />
+
+## How it works
+
+- **The card sizes itself to what's inside.** It measures its contents and springs its own width, height and corner radius to fit, so the pill becomes a card without anything in it being stretched.
+- **The thumb you chose is the one that moves.** It keeps the same layout id from its button to the card's corner, and [Icon](/docs/primitives/icon) later reshapes it into a check.
+- **Everything else arrives in order.** The title, then the reasons, then the comment box fade and blur in a beat apart, after the card has started to open.
+- **Sending is its own step.** Pass `sending` while your request is in flight: the card locks, Send keeps its width as its word becomes a spinner, and only when you set `sent` does the card collapse. It's announced at each step.
+- **Built on Base UI.** The thumbs are Buttons, the reasons a Toggle Group, so each says whether it's pressed, and the comment is a labelled Field. Opening the card moves focus to the first reason, closing returns it to your thumb, and the thank-you is announced.
