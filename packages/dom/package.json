@@ -3,9 +3,25 @@
   "version": "0.2.0",
   "description": "Browser layer: reads what is on screen into plain data for the core.",
   "license": "MIT",
+  "author": "Albert Dugba",
+  "homepage": "https://github.com/albertdugba/remold-ui/tree/main/packages/dom#readme",
+  "bugs": {
+    "url": "https://github.com/albertdugba/remold-ui/issues"
+  },
+  "keywords": [
+    "morph",
+    "animation",
+    "transition",
+    "flip",
+    "text-morph",
+    "connectors",
+    "dom",
+    "view-transitions"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/albertdugba/remold-ui.git"
+    "url": "git+https://github.com/albertdugba/remold-ui.git",
+    "directory": "packages/dom"
   },
   "publishConfig": {
     "access": "public"
