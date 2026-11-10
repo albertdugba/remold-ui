@@ -82,6 +82,7 @@ describe("values", () => {
       const start = Array.from({ length: count }, () => (rand() - 0.5) * 2000);
       const batch = values(start, { spring, precision: 0.05 });
       const singles = start.map((s) => value(s, { spring, precision: 0.05 }));
+      const mismatches: string[] = [];
 
       for (let frame = 0; frame < 400; frame++) {
         const i = Math.floor(rand() * count);
@@ -102,14 +103,17 @@ describe("values", () => {
         const dt = rand() < 0.05 ? rand() * 0.5 : rand() < 0.05 ? 0 : 1 / (30 + rand() * 120);
         const anyMoving = batch.step(dt);
         for (const single of singles) single.step(dt);
-        expect(anyMoving).toBe(singles.some((s) => !s.settled));
+        // Compared with Object.is and collected, then asserted once per seed: hundreds of
+        // thousands of expect() calls are slow enough to time out on a CI runner.
+        if (anyMoving !== singles.some((s) => !s.settled)) mismatches.push(`frame ${frame}: moving`);
         singles.forEach((single, k) => {
-          expect(batch.current[k]).toBe(single.current);
-          expect(batch.velocity[k]).toBe(single.velocity);
-          expect(batch.target[k]).toBe(single.target);
-          expect(batch.isSettled(k)).toBe(single.settled);
+          if (!Object.is(batch.current[k], single.current)) mismatches.push(`frame ${frame}, ${k}: current`);
+          if (!Object.is(batch.velocity[k], single.velocity)) mismatches.push(`frame ${frame}, ${k}: velocity`);
+          if (!Object.is(batch.target[k], single.target)) mismatches.push(`frame ${frame}, ${k}: target`);
+          if (batch.isSettled(k) !== single.settled) mismatches.push(`frame ${frame}, ${k}: settled`);
         });
       }
+      expect(mismatches, `seed ${seed}`).toEqual([]);
     }
   });
 
