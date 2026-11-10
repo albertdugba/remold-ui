@@ -118,6 +118,43 @@ importers:
         specifier: ^4.152.0
         version: 4.152.0(@types/node@24.10.1)
 
+  apps/voice-studio:
+    dependencies:
+      '@base-ui/react':
+        specifier: 1.9.0
+        version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@remold-ui/core':
+        specifier: 0.2.0
+        version: 0.2.0
+      '@remold-ui/react':
+        specifier: 0.2.0
+        version: 0.2.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      motion:
+        specifier: ^14.7.1
+        version: 14.7.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      react:
+        specifier: 19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: 19.3.0
+        version: 19.3.0(react@19.3.0)
+    devDependencies:
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      '@vitejs/plugin-react':
+        specifier: latest
+        version: 6.3.0(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1))
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vite:
+        specifier: 8.3.3
+        version: 8.3.3(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1)
+
   packages/canvas:
     dependencies:
       '@remold-ui/core':
@@ -1064,6 +1101,24 @@ packages:
   '@poppinss/exception@1.2.3':
     resolution: {integrity: sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==}
 
+  '@remold-ui/canvas@0.2.0':
+    resolution: {integrity: sha512-aT80vsftz6Gpq8unc6yTnaVD75psdDZ4DQczV7pSwQJy5Y31xKqgPJnNES/IVcvsIPzLrp17hPkdxkQ7DIFdqw==}
+
+  '@remold-ui/core@0.2.0':
+    resolution: {integrity: sha512-xz9gaz0xH+ncUnzeiKoNhb89Z+ZE1bX5jFhd+JzGH8rv8QJFuZ50A4QYlylgbiyPCsZAl541PNoX04uvZ+XvMA==}
+
+  '@remold-ui/dom@0.2.0':
+    resolution: {integrity: sha512-hxrAhNS8j26WtXHP0QuYrXxG/Rnkxd040SlhfUJ5Zj9Q+w4UCMaGrbZy5cpTGk1agaHGbfb3vHDa5vmCXiBD8A==}
+
+  '@remold-ui/morph@0.2.0':
+    resolution: {integrity: sha512-koU4ruEK3+c5tZX7y3XIDYGFmjQ+asKYyqgkJhvDgAgAp+4Roa33Xd4HqIKvjgfFxILpp4GkjiGvuICzeTIAXw==}
+
+  '@remold-ui/react@0.2.0':
+    resolution: {integrity: sha512-MV2BXU3FoMTlzesZbc2pkOFCTlGTPC3IbymiN1X8KohoQjQKpsa61VebS1HmIwwiLjf5GED+ySM9zjyBxPbEng==}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+
   '@rolldown/binding-android-arm-eabi@1.2.13':
     resolution: {integrity: sha512-Vu/NICrgdRvUOeaJZIyB2FP63s6fO/4ud5l8dXmxDx9yDyn+mN0y+gsvsVviSli+T361Aqo0h46EuMoobrwawA==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -1542,6 +1597,22 @@ packages:
 
   '@ungap/structured-clone@1.4.0':
     resolution: {integrity: sha512-1mEZtMKPM09vDmQt5y7YvmN2+DFTP7Tg0EWXdic8/C6VRnpb33e4ghisCIE3WZjsE2N8mf+QV1Zqh7ZFYLWInQ==}
+
+  '@vitejs/plugin-react@6.3.0':
+    resolution: {integrity: sha512-H9E955aVvD2F4zNHCw4eIZbIfF6xKldlh7MNu+hSU7xwQzh65lI/N+CJWqmfhi0PEjDXIt/H7T7J/4wU63KJiw==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      '@rolldown/plugin-babel': ^0.1.7 || ^0.2.0 || ^0.3.0
+      babel-plugin-react-compiler: ^1.0.0
+      oxc-transform-react: '>=0.152.0 <0.157.0'
+      vite: ^8.0.0
+    peerDependenciesMeta:
+      '@rolldown/plugin-babel':
+        optional: true
+      babel-plugin-react-compiler:
+        optional: true
+      oxc-transform-react:
+        optional: true
 
   '@vitest/mocker@5.0.3':
     resolution: {integrity: sha512-T8sWAIbkSyAjkwTcaEc3Iu0o9A27X1/kdXrizhZkGuSKScRQtRzclfAMpOTcGdXCsqxeWlpGy3XjqaW8CpLORg==}
@@ -4020,6 +4091,31 @@ snapshots:
 
   '@poppinss/exception@1.2.3': {}
 
+  '@remold-ui/canvas@0.2.0':
+    dependencies:
+      '@remold-ui/core': 0.2.0
+      '@remold-ui/dom': 0.2.0
+
+  '@remold-ui/core@0.2.0': {}
+
+  '@remold-ui/dom@0.2.0':
+    dependencies:
+      '@remold-ui/core': 0.2.0
+
+  '@remold-ui/morph@0.2.0':
+    dependencies:
+      '@remold-ui/core': 0.2.0
+
+  '@remold-ui/react@0.2.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@remold-ui/canvas': 0.2.0
+      '@remold-ui/core': 0.2.0
+      '@remold-ui/dom': 0.2.0
+      '@remold-ui/morph': 0.2.0
+      motion: 14.7.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+
   '@rolldown/binding-android-arm-eabi@1.2.13':
     optional: true
 
@@ -4352,6 +4448,11 @@ snapshots:
       '@types/node': 24.10.1
 
   '@ungap/structured-clone@1.4.0': {}
+
+  '@vitejs/plugin-react@6.3.0(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1))':
+    dependencies:
+      '@rolldown/pluginutils': 1.0.1
+      vite: 8.3.3(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1)
 
   '@vitest/mocker@5.0.3(vite@8.3.3(@types/node@26.6.4)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1))':
     dependencies:
@@ -6266,6 +6367,22 @@ snapshots:
     optionalDependencies:
       '@types/node': 26.6.4
       esbuild: 0.27.7
+      fsevents: 2.3.3
+      jiti: 2.7.0
+      terser: 5.36.0
+      tsx: 4.23.15
+      yaml: 2.9.1
+
+  vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1):
+    dependencies:
+      lightningcss: 1.33.0
+      picomatch: 4.0.7
+      postcss: 8.5.28
+      rolldown: 1.2.13
+      tinyglobby: 0.2.17
+    optionalDependencies:
+      '@types/node': 26.6.4
+      esbuild: 0.28.2
       fsevents: 2.3.3
       jiti: 2.7.0
       terser: 5.36.0

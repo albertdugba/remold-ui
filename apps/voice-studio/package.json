@@ -1,0 +1,27 @@
+{
+  "name": "voice-studio-demo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5174",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --port 4174",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@base-ui/react": "1.9.0",
+    "@remold-ui/core": "0.2.0",
+    "@remold-ui/react": "0.2.0",
+    "motion": "^14.7.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "latest",
+    "typescript": "5.9.3",
+    "vite": "8.3.3"
+  }
+}
