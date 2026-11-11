@@ -1,0 +1,472 @@
+.stg {
+  --stg-surface: #ffffff;
+  --stg-ink: #18181b;
+  --stg-muted: #71717a;
+  --stg-quiet: #a1a1aa;
+  --stg-well: #f4f4f5;
+  --stg-line: rgb(24 24 27 / 0.07);
+  --stg-photos: #f59e0b;
+  --stg-files: #6366f1;
+  --stg-mail: #a1a1aa;
+  --stg-free: #ececee;
+  --stg-good: #16a34a;
+  --stg-bad: #e5484d;
+
+  position: relative;
+  display: block;
+  width: min(100%, 420px);
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--stg-surface);
+  color: var(--stg-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The card springs its height to this, so it grows and shrinks with the grid */
+.stg-content {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.dark .stg {
+  --stg-surface: #1c1c1f;
+  --stg-ink: #fafafa;
+  --stg-muted: #a1a1aa;
+  --stg-quiet: #71717a;
+  --stg-well: #26262b;
+  --stg-line: rgb(255 255 255 / 0.07);
+  --stg-photos: #fbbf24;
+  --stg-files: #818cf8;
+  --stg-mail: #71717a;
+  --stg-free: #2c2c31;
+  --stg-good: #4ade80;
+  --stg-bad: #ff6369;
+}
+
+.stg p {
+  margin: 0;
+}
+
+.stg-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.stg-head b {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.stg-head span {
+  color: var(--stg-muted);
+  font-size: 12.5px;
+}
+
+/* Storage */
+
+.stg-storage {
+  display: grid;
+  gap: 8px;
+}
+
+.stg-used {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.stg-used b {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stg-used span {
+  color: var(--stg-muted);
+}
+
+.stg-bar {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.stg-segment {
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.stg-segment[data-tone="photos"],
+.stg-legend [data-tone="photos"]::before {
+  background: var(--stg-photos);
+}
+
+.stg-segment[data-tone="files"],
+.stg-legend [data-tone="files"]::before {
+  background: var(--stg-files);
+}
+
+.stg-segment[data-tone="mail"],
+.stg-legend [data-tone="mail"]::before {
+  background: var(--stg-mail);
+}
+
+.stg-segment[data-tone="free"] {
+  background: var(--stg-free);
+}
+
+.stg-legend {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  color: var(--stg-muted);
+  font-size: 12px;
+  list-style: none;
+}
+
+.stg-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stg-legend li::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+/* Review grid */
+
+.stg-review {
+  display: grid;
+  gap: 10px;
+}
+
+.stg-review-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.stg-review-head b {
+  font-weight: 600;
+}
+
+.stg-review-head span {
+  color: var(--stg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.stg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stg-cell {
+  aspect-ratio: 1;
+}
+
+.stg-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  background: var(--stg-well);
+  cursor: pointer;
+}
+
+.stg-tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+/* Picked: a ring in the accent just inside the edge, and the photo dims a touch */
+.stg-tile::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border: 3px solid var(--stg-files);
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.stg-tile[data-checked]::before {
+  opacity: 1;
+}
+
+.stg-tile[data-checked] img {
+  filter: brightness(0.88);
+}
+
+.stg-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.5), transparent 40%);
+  pointer-events: none;
+}
+
+/* Hidden while its dust is out. It fades as the dust takes over, and settles back in as the dust
+   lands, so there's no hard swap either way. */
+.stg-tile > *,
+.stg-tile::after {
+  transition:
+    opacity 0.35s ease,
+    filter 0.35s ease,
+    scale 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.stg-tile {
+  transition: background-color 0.35s ease;
+}
+
+.stg-tile[data-moving] {
+  background: transparent;
+}
+
+.stg-tile[data-moving] > *,
+.stg-tile[data-moving]::before,
+.stg-tile[data-moving]::after {
+  opacity: 0;
+  filter: blur(4px);
+  transition-duration: 0.2s;
+}
+
+.stg-check {
+  position: absolute;
+  z-index: 2;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid rgb(255 255 255 / 0.9);
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.2);
+  color: #fff;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.stg-tile[data-checked] .stg-check {
+  border-color: #fff;
+  background: var(--stg-files);
+}
+
+.stg-tick {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.stg-tick svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+
+.stg-tag,
+.stg-size {
+  position: absolute;
+  z-index: 1;
+  left: 8px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.stg-tag {
+  bottom: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stg-size {
+  top: 8px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.35);
+  font-variant-numeric: tabular-nums;
+}
+
+.stg-done {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 40px 24px;
+  color: var(--stg-muted);
+  font-size: 14px;
+}
+
+.stg-done-art {
+  display: block;
+  width: 88px;
+  height: 88px;
+}
+
+/* Selection and delete */
+
+.stg-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--stg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.stg-actions > span {
+  display: grid;
+}
+
+.stg-delete {
+  height: 36px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--stg-bad);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.stg-delete:disabled {
+  background: var(--stg-well);
+  color: var(--stg-quiet);
+  cursor: default;
+}
+
+/* Undo toast */
+
+.stg-toasts {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+}
+
+.stg-toast {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--stg-ink);
+  color: var(--stg-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  transform: translateY(var(--toast-swipe-movement-y, 0));
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s;
+}
+
+.stg-toast[data-starting-style],
+.stg-toast[data-ending-style] {
+  opacity: 0;
+  transform: translateY(120%);
+}
+
+.stg-toast-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 10px 10px 14px;
+}
+
+.stg-toast-title {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stg-undo {
+  flex: none;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--stg-surface) 16%, transparent);
+  color: var(--stg-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stg-countdown {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--stg-photos);
+  transform-origin: left;
+  animation: stg-countdown var(--stg-undo) linear forwards;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .stg-toasts:hover .stg-countdown {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes stg-countdown {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.stg-tile:focus-visible,
+.stg-delete:focus-visible,
+.stg-undo:focus-visible {
+  outline: 2px solid var(--stg-files);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stg-tile img,
+  .stg-countdown {
+    transition: none;
+    animation: none;
+  }
+}

@@ -73,6 +73,11 @@
 
 .tbk-head-copy,
 .tbk-ticket-place,
+.tbk-chevron-slot {
+  display: grid;
+  flex: none;
+}
+
 .tbk-option-copy {
   display: grid;
   line-height: 1.3;
@@ -135,8 +140,9 @@
   width: 100%;
   padding: 10px 12px 10px 10px;
   border: 0;
+  position: relative;
   border-radius: 16px;
-  background: var(--tbk-well);
+  background: none;
   color: inherit;
   font: inherit;
   text-align: left;
@@ -145,7 +151,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .tbk-option:hover {
+  .tbk-option:hover .tbk-surface {
     background: color-mix(in oklab, var(--tbk-ink) 7%, var(--tbk-well));
   }
 }
@@ -213,11 +219,22 @@
 }
 
 .tbk-ticket {
+  position: relative;
   display: grid;
   gap: 4px;
   padding: 12px;
-  border-radius: 18px;
+}
+
+.tbk-surface {
+  position: absolute;
+  inset: 0;
   background: var(--tbk-well);
+  transition: background-color 0.15s;
+}
+
+.tbk-option > :not(.tbk-surface),
+.tbk-ticket > :not(.tbk-surface) {
+  position: relative;
 }
 
 .tbk-ticket-top {

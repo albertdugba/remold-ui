@@ -326,7 +326,6 @@
 }
 
 .bk-clear,
-.bk-action,
 .bk-delete,
 .bk-undo {
   display: inline-flex;
@@ -346,15 +345,13 @@
   transition: background-color 0.15s, color 0.15s;
 }
 
-.bk-clear,
-.bk-action {
+.bk-clear {
   width: 34px;
   color: var(--bk-bar-muted);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .bk-clear:hover,
-  .bk-action:hover,
   .bk-undo:hover {
     background: var(--bk-bar-hover);
     color: var(--bk-bar-ink);
@@ -379,31 +376,15 @@
 }
 
 .bk-clear svg,
-.bk-action svg,
 .bk-delete svg {
   width: 16px;
   height: 16px;
 }
 
 .bk-clear:focus-visible,
-.bk-action:focus-visible,
 .bk-delete:focus-visible,
 .bk-undo:focus-visible {
   outline: 2px solid var(--bk-accent);
   outline-offset: 1px;
 }
 
-.bk-tip {
-  padding: 5px 8px;
-  border-radius: 7px;
-  background: var(--bk-ink);
-  color: var(--bk-surface);
-  font-size: 12px;
-  transition: opacity 0.12s, transform 0.12s;
-}
-
-.bk-tip[data-starting-style],
-.bk-tip[data-ending-style] {
-  opacity: 0;
-  transform: translateY(3px);
-}

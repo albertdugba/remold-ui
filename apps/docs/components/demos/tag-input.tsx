@@ -155,7 +155,13 @@ export function TagInput({
         </Combobox.InputGroup>
 
         <Combobox.Portal container={portal}>
-          <Combobox.Positioner anchor={box} sideOffset={8} align="start">
+          <Combobox.Positioner
+            anchor={box}
+            side="bottom"
+            sideOffset={8}
+            align="start"
+            collisionAvoidance={{ side: "none", fallbackAxisSide: "none" }}
+          >
             <Combobox.Popup className="tag-popup">
               <Combobox.Empty className="tag-empty">No tags match</Combobox.Empty>
               <Combobox.List className="tag-list">

@@ -3,7 +3,8 @@ import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { shapes } from "@remold-ui/core";
 import { Remold } from "@remold-ui/react/canvas";
-import { useEffect, useState } from "react";
+import { motion } from "motion/react";
+import { useEffect, useId, useState } from "react";
 import { useScene } from "./use-scene";
 import "./particle-shapes.css";
 
@@ -24,8 +25,8 @@ const PALETTE = {
   amber: "#fbbf24",
   orange: "#f97316",
   wingEdge: "#9a3412",
-  markFace: "#f5f3ff",
-  markEdge: "#7c3aed",
+  grokFace: "#f4f4f5",
+  grokEdge: "#71717a",
 };
 
 const galaxy = shapes
@@ -98,13 +99,18 @@ const butterfly = shapes.compose([
   },
 ]);
 
-/** The Remold mark's path, made solid: a pale face front and back, with violet edges. */
-const MARK = "M7 23.5V8.5A1.5 1.5 0 0 1 8.5 7H14A11 11 0 0 1 25 18H18A4 4 0 0 0 14 14V23.5A1.5 1.5 0 0 1 12.5 25H8.5A1.5 1.5 0 0 1 7 23.5Z";
-const logo = shapes.fromPath(MARK, { depth: 0.45 }).tone(({ z }) => (Math.abs(z) > 0.22 ? "markFace" : "markEdge"));
+/**
+ * The Grok mark, made solid: a ring broken at two corners, each half sweeping out into a needle tip
+ * on one diagonal. Only the upper-right needle runs on past the ring, as a blade into the middle.
+ */
+const GROK =
+  "M32 77.8A33.4 33.4 0 0 0 83.3 39C85.5 32 82 20 95 7.3L39.8 62L72.7 40.6A24.8 24.8 0 0 1 41.9 73.7Z" +
+  "M70.3 23.1A33.4 33.4 0 0 0 20.8 65.6C18.5 70 22 80 5.2 93L33.6 68A24.8 24.8 0 0 1 60.6 27.8Z";
+const grok = shapes.fromPath(GROK, { depth: 0.32 }).tone(({ z }) => (Math.abs(z) > 0.15 ? "grokFace" : "grokEdge"));
 
-const SHAPES = { galaxy, helix, lorenz, bee, butterfly, logo };
+const SHAPES = { galaxy, helix, lorenz, bee, butterfly, grok };
 
-export const PARTICLE_SHAPES = ["galaxy", "helix", "lorenz", "bee", "butterfly", "logo"] as const;
+export const PARTICLE_SHAPES = ["galaxy", "helix", "lorenz", "bee", "butterfly", "grok"] as const;
 export type ParticleShape = (typeof PARTICLE_SHAPES)[number];
 
 const NAMES: Record<ParticleShape, string> = {
@@ -113,8 +119,10 @@ const NAMES: Record<ParticleShape, string> = {
   lorenz: "Lorenz attractor",
   bee: "Honeybee",
   butterfly: "Butterfly",
-  logo: "Remold mark",
+  grok: "Grok",
 };
+
+const SLIDE = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
 
 /** A still field of faint stars behind the dots, the same every time. */
 function drawStars(context: CanvasRenderingContext2D, { width, height }: { width: number; height: number }) {
@@ -144,6 +152,7 @@ export interface ParticleShapesProps {
 /** Thousands of dots that turn in 3D and flow from one shape into the next. */
 export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2600 }: ParticleShapesProps) {
   const [dots, setDots] = useState(count);
+  const id = useId();
   useEffect(() => {
     setDots(window.matchMedia("(max-width: 520px)").matches ? Math.round(count * 0.6) : count);
   }, [count]);
@@ -158,7 +167,12 @@ export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2
         palette={PALETTE}
         pairing="flow"
         transition={{ type: "scatter", spread: 1.3, hold: 0.35, stagger: 0.5 }}
-        camera={{ spin: paused ? 0 : 0.035, tilt: 24 }}
+        // A mark has a front, so it faces you and sways rather than turning to show its back.
+        camera={
+          shape === "grok"
+            ? { spin: paused ? 0 : 0.035, tilt: 8, sway: 28, angle: 0 }
+            : { spin: paused ? 0 : 0.035, tilt: 24, sway: 0 }
+        }
         blend="add"
         dot="square"
         radius={0.9}
@@ -176,7 +190,9 @@ export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2
         >
           {PARTICLE_SHAPES.map((name) => (
             <Toggle key={name} value={name} className="pts-shape">
-              {NAMES[name]}
+              {/* One highlight, shared by every name: it slides to the shape that's showing */}
+              {name === shape && <motion.span layoutId={`${id}-picked`} className="pts-picked" transition={SLIDE} />}
+              <span className="pts-name">{NAMES[name]}</span>
             </Toggle>
           ))}
         </ToggleGroup>
@@ -193,7 +209,7 @@ const BEATS: readonly { shape: ParticleShape; ms: number }[] = [
   { shape: "lorenz", ms: 7000 },
   { shape: "bee", ms: 7000 },
   { shape: "butterfly", ms: 7000 },
-  { shape: "logo", ms: 7000 },
+  { shape: "grok", ms: 7000 },
 ];
 
 const fromBeat = (step: number) => BEATS[step]!.shape;

@@ -694,7 +694,7 @@
 
 .hm-footer {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
   gap: 32px;
   padding-top: 40px;
   border-top: 1px solid var(--hm-line);
@@ -1793,6 +1793,7 @@
   margin-top: 0;
 }
 
+/* The categories: separate grey pills, with one black highlight that slides to what's picked */
 .hp-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1800,9 +1801,9 @@
 }
 
 .hp-chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   height: 38px;
   padding: 0 16px;
   border: 0;
@@ -1816,18 +1817,31 @@
   cursor: pointer;
   transition:
     background-color 160ms ease-out,
-    color 160ms ease-out,
+    color 0.25s ease-out,
     transform 160ms ease-out;
+}
+
+.hp-chip[data-pressed] {
+  color: var(--color-fd-background);
+}
+
+.hp-chip-picked {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-fd-foreground);
+}
+
+.hp-chip-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .hp-chip svg {
   margin-right: -4px;
   opacity: 0.7;
-}
-
-.hp-chip[data-pressed] {
-  background: var(--color-fd-foreground);
-  color: var(--color-fd-background);
 }
 
 .hp-chip:active {
@@ -1844,6 +1858,12 @@
 .hp-chip:focus-visible {
   outline: 2px solid var(--color-fd-foreground);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-chip {
+    transition: none;
+  }
 }
 
 .hp-gallery-end {
@@ -2198,6 +2218,14 @@
 @media (max-width: 640px) {
   .hp-filter-bar {
     top: auto;
+  }
+
+  /* On a phone every category shows at once: the chips wrap instead of scrolling sideways. */
+  .hp-chips {
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
   }
 
   .hm {

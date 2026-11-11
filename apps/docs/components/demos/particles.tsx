@@ -8,12 +8,6 @@ import "./particles.css";
 const HEADSET =
   "M14 36H86C94 36 98 42 98 50V60C98 68 93 73 86 73H66C61 73 58 65 50 65S39 73 34 73H14C7 73 2 68 2 60V50C2 42 6 36 14 36Z" +
   "M22 22H78C84 22 87 26 87 31H13C13 26 16 22 22 22Z";
-const SNEAKER =
-  "M3 74.5H91C97 74.5 99 82.5 92 84.5H9C2 84.5 0 76.5 3 74.5Z" +
-  "M8 72C6 62 8 52 12 46L16 41C22 44 30 46 36 43L44 38C50 45 58 51 70 55C82 58 92 61 95 67C96 70 94 72 91 72Z" +
-  "M47 46.6A1.6 1.6 0 1 0 47 49.8A1.6 1.6 0 1 0 47 46.6Z" +
-  "M53 50.6A1.6 1.6 0 1 0 53 53.8A1.6 1.6 0 1 0 53 50.6Z" +
-  "M59 53.8A1.6 1.6 0 1 0 59 57A1.6 1.6 0 1 0 59 53.8Z";
 
 const LOGO =
   "M7 23.5V8.5A1.5 1.5 0 0 1 8.5 7H14A11 11 0 0 1 25 18H18A4 4 0 0 0 14 14V23.5A1.5 1.5 0 0 1 12.5 25H8.5A1.5 1.5 0 0 1 7 23.5Z";
@@ -103,10 +97,6 @@ const HOME_PALETTE = ["#2563eb"] as const;
 const FRAMES: Record<string, { label: string; shape: () => ParticleShape }> = {
   Text: { label: "Just landed", shape: () => "Just landed" },
   Headset: { label: "A headset", shape: () => ({ path: HEADSET }) },
-  Sneaker: {
-    label: "A running shoe",
-    shape: () => ({ path: SNEAKER, fillRule: "evenodd" }),
-  },
   Logo: { label: "A logo", shape: () => ({ path: LOGO }) },
   Snowflake: { label: "A snowflake", shape: () => ({ path: FLAKE }) },
   Pin: {
@@ -131,7 +121,6 @@ const FRAMES: Record<string, { label: string; shape: () => ParticleShape }> = {
 const CHOICES = {
   Text: ["Text"],
   Headset: ["Headset"],
-  Sneaker: ["Sneaker"],
   Logo: ["Logo"],
   Snowflake: ["Snowflake"],
   Pin: ["Pin"],

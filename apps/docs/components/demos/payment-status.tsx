@@ -5,11 +5,11 @@ import { IllustratedStory, type StoryStage } from "./illustrated-story";
 import { useScene } from "./use-scene";
 import "./payment-status.css";
 
-const BACK_CARD = "M44 36h76a8 8 0 0 1 8 8v4H36v-4a8 8 0 0 1 8 -8Z";
-const CARD = "M38 44h84a8 8 0 0 1 8 8v48a8 8 0 0 1 -8 8H38a8 8 0 0 1 -8 -8V52a8 8 0 0 1 8 -8Z";
-const CARD_SHEEN = "M88 44h18l-30 64H58Z";
-const CARD_NUMBER = "M42 86h14v3.5H42Z M60 86h14v3.5H60Z M78 86h14v3.5H78Z M96 86h14v3.5H96Z M42 96h30v2.5H42Z";
-const CHIP = "M44 58h16a3 3 0 0 1 3 3v10a3 3 0 0 1 -3 3H44a3 3 0 0 1 -3 -3V61a3 3 0 0 1 3 -3Z";
+const BACK_CARD = "M44 46h76a8 8 0 0 1 8 8v4H36v-4a8 8 0 0 1 8 -8Z";
+const CARD = "M38 54h84a8 8 0 0 1 8 8v38a8 8 0 0 1 -8 8H38a8 8 0 0 1 -8 -8V62a8 8 0 0 1 8 -8Z";
+const CARD_SHEEN = "M90 54h18l-25 54H65Z";
+const CARD_NUMBER = "M42 88h14v3.5H42Z M60 88h14v3.5H60Z M78 88h14v3.5H78Z M96 88h14v3.5H96Z M42 97h30v2.5H42Z";
+const CHIP = "M44 64h16a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3H44a3 3 0 0 1 -3 -3V67a3 3 0 0 1 3 -3Z";
 
 export const PAYMENT_STATUSES = ["card", "processing", "declined", "paid"] as const;
 export type PaymentStatusValue = (typeof PAYMENT_STATUSES)[number];
@@ -25,7 +25,7 @@ function stagesFor(amount: string, card: string, email: string): readonly StoryS
         soft: BACK_CARD,
         ink: CARD,
         sheen: CARD_SHEEN,
-        brand: "M106 58a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
+        brand: "M106 67a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
         light: CARD_NUMBER,
         topSoft: CHIP,
       },
@@ -52,8 +52,8 @@ function stagesFor(amount: string, card: string, email: string): readonly StoryS
         soft: BACK_CARD,
         ink: CARD,
         sheen: CARD_SHEEN,
-        brand: "M104 40a14 14 0 1 0 28 0a14 14 0 1 0 -28 0Z",
-        light: `${CARD_NUMBER} M116.5 32h3v10h-3Z M116.5 45h3v3h-3Z`,
+        brand: "M104 50a14 14 0 1 0 28 0a14 14 0 1 0 -28 0Z",
+        light: `${CARD_NUMBER} M116.5 42h3v10h-3Z M116.5 55h3v3h-3Z`,
         topSoft: CHIP,
       },
     },

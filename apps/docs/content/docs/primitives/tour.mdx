@@ -1,0 +1,132 @@
+---
+title: "Tour"
+description: "Walk people through an interface one step at a time. Tour keeps the step and finds what each one points at; how it looks is yours."
+---
+
+Tour has no look of its own. It holds the step, knows which element each step points at, and measures a spotlight around it. Everything you see here is drawn on top: the dimmed window is `Tour.Spotlight` with a spread shadow, the line is [Connectors](/docs/primitives/connectors), and the tip grows out of the help button with [Morph](/docs/primitives/morph). The same tour could be a row of hotspots or a checklist instead.
+
+<Stage name="product-tour" code={<Source demo="product-tour" />} wide>
+  <ProductTourDemo />
+</Stage>
+
+## Installation
+
+<Install packages="@remold-ui/react" />
+
+## Usage
+
+Wrap the app in `Tour.Root` with the steps in order, and mark what each step points at with `Tour.Target`. Inside the root, `useTour()` gives you the step and its target element, which is all a popover needs to anchor to it.
+
+```tsx
+import { Popover } from "@base-ui/react/popover";
+import { Remold, useTour } from "@remold-ui/react";
+
+const STEPS = { search: "Find anything", share: "Bring your team" };
+
+export function App() {
+  return (
+    <Remold.Tour.Root steps={["search", "share"]}>
+      <Remold.Tour.Target name="search" render={<SearchField />} />
+      <Remold.Tour.Target name="share" render={<button type="button">Share</button>} />
+
+      <Remold.Tour.Spotlight className="spotlight" />
+      <TourCard />
+    </Remold.Tour.Root>
+  );
+}
+
+function TourCard() {
+  const tour = useTour();
+  return (
+    <Popover.Root open={tour.open} onOpenChange={(open) => !open && tour.close()}>
+      <Popover.Portal>
+        <Popover.Positioner anchor={tour.target} sideOffset={16}>
+          <Popover.Popup>
+            <Popover.Title>{tour.step && STEPS[tour.step]}</Popover.Title>
+            <Remold.Tour.Previous>Back</Remold.Tour.Previous>
+            <Remold.Tour.Next>{tour.last ? "Done" : "Next"}</Remold.Tour.Next>
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+```
+
+The spotlight covers the target and its `padding`, nothing more. A spread shadow turns it into a dimmed window, and a transition makes it glide:
+
+```css
+.spotlight {
+  border-radius: 12px;
+  box-shadow: 0 0 0 200vmax rgb(12 12 20 / 0.5);
+  transition: transform 0.6s, width 0.6s, height 0.6s, opacity 0.3s;
+}
+
+.spotlight[data-rm-closed] {
+  opacity: 0;
+}
+```
+
+- **Start it** from a button with `useTour().start()`, from outside with `actionsRef`, or open with `defaultStep`. Control it with `step` and `onStepChange`; `null` means closed.
+- **Next on the last step finishes**, which closes the tour with the reason `"finish"`, so you can tell finishing from skipping.
+- **Closed, the spotlight covers its whole offset parent,** so it closes in on the first target as the tour starts and opens back out when it ends.
+- **A step can point at nothing.** Leave out its `Tour.Target` and the spotlight closes to a point in the middle, with `data-rm-centered`: a place for a welcome or a goodbye.
+- **Keyboard:** while it's open, the arrow keys move between steps and Escape closes it, except while someone is typing in a field.
+- **Off-screen targets** scroll into view when their step comes up. Opening the tour with the page doesn't scroll it.
+- **Your styles, your popover.** Base UI's Popover handles focus, dismissal and placement; use `initialFocus={false}` on its popup for a tour that shouldn't take focus.
+
+## API reference
+
+### Root
+
+Holds the tour. Renders no element.
+
+<TypeTable
+  type={{
+    steps: { type: "string[]", description: <>{"The steps in order. Each names a Tour.Target, or none."}</> },
+    step: { type: "string | null", description: <>{"The step showing, or null while closed (controlled)."}</> },
+    defaultStep: { type: "string | null", default: "null", description: <>{"The step to open at, when not controlled."}</> },
+    onStepChange: {
+      type: "(step, { reason, event }) => void",
+      description: <>{"Reasons: start, next, previous, go-to, close, finish, arrow-key and escape-key."}</>,
+    },
+    keyboard: { type: "boolean", default: "true", description: <>{"Arrow keys move between steps and Escape closes."}</> },
+    scrollIntoView: { type: "boolean", default: "true", description: <>{"Scroll a step's target into view when it's off screen."}</> },
+    actionsRef: {
+      type: "RefObject<TourActions>",
+      description: <>{"start(step?), next(), previous(), goTo(step), close() and the current step."}</>,
+    },
+  }}
+/>
+
+### Target
+
+Marks the element a step points at. Renders a `span`; `render` puts it on your own element. Carries `data-rm-tour-target` and, while its step shows, `data-rm-active`.
+
+<TypeTable
+  type={{
+    name: { type: "string", description: <>{"The step it belongs to."}</> },
+    className: { type: "string | ((state) => string)", description: <>{"A class name, or a function of { active }."}</> },
+    render: { type: "ReactElement | ((props, state) => ReactElement)", description: <>{"Replace the default element."}</> },
+  }}
+/>
+
+### Spotlight
+
+A `div` over the current target, measured from its offset parent (or the viewport when it's `position: fixed`), and over the whole of it while the tour is closed. Its box is also set as `--rm-tour-x`, `--rm-tour-y`, `--rm-tour-width` and `--rm-tour-height`. Carries `data-rm-open` or `data-rm-closed`, `data-rm-step` and `data-rm-centered`.
+
+<TypeTable
+  type={{
+    padding: { type: "number", default: "8", description: <>{"Room around the target, in pixels."}</> },
+    className: { type: "string | ((state) => string)", description: <>{"A class name, or a function of { open, step, centered }."}</> },
+    render: { type: "ReactElement | ((props, state) => ReactElement)", description: <>{"Replace the default element."}</> },
+  }}
+/>
+
+### Next, Previous and Close
+
+Buttons that move the tour. Previous is disabled on the first step; Next finishes on the last. Each carries `data-rm-disabled` and `data-rm-last`, and its state is `{ disabled, last }`. Call `preventDefault()` in your own `onClick` to stop the action.
+
+### useTour()
+
+Inside a `Tour.Root`: `step`, `steps`, `index`, `count`, `open`, `first`, `last`, `target`, and the actions `start`, `next`, `previous`, `goTo` and `close`.

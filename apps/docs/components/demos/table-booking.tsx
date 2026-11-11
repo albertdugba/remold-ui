@@ -40,7 +40,28 @@ const part = (delay = 0) => ({
   exit: { opacity: 0, scale: 0.94, filter: "blur(6px)", transition: QUICK },
 });
 
+const STAY = { initial: false as const, exit: { opacity: 0, transition: QUICK } };
+
+const box = (delay = 0) => ({
+  initial: { opacity: 0, scale: 0.94 },
+  animate: { opacity: 1, scale: 1, transition: { ...SPRING, delay } },
+  exit: { opacity: 0, scale: 0.94, transition: QUICK },
+});
+
 const guestsLabel = (count: number) => `${count} ${count === 1 ? "guest" : "guests"}`;
+
+function Surface({ option, radius }: { option: Option; radius: number }) {
+  return (
+    <motion.span
+      layoutId={`tbk-surface-${option.id}`}
+      className="tbk-surface"
+      layoutCrossfade={false}
+      exit={{ opacity: 0, transition: { duration: 0 } }}
+      style={{ borderRadius: radius }}
+      aria-hidden="true"
+    />
+  );
+}
 
 function TimeChip({ option }: { option: Option }) {
   return (
@@ -101,7 +122,7 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                           </span>
                         </span>
                       </motion.header>
-                      <motion.div className="tbk-alert" role="status" {...part(0.05)}>
+                      <motion.div className="tbk-alert" role="status" {...box(0.05)}>
                         <HugeiconsIcon icon={Alert02Icon} strokeWidth={2} aria-hidden="true" />
                         <span className="tbk-alert-copy">
                           <b>Your 7:30 table is no longer free</b>
@@ -111,26 +132,32 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                         </span>
                       </motion.div>
                       <div className="tbk-options">
-                        {OPTIONS.map((option, index) => (
-                          <Button
-                            key={option.id}
-                            className="tbk-option"
-                            onClick={() => choose(option)}
-                            render={<motion.button {...part(0.08 + index * 0.04)} />}
-                          >
-                            <TimeChip option={option} />
-                            <span className="tbk-option-copy">
-                              <b>{option.title}</b>
-                              <span>{option.table}</span>
-                            </span>
-                            <HugeiconsIcon
-                              icon={ArrowRight01Icon}
-                              className="tbk-chevron"
-                              strokeWidth={2}
-                              aria-hidden="true"
-                            />
-                          </Button>
-                        ))}
+                        {OPTIONS.map((option, index) => {
+                          const landing = option.id === picked.id;
+                          return (
+                            <Button
+                              key={option.id}
+                              className="tbk-option"
+                              onClick={() => choose(option)}
+                              render={<motion.button {...(landing ? STAY : box(0.08 + index * 0.04))} />}
+                            >
+                              <Surface option={option} radius={16} />
+                              <TimeChip option={option} />
+                              <motion.span className="tbk-option-copy" {...(landing ? part(0.1) : {})}>
+                                <b>{option.title}</b>
+                                <span>{option.table}</span>
+                              </motion.span>
+                              <motion.span className="tbk-chevron-slot" {...(landing ? part(0.14) : {})}>
+                                <HugeiconsIcon
+                                  icon={ArrowRight01Icon}
+                                  className="tbk-chevron"
+                                  strokeWidth={2}
+                                  aria-hidden="true"
+                                />
+                              </motion.span>
+                            </Button>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -148,6 +175,7 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                         <b>Booking changed</b>
                       </motion.header>
                       <div className="tbk-ticket">
+                        <Surface option={picked} radius={18} />
                         <div className="tbk-ticket-top">
                           <TimeChip option={picked} />
                           <motion.span className="tbk-ticket-place" {...part(0.08)}>
@@ -218,7 +246,7 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                             key={size}
                             value={String(size)}
                             className="tbk-size"
-                            render={<motion.button {...part(0.05 + index * 0.025)} />}
+                            render={<motion.button {...box(0.05 + index * 0.025)} />}
                           >
                             {guests === size && (
                               <motion.span layoutId="tbk-size-pick" className="tbk-size-pick" />

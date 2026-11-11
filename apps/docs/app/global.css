@@ -75,12 +75,13 @@ body {
  * Safari zooms a page when a focused editable control computes below 16px.
  * Keep text entry stable on phones without changing the visual sizing of
  * sliders, switches, file inputs, or other non-text controls.
+ * An input marked data-own-size sizes itself and never goes below 16px.
  */
 @media (max-width: 767px) {
   :where(
       input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
           [type="color"]
-        ):not([type="file"]),
+        ):not([type="file"]):not([data-own-size]),
       textarea,
       select,
       [contenteditable="true"]
@@ -950,8 +951,21 @@ html > body[data-scroll-locked] {
     0 1px 2px rgb(0 0 0 / 0.06),
     0 0 0 1px var(--rm-bar-line);
   transition:
+    top 320ms var(--rm-bar-ease),
     left 320ms var(--rm-bar-ease),
     width 320ms var(--rm-bar-ease);
+}
+
+/* On a phone every category shows at once: the row wraps instead of scrolling sideways. */
+@media (max-width: 640px) {
+  .rm-browser-tabs {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .rm-browser-tabs[data-overflow] {
+    mask-image: none;
+  }
 }
 
 .rm-browser-tab:focus-visible,

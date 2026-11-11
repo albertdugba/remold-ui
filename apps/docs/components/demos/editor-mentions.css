@@ -16,13 +16,12 @@
   --em-query: rgb(79 70 229 / 0.08);
   --em-lift: 0 1px 2px rgb(24 24 27 / 0.04), 0 8px 24px -10px rgb(24 24 27 / 0.18);
   --em-online: #22c55e;
-  --em-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.22), 0 0 0 1px rgb(24 24 27 / 0.06);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
 }
 
 .dark .em-layer {
   --em-surface: #1f1f23;
-  --em-raised: #2a2a2f;
+  --em-raised: #1c1c1f;
   --em-field: #26262b;
   --em-line: rgb(255 255 255 / 0.08);
   --em-ink: #fafafa;
@@ -35,7 +34,6 @@
   --em-chip-ink: #c7d2fe;
   --em-query: rgb(129 140 248 / 0.14);
   --em-lift: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px -10px rgb(0 0 0 / 0.6);
-  --em-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
 .em {
@@ -329,12 +327,16 @@
 }
 
 /* The picker: a Base UI popover anchored to the @query */
+/* The popover menu's surface: a hairline border and a soft, low shadow */
 .em-picker {
   width: 248px;
   padding: 4px;
+  border: 1px solid rgb(0 0 0 / 0.06);
   border-radius: 16px;
   background: var(--em-raised);
-  box-shadow: var(--em-shadow);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.05),
+    0 12px 28px -20px rgb(0 0 0 / 0.16);
   color: var(--em-ink);
   transform-origin: var(--transform-origin);
   transition: opacity 0.16s, transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.25);
@@ -381,7 +383,18 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: color-mix(in oklab, var(--em-ink) 5%, transparent);
+  background: #f5f5f1;
+}
+
+.dark .em-picker {
+  border-color: rgb(255 255 255 / 0.07);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.28),
+    0 12px 28px -20px rgb(0 0 0 / 0.48);
+}
+
+.dark .em-highlight {
+  background: #2a2a2f;
 }
 
 .em-face {
