@@ -1,4 +1,4 @@
-import { docsLlms, source } from "@/lib/source";
+import { pageLlms, source } from "@/lib/source";
 import { getPageMarkdownUrl } from "@/lib/shared";
 import { notFound } from "next/navigation";
 
@@ -9,7 +9,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/llms.mdx/doc
   const page = source.getPage(slug?.slice(0, -1));
   if (!page) notFound();
 
-  return new Response(await docsLlms.page(page), {
+  return new Response(await pageLlms.page(page), {
     headers: {
       "Content-Type": "text/markdown",
     },

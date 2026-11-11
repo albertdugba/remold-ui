@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { RemoldMark } from "@/components/brand/remold-mark";
+import { X_HANDLE, X_URL } from "@/lib/layout.shared";
 import { InstallCommand } from "@/components/home/install-command";
 import { Faq } from "@/components/home/faq";
 import { Flavors } from "@/components/home/flavors";
@@ -141,6 +142,15 @@ export default async function HomePage() {
             <p>Navigate</p>
             <Link href="/docs">Docs</Link>
             <Link href="/docs/components">Examples</Link>
+          </nav>
+          <nav aria-label="Follow">
+            <p>Follow</p>
+            <a href={X_URL} target="_blank" rel="noreferrer">
+              @{X_HANDLE} on X
+            </a>
+            <a href="https://github.com/albertdugba/remold-ui" target="_blank" rel="noreferrer">
+              GitHub
+            </a>
           </nav>
           <nav aria-label="For assistants">
             <p>For assistants</p>

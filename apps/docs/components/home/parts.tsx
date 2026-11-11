@@ -12,6 +12,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAutoplay } from "@remold-ui/react";
+import { motion } from "motion/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AppleMusicBadge } from "../demos/apple-music-badge";
@@ -45,6 +46,10 @@ const TableBookingDemo = dynamic(
 );
 const OtpInputDemo = dynamic(
   () => import("../demos/otp-input").then((m) => m.OtpInputDemo),
+  { ssr: false },
+);
+const StorageCleanupDemo = dynamic(
+  () => import("../demos/storage-cleanup").then((m) => m.StorageCleanupDemo),
   { ssr: false },
 );
 const DonationGoalDemo = dynamic(
@@ -81,10 +86,6 @@ const CurrencyConverterDemo = dynamic(
 );
 const OrderTrackerDemo = dynamic(
   () => import("../demos/order-tracker").then((m) => m.OrderTrackerDemo),
-  { ssr: false },
-);
-const VoiceAssistantDemo = dynamic(
-  () => import("../demos/voice-assistant").then((m) => m.VoiceAssistantDemo),
   { ssr: false },
 );
 const ParticleShapesDemo = dynamic(
@@ -169,6 +170,14 @@ const FilterBarDemo = dynamic(
 );
 const LabelPickerDemo = dynamic(
   () => import("../demos/label-picker").then((m) => m.LabelPickerDemo),
+  { ssr: false },
+);
+const PeelRewardDemo = dynamic(
+  () => import("../demos/peel-reward").then((m) => m.PeelRewardDemo),
+  { ssr: false },
+);
+const NotificationInboxDemo = dynamic(
+  () => import("../demos/notification-inbox").then((m) => m.NotificationInboxDemo),
   { ssr: false },
 );
 const WalletStackDemo = dynamic(
@@ -338,6 +347,25 @@ const ALL = "all";
  * Categories as a row of pills, led by All, which is on whenever nothing else is. Any number of
  * categories can be on, and each one on shows a cross to turn it off; picking All clears them.
  */
+const SLIDE = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
+
+/**
+ * The highlight behind a picked category. Each is numbered by when it was picked, so swapping one
+ * category for another slides the highlight across, and picking a second fades in a second one.
+ */
+function Picked({ order }: { order: number }) {
+  if (order < 0) return null;
+  return (
+    <motion.span
+      layoutId={`hp-picked-${order}`}
+      className="hp-chip-picked"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={SLIDE}
+    />
+  );
+}
+
 function CategoryChips({
   selected,
   options,
@@ -361,14 +389,18 @@ function CategoryChips({
       aria-label="Category"
     >
       <Toggle value={ALL} className="hp-chip">
-        All
+        <Picked order={value.indexOf(ALL)} />
+        <span className="hp-chip-label">All</span>
       </Toggle>
       {options.map((option) => (
         <Toggle key={option.value} value={option.value} className="hp-chip">
-          {option.label}
-          {selected.has(option.value) && (
-            <HugeiconsIcon icon={Cancel01Icon} size={14} strokeWidth={2.2} aria-hidden="true" />
-          )}
+          <Picked order={value.indexOf(option.value)} />
+          <span className="hp-chip-label">
+            {option.label}
+            {selected.has(option.value) && (
+              <HugeiconsIcon icon={Cancel01Icon} size={14} strokeWidth={2.2} aria-hidden="true" />
+            )}
+          </span>
         </Toggle>
       ))}
     </ToggleGroup>
@@ -559,14 +591,15 @@ function allCards() {
   return (
     <>
       <PartCard
-        kicker="Base UI · Motion"
-        category="forms"
-        title="Mentions"
-        docs="/docs/components/editor-mentions"
-        states={["Mention"]}
-        minHeight={600}
+        kicker="Canvas · Particles"
+        category="canvas"
+        title="Particle shapes"
+        docs="/docs/components/particle-shapes"
+        states={["Shapes"]}
+        wide
+        dark
       >
-        {(_, playing) => <EditorMentionsDemo playing={playing} />}
+        {(_, playing) => <ParticleShapesDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Layout · Icon · Text"
@@ -578,106 +611,23 @@ function allCards() {
         {(_, playing) => <OtpInputDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="SVG · Illustration"
-        category="illustrations"
-        title="Order tracker"
-        docs="/docs/components/order-tracker"
-        states={["Track"]}
-      >
-        {(_, playing) => <OrderTrackerDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="SVG · Base UI"
-        category="svg"
-        title="Payment status"
-        docs="/docs/components/payment-status"
-        states={["Pay"]}
-      >
-        {(_, playing) => <PaymentStatusDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Base UI · Motion"
-        category="morphing"
-        title="Button to dialog"
-        docs="/docs/components/morphing-dialog"
-        states={["New trip"]}
-        minHeight={560}
-      >
-        {(_, playing) => <MorphingDialogDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Motion · Media"
-        category="morphing"
-        title="Mini player to full"
-        docs="/docs/components/podcast-player"
-        states={["Mini", "Player", "Mini", "Player"]}
-        every={2600}
-        bleed
-        short
-      >
-        {(i) => (
-          <PodcastPlayer
-            source="/api/music"
-            credit={APPLE_MUSIC_BADGE}
-            scene={i}
-            height="100%"
-            compact
-          />
-        )}
-      </PartCard>
-      <PartCard
-        featured
         kicker="Base UI · Motion"
         category="forms"
-        title="Event RSVP"
-        docs="/docs/components/event-rsvp"
-        states={["RSVP"]}
+        title="Promo code"
+        docs="/docs/components/promo-code"
+        states={["Apply"]}
+      >
+        {(_, playing) => <PromoCodeDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Particles · Base UI"
+        category="canvas"
+        title="Free up space"
+        docs="/docs/components/storage-cleanup"
+        states={["Delete"]}
         minHeight={600}
       >
-        {(_, playing) => <EventRsvpDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Base UI · Motion"
-        category="morphing"
-        title="Feedback prompt"
-        docs="/docs/components/feedback-prompt"
-        states={["Helpful?"]}
-        minHeight={560}
-      >
-        {(_, playing) => <FeedbackPromptDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Layout · Connectors"
-        category="connectors"
-        title="Post and comments"
-        spotlight
-        wide
-        tall
-        docs="/docs/components/comment-thread"
-        states={["Comments"]}
-      >
-        {(_, playing) => <CommentThread variant="preview" playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Particles · Motion"
-        category="canvas"
-        title="Donation goal"
-        docs="/docs/components/donation-goal"
-        states={["Give"]}
-        minHeight={520}
-      >
-        {(_, playing) => <DonationGoalDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Canvas · States"
-        category="canvas"
-        title="Voice states"
-        bare
-        docs="/docs/components/voice-orb"
-        states={["Idle", "Listening", "Thinking", "Speaking"]}
-        every={2200}
-      >
-        {(i) => <VoiceOrb state={ORB_STATES[i]!} size={240} />}
+        {(_, playing) => <StorageCleanupDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -691,15 +641,120 @@ function allCards() {
         {(_, playing) => <WalletStackDemo playing={playing} />}
       </PartCard>
       <PartCard
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Notification inbox"
+        docs="/docs/components/notification-inbox"
+        states={["Inbox"]}
+        minHeight={700}
+      >
+        {(_, playing) => <NotificationInboxDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Motion · Base UI"
+        category="morphing"
+        title="Peel-off reward"
+        docs="/docs/components/peel-reward"
+        states={["Reward"]}
+        minHeight={460}
+      >
+        {(_, playing) => <PeelRewardDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
+        category="morphing"
+        title="Button to dialog"
+        docs="/docs/components/morphing-dialog"
+        states={["New trip"]}
+        minHeight={560}
+      >
+        {(_, playing) => <MorphingDialogDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Layout · Text"
+        category="morphing"
+        title="Option to booking"
+        docs="/docs/components/table-booking"
+        states={["Booking"]}
+      >
+        {(_, playing) => <TableBookingDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Tag input"
+        docs="/docs/components/tag-input"
+        states={["Tags"]}
+        minHeight={560}
+      >
+        {(_, playing) => <TagInputDemo playing={playing} />}
+      </PartCard>
+      <PartCard
         featured
-        kicker="Base UI · createMorph"
-        category="charts"
-        title="Revenue"
-        docs="/docs/components/revenue-card"
-        states={["Revenue"]}
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Event RSVP"
+        docs="/docs/components/event-rsvp"
+        states={["RSVP"]}
         minHeight={600}
       >
-        {(_, playing) => <RevenueCardDemo playing={playing} />}
+        {(_, playing) => <EventRsvpDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="SVG · Branding"
+        category="svg"
+        title="Logo into logo"
+        bare
+        docs="/docs/components/logo-morph"
+        states={["OpenAI", "Apple", "Cursor", "Mercedes", "X", "Anthropic", "Tesla"]}
+        every={2000}
+      >
+        {(i) => (
+          <LogoMorph
+            selected={LOGO[i]}
+            controls={false}
+            autoplay={false}
+            height={220}
+          />
+        )}
+      </PartCard>
+      <PartCard
+        kicker="SVG · Illustration"
+        category="illustrations"
+        title="Order tracker"
+        docs="/docs/components/order-tracker"
+        states={["Track"]}
+      >
+        {(_, playing) => <OrderTrackerDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Layout · Shared"
+        category="morphing"
+        title="Email to teammate"
+        docs="/docs/components/invite-team"
+        states={["Invite"]}
+      >
+        {(_, playing) => <InviteTeamDemo framed={false} playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
+        category="morphing"
+        title="Popover menu"
+        docs="/docs/components/popover-menu"
+        states={["Menu"]}
+      >
+        {(_, playing) => <PopoverMenuDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        featured
+        kicker="Motion · createMorph"
+        category="forms"
+        title="Send money"
+        docs="/docs/components/send-money"
+        states={["Send"]}
+        minHeight={720}
+      >
+        {(_, playing) => <SendMoneyDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -713,15 +768,74 @@ function allCards() {
         {(_, playing) => <CurrencyConverterDemo playing={playing} />}
       </PartCard>
       <PartCard
-        featured
-        kicker="Motion · createMorph"
+        kicker="Base UI · Motion"
         category="forms"
-        title="Send a message"
-        docs="/docs/components/send-message"
-        states={["Send"]}
+        title="Mentions"
+        docs="/docs/components/editor-mentions"
+        states={["Mention"]}
+        minHeight={600}
+      >
+        {(_, playing) => <EditorMentionsDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
+        category="morphing"
+        title="Feedback prompt"
+        docs="/docs/components/feedback-prompt"
+        states={["Helpful?"]}
         minHeight={560}
       >
-        {(_, playing) => <SendMessageDemo playing={playing} />}
+        {(_, playing) => <FeedbackPromptDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Particles · Motion"
+        category="canvas"
+        title="Donation goal"
+        docs="/docs/components/donation-goal"
+        states={["Give"]}
+        minHeight={520}
+      >
+        {(_, playing) => <DonationGoalDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Layout · Reveal"
+        category="morphing"
+        title="Turn on two-factor"
+        docs="/docs/components/two-factor"
+        states={["Two-factor"]}
+      >
+        {(_, playing) => <TwoFactorDemo framed={false} playing={playing} />}
+      </PartCard>
+      <PartCard
+        featured
+        kicker="Motion · createMorph"
+        category="illustrations"
+        title="Streak"
+        docs="/docs/components/streak"
+        states={["Streak"]}
+        minHeight={560}
+      >
+        {(_, playing) => <StreakDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        featured
+        kicker="Base UI · createMorph"
+        category="charts"
+        title="Revenue"
+        docs="/docs/components/revenue-card"
+        states={["Revenue"]}
+        minHeight={600}
+      >
+        {(_, playing) => <RevenueCardDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="SVG · Base UI"
+        category="svg"
+        title="Payment status"
+        docs="/docs/components/payment-status"
+        states={["Pay"]}
+      >
+        {(_, playing) => <PaymentStatusDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -738,12 +852,31 @@ function allCards() {
         featured
         kicker="Motion · createMorph"
         category="forms"
-        title="Send money"
-        docs="/docs/components/send-money"
+        title="Send a message"
+        docs="/docs/components/send-message"
         states={["Send"]}
-        minHeight={720}
+        minHeight={560}
       >
-        {(_, playing) => <SendMoneyDemo playing={playing} />}
+        {(_, playing) => <SendMessageDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Motion · Media"
+        category="morphing"
+        title="Mini player to full"
+        docs="/docs/components/podcast-player"
+        states={["Mini", "Player", "Mini", "Player"]}
+        every={2600}
+        bleed
+      >
+        {(i) => (
+          <PodcastPlayer
+            source="/api/music"
+            credit={APPLE_MUSIC_BADGE}
+            scene={i}
+            height="100%"
+            compact
+          />
+        )}
       </PartCard>
       <PartCard
         kicker="Base UI · Motion"
@@ -753,45 +886,6 @@ function allCards() {
         states={["Months"]}
       >
         {(_, playing) => <StepperSliderDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Base UI · Motion"
-        category="forms"
-        title="Tag input"
-        docs="/docs/components/tag-input"
-        states={["Tags"]}
-        minHeight={560}
-      >
-        {(_, playing) => <TagInputDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Base UI · Motion"
-        category="forms"
-        title="Promo code"
-        docs="/docs/components/promo-code"
-        states={["Apply"]}
-      >
-        {(_, playing) => <PromoCodeDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Base UI · Motion"
-        category="morphing"
-        title="Popover menu"
-        docs="/docs/components/popover-menu"
-        states={["Menu"]}
-      >
-        {(_, playing) => <PopoverMenuDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        featured
-        kicker="Motion · createMorph"
-        category="illustrations"
-        title="Streak"
-        docs="/docs/components/streak"
-        states={["Streak"]}
-        minHeight={560}
-      >
-        {(_, playing) => <StreakDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -816,15 +910,6 @@ function allCards() {
         {(_, playing) => <SeatCalculatorDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Layout · Text"
-        category="morphing"
-        title="Option to booking"
-        docs="/docs/components/table-booking"
-        states={["Booking"]}
-      >
-        {(_, playing) => <TableBookingDemo playing={playing} />}
-      </PartCard>
-      <PartCard
         featured
         kicker="Layout · Base UI"
         category="morphing"
@@ -834,6 +919,18 @@ function allCards() {
         minHeight={600}
       >
         {(_, playing) => <OnboardingChecklistDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Layout · Connectors"
+        category="connectors"
+        title="Post and comments"
+        spotlight
+        wide
+        tall
+        docs="/docs/components/comment-thread"
+        states={["Comments"]}
+      >
+        {(_, playing) => <CommentThread variant="preview" playing={playing} />}
       </PartCard>
       <PartCard
         featured
@@ -869,47 +966,6 @@ function allCards() {
         {(_, playing) => <LabelPickerDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Morph · Matching"
-        category="morphing"
-        title="One person, three components"
-        docs="/docs/primitives/morph"
-        states={["Card"]}
-        bleed
-        minHeight={680}
-      >
-        {(_, playing) => <RemoldPerson playing={playing} showControls={false} />}
-      </PartCard>
-      <PartCard
-        kicker="Particles · Base UI"
-        category="canvas"
-        title="Voice assistant"
-        docs="/docs/components/voice-assistant"
-        states={["Talk"]}
-        dark
-      >
-        {(_, playing) => <VoiceAssistantDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Canvas · Particles"
-        category="canvas"
-        title="Particle shapes"
-        docs="/docs/components/particle-shapes"
-        states={["Shapes"]}
-        wide
-        dark
-      >
-        {(_, playing) => <ParticleShapesDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Layout · Reveal"
-        category="morphing"
-        title="Turn on two-factor"
-        docs="/docs/components/two-factor"
-        states={["Two-factor"]}
-      >
-        {(_, playing) => <TwoFactorDemo framed={false} playing={playing} />}
-      </PartCard>
-      <PartCard
         featured
         kicker="Base UI · Motion"
         category="charts"
@@ -921,13 +977,26 @@ function allCards() {
         {(_, playing) => <UsageMeterDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Layout · Shared"
-        category="morphing"
-        title="Email to teammate"
-        docs="/docs/components/invite-team"
-        states={["Invite"]}
+        kicker="Canvas · States"
+        category="canvas"
+        title="Voice states"
+        bare
+        docs="/docs/components/voice-orb"
+        states={["Idle", "Listening", "Thinking", "Speaking"]}
+        every={2200}
       >
-        {(_, playing) => <InviteTeamDemo framed={false} playing={playing} />}
+        {(i) => <VoiceOrb state={ORB_STATES[i]!} size={240} />}
+      </PartCard>
+      <PartCard
+        kicker="Morph · Matching"
+        category="morphing"
+        title="One person, three components"
+        docs="/docs/primitives/morph"
+        states={["Card"]}
+        bleed
+        minHeight={680}
+      >
+        {(_, playing) => <RemoldPerson playing={playing} showControls={false} />}
       </PartCard>
       <PartCard
         kicker="SVG · Shapes"
@@ -940,24 +1009,6 @@ function allCards() {
         every={1800}
       >
         {(i) => <EmblemDemo framed={false} index={i} />}
-      </PartCard>
-      <PartCard
-        kicker="SVG · Branding"
-        category="svg"
-        title="Logo into logo"
-        bare
-        docs="/docs/components/logo-morph"
-        states={["OpenAI", "Apple", "Cursor", "Mercedes", "X", "Anthropic", "Tesla"]}
-        every={2000}
-      >
-        {(i) => (
-          <LogoMorph
-            selected={LOGO[i]}
-            controls={false}
-            autoplay={false}
-            height={220}
-          />
-        )}
       </PartCard>
     </>
   );

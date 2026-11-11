@@ -5,14 +5,11 @@ import {
   Delete02Icon,
   FileAttachmentIcon,
   FileSpreadsheetIcon,
-  FolderInputIcon,
   Image01Icon,
   MinusSignIcon,
-  Share02Icon,
   CheckIcon,
 } from "@hugeicons/core-free-icons";
 import { Checkbox } from "@base-ui/react/checkbox";
-import { Tooltip } from "@base-ui/react/tooltip";
 import {
   createColumnHelper,
   flexRender,
@@ -23,10 +20,19 @@ import {
   type Updater,
 } from "@tanstack/react-table";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useRef, type CSSProperties, type MouseEvent, type Ref } from "react";
-import { useControllableState, type ChangeDetails } from "./use-controllable-state";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type MouseEvent,
+  type Ref,
+} from "react";
+import {
+  useControllableState,
+  type ChangeDetails,
+} from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import { usePortalContainer } from "./portal-container";
 import "./bulk-select.css";
 
 interface File {
@@ -71,7 +77,14 @@ const FILES: File[] = [
     icon: FileAttachmentIcon,
     color: "#ef4444",
   },
-  { id: "e", name: "Team photo.png", size: "5.6 MB", edited: "Oct 12", icon: Image01Icon, color: "#8b5cf6" },
+  {
+    id: "e",
+    name: "Team photo.png",
+    size: "5.6 MB",
+    edited: "Oct 12",
+    icon: Image01Icon,
+    color: "#8b5cf6",
+  },
   {
     id: "f",
     name: "Invoices 2026.xlsx",
@@ -91,7 +104,12 @@ export interface BulkSelectValue {
   undo: string[] | null;
 }
 
-const REST: BulkSelectValue = { gone: [], selected: [], anchor: null, undo: null };
+const REST: BulkSelectValue = {
+  gone: [],
+  selected: [],
+  anchor: null,
+  undo: null,
+};
 
 const SPRING = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
 
@@ -108,7 +126,10 @@ const DATA_COLUMNS = [
       const Icon = row.original.icon;
       return (
         <span className="bk-name">
-          <span className="bk-icon" style={{ "--tint": row.original.color } as CSSProperties}>
+          <span
+            className="bk-icon"
+            style={{ "--tint": row.original.color } as CSSProperties}
+          >
             <HugeiconsIcon icon={Icon} aria-hidden="true" />
           </span>
           <span className="bk-file">{row.original.name}</span>
@@ -142,11 +163,6 @@ const BAR_ROW = {
   transition: { duration: 0.18 },
 };
 
-const ACTIONS = [
-  { label: "Move", icon: FolderInputIcon },
-  { label: "Share", icon: Share02Icon },
-];
-
 function SelectAllCheckbox({ table }: { table: Table<File> }) {
   return (
     <Checkbox.Root
@@ -160,7 +176,10 @@ function SelectAllCheckbox({ table }: { table: Table<File> }) {
         className="bk-tick"
         render={(props, state) => (
           <span {...props}>
-            <HugeiconsIcon icon={state.indeterminate ? MinusSignIcon : CheckIcon} aria-hidden="true" />
+            <HugeiconsIcon
+              icon={state.indeterminate ? MinusSignIcon : CheckIcon}
+              aria-hidden="true"
+            />
           </span>
         )}
       />
@@ -209,23 +228,6 @@ function RollingCount({ count }: { count: number }) {
   );
 }
 
-function ActionButton({ label, icon }: (typeof ACTIONS)[number]) {
-  const portal = usePortalContainer();
-
-  return (
-    <Tooltip.Root>
-      <Tooltip.Trigger className="bk-action" aria-label={label}>
-        <HugeiconsIcon icon={icon} aria-hidden="true" />
-      </Tooltip.Trigger>
-      <Tooltip.Portal container={portal}>
-        <Tooltip.Positioner className="bk-layer" sideOffset={8}>
-          <Tooltip.Popup className="bk-tip">{label}</Tooltip.Popup>
-        </Tooltip.Positioner>
-      </Tooltip.Portal>
-    </Tooltip.Root>
-  );
-}
-
 function SelectionBar({
   count,
   onClear,
@@ -239,7 +241,12 @@ function SelectionBar({
 }) {
   return (
     <motion.div ref={ref} className="bk-bar-row" {...BAR_ROW}>
-      <button type="button" className="bk-clear" onClick={onClear} aria-label="Clear selection">
+      <button
+        type="button"
+        className="bk-clear"
+        onClick={onClear}
+        aria-label="Clear selection"
+      >
         <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
       </button>
       <span className="bk-count">
@@ -247,9 +254,6 @@ function SelectionBar({
         selected
       </span>
       <span className="bk-bar-gap" />
-      {ACTIONS.map((action) => (
-        <ActionButton key={action.label} {...action} />
-      ))}
       <button type="button" className="bk-delete" onClick={onDelete}>
         <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
         Delete
@@ -318,12 +322,22 @@ function Dock({
             className="bk-bar"
             initial={{ y: 14, opacity: 0, scale: 0.97 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 10, opacity: 0, scale: 0.98, transition: { duration: 0.16 } }}
+            exit={{
+              y: 10,
+              opacity: 0,
+              scale: 0.98,
+              transition: { duration: 0.16 },
+            }}
             transition={SPRING}
           >
             <AnimatePresence initial={false} mode="popLayout">
               {bar === "select" ? (
-                <SelectionBar key="select" count={count} onClear={onClear} onDelete={onDelete} />
+                <SelectionBar
+                  key="select"
+                  count={count}
+                  onClear={onClear}
+                  onDelete={onDelete}
+                />
               ) : (
                 <UndoBar key="undo" deleted={undo!.length} onUndo={onUndo} />
               )}
@@ -341,33 +355,59 @@ function selectionWithShift(
   on: boolean,
   shift: boolean,
 ): BulkSelectValue {
-  const visible = FILES.filter((file) => !current.gone.includes(file.id)).map((file) => file.id);
+  const visible = FILES.filter((file) => !current.gone.includes(file.id)).map(
+    (file) => file.id,
+  );
 
   if (shift && current.anchor && on) {
-    const [from, to] = [visible.indexOf(current.anchor), visible.indexOf(id)].sort((a, b) => a - b);
+    const [from, to] = [
+      visible.indexOf(current.anchor),
+      visible.indexOf(id),
+    ].sort((a, b) => a - b);
     const range = visible.slice(from, to + 1);
-    return { ...current, selected: [...new Set([...current.selected, ...range])], undo: null };
+    return {
+      ...current,
+      selected: [...new Set([...current.selected, ...range])],
+      undo: null,
+    };
   }
 
   return {
     ...current,
-    selected: on ? [...current.selected, id] : current.selected.filter((selected) => selected !== id),
+    selected: on
+      ? [...current.selected, id]
+      : current.selected.filter((selected) => selected !== id),
     anchor: id,
     undo: null,
   };
 }
 
-export function BulkSelect({ value, defaultValue = REST, onValueChange, ref }: BulkSelectProps) {
-  const [files, setFiles] = useControllableState({ value, defaultValue, onValueChange });
+export function BulkSelect({
+  value,
+  defaultValue = REST,
+  onValueChange,
+  ref,
+}: BulkSelectProps) {
+  const [files, setFiles] = useControllableState({
+    value,
+    defaultValue,
+    onValueChange,
+  });
   const shift = useRef(false);
 
   useEffect(() => {
     if (!files.undo) return;
-    const timer = setTimeout(() => setFiles((current) => ({ ...current, undo: null }), "timer"), 4500);
+    const timer = setTimeout(
+      () => setFiles((current) => ({ ...current, undo: null }), "timer"),
+      4500,
+    );
     return () => clearTimeout(timer);
   }, [files.undo, setFiles]);
 
-  const rows = useMemo(() => FILES.filter((file) => !files.gone.includes(file.id)), [files.gone]);
+  const rows = useMemo(
+    () => FILES.filter((file) => !files.gone.includes(file.id)),
+    [files.gone],
+  );
   const rowSelection = useMemo<RowSelectionState>(
     () => Object.fromEntries(files.selected.map((id) => [id, true])),
     [files.selected],
@@ -393,9 +433,16 @@ export function BulkSelect({ value, defaultValue = REST, onValueChange, ref }: B
 
   const onRowSelectionChange = (updater: Updater<RowSelectionState>) =>
     setFiles((current) => {
-      const previous = Object.fromEntries(current.selected.map((id) => [id, true]));
-      const selection = typeof updater === "function" ? updater(previous) : updater;
-      return { ...current, selected: Object.keys(selection).filter((id) => selection[id]), undo: null };
+      const previous = Object.fromEntries(
+        current.selected.map((id) => [id, true]),
+      );
+      const selection =
+        typeof updater === "function" ? updater(previous) : updater;
+      return {
+        ...current,
+        selected: Object.keys(selection).filter((id) => selection[id]),
+        undo: null,
+      };
     });
 
   const columns = [
@@ -425,74 +472,82 @@ export function BulkSelect({ value, defaultValue = REST, onValueChange, ref }: B
   const tableRows = table.getRowModel().rows;
 
   return (
-    <Tooltip.Provider delay={300}>
-      <section ref={ref} className="bk bk-layer not-prose" aria-label="Files">
-        <div role="table" aria-label="Files" aria-rowcount={tableRows.length}>
-          {table.getHeaderGroups().map((group) => (
-            <div key={group.id} role="row" className="bk-head">
-              {group.headers.map((header) => (
-                <span key={header.id} role="columnheader" className="bk-cell">
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </span>
-              ))}
-            </div>
-          ))}
+    <section ref={ref} className="bk bk-layer not-prose" aria-label="Files">
+      <div role="table" aria-label="Files" aria-rowcount={tableRows.length}>
+        {table.getHeaderGroups().map((group) => (
+          <div key={group.id} role="row" className="bk-head">
+            {group.headers.map((header) => (
+              <span key={header.id} role="columnheader" className="bk-cell">
+                {flexRender(
+                  header.column.columnDef.header,
+                  header.getContext(),
+                )}
+              </span>
+            ))}
+          </div>
+        ))}
 
-          <ul role="rowgroup" className="bk-rows">
-            <AnimatePresence initial={false}>
-              {tableRows.map((row, index) => {
-                const on = row.getIsSelected();
-                const order = files.undo?.indexOf(row.id) ?? -1;
+        <ul role="rowgroup" className="bk-rows">
+          <AnimatePresence initial={false}>
+            {tableRows.map((row, index) => {
+              const on = row.getIsSelected();
+              const order = files.undo?.indexOf(row.id) ?? -1;
 
-                return (
-                  <motion.li
-                    key={row.id}
-                    role="row"
-                    aria-selected={on}
-                    layout="position"
-                    className="bk-row"
-                    data-selected={on || undefined}
-                    data-joins-up={(on && tableRows[index - 1]?.getIsSelected()) || undefined}
-                    data-joins-down={(on && tableRows[index + 1]?.getIsSelected()) || undefined}
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{
-                      opacity: 0,
-                      height: 0,
-                      transition: {
-                        duration: 0.28,
-                        delay: Math.max(0, order) * 0.06,
-                        ease: [0.4, 0, 0.2, 1],
-                      },
-                    }}
-                    transition={SPRING}
-                    onClickCapture={(event: MouseEvent) => {
-                      shift.current = event.shiftKey;
-                    }}
-                  >
-                    <label className="bk-row-inner">
-                      {row.getVisibleCells().map((cell) => (
-                        <span key={cell.id} role="cell" className="bk-cell">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </span>
-                      ))}
-                    </label>
-                  </motion.li>
-                );
-              })}
-            </AnimatePresence>
-          </ul>
-        </div>
+              return (
+                <motion.li
+                  key={row.id}
+                  role="row"
+                  aria-selected={on}
+                  layout="position"
+                  className="bk-row"
+                  data-selected={on || undefined}
+                  data-joins-up={
+                    (on && tableRows[index - 1]?.getIsSelected()) || undefined
+                  }
+                  data-joins-down={
+                    (on && tableRows[index + 1]?.getIsSelected()) || undefined
+                  }
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{
+                    opacity: 0,
+                    height: 0,
+                    transition: {
+                      duration: 0.28,
+                      delay: Math.max(0, order) * 0.06,
+                      ease: [0.4, 0, 0.2, 1],
+                    },
+                  }}
+                  transition={SPRING}
+                  onClickCapture={(event: MouseEvent) => {
+                    shift.current = event.shiftKey;
+                  }}
+                >
+                  <label className="bk-row-inner">
+                    {row.getVisibleCells().map((cell) => (
+                      <span key={cell.id} role="cell" className="bk-cell">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </span>
+                    ))}
+                  </label>
+                </motion.li>
+              );
+            })}
+          </AnimatePresence>
+        </ul>
+      </div>
 
-        <Dock
-          count={files.selected.length}
-          undo={files.undo}
-          onClear={() => setFiles((current) => ({ ...current, selected: [] }))}
-          onDelete={remove}
-          onUndo={restore}
-        />
-      </section>
-    </Tooltip.Provider>
+      <Dock
+        count={files.selected.length}
+        undo={files.undo}
+        onClear={() => setFiles((current) => ({ ...current, selected: [] }))}
+        onDelete={remove}
+        onUndo={restore}
+      />
+    </section>
   );
 }
 
@@ -518,5 +573,11 @@ interface BulkSelectDemoProps {
 
 export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
   const scene = useScene(BEATS, fromBeat, playing);
-  return <BulkSelect ref={scene.ref} value={scene.state} onValueChange={scene.onValueChange} />;
+  return (
+    <BulkSelect
+      ref={scene.ref}
+      value={scene.state}
+      onValueChange={scene.onValueChange}
+    />
+  );
 }

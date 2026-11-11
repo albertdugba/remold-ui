@@ -1,5 +1,21 @@
 /* The order tracker's own motion, on top of the illustrated story. */
 
+/* A food-delivery palette: the brand red for what matters (the band, the badge, the progress),
+   a near-black ink, and warm peach for steam and the soft shapes. */
+.ils.otr {
+  --ils-ink: #191919;
+  --ils-brand: #ff3008;
+  --ils-soft: #ffd3c6;
+  --ils-track: #f3e7e2;
+}
+
+.dark .ils.otr {
+  --ils-ink: #f4efec;
+  --ils-brand: #ff5a36;
+  --ils-soft: #5c3328;
+  --ils-track: #3d2e29;
+}
+
 /* The scooter's spokes, turning on its hubs. */
 .otr-spokes path {
   fill: none;

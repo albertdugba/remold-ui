@@ -8,12 +8,13 @@
   --wa-edge: #3e1c0b;
   --wa-thread: #ead2ad;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   --wa-panel: #ffffff;
   --wa-ink: #111111;
   --wa-muted: #8e8e93;
   --wa-line: rgb(60 60 67 / 0.12);
-  width: min(100%, 340px);
+  width: 100%;
   container-type: inline-size;
   color: var(--wa-ink);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
@@ -26,9 +27,19 @@
   --wa-line: rgb(84 84 88 / 0.5);
 }
 
+/* The holder in the middle; on a wide stage the details panel opens beside it. */
+.wa-room {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
 /* Room below the holder for its shadow; anything sunk past that is cut off. */
 .wa-scene {
   position: relative;
+  flex: none;
   width: 340px;
   height: 480px;
   clip-path: inset(-80px -80px 0 -80px);
@@ -36,7 +47,7 @@
 
 /* The holder is drawn at 340px. On a narrower card it scales down and keeps its bottom in view. */
 @container (max-width: 339px) {
-  .wa-scene {
+  .wa-room {
     transform: scale(calc(100cqi / 340px));
     transform-origin: top center;
     margin-bottom: calc(480px * (100cqi / 340px) - 480px);
@@ -191,7 +202,8 @@
 }
 
 .wa-card:focus-visible,
-.wa-switch:focus-visible {
+.wa-switch:focus-visible,
+.wa-see-all:focus-visible {
   outline: 2px solid #0a84ff;
   outline-offset: 3px;
 }
@@ -332,37 +344,90 @@
   gap: 8px;
 }
 
-.wa-details-title {
+/* The summary: the balance in large type, when it's due, and the default switch */
+.wa-summary {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin: 0;
-  padding: 0 4px;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 0 4px 2px;
 }
 
-.wa-details-title b {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+.wa-balance {
+  display: grid;
+  gap: 1px;
 }
 
-.wa-details-title span {
+.wa-balance span {
   color: var(--wa-muted);
-  font-size: 13px;
+  font-size: 11.5px;
+  font-weight: 500;
 }
 
-/* Flat grouped lists, like iOS settings: white on the grey stage, no shadows */
-.wa-txns,
+.wa-balance b {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-due {
+  white-space: nowrap;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--wa-ink) 7%, transparent);
+  color: var(--wa-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .wa-primary {
-  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 2px auto;
+  color: var(--wa-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* The transactions: one grouped card, its title inside, flat on the grey stage */
+.wa-txns {
+  overflow: hidden;
+  border-radius: 16px;
   background: var(--wa-panel);
 }
 
-.wa-txns {
+.wa-details-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 9px 14px 1px;
+}
+
+.wa-details-title b {
+  font-size: 13.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.wa-see-all {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: #0a84ff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.wa-txns ul {
   display: grid;
   margin: 0;
   padding: 0;
-  overflow: hidden;
   list-style: none;
 }
 
@@ -371,7 +436,7 @@
   display: flex;
   align-items: center;
   gap: 11px;
-  height: 48px;
+  height: 43px;
   padding: 0 14px 0 12px;
 }
 
@@ -380,13 +445,13 @@
   position: absolute;
   top: 0;
   right: 0;
-  left: 55px;
+  left: 57px;
   height: 1px;
   background: var(--wa-line);
   content: "";
 }
 
-/* The merchant's own mark, white on its own colour */
+/* The merchant's own mark, white on its own colour, with a hairline ring so dark marks hold their edge */
 .wa-txn-logo {
   display: grid;
   flex: none;
@@ -394,11 +459,12 @@
   width: 32px;
   height: 32px;
   border-radius: 9px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
 }
 
 .wa-txn-logo svg {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   fill: #ffffff;
 }
 
@@ -425,31 +491,49 @@
   white-space: nowrap;
 }
 
+/* The amount, with a pending charge or the cash back it earned underneath */
 .wa-txn-amount {
+  display: grid;
   flex: none;
+  justify-items: end;
+  line-height: 1.25;
+}
+
+.wa-txn-amount b {
   font-size: 14px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-.wa-primary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 46px;
-  padding: 0 14px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
+.wa-txn-amount[data-pending] b {
+  color: var(--wa-muted);
+}
+
+.wa-txn-amount span {
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.wa-txn-amount [data-tone="pending"] {
+  color: var(--wa-muted);
+}
+
+.wa-txn-amount [data-tone="cash"] {
+  color: #1f9d55;
+}
+
+.dark .wa-txn-amount [data-tone="cash"] {
+  color: #30d158;
 }
 
 /* Back to every card, centred at the foot of the stage */
 .wa-all {
   position: absolute;
-  bottom: 6px;
+  bottom: 0;
   left: 50%;
   z-index: 40;
-  height: 32px;
-  padding: 0 14px;
+  height: 28px;
+  padding: 0 13px;
   border: 0;
   border-radius: 999px;
   background: var(--wa-panel);
@@ -468,8 +552,8 @@
 
 .wa-switch {
   position: relative;
-  width: 42px;
-  height: 26px;
+  width: 38px;
+  height: 23px;
   padding: 0;
   border: 0;
   border-radius: 999px;
@@ -486,8 +570,8 @@
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 22px;
-  height: 22px;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
@@ -495,5 +579,36 @@
 }
 
 .wa-thumb[data-checked] {
-  transform: translateX(16px);
+  transform: translateX(15px);
+}
+
+/* Wide: the details as a panel beside the holder, the card's own page */
+.wa-panel {
+  position: absolute;
+  top: 0;
+  left: calc(50% + 26px);
+  z-index: 20;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  width: 304px;
+}
+
+.wa-panel-name {
+  padding: 2px 4px 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wa-panel-name em {
+  color: var(--wa-muted);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.wa-panel .wa-txns li {
+  height: 46px;
 }

@@ -23,7 +23,8 @@ export function useMeasuredSize<T extends HTMLElement>() {
     };
     measure();
     const observer = new ResizeObserver(measure);
-    observer.observe(element);
+    // The border box, so a change in padding alone (a stylesheet arriving late) is caught too.
+    observer.observe(element, { box: "border-box" });
     return () => observer.disconnect();
   }, []);
 

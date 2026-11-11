@@ -222,11 +222,10 @@
     0 0 0 4px color-mix(in oklab, var(--fk-ink) 7%, transparent);
 }
 
+/* A wrong code tints the field red; no ring, even while it has focus */
 .prm-box[data-invalid] {
-  background: color-mix(in oklab, var(--fk-bad) 6%, var(--fk-surface));
-  box-shadow:
-    inset 0 0 0 1.5px var(--fk-bad),
-    0 0 0 4px color-mix(in oklab, var(--fk-bad) 12%, transparent);
+  background: color-mix(in oklab, var(--fk-bad) 8%, var(--fk-surface));
+  box-shadow: none;
 }
 
 .prm-box[data-state="applied"] {

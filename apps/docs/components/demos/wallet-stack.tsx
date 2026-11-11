@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useId, useState, type Ref } from "react";
 import { BRANDS, type BrandId } from "./merchant-logos";
 import { useControllableState } from "./use-controllable-state";
+import { useMeasuredSize } from "./use-measured-size";
 import { useScene } from "./use-scene";
 import "./wallet-stack.css";
 
@@ -13,7 +14,10 @@ interface Card {
   tier: string;
   last4: string;
   look: string;
-  recent: { brand: BrandId; when: string; amount: string }[];
+  balance: string;
+  due: string;
+  /** `note` sits under the amount: a pending charge, or cash back earned. */
+  recent: { brand: BrandId; when: string; amount: string; note?: { text: string; tone: "pending" | "cash" } }[];
 }
 
 const CARDS: Card[] = [
@@ -23,10 +27,15 @@ const CARDS: Card[] = [
     tier: "Gold Card",
     last4: "1009",
     look: "gold",
+    balance: "$1,942.15",
+    due: "Due Nov 28",
     recent: [
-      { brand: "emirates", when: "Today · DXB → ACC", amount: "$684.00" },
-      { brand: "starbucks", when: "Mon · Contactless", amount: "$6.75" },
+      { brand: "emirates", when: "Today · DXB → ACC", amount: "$684.00", note: { text: "Pending", tone: "pending" } },
+      { brand: "starbucks", when: "Mon · Contactless", amount: "$6.75", note: { text: "+$0.27 back", tone: "cash" } },
       { brand: "ikea", when: "Oct 19 · In store", amount: "$238.40" },
+      { brand: "uber", when: "Oct 18 · Trip", amount: "$23.10" },
+      { brand: "apple", when: "Oct 15 · iCloud+", amount: "$2.99" },
+      { brand: "airbnb", when: "Oct 12 · Cape Coast stay", amount: "$356.00", note: { text: "+$10.68 back", tone: "cash" } },
     ],
   },
   {
@@ -35,10 +44,15 @@ const CARDS: Card[] = [
     tier: "World Elite",
     last4: "5100",
     look: "wine",
+    balance: "$486.30",
+    due: "Due Dec 3",
     recent: [
       { brand: "spotify", when: "Today · Subscription", amount: "$10.99" },
-      { brand: "amazon", when: "Yesterday · Online", amount: "$64.20" },
+      { brand: "amazon", when: "Yesterday · Online", amount: "$64.20", note: { text: "+$1.28 back", tone: "cash" } },
       { brand: "airbnb", when: "Oct 22 · Lisbon stay", amount: "$412.00" },
+      { brand: "starbucks", when: "Oct 21 · Mobile order", amount: "$8.45" },
+      { brand: "netflix", when: "Oct 20 · Subscription", amount: "$15.49" },
+      { brand: "ikea", when: "Oct 16 · Online", amount: "$96.00", note: { text: "Refunded", tone: "pending" } },
     ],
   },
   {
@@ -47,10 +61,15 @@ const CARDS: Card[] = [
     tier: "Infinite",
     last4: "4242",
     look: "black",
+    balance: "$2,184.60",
+    due: "Due Nov 21",
     recent: [
-      { brand: "apple", when: "Today · Contactless", amount: "$129.00" },
-      { brand: "uber", when: "Yesterday · Trip", amount: "$18.40" },
+      { brand: "apple", when: "Today · Contactless", amount: "$129.00", note: { text: "+$3.87 back", tone: "cash" } },
+      { brand: "uber", when: "Yesterday · Trip", amount: "$18.40", note: { text: "Pending", tone: "pending" } },
       { brand: "netflix", when: "Oct 24 · Subscription", amount: "$15.49" },
+      { brand: "amazon", when: "Oct 23 · Online", amount: "$47.80" },
+      { brand: "emirates", when: "Oct 20 · Seat upgrade", amount: "$220.00", note: { text: "+$6.60 back", tone: "cash" } },
+      { brand: "spotify", when: "Oct 17 · Subscription", amount: "$10.99" },
     ],
   },
 ];
@@ -62,15 +81,63 @@ const PEEK = [16, 11, 6];
 
 const SUNK = 300;
 
+/** Room for the holder and a side panel next to it: past this width the details open beside the card. */
+const PANEL = 304;
+const GAP = 16;
+const WIDE = 340 + GAP + PANEL;
+
 export interface WalletStackValue {
   open: boolean;
   /** The card lifted out to show its transactions, if any. */
   chosen: string | null;
-  /** The default card. */
-  primary: string;
+  /** The default card, or `null` when none is set. */
+  primary: string | null;
 }
 
 const SPRING = { type: "spring" as const, duration: 0.7, bounce: 0.16 };
+
+const nameOf = (card: Card) =>
+  `${card.network === "amex" ? "American Express" : card.network === "visa" ? "Visa" : "Mastercard"} ${card.tier}`;
+
+function Transactions({ card, rows }: { card: Card; rows: number }) {
+  return (
+    <div className="wa-txns">
+      <p className="wa-details-title">
+        <b>Latest transactions</b>
+        <button type="button" className="wa-see-all">
+          See all
+        </button>
+      </p>
+      <ul>
+        {card.recent.slice(0, rows).map((transaction, row) => {
+          const brand = BRANDS[transaction.brand];
+          return (
+            <motion.li
+              key={transaction.brand}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...SPRING, delay: 0.16 + row * 0.04 }}
+            >
+              <span className="wa-txn-logo" style={{ background: brand.color }} aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d={brand.path} />
+                </svg>
+              </span>
+              <span className="wa-txn-copy">
+                <b>{brand.name}</b>
+                <span>{transaction.when}</span>
+              </span>
+              <span className="wa-txn-amount" data-pending={transaction.note?.tone === "pending" || undefined}>
+                <b>{transaction.amount}</b>
+                {transaction.note && <span data-tone={transaction.note.tone}>{transaction.note.text}</span>}
+              </span>
+            </motion.li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 function Mark({ network }: { network: Card["network"] }) {
   if (network === "visa") return <span className="wa-visa">VISA</span>;
@@ -155,6 +222,8 @@ export function WalletStack({
   const { open, chosen } = wallet;
   const id = useId().replace(/:/g, "");
   const [hover, setHover] = useState(false);
+  const [roomRef, room] = useMeasuredSize<HTMLDivElement>();
+  const wide = (room?.width ?? 0) >= WIDE;
   const peeking = hover && !open;
 
   const togglePocket = () =>
@@ -166,7 +235,9 @@ export function WalletStack({
         : { ...current, chosen: current.chosen === card.id ? null : card.id },
     );
 
-  const sunk = chosen ? SUNK : 0;
+  // Narrow, the holder sinks out of the way to make room for the details under the card.
+  // Wide, the details sit beside it, so the holder stays and the other cards go back in.
+  const sunk = chosen && !wide ? SUNK : 0;
   const yOf = (card: Card, index: number) => {
     if (chosen === card.id) return 0;
     if (chosen) return CLOSED[index]! + sunk;
@@ -174,8 +245,8 @@ export function WalletStack({
     return OPEN[index]!;
   };
   const picked = CARDS.find((card) => card.id === chosen);
-  const nameOf = (card: Card) =>
-    `${card.network === "amex" ? "American Express" : card.network === "visa" ? "Visa" : "Mastercard"} ${card.tier}`;
+  const makeDefault = (card: Card) => (on: boolean) =>
+    setWallet((current) => ({ ...current, primary: on ? card.id : null }));
 
   return (
     <section ref={ref} className="wa not-prose" aria-label="Wallet">
@@ -189,8 +260,12 @@ export function WalletStack({
         </filter>
       </svg>
 
-      <div
+      <div ref={roomRef} className="wa-room" data-wide={wide || undefined}>
+      <motion.div
         className="wa-scene"
+        initial={false}
+        animate={{ x: wide && picked ? -(GAP + PANEL) / 2 : 0 }}
+        transition={SPRING}
         onPointerEnter={(event) => event.pointerType === "mouse" && setHover(true)}
         onPointerLeave={() => setHover(false)}
       >
@@ -270,7 +345,7 @@ export function WalletStack({
         })}
 
         <AnimatePresence mode="popLayout">
-          {picked && (
+          {picked && !wide && (
             <motion.div
               key={picked.id}
               className="wa-details"
@@ -279,51 +354,33 @@ export function WalletStack({
               exit={{ opacity: 0, y: 28, transition: { duration: 0.18 } }}
               transition={{ ...SPRING, delay: 0.1 }}
             >
-              <p className="wa-details-title">
-                <b>Latest Transactions</b>
-                <span>See all</span>
-              </p>
-              <ul className="wa-txns">
-                {picked.recent.map((transaction, row) => {
-                  const brand = BRANDS[transaction.brand];
-                  return (
-                    <motion.li
-                      key={transaction.brand}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ ...SPRING, delay: 0.16 + row * 0.05 }}
-                    >
-                      <span className="wa-txn-logo" style={{ background: brand.color }} aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                          <path d={brand.path} />
-                        </svg>
-                      </span>
-                      <span className="wa-txn-copy">
-                        <b>{brand.name}</b>
-                        <span>{transaction.when}</span>
-                      </span>
-                      <span className="wa-txn-amount">−{transaction.amount}</span>
-                    </motion.li>
-                  );
-                })}
-              </ul>
-              <label className="wa-primary">
-                <span>Default card</span>
-                <Switch.Root
-                  className="wa-switch"
-                  checked={wallet.primary === picked.id}
-                  onCheckedChange={(on) => on && setWallet((current) => ({ ...current, primary: picked.id }))}
-                  aria-label={`Make ${nameOf(picked)} your default card`}
-                >
-                  <Switch.Thumb className="wa-thumb" />
-                </Switch.Root>
-              </label>
+              {/* What's owed on the card, and whether it's the one used by default */}
+              <div className="wa-summary">
+                <span className="wa-balance">
+                  <span>Balance</span>
+                  <b>{picked.balance}</b>
+                </span>
+                <span className="wa-due">{picked.due}</span>
+                <label className="wa-primary">
+                  <span>Default</span>
+                  <Switch.Root
+                    className="wa-switch"
+                    checked={wallet.primary === picked.id}
+                    onCheckedChange={makeDefault(picked)}
+                    aria-label={`Make ${nameOf(picked)} your default card`}
+                  >
+                    <Switch.Thumb className="wa-thumb" />
+                  </Switch.Root>
+                </label>
+              </div>
+
+              <Transactions card={picked} rows={3} />
             </motion.div>
           )}
         </AnimatePresence>
 
         <AnimatePresence>
-          {picked && (
+          {picked && !wide && (
             <motion.button
               key="back"
               type="button"
@@ -350,6 +407,45 @@ export function WalletStack({
           <Leather id={id} d={FRONT} stitch={[FRONT_STITCH]} tone="front" />
           <span className="wa-emboss">Northwind</span>
         </motion.button>
+      </motion.div>
+
+      <AnimatePresence mode="popLayout">
+        {picked && wide && (
+          <motion.aside
+            key={picked.id}
+            className="wa-panel"
+            aria-label={`${nameOf(picked)} details`}
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12, transition: { duration: 0.16 } }}
+            transition={{ ...SPRING, delay: 0.08 }}
+          >
+            <span className="wa-panel-name">
+              {nameOf(picked)} <em>•••• {picked.last4}</em>
+            </span>
+            <div className="wa-summary">
+              <span className="wa-balance">
+                <span>Balance</span>
+                <b>{picked.balance}</b>
+              </span>
+              <span className="wa-due">{picked.due}</span>
+              <label className="wa-primary">
+                <span>Default</span>
+                <Switch.Root
+                  className="wa-switch"
+                  checked={wallet.primary === picked.id}
+                  onCheckedChange={makeDefault(picked)}
+                  aria-label={`Make ${nameOf(picked)} your default card`}
+                >
+                  <Switch.Thumb className="wa-thumb" />
+                </Switch.Root>
+              </label>
+            </div>
+
+            <Transactions card={picked} rows={6} />
+          </motion.aside>
+        )}
+      </AnimatePresence>
       </div>
     </section>
   );

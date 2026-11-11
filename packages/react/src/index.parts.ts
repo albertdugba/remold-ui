@@ -6,3 +6,4 @@ export { RemoldPathGroup as PathGroup } from "./path-group/remold-path-group.js"
 export type { PathSpec } from "./path-group/types.js";
 export { RemoldConnectors as Connectors } from "./connectors/remold-connectors.js";
 export { RemoldAnchor as Anchor } from "./anchor/remold-anchor.js";
+export * as Tour from "./tour/index.parts.js";

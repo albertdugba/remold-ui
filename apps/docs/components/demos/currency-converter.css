@@ -60,6 +60,7 @@
 
 .fx-well {
   position: relative;
+  container-type: inline-size;
   display: grid;
   gap: 6px;
   padding: 18px 128px 20px 20px;
@@ -86,10 +87,13 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 40px;
+  /* As large as fits: 40px on a wide card, less on a phone, and smaller again as the number
+     grows, so a long amount stays whole beside the currency. 100cqi is the room left of it. */
+  font-size: clamp(16px, min(13cqi + 8px, 100cqi / (var(--fx-chars) * 0.56)), 40px);
   font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 46px;
+  transition: font-size 0.2s ease-out;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   outline: none;
@@ -224,6 +228,7 @@
 }
 
 .fx-option {
+  position: relative;
   display: grid;
   grid-template-columns: 28px auto minmax(0, 1fr) auto;
   gap: 10px;
@@ -234,12 +239,21 @@
   cursor: pointer;
 }
 
-.fx-option[data-highlighted] {
+/* One highlight for the whole list, behind the row it's on */
+.fx-option-hover {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background: rgb(24 24 27 / 0.05);
+  pointer-events: none;
 }
 
-.dark .fx-option[data-highlighted] {
+.dark .fx-option-hover {
   background: rgb(255 255 255 / 0.06);
+}
+
+.fx-option > :not(.fx-option-hover) {
+  position: relative;
 }
 
 .fx-option .fx-flag {
@@ -366,6 +380,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .fx-amount {
+    transition: none;
+  }
+
   .fx-spin {
     animation: none;
   }

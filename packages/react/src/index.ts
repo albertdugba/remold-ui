@@ -10,6 +10,13 @@ export type {
   UseRemoldMorphOptions,
   UseRemoldMorphReturnValue,
 } from "./use-remold-morph/types.js";
+export { useTour } from "./tour/tour-context.js";
+export type {
+  TourActions,
+  TourChangeDetails,
+  TourChangeReason,
+  TourContextValue,
+} from "./tour/types.js";
 export { useViewTransition } from "./use-view-transition/use-view-transition.js";
 export { MorphPath } from "./morph-path/morph-path.js";
 export type { MorphPathProps } from "./morph-path/types.js";

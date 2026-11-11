@@ -177,13 +177,25 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
     };
   }, [element]);
 
-  // A changed camera turns, tilts or pauses the cloud from where it is.
-  const { spin, tilt, distance, sway } = typeof camera === "object" ? camera : {};
+  // A changed palette recolours the dots where they are, without moving them.
+  const paletteKey = palette ? JSON.stringify(palette) : "";
+  useIsoLayoutEffect(() => {
+    if (!instance || !palette) return;
+
+    instance.setPalette(palette);
+  }, [instance, paletteKey]);
+
+  // A changed camera turns, tilts or pauses the cloud from where it is. A changed angle turns it to
+  // that angle, so a drag can steer it; an unchanged one is left out, so the cloud keeps turning.
+  const { spin, tilt, distance, sway, angle } = typeof camera === "object" ? camera : {};
+  const shownAngle = useRef(angle);
   useIsoLayoutEffect(() => {
     if (!instance || !mountOptions.current.camera) return;
 
-    instance.setCamera({ spin, tilt, distance, sway });
-  }, [instance, spin, tilt, distance, sway]);
+    const turned = angle !== shownAngle.current;
+    shownAngle.current = angle;
+    instance.setCamera({ spin, tilt, distance, sway, ...(turned ? { angle } : {}) });
+  }, [instance, spin, tilt, distance, sway, angle]);
 
   // A new shape: sample it (images load first) and flow into it.
   const warned = useRef(false);

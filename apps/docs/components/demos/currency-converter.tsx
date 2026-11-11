@@ -11,7 +11,7 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
 import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 
 import { useInPreview } from "./portal-container";
 import { useMeasuredSize } from "./use-measured-size";
@@ -113,6 +113,9 @@ function Flag({ code }: { code: string }) {
   );
 }
 
+/** The highlight slides between rows, as the popover menu's does. */
+const HOVER = { type: "spring" as const, stiffness: 460, damping: 34, mass: 0.55 };
+
 interface ListProps {
   side: Side;
   code: string;
@@ -130,6 +133,7 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
     (other) => !typed || other.toLowerCase().includes(typed) || nameOf(other).toLowerCase().includes(typed),
   );
   const visible = shown.slice(0, typed ? 36 : 24);
+  const [highlighted, setHighlighted] = useState<string | undefined>();
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") onClose();
@@ -161,6 +165,7 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
         filter={null}
         value={query}
         autoHighlight="always"
+        onItemHighlighted={(item) => setHighlighted(item)}
         itemToStringValue={(item: string) => `${item} ${nameOf(item)}`}
         onValueChange={(next, details) =>
           details.reason !== "item-press" && details.reason !== "list-navigation" && onQueryChange(next)
@@ -176,7 +181,7 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
           />
         </motion.label>
         <Autocomplete.Empty className="fx-empty">No currencies match</Autocomplete.Empty>
-        <Autocomplete.List className="fx-list">
+        <Autocomplete.List className="fx-list" render={<motion.div layoutScroll />}>
           {(item: string, index: number) => (
             <Autocomplete.Item
               key={item}
@@ -198,6 +203,9 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
                 )
               }
             >
+              {item === highlighted && (
+                <motion.span layoutId={`fx-hover-${side}`} className="fx-option-hover" transition={HOVER} />
+              )}
               <Flag code={item} />
               <span className="fx-option-code">{item}</span>
               <span className="fx-option-name">{nameOf(item)}</span>
@@ -236,6 +244,7 @@ function Well({
   failed,
   busy,
   canPick,
+  chars,
   onAmountChange,
   onPick,
 }: {
@@ -246,13 +255,20 @@ function Well({
   failed: boolean;
   busy: boolean;
   canPick: boolean;
+  /** The longer of the two amounts, in characters: both shrink together to fit it. */
+  chars: number;
   onAmountChange: (amount: string) => void;
   onPick: () => void;
 }) {
   const sending = side === "send";
 
   return (
-    <motion.div className="fx-well" data-side={side} {...PART}>
+    <motion.div
+      className="fx-well"
+      data-side={side}
+      style={{ "--fx-chars": chars } as CSSProperties}
+      {...PART}
+    >
       <motion.label
         layoutId={`fx-label-${side}`}
         className="fx-label"
@@ -266,6 +282,7 @@ function Well({
         <input
           id="fx-amount"
           className="fx-amount"
+          data-own-size
           inputMode="decimal"
           autoComplete="off"
           value={amount}
@@ -494,8 +511,10 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
     [1400, reset],
   ]);
 
+  const chars = Math.max(amount.length, gets === null ? 1 : format(gets, to).length, 1);
   const well = (side: Side) => (
     <Well
+      chars={chars}
       side={side}
       code={side === "send" ? from : to}
       amount={amount}
