@@ -406,7 +406,7 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
   return (
     <section
       ref={ref}
-      className={`grid min-h-[470px] w-[480px] max-w-full content-start font-sans tracking-[-0.01em] text-(--iv-ink) antialiased ${PALETTE}`}
+      className={`grid min-h-[470px] w-[420px] max-w-full content-start font-sans tracking-[-0.01em] text-(--iv-ink) antialiased ${PALETTE}`}
       aria-label="Team members"
     >
       <LayoutGroup>

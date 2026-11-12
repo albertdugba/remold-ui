@@ -1,11 +1,6 @@
 "use client";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
-import { Tabs } from "@base-ui/react/tabs";
-import { Toggle } from "@base-ui/react/toggle";
-import { ToggleGroup } from "@base-ui/react/toggle-group";
 import Link from "next/link";
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { ComponentPreview, type CustomPreview } from "./component-preview";
 import { landingCards } from "./home/parts";
 
@@ -73,25 +68,6 @@ const LANDING_COPY: Record<string, string> = {
   "logo-into-logo": "One brand mark reshapes into the next, with no text in between.",
 };
 
-/** The groups the shelf filters by, in the order the chips show them. */
-const GROUPS = ["Morphing", "Forms & Inputs", "Payments", "Charts & Data", "Interface", "Canvas & Particles", "Illustrations"] as const;
-
-/** The landing page, the sidebar and the home catalogue each name things their own way: one set of names here. */
-const GROUP_OF: Record<string, (typeof GROUPS)[number]> = {
-  "Form elements": "Forms & Inputs",
-  Particles: "Canvas & Particles",
-  Canvas: "Canvas & Particles",
-  Motion: "Canvas & Particles",
-  Backgrounds: "Canvas & Particles",
-  Shapes: "Illustrations",
-  Icons: "Illustrations",
-  Text: "Morphing",
-};
-const groupOf = (category: string) => GROUP_OF[category] ?? ((GROUPS as readonly string[]).includes(category) ? (category as (typeof GROUPS)[number]) : "Interface");
-
-type Filter = "all" | "new" | (typeof GROUPS)[number];
-type Sort = "featured" | "az";
-
 /**
  * A flat, visual library shelf. Landing cards come first in their authored order; documented
  * examples the landing page doesn't show follow them, without creating a second inventory.
@@ -109,6 +85,7 @@ export function ComponentBrowser({ extras }: { extras: BrowserItem[] }) {
       description: LANDING_COPY[card.slug] ?? card.kicker,
       href: card.href,
       category: card.categoryLabel,
+      isNew: card.isNew,
       custom: {
         render: card.render,
         states: card.states,
@@ -124,126 +101,21 @@ export function ComponentBrowser({ extras }: { extras: BrowserItem[] }) {
     return [...front, ...rest];
   }, [extras]);
 
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
-  const [sort, setSort] = useState<Sort>("featured");
-  const value = useDeferredValue(query.trim().toLowerCase());
-  const search = useRef<HTMLInputElement>(null);
-  const tabs = useRef<HTMLDivElement>(null);
-
-  // The category row scrolls when it can't fit; mark it so its far edge can fade.
-  useEffect(() => {
-    const row = tabs.current;
-    if (!row) return;
-    const check = () => row.toggleAttribute("data-overflow", row.scrollWidth > row.clientWidth + 1);
-    check();
-    const observer = new ResizeObserver(check);
-    observer.observe(row);
-    return () => observer.disconnect();
-  }, []);
-
-  // "/" jumps to the search, as it does on most docs sites, unless you're already typing somewhere.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (event.key !== "/" || event.metaKey || event.ctrlKey || target.closest("input, textarea, [contenteditable]")) return;
-      event.preventDefault();
-      search.current?.focus();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-
-  const inFilter = (item: BrowserItem, f: Filter) => f === "all" || (f === "new" ? Boolean(item.isNew) : groupOf(item.category) === f);
-  const counts = useMemo(() => {
-    const out: Record<string, number> = { all: items.length, new: items.filter((i) => i.isNew).length };
-    for (const g of GROUPS) out[g] = items.filter((i) => groupOf(i.category) === g).length;
-    return out;
-  }, [items]);
-  const chips: { value: Filter; label: string }[] = [
-    { value: "all", label: "All" },
-    ...(counts.new ? [{ value: "new" as const, label: "New" }] : []),
-    ...GROUPS.filter((g) => counts[g]).map((g) => ({ value: g, label: g })),
-  ];
-
-  const shown = useMemo(() => {
-    const matched = items.filter(
-      (item) =>
-        inFilter(item, filter) &&
-        (!value || `${item.title} ${item.description} ${groupOf(item.category)}`.toLowerCase().includes(value)),
-    );
-    return sort === "az" ? [...matched].sort((a, b) => a.title.localeCompare(b.title)) : matched;
-  }, [items, value, filter, sort]);
   return (
-    <Tabs.Root className="rm-browser not-prose" value={filter} onValueChange={(next) => setFilter(next as Filter)}>
-      <div className="rm-browser-tools">
-        <label className="rm-browser-search">
-          <HugeiconsIcon icon={Search01Icon} strokeWidth={2} aria-hidden="true" />
-          <input
-            ref={search}
-            type="search"
-            placeholder="Search components"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={(event) => event.key === "Escape" && setQuery("")}
-            aria-label="Search components"
-          />
-          {query && (
-            <span className="rm-browser-results" aria-live="polite">
-              {shown.length === 1 ? "1 result" : `${shown.length} results`}
+    <div className="rm-browser not-prose">
+      <div className="rm-browser-grid">
+        {items.map((item) => (
+          <Link key={item.id} href={item.href} className="rm-card">
+            <span className="rm-card-stage">
+              <ComponentPreview id={item.id} custom={item.custom} />
+              {item.isNew && <span className="rm-card-new">New</span>}
             </span>
-          )}
-          {query ? (
-            <button type="button" className="rm-browser-clear" aria-label="Clear the search" onClick={() => {
-              setQuery("");
-              search.current?.focus();
-            }}>
-              <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} aria-hidden="true" />
-            </button>
-          ) : (
-            <kbd className="rm-browser-key" aria-hidden="true">/</kbd>
-          )}
-        </label>
-        <ToggleGroup
-          className="rm-browser-sort"
-          aria-label="Sort"
-          value={[sort]}
-          onValueChange={(next) => next[0] && setSort(next[0] as Sort)}
-        >
-          <Toggle value="featured" className="rm-browser-sort-item">Featured</Toggle>
-          <Toggle value="az" className="rm-browser-sort-item">A–Z</Toggle>
-        </ToggleGroup>
+            <span className="rm-card-meta">
+              <strong>{item.title}</strong>
+            </span>
+          </Link>
+        ))}
       </div>
-      <div className="rm-browser-filters">
-        <Tabs.List ref={tabs} className="rm-browser-tabs" aria-label="Category">
-          {chips.map((chip) => (
-            <Tabs.Tab key={chip.value} value={chip.value} className="rm-browser-tab">
-              {chip.label}
-              <span className="rm-browser-tab-count">{counts[chip.value]}</span>
-            </Tabs.Tab>
-          ))}
-          <Tabs.Indicator className="rm-browser-indicator" />
-        </Tabs.List>
-      </div>
-      <Tabs.Panel value={filter} className="rm-browser-panel">
-      {shown.length === 0 ? (
-        <p className="rm-browser-empty">{query ? `Nothing matches “${query}”.` : "Nothing here yet."}</p>
-      ) : (
-        <div className="rm-browser-grid">
-          {shown.map((item) => (
-            <Link key={item.id} href={item.href} className="rm-card">
-              <span className="rm-card-stage">
-                <ComponentPreview id={item.id} custom={item.custom} />
-                {item.isNew && <span className="rm-card-new">New</span>}
-              </span>
-              <span className="rm-card-meta">
-                <strong>{item.title}</strong>
-              </span>
-            </Link>
-          ))}
-        </div>
-      )}
-      </Tabs.Panel>
-    </Tabs.Root>
+    </div>
   );
 }

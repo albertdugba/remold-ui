@@ -375,9 +375,9 @@ export function NotificationInbox({ value, defaultValue = START, onValueChange, 
   const [inbox, setInbox] = useControllableState({ value, defaultValue, onValueChange });
   const id = useId();
   const still = useReducedMotion();
-  const shell = useRef<HTMLDivElement>(null);
-  const [anchor, room] = useMeasure();
-  const [content, size] = useMeasure();
+  const [shell, setShell] = useState<HTMLDivElement | null>(null);
+  const [anchor, room] = useMeasure({ offsetSize: true });
+  const [content, size] = useMeasure({ offsetSize: true });
   const [highlighted, setHighlighted] = useState<string | null>(null);
   const [bell, animateBell] = useAnimate();
   const marking = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -427,9 +427,9 @@ export function NotificationInbox({ value, defaultValue = START, onValueChange, 
       <div ref={anchor} className="relative h-[640px] w-[min(100%,420px)]">
         <AppBar open={open} />
 
-        <Popover.Root open={open} onOpenChange={onOpenChange} modal={false}>
+        <Popover.Root open={open && shell !== null} onOpenChange={onOpenChange} modal={false}>
           <motion.div
-            ref={shell}
+            ref={setShell}
             className="absolute top-0 left-0 overflow-hidden bg-(--nbx-surface)"
             initial={false}
             animate={
@@ -581,8 +581,7 @@ const ACCEPTED = WITH_NEW.map((notice) =>
 const CLEARING = ["mention", "comment", "deploy"];
 
 const BEATS: readonly (InboxValue & { ms: number })[] = [
-  { ...START, ms: 1200 },
-  { ...START, notices: WITH_NEW, ms: 1300 },
+  { ...START, open: true, ms: 1400 },
   { ...START, open: true, notices: WITH_NEW, ms: 1900 },
   { ...START, open: true, notices: ACCEPTED, ms: 1600 },
   { ...START, open: true, tab: "unread", notices: ACCEPTED, ms: 1300 },
