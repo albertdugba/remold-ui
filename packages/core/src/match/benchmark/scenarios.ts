@@ -1,14 +1,9 @@
-/**
- * Benchmark scenarios: before/after pairs of the same interface, each built to test a
- * different hard case. Boxes are in pixels; brands and products are invented.
- */
 import type { Rgba } from "../nodes";
 import { box, control, heading, media, page, text, type Element, type Page } from "./build";
 
 export interface Scenario {
   id: string;
   name: string;
-  /** What changes, and why it's hard. */
   note: string;
   from: Page;
   to: Page;
@@ -18,8 +13,6 @@ const MUTED: Rgba = [85, 96, 112, 1];
 const BAR: Rgba = [243, 245, 248, 1];
 const GHOST = { color: [20, 27, 38, 1], background: [0, 0, 0, 0] } as const;
 const CHIP = { color: [20, 27, 38, 1], background: [230, 234, 240, 1], radius: 999, fontWeight: 500 } as const;
-
-/* Shop: product grid → product detail */
 
 const PRODUCTS = [
   { id: "p1", name: "Field Jacket", price: "$128", rating: "4.6", tint: [233, 201, 184, 1] },
@@ -93,8 +86,6 @@ const shopDetail = page(1000, [
   }),
 ]);
 
-/* Board: a card moves column, one is added, one is renamed, counts change */
-
 type Task = { id: string; title: string; tag: string; who: string; column: number };
 const TASKS_BEFORE: Task[] = [
   { id: "pricing", title: "Update pricing page", tag: "Copy", who: "AL", column: 0 },
@@ -150,8 +141,6 @@ const board = (tasks: Task[]) =>
       );
     }),
   ]);
-
-/* Dashboard: every number changes and half the table goes */
 
 const KPI_ALL = [
   ["Revenue", "$1.24M", "+8.2%"],
@@ -223,8 +212,6 @@ const dashboard = (europe: boolean) => {
   ]);
 };
 
-/* Checkout: names merge, the address splits, three items merge into one line */
-
 const ITEMS = [
   ["Field notebook", "€24"],
   ["Brass pen", "€38"],
@@ -293,8 +280,6 @@ const checkoutReview = page(1000, [
   summary(true),
 ]);
 
-/* Settings: the same content rebuilt for mobile, with new layout and order */
-
 const NAV = ["Profile", "Notifications", "Billing", "Security"];
 const TOGGLES = [
   ["t1", "Email digests", true],
@@ -337,7 +322,6 @@ const settingsDesktop = page(1000, [
   control("save", "Save changes", [600, 530, 140, 40]),
 ]);
 
-// The mobile page is 400px wide, so the same content sits at different relative positions.
 const settingsMobile = page(400, [
   heading("h", "Profile", [16, 16, 300, 32]),
   box(

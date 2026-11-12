@@ -1,9 +1,3 @@
-/**
- * Measurements of subpaths: winding, centre and bounds.
- *
- * These are estimates from points sampled along the outline. They are used to decide how
- * shapes pair up and which way they run, where speed matters more than exactness.
- */
 import type { Point } from "../interpolate";
 import { pointAt, type Subpath } from "./normalize";
 
@@ -14,72 +8,52 @@ export interface Bounds {
   height: number;
 }
 
-/** Points along the outline: `perSegment` evenly spaced in t on every segment, plus the end. */
+const steps = (count: number) => Array.from({ length: count }, (_, step) => step / count);
+
+const cross = (p: Point, q: Point) => p.x * q.y - q.x * p.y;
+
+const sum = (points: readonly Point[]): Point =>
+  points.reduce((total, point) => ({ x: total.x + point.x, y: total.y + point.y }), { x: 0, y: 0 });
+
+const EMPTY_BOX = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+
+const grow = (box: typeof EMPTY_BOX, point: Point) => ({
+  minX: Math.min(box.minX, point.x),
+  minY: Math.min(box.minY, point.y),
+  maxX: Math.max(box.maxX, point.x),
+  maxY: Math.max(box.maxY, point.y),
+});
+
 export function samplePoints(subpath: Subpath, perSegment = 4): Point[] {
-  const points: Point[] = [];
+  const along = subpath.segments.flatMap((segment) => steps(perSegment).map((t) => pointAt(segment, t)));
+  const last = subpath.segments.at(-1);
 
-  for (const c of subpath.segments) {
-    for (let k = 0; k < perSegment; k++) points.push(pointAt(c, k / perSegment));
-  }
-  const last = subpath.segments[subpath.segments.length - 1];
-
-  if (last && !subpath.closed) points.push(last.p3);
-
-  return points;
+  return last && !subpath.closed ? [...along, last.p3] : along;
 }
 
-/**
- * Signed area enclosed by the outline (shoelace formula). Positive means the outline runs
- * clockwise on screen, where y points down; negative means anticlockwise.
- */
 export function signedArea(subpath: Subpath): number {
   const points = samplePoints(subpath);
-  let sum = 0;
+  const twice = points.reduce((total, point, index) => total + cross(point, points[(index + 1) % points.length]!), 0);
 
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i]!;
-    const q = points[(i + 1) % points.length]!;
-
-    sum += p.x * q.y - q.x * p.y;
-  }
-  return sum / 2;
+  return twice / 2;
 }
 
-/** The average of the sampled outline points: a cheap centre for comparing positions. */
 export function centroid(subpath: Subpath): Point {
   const points = samplePoints(subpath);
 
   if (points.length === 0) return { x: 0, y: 0 };
 
-  let x = 0,
-    y = 0;
-  for (const p of points) {
-    x += p.x;
-    y += p.y;
-  }
-  return { x: x / points.length, y: y / points.length };
+  const total = sum(points);
+
+  return { x: total.x / points.length, y: total.y / points.length };
 }
 
-/**
- * A box around every point and handle. The curve always lies inside its handles, so this
- * never cuts the shape off, though it can be larger than the drawn shape. `null` when empty.
- */
 export function bounds(subpaths: readonly Subpath[]): Bounds | null {
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity;
-  for (const subpath of subpaths) {
-    for (const c of subpath.segments) {
-      for (const p of [c.p0, c.p1, c.p2, c.p3]) {
-        minX = Math.min(minX, p.x);
-        minY = Math.min(minY, p.y);
-        maxX = Math.max(maxX, p.x);
-        maxY = Math.max(maxY, p.y);
-      }
-    }
-  }
-  if (minX === Infinity) return null;
+  const points = subpaths.flatMap((subpath) => subpath.segments.flatMap(({ p0, p1, p2, p3 }) => [p0, p1, p2, p3]));
+
+  if (points.length === 0) return null;
+
+  const { minX, minY, maxX, maxY } = points.reduce(grow, EMPTY_BOX);
 
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }

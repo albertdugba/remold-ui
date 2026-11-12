@@ -1,49 +1,27 @@
-/** Matches two UI snapshots without relying on element keys. */
 import { assignFlat, type Assignment } from "./hungarian";
-import { descendants, prepare, type MatchNode } from "./nodes";
+import { descendants, prepare, type PreparedNode, type MatchNode } from "./nodes";
 import { baseSimilarity, styleSimilarity } from "./similarity";
 import { splitsAndMerges, type Merge, type Split } from "./split-merge";
 import { structureContext, withContext } from "./structure";
 
 export interface MatchNodesOptions {
-  /** Pairs scoring below this (0–1) are left unmatched. Default 0.5. */
   threshold?: number;
-  /** Use family context to settle ambiguous pairs. Default true. */
   structure?: boolean;
-  /** Detect one-to-many and many-to-one changes in text. Default true. */
   splits?: boolean;
-  /**
-   * Maximum score-table size for the optimal matcher. Larger snapshots use a bounded greedy
-   * matcher and skip structural refinement, keeping a transition responsive. Default 160,000.
-   * Set to `Infinity` to always use the optimal matcher.
-   */
   maxPairComparisons?: number;
 }
 
 export interface NodeMatches {
-  /** One old element became one new element. Indexes into the two input lists. */
   pairs: Assignment[];
-  /** One old element became several new ones. */
   splits: Split[];
-  /** Several old elements became one new one. */
   merges: Merge[];
-  /** Old elements with no counterpart. */
   removed: number[];
-  /** New elements with no counterpart. */
   added: number[];
 }
 
-/** How many times family context is applied. Each pass can settle ties the previous one exposed. */
-const STRUCTURE_PASSES = 3;
-const LONER_STYLE = 0.7;
-const DEFAULT_MAX_PAIR_COMPARISONS = 160_000;
-const GREEDY_CANDIDATES_PER_NODE = 4;
-
-type PreparedNodes = ReturnType<typeof prepare>;
-
-interface RefinementOptions {
-  fromNodes: PreparedNodes;
-  toNodes: PreparedNodes;
+interface Refinement {
+  fromNodes: readonly PreparedNode[];
+  toNodes: readonly PreparedNode[];
   pairs: Assignment[];
   styleScores: Float64Array;
   toCount: number;
@@ -51,266 +29,254 @@ interface RefinementOptions {
   merges: readonly Merge[];
 }
 
-interface PairIndexes {
-  toByFrom: Map<number, number>;
-  fromByTo: Map<number, number>;
-  excludedFrom: Set<number>;
-  excludedTo: Set<number>;
+interface Candidate {
+  from: number;
+  to: number;
+  score: number;
 }
 
-function createPairIndexes({ pairs, splits, merges }: Pick<RefinementOptions, "pairs" | "splits" | "merges">): PairIndexes {
-  const forward = new Map<number, number>();
-  const backward = new Map<number, number>();
+const STRUCTURE_PASSES = 3;
+const LONER_STYLE = 0.7;
+const DEFAULT_THRESHOLD = 0.5;
+const DEFAULT_MAX_PAIR_COMPARISONS = 160_000;
+const GREEDY_CANDIDATES_PER_NODE = 4;
+const MIN_SHARED_CONTENTS = 3;
+const CONTAINER_HELD_SHARE = 0.6;
+const CONTAINER_TARGET_SHARE = 0.3;
+const CONTAINER_SCORE_RANGE = 2.5;
+const TOP_LEVEL = "top";
 
-  for (const p of pairs) {
-    forward.set(p.from, p.to);
-    backward.set(p.to, p.from);
-  }
+const isTextual = ({ node }: PreparedNode) => node.kind === "text" || node.kind === "heading";
 
-  const excludedFrom = new Set<number>();
-  const excludedTo = new Set<number>();
+const isContainer = (entry: PreparedNode) => !isTextual(entry);
 
-  for (const split of splits) {
-    excludedFrom.add(split.from);
-    for (const toIndex of split.to) excludedTo.add(toIndex);
-  }
+const contentsOf = (nodes: readonly PreparedNode[], index: number) =>
+  descendants(nodes, index).filter((descendant) => nodes[descendant]!.hasContent);
 
-  for (const merge of merges) {
-    excludedTo.add(merge.to);
-    for (const fromIndex of merge.from) excludedFrom.add(fromIndex);
-  }
-  return { toByFrom: forward, fromByTo: backward, excludedFrom, excludedTo };
+function regroupedSides(splits: readonly Split[], merges: readonly Merge[]) {
+  return {
+    from: new Set([...splits.map((split) => split.from), ...merges.flatMap((merge) => merge.from)]),
+    to: new Set([...splits.flatMap((split) => split.to), ...merges.map((merge) => merge.to)]),
+  };
 }
 
-function pairLoners({ fromNodes, toNodes, pairs, styleScores, toCount, splits, merges }: RefinementOptions): Assignment[] {
-  const { toByFrom, fromByTo, excludedFrom, excludedTo } = createPairIndexes({ pairs, splits, merges });
-  const family = (parent: number, partner: number | undefined) =>
-    parent === -1 ? "top" : partner === undefined ? null : `${parent}>${partner}`;
+function groupBy<T>(items: readonly T[], keyOf: (item: T) => string | null, valueFor: (item: T) => number) {
+  return items.reduce((groups, item) => {
+    const key = keyOf(item);
 
-  const leftA = new Map<string, number[]>();
-  const leftB = new Map<string, number[]>();
+    return key === null ? groups : groups.set(key, [...(groups.get(key) ?? []), valueFor(item)]);
+  }, new Map<string, number[]>());
+}
 
-  for (const entry of fromNodes) {
-    if (toByFrom.has(entry.index) || excludedFrom.has(entry.index) || entry.node.kind === "text" || entry.node.kind === "heading") {
-      continue;
-    }
+function pickGreedily(candidates: readonly Candidate[]): Candidate[] {
+  const usedFrom = new Set<number>();
+  const usedTo = new Set<number>();
 
-    const key = family(entry.node.parent, entry.node.parent === -1 ? undefined : toByFrom.get(entry.node.parent));
-    if (key) leftA.set(key, [...(leftA.get(key) ?? []), entry.index]);
-  }
+  return candidates.filter(({ from, to }) => {
+    if (usedFrom.has(from) || usedTo.has(to)) return false;
 
-  for (const entry of toNodes) {
-    if (fromByTo.has(entry.index) || excludedTo.has(entry.index) || entry.node.kind === "text" || entry.node.kind === "heading") {
-      continue;
-    }
+    usedFrom.add(from);
+    usedTo.add(to);
 
-    const fromParent = entry.node.parent === -1 ? undefined : fromByTo.get(entry.node.parent);
-    const key = entry.node.parent === -1 ? "top" : fromParent === undefined ? null : `${fromParent}>${entry.node.parent}`;
-    if (key) leftB.set(key, [...(leftB.get(key) ?? []), entry.index]);
-  }
+    return true;
+  });
+}
 
-  const added: Assignment[] = [];
-  for (const [key, olds] of leftA) {
+function pairLoners({ fromNodes, toNodes, pairs, styleScores, toCount, splits, merges }: Refinement): Assignment[] {
+  const toByFrom = new Map(pairs.map((pair) => [pair.from, pair.to]));
+  const fromByTo = new Map(pairs.map((pair) => [pair.to, pair.from]));
+  const regrouped = regroupedSides(splits, merges);
+
+  const familyKey = (parent: number, oldParent: number | undefined, newParent: number | undefined) => {
+    if (parent === -1) return TOP_LEVEL;
+
+    return oldParent === undefined || newParent === undefined ? null : `${oldParent}>${newParent}`;
+  };
+
+  const lonelyFrom = fromNodes.filter((entry) => !toByFrom.has(entry.index) && !regrouped.from.has(entry.index) && isContainer(entry));
+  const lonelyTo = toNodes.filter((entry) => !fromByTo.has(entry.index) && !regrouped.to.has(entry.index) && isContainer(entry));
+
+  const leftA = groupBy(
+    lonelyFrom,
+    ({ node }) => familyKey(node.parent, node.parent, toByFrom.get(node.parent)),
+    (entry) => entry.index,
+  );
+
+  const leftB = groupBy(
+    lonelyTo,
+    ({ node }) => familyKey(node.parent, fromByTo.get(node.parent), node.parent),
+    (entry) => entry.index,
+  );
+
+  const added = [...leftA].flatMap(([key, olds]) => {
     const news = leftB.get(key);
-    if (olds.length !== 1 || news?.length !== 1) continue;
-    const i = olds[0]!;
-    const j = news[0]!;
-    const score = styleScores[i * toCount + j]!;
-    if (fromNodes[i]!.node.kind === toNodes[j]!.node.kind && score >= LONER_STYLE) added.push({ from: i, to: j, score });
-  }
 
-  return added.length ? [...pairs, ...added] : pairs;
+    if (olds.length !== 1 || news?.length !== 1) return [];
+
+    const [from, to] = [olds[0]!, news[0]!];
+    const score = styleScores[from * toCount + to]!;
+    const sameKind = fromNodes[from]!.node.kind === toNodes[to]!.node.kind;
+
+    return sameKind && score >= LONER_STYLE ? [{ from, to, score }] : [];
+  });
+
+  return added.length > 0 ? [...pairs, ...added] : pairs;
 }
 
-function pairContainers({ fromNodes, toNodes, pairs, styleScores, toCount, splits, merges }: RefinementOptions): Assignment[] {
-  const forward = new Map<number, number>();
-  const usedB = new Set<number>();
-  for (const p of pairs) {
-    forward.set(p.from, p.to);
-    usedB.add(p.to);
-  }
-  for (const s of splits) {
-    forward.set(s.from, -1);
-    for (const j of s.to) usedB.add(j);
-  }
-  for (const m of merges) {
-    usedB.add(m.to);
-    for (const i of m.from) forward.set(i, -1);
-  }
+function pairContainers({ fromNodes, toNodes, pairs, styleScores, toCount, splits, merges }: Refinement): Assignment[] {
+  const toByFrom = new Map(pairs.map((pair) => [pair.from, pair.to]));
+  const regrouped = regroupedSides(splits, merges);
+  const takenTo = new Set([...pairs.map((pair) => pair.to), ...regrouped.to]);
 
-  const contents = (nodes: PreparedNodes, index: number) => descendants(nodes, index).filter((descendant) => nodes[descendant]!.hasContent);
-  const isContainer = (entry: (typeof fromNodes)[number]) => entry.node.kind !== "text" && entry.node.kind !== "heading";
-  const inB = new Map<number, Set<number>>();
+  const openTargets = toNodes
+    .filter((entry) => !takenTo.has(entry.index) && isContainer(entry))
+    .map((entry) => ({ index: entry.index, kind: entry.node.kind, contents: new Set(contentsOf(toNodes, entry.index)) }));
 
-  for (const entry of toNodes) {
-    if (!usedB.has(entry.index) && isContainer(entry)) inB.set(entry.index, new Set(contents(toNodes, entry.index)));
-  }
+  const candidatesFor = (entry: PreparedNode): Candidate[] => {
+    const held = contentsOf(fromNodes, entry.index);
+    const sent = held.map((index) => toByFrom.get(index)).filter((index): index is number => index !== undefined);
 
-  const candidates: { from: number; to: number; score: number }[] = [];
+    if (sent.length < MIN_SHARED_CONTENTS) return [];
 
-  for (const entry of fromNodes) {
-    if (forward.has(entry.index) || !isContainer(entry)) continue;
-    const held = contents(fromNodes, entry.index);
-    const sent = held.map((descendant) => forward.get(descendant)).filter((index): index is number => index !== undefined && index >= 0);
-    if (sent.length < 3) continue;
-    for (const [toIndex, contained] of inB) {
-      if (toNodes[toIndex]!.node.kind !== entry.node.kind || contained.size === 0) continue;
-      let agree = 0;
-      for (const targetIndex of sent) if (contained.has(targetIndex)) agree++;
-      if (agree < 3 || agree / held.length < 0.6 || agree / contained.size < 0.3) continue;
-      candidates.push({ from: entry.index, to: toIndex, score: agree / held.length + agree / contained.size + 0.5 * styleScores[entry.index * toCount + toIndex]! });
+    return openTargets.flatMap((target) => {
+      if (target.kind !== entry.node.kind || target.contents.size === 0) return [];
+
+      const agree = sent.filter((index) => target.contents.has(index)).length;
+      const heldShare = agree / held.length;
+      const targetShare = agree / target.contents.size;
+
+      if (agree < MIN_SHARED_CONTENTS || heldShare < CONTAINER_HELD_SHARE || targetShare < CONTAINER_TARGET_SHARE) return [];
+
+      const score = heldShare + targetShare + 0.5 * styleScores[entry.index * toCount + target.index]!;
+
+      return [{ from: entry.index, to: target.index, score }];
+    });
+  };
+
+  const candidates = fromNodes
+    .filter((entry) => !toByFrom.has(entry.index) && !regrouped.from.has(entry.index) && isContainer(entry))
+    .flatMap(candidatesFor)
+    .sort((x, y) => y.score - x.score);
+
+  const added = pickGreedily(candidates).map((candidate) => ({ ...candidate, score: candidate.score / CONTAINER_SCORE_RANGE }));
+
+  return added.length > 0 ? [...pairs, ...added] : pairs;
+}
+
+const samePairs = (previous: readonly Assignment[], next: readonly Assignment[]) =>
+  previous.length === next.length && previous.every((pair, index) => pair.from === next[index]!.from && pair.to === next[index]!.to);
+
+function bestForRow(similarity: Float64Array, row: number, cols: number, threshold: number): Candidate[] {
+  return Array.from({ length: cols }, (_, to) => ({ from: row, to, score: similarity[row * cols + to]! }))
+    .filter((candidate) => candidate.score >= threshold)
+    .sort((x, y) => y.score - x.score || x.to - y.to)
+    .slice(0, GREEDY_CANDIDATES_PER_NODE);
+}
+
+function assignGreedy(similarity: Float64Array, rows: number, cols: number, threshold: number): Assignment[] {
+  const candidates = Array.from({ length: rows }, (_, row) => bestForRow(similarity, row, cols, threshold))
+    .flat()
+    .sort((x, y) => y.score - x.score || x.from - y.from || x.to - y.to);
+
+  return pickGreedily(candidates);
+}
+
+function scoreTables(fromNodes: readonly PreparedNode[], toNodes: readonly PreparedNode[]) {
+  const style = new Float64Array(fromNodes.length * toNodes.length);
+  const base = new Float64Array(fromNodes.length * toNodes.length);
+
+  for (const [row, from] of fromNodes.entries()) {
+    for (const [column, to] of toNodes.entries()) {
+      const cell = row * toNodes.length + column;
+
+      style[cell] = styleSimilarity(from, to);
+      base[cell] = baseSimilarity(from, to, style[cell]);
     }
   }
 
-  candidates.sort((x, y) => y.score - x.score);
-  const usedFrom = new Set<number>();
-  const usedTo = new Set<number>();
-  const added: Assignment[] = [];
-
-  for (const candidate of candidates) {
-    if (usedFrom.has(candidate.from) || usedTo.has(candidate.to)) continue;
-    usedFrom.add(candidate.from);
-    usedTo.add(candidate.to);
-    added.push({ from: candidate.from, to: candidate.to, score: candidate.score / 2.5 });
-  }
-
-  return added.length ? [...pairs, ...added] : pairs;
+  return { style, base };
 }
 
-function samePairs(previousPairs: readonly Assignment[], nextPairs: readonly Assignment[]): boolean {
-  if (previousPairs.length !== nextPairs.length) return false;
+function refineWithStructure(
+  fromNodes: readonly PreparedNode[],
+  toNodes: readonly PreparedNode[],
+  base: Float64Array,
+  style: Float64Array,
+  initial: Assignment[],
+  threshold: number,
+): Assignment[] {
+  const context = structureContext(fromNodes, toNodes, style);
+  const scratch = new Float64Array(base.length);
+  let pairs = initial;
 
-  for (let index = 0; index < previousPairs.length; index++) {
-    if (previousPairs[index]!.from !== nextPairs[index]!.from || previousPairs[index]!.to !== nextPairs[index]!.to) return false;
-  }
-  return true;
-}
+  for (let pass = 0; pass < STRUCTURE_PASSES; pass++) {
+    const similarity = withContext(base, fromNodes, toNodes, pairs, context, scratch);
+    const next = assignFlat({ similarity, rows: fromNodes.length, cols: toNodes.length, threshold });
+    const settled = samePairs(next, pairs);
 
-function assignGreedy({
-  similarity,
-  rows,
-  cols,
-  threshold,
-}: {
-  similarity: Float64Array;
-  rows: number;
-  cols: number;
-  threshold: number;
-}): Assignment[] {
-  const candidates: Assignment[] = [];
+    pairs = next;
 
-  for (let from = 0; from < rows; from++) {
-    const best: Assignment[] = [];
-
-    for (let to = 0; to < cols; to++) {
-      const score = similarity[from * cols + to]!;
-      if (score < threshold) continue;
-
-      const candidate = { from, to, score };
-      const insertAt = best.findIndex((entry) => entry.score < score);
-      if (insertAt === -1) best.push(candidate);
-      else best.splice(insertAt, 0, candidate);
-      if (best.length > GREEDY_CANDIDATES_PER_NODE) best.pop();
-    }
-
-    candidates.push(...best);
-  }
-
-  candidates.sort((left, right) => right.score - left.score || left.from - right.from || left.to - right.to);
-  const usedFrom = new Set<number>();
-  const usedTo = new Set<number>();
-  const pairs: Assignment[] = [];
-
-  for (const candidate of candidates) {
-    if (usedFrom.has(candidate.from) || usedTo.has(candidate.to)) continue;
-    usedFrom.add(candidate.from);
-    usedTo.add(candidate.to);
-    pairs.push(candidate);
+    if (settled) break;
   }
 
   return pairs;
+}
+
+function validate(threshold: number, maxPairComparisons: number) {
+  if (!(threshold >= 0 && threshold <= 1)) {
+    throw new RangeError(`matchNodes: threshold must be between 0 and 1, got ${threshold}`);
+  }
+
+  if (!(maxPairComparisons >= 0)) {
+    throw new RangeError(`matchNodes: maxPairComparisons must be non-negative, got ${maxPairComparisons}`);
+  }
 }
 
 export function matchNodes(
   from: readonly MatchNode[],
   to: readonly MatchNode[],
   {
-    threshold = 0.5,
+    threshold = DEFAULT_THRESHOLD,
     structure = true,
     splits: findSplits = true,
     maxPairComparisons = DEFAULT_MAX_PAIR_COMPARISONS,
   }: MatchNodesOptions = {},
 ): NodeMatches {
-  if (!(threshold >= 0 && threshold <= 1)) {
-    throw new RangeError(`matchNodes: threshold must be between 0 and 1, got ${threshold}`);
-  }
-  if (!(maxPairComparisons >= 0)) {
-    throw new RangeError(`matchNodes: maxPairComparisons must be non-negative, got ${maxPairComparisons}`);
-  }
+  validate(threshold, maxPairComparisons);
 
   const fromNodes = prepare(from);
   const toNodes = prepare(to);
   const fromCount = fromNodes.length;
   const toCount = toNodes.length;
-  const useGreedyMatching = fromCount * toCount > maxPairComparisons;
-  const styleScores = new Float64Array(fromCount * toCount);
-  const baseScores = new Float64Array(fromCount * toCount);
+  const greedy = fromCount * toCount > maxPairComparisons;
+  const scores = scoreTables(fromNodes, toNodes);
 
-  for (let fromIndex = 0; fromIndex < fromCount; fromIndex++) {
-    for (let toIndex = 0; toIndex < toCount; toIndex++) {
-      const scoreIndex = fromIndex * toCount + toIndex;
-      styleScores[scoreIndex] = styleSimilarity(fromNodes[fromIndex]!, toNodes[toIndex]!);
-      baseScores[scoreIndex] = baseSimilarity(fromNodes[fromIndex]!, toNodes[toIndex]!, styleScores[scoreIndex]);
-    }
-  }
+  const initial = greedy
+    ? assignGreedy(scores.base, fromCount, toCount, threshold)
+    : assignFlat({ similarity: scores.base, rows: fromCount, cols: toCount, threshold });
 
-  let pairs = useGreedyMatching
-    ? assignGreedy({ similarity: baseScores, rows: fromCount, cols: toCount, threshold })
-    : assignFlat({ similarity: baseScores, rows: fromCount, cols: toCount, threshold });
+  const structured =
+    structure && !greedy && fromCount > 0 && toCount > 0
+      ? refineWithStructure(fromNodes, toNodes, scores.base, scores.style, initial, threshold)
+      : initial;
 
-  if (structure && !useGreedyMatching && fromCount > 0 && toCount > 0) {
-    const context = structureContext(fromNodes, toNodes, styleScores);
-    const contextualScores = new Float64Array(fromCount * toCount);
+  const regrouped = findSplits && !greedy ? splitsAndMerges(fromNodes, toNodes, structured) : { pairs: structured, splits: [], merges: [] };
+  const refinement = { fromNodes, toNodes, styleScores: scores.style, toCount, splits: regrouped.splits, merges: regrouped.merges };
 
-    for (let pass = 0; pass < STRUCTURE_PASSES; pass++) {
-      const nextPairs = assignFlat({ similarity: withContext(baseScores, fromNodes, toNodes, pairs, context, contextualScores), rows: fromCount, cols: toCount, threshold });
-      const settled = samePairs(nextPairs, pairs);
-      pairs = nextPairs;
-      if (settled) break;
-    }
-  }
+  const pairs =
+    structure && !greedy
+      ? pairContainers({ ...refinement, pairs: pairLoners({ ...refinement, pairs: regrouped.pairs }) })
+      : regrouped.pairs;
 
-  let splits: Split[] = [];
-  let merges: Merge[] = [];
-
-  if (findSplits && !useGreedyMatching) ({ pairs, splits, merges } = splitsAndMerges(fromNodes, toNodes, pairs));
-  const refinementOptions = { fromNodes, toNodes, pairs, styleScores, toCount, splits, merges };
-  if (structure && !useGreedyMatching) pairs = pairLoners(refinementOptions);
-  if (structure && !useGreedyMatching) pairs = pairContainers({ ...refinementOptions, pairs });
-
-  const usedA = new Set<number>();
-  const usedB = new Set<number>();
-
-  for (const p of pairs) {
-    usedA.add(p.from);
-    usedB.add(p.to);
-  }
-
-  for (const s of splits) {
-    usedA.add(s.from);
-    for (const j of s.to) usedB.add(j);
-  }
-
-  for (const m of merges) {
-    usedB.add(m.to);
-    for (const i of m.from) usedA.add(i);
-  }
+  const sides = regroupedSides(regrouped.splits, regrouped.merges);
+  const usedFrom = new Set([...pairs.map((pair) => pair.from), ...sides.from]);
+  const usedTo = new Set([...pairs.map((pair) => pair.to), ...sides.to]);
 
   return {
     pairs: pairs.sort((p, q) => p.from - q.from),
-    splits,
-    merges,
-    removed: fromNodes.map((entry) => entry.index).filter((index) => !usedA.has(index)),
-    added: toNodes.map((entry) => entry.index).filter((index) => !usedB.has(index)),
+    splits: regrouped.splits,
+    merges: regrouped.merges,
+    removed: fromNodes.map((entry) => entry.index).filter((index) => !usedFrom.has(index)),
+    added: toNodes.map((entry) => entry.index).filter((index) => !usedTo.has(index)),
   };
 }

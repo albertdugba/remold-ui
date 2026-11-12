@@ -1,4 +1,3 @@
-/** Detects text nodes that split into several nodes or merge into one. */
 import type { Assignment } from "./hungarian";
 import type { PreparedNode } from "./nodes";
 
@@ -12,75 +11,88 @@ export interface Merge {
   to: number;
 }
 
-/** Tokens that identify content: words of two or more characters, and anything with a digit. */
-const significantTokens = (node: PreparedNode) => node.significant;
-
-/** Every significant token of `part` appears in `whole`, and `whole` has more. */
-function isPartOf(part: PreparedNode, whole: PreparedNode): boolean {
-  const partTokens = part.significant;
-  const wholeTokens = whole.significantSet;
-
-  return partTokens.length > 0 && partTokens.length < wholeTokens.size && partTokens.every((token) => wholeTokens.has(token));
+interface Candidate {
+  index: number;
+  score: number;
 }
 
-const closeness = (p: PreparedNode, q: PreparedNode) => Math.exp(-Math.hypot(p.node.x - q.node.x, p.node.y - q.node.y) / 0.6);
+const MIN_COVERAGE = 0.6;
+const CLOSENESS_SCALE = 0.6;
 
-/**
- * Find wholes in `wholes` made of two or more parts in `parts`. `wholeTo` and `partFrom` are the
- * current one-to-one matches in that direction.
- */
+function isPartOf(part: PreparedNode, whole: PreparedNode): boolean {
+  const tokens = part.significant;
+
+  return tokens.length > 0 && tokens.length < whole.significantSet.size && tokens.every((token) => whole.significantSet.has(token));
+}
+
+const closeness = (p: PreparedNode, q: PreparedNode) =>
+  Math.exp(-Math.hypot(p.node.x - q.node.x, p.node.y - q.node.y) / CLOSENESS_SCALE);
+
+function bestWhole(
+  part: PreparedNode,
+  wholes: readonly PreparedNode[],
+  parts: readonly PreparedNode[],
+  wholeTo: ReadonlyMap<number, number>,
+  partFrom: ReadonlyMap<number, number>,
+): number | undefined {
+  const partner = partFrom.get(part.index);
+
+  const isFree = (whole: PreparedNode) => {
+    const current = wholeTo.get(whole.index);
+
+    if (partner !== undefined && partner !== whole.index) return false;
+
+    return current === undefined || current === part.index || isPartOf(parts[current]!, whole);
+  };
+
+  const best = wholes
+    .filter((whole) => whole.text && isPartOf(part, whole) && isFree(whole))
+    .reduce<Candidate | null>((best, whole) => {
+      const score = closeness(part, whole) + (wholeTo.get(whole.index) === part.index ? 1 : 0);
+
+      return score > (best?.score ?? 0) ? { index: whole.index, score } : best;
+    }, null);
+
+  return best?.index;
+}
+
+function coverage(whole: PreparedNode, claimed: readonly PreparedNode[]): number {
+  const covered = new Set(claimed.flatMap((part) => part.significant));
+  const tokens = new Set(whole.significant);
+  const hits = [...tokens].filter((token) => covered.has(token)).length;
+
+  return hits / tokens.size;
+}
+
 function findGroups(
   wholes: readonly PreparedNode[],
   parts: readonly PreparedNode[],
   wholeTo: ReadonlyMap<number, number>,
   partFrom: ReadonlyMap<number, number>,
 ): Map<number, number[]> {
-  const claims = new Map<number, number[]>();
+  const claims = parts
+    .filter((part) => part.text)
+    .reduce((claims, part) => {
+      const whole = bestWhole(part, wholes, parts, wholeTo, partFrom);
 
-  for (const part of parts) {
-    if (!part.text) continue;
+      return whole === undefined ? claims : claims.set(whole, [...(claims.get(whole) ?? []), part.index]);
+    }, new Map<number, number[]>());
 
-    const partner = partFrom.get(part.index);
-    let best = -1;
-    let bestScore = 0;
+  const groups = [...claims].filter(
+    ([whole, claimed]) =>
+      claimed.length >= 2 &&
+      coverage(
+        wholes[whole]!,
+        claimed.map((index) => parts[index]!),
+      ) >= MIN_COVERAGE,
+  );
 
-    for (const whole of wholes) {
-      if (!whole.text || !isPartOf(part, whole)) continue;
-      // Already matched one-to-one to some other whole: leave it.
-      if (partner !== undefined && partner !== whole.index) continue;
-      // The whole is matched to something that isn't one of its parts: leave it.
-      const current = wholeTo.get(whole.index);
-
-      if (current !== undefined && current !== part.index && !isPartOf(parts[current]!, whole)) continue;
-
-      const score = closeness(part, whole) + (current === part.index ? 1 : 0);
-
-      if (score > bestScore) {
-        bestScore = score;
-        best = whole.index;
-      }
-    }
-    if (best >= 0) claims.set(best, [...(claims.get(best) ?? []), part.index]);
-  }
-
-  const groups = new Map<number, number[]>();
-
-  for (const [whole, claimed] of claims) {
-    if (claimed.length < 2) continue;
-    // The parts must cover most of the whole, or it's a coincidence of shared words.
-    const covered = new Set(claimed.flatMap((partIndex) => significantTokens(parts[partIndex]!)));
-    const tokens = new Set(significantTokens(wholes[whole]!));
-    let hits = 0;
-
-    for (const t of tokens) if (covered.has(t)) hits++;
-    if (hits / tokens.size >= 0.6) groups.set(whole, claimed);
-  }
-  return groups;
+  return new Map(groups);
 }
 
-const maps = (pairs: readonly Assignment[]) => ({
-  forward: new Map(pairs.map((p) => [p.from, p.to])),
-  backward: new Map(pairs.map((p) => [p.to, p.from])),
+const directions = (pairs: readonly Assignment[]) => ({
+  forward: new Map(pairs.map((pair) => [pair.from, pair.to])),
+  backward: new Map(pairs.map((pair) => [pair.to, pair.from])),
 });
 
 export function splitsAndMerges(
@@ -88,22 +100,13 @@ export function splitsAndMerges(
   toNodes: readonly PreparedNode[],
   pairs: readonly Assignment[],
 ): { pairs: Assignment[]; splits: Split[]; merges: Merge[] } {
-  let remaining = [...pairs];
+  const before = directions(pairs);
+  const splits = [...findGroups(fromNodes, toNodes, before.forward, before.backward)].map(([from, to]): Split => ({ from, to }));
+  const afterSplits = pairs.filter((pair) => !splits.some((split) => pair.from === split.from || split.to.includes(pair.to)));
 
-  const splits: Split[] = [];
-  const before = maps(remaining);
+  const after = directions(afterSplits);
+  const merges = [...findGroups(toNodes, fromNodes, after.backward, after.forward)].map(([to, from]): Merge => ({ from, to }));
+  const remaining = afterSplits.filter((pair) => !merges.some((merge) => pair.to === merge.to || merge.from.includes(pair.from)));
 
-  for (const [from, to] of findGroups(fromNodes, toNodes, before.forward, before.backward)) {
-    splits.push({ from, to });
-    remaining = remaining.filter((p) => p.from !== from && !to.includes(p.to));
-  }
-
-  const merges: Merge[] = [];
-  const after = maps(remaining);
-
-  for (const [to, from] of findGroups(toNodes, fromNodes, after.backward, after.forward)) {
-    merges.push({ from, to });
-    remaining = remaining.filter((p) => p.to !== to && !from.includes(p.from));
-  }
   return { pairs: remaining, splits, merges };
 }

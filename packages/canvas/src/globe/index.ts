@@ -1,112 +1,65 @@
-/**
- * Globe: a dotted Earth that turns on its own, can be spun with a finger, pulses wherever
- * something happens, and flies arcs between places. Built on the painter, so it stays sharp,
- * sleeps off screen and holds still for reduced motion.
- *
- * Colours come from `colors`, or from CSS when left out: `color` paints the land, `accent-color`
- * the pulses, and `--globe-sphere`, `--globe-glow` and `--globe-arc` the ocean, halo and arcs.
- *
- * ```ts
- * const earth = globe(canvas, { colors: { sphere: "#0d1b3e", glow: "#3b82f6" } });
- * earth.pulse({ lat: 6.5, lon: 3.4 });
- * earth.arc({ from: { lat: 6.5, lon: 3.4 }, to: { lat: 51.5, lon: -0.1 } });
- * earth.focus({ lat: 51.5, lon: -0.1, label: "London · 73 now" });
- * ```
- */
 import type { ReducedMotion } from "@remold-ui/dom";
 import { parseColor } from "../extrude";
 import { painter } from "../painter";
 import { LAND } from "./land";
 
 export interface GlobePoint {
-  /** Degrees north. */
   lat: number;
-  /** Degrees east. */
   lon: number;
 }
 
 export interface GlobeFocus extends GlobePoint {
-  /** A tag drawn above the point. */
   label?: string;
 }
 
 export interface GlobeMarker extends GlobePoint {
-  /** Default: the accent colour. */
   color?: string;
-  /** Radius in CSS pixels. Default 3. */
   size?: number;
 }
 
 export interface GlobePulseOptions extends GlobePoint {
-  /** Default: the accent colour. */
   color?: string;
 }
 
 export interface GlobeArc {
   from: GlobePoint;
   to: GlobePoint;
-  /** Default: the next arc colour. */
   color?: string;
-  /** Pulse where it lands. Default true. */
   pulse?: boolean;
 }
 
 export interface GlobeColors {
-  /** The land dots. Default: CSS `color`. */
   land?: string;
-  /** The ocean, drawn as a solid ball behind the land. It also hides the far side. Default: `--globe-sphere`, or none. */
   sphere?: string;
-  /** A halo around the edge. Default: `--globe-glow`, or none. */
   glow?: string;
-  /** Pulses, markers and the focus tag. Default: CSS `accent-color`. */
   accent?: string;
-  /** Arcs. Pass several to take turns. Default: `--globe-arc`, or the accent. */
   arc?: string | readonly string[];
 }
 
-/** Everything that can change after the globe is made. */
 export interface GlobeLook {
-  /** Colours for each part. Anything left out comes from CSS. */
   colors?: GlobeColors;
-  /** Places that stay lit. */
   markers?: readonly GlobeMarker[];
-  /** Degrees per second it turns on its own. Default 7; 0 holds it still. */
   spin?: number;
-  /** Degrees it leans towards you while turning. Default 18. */
   tilt?: number;
-  /** Scales every land dot. Default 1. */
   dotSize?: number;
-  /** How much of the canvas the globe fills, from 0 to 1. Leave room for a glow or tall arcs. Default 1. */
   scale?: number;
 }
 
 export interface GlobeOptions extends GlobeLook {
-  /** The longitude facing you at the start. Default 0. */
   start?: number;
-  /** Let a drag spin it, with a fling. Default true. */
   draggable?: boolean;
-  /** Dots spread over the whole sphere; the land keeps about a third. Default 14000. */
   dots?: number;
-  /** The canvas's accessible name. */
   label?: string;
-  /** "user" (default) follows the system setting; "always" and "never" override it. */
   reducedMotion?: ReducedMotion;
-  /** Stored pixels per CSS pixel are capped at this. Default 2. */
   maxPixelRatio?: number;
 }
 
 export interface Globe {
-  /** A ring that spreads from a point, which stays lit for a few seconds. */
   pulse(at: GlobePulseOptions): void;
-  /** An arc that flies from one place to another, then fades. */
   arc(arc: GlobeArc): void;
-  /** Turn to face a point and hold there, or `null` to let it spin again. */
   focus(at: GlobeFocus | null): void;
-  /** Change colours, markers, spin, tilt, dot size or scale. */
   set(look: GlobeLook): void;
-  /** Draw again now, after a CSS change. */
   redraw(): void;
-  /** Stop drawing and let go of the canvas. */
   destroy(): void;
 }
 
@@ -117,12 +70,69 @@ const HOLD = 300;
 const FADE = 900;
 const LIFT = 0.45;
 const STEPS = 48;
-const rad = (deg: number) => (deg * Math.PI) / 180;
+const FULL_TURN = Math.PI * 2;
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+const DEFAULT_DOTS = 14000;
+const DEFAULT_SPIN = 7;
+const DEFAULT_TILT = 18;
+const COLOR_REFRESH = 30;
+const MAX_FOCUS_LAT = 0.6;
+const MAX_DRAG_LAT = 0.9;
+const FLING_WINDOW = 80;
+
+const rad = (degrees: number) => (degrees * Math.PI) / 180;
 const wrap = (angle: number) => Math.atan2(Math.sin(angle), Math.cos(angle));
-const clamp = (n: number, limit: number) => Math.max(-limit, Math.min(limit, n));
+const clamp = (value: number, limit: number) => Math.max(-limit, Math.min(limit, value));
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
 type Vec = [number, number, number];
+type ScreenPoint = readonly [number, number];
+
+interface Colors {
+  land: string;
+  sphere: string;
+  glow: string;
+  accent: string;
+  arc: readonly string[];
+  text: string;
+}
+
+interface Pulse extends GlobePulseOptions {
+  t: number;
+  turn?: number;
+}
+
+interface Arc {
+  a: Vec;
+  b: Vec;
+  angle: number;
+  to: GlobePoint;
+  color?: string;
+  pulse: boolean;
+  t: number;
+  landed: boolean;
+  turn: number;
+}
+
+interface View {
+  lon: number;
+  lat: number;
+}
+
+interface Projection {
+  radius: number;
+  cx: number;
+  cy: number;
+  sinV: number;
+  cosV: number;
+  turn: (vector: Vec) => Vec;
+  screen: (vector: Vec) => ScreenPoint;
+}
+
+interface Ring {
+  points: [number, number][];
+  box: readonly [number, number, number, number];
+}
 
 const toVec = ({ lat, lon }: GlobePoint): Vec => [
   Math.cos(rad(lat)) * Math.sin(rad(lon)),
@@ -130,259 +140,375 @@ const toVec = ({ lat, lon }: GlobePoint): Vec => [
   Math.cos(rad(lat)) * Math.cos(rad(lon)),
 ];
 
-/** Rings parsed once, with their bounds for a quick reject. */
-const rings = LAND.map((ring) => {
+function toRing(ring: string): Ring {
   const points = ring.split(" ").map((pair) => pair.split(",").map(Number) as [number, number]);
-  const lons = points.map((p) => p[0]);
-  const lats = points.map((p) => p[1]);
-  return { points, box: [Math.min(...lons), Math.max(...lons), Math.min(...lats), Math.max(...lats)] as const };
-});
+  const lons = points.map((point) => point[0]);
+  const lats = points.map((point) => point[1]);
 
+  return { points, box: [Math.min(...lons), Math.max(...lons), Math.min(...lats), Math.max(...lats)] };
+}
+
+const rings = LAND.map(toRing);
 const sampled = new Map<number, Float32Array>();
 
-/** Evenly spread points on a sphere (a Fibonacci lattice), kept where they fall on land. */
-function landDots(count: number): Float32Array {
-  const cached = sampled.get(count);
-  if (cached) return cached;
-  const out: number[] = [];
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < count; i++) {
-    const lat = Math.asin(1 - (2 * (i + 0.5)) / count);
-    const lon = wrap(golden * i);
-    if (onLand((lon * 180) / Math.PI, (lat * 180) / Math.PI)) out.push(Math.sin(lat), Math.cos(lat), lon);
+function crossings({ points }: Ring, lon: number, lat: number): number {
+  let count = 0;
+
+  for (let index = 0, previous = points.length - 1; index < points.length; previous = index++) {
+    const [xi, yi] = points[index]!;
+    const [xj, yj] = points[previous]!;
+
+    if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) count++;
   }
-  const dots = new Float32Array(out);
-  sampled.set(count, dots);
-  return dots;
+
+  return count;
 }
 
 function onLand(lon: number, lat: number): boolean {
-  let inside = false;
-  for (const { points, box } of rings) {
-    if (lon < box[0] || lon > box[1] || lat < box[2] || lat > box[3]) continue;
-    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-      const [xi, yi] = points[i]!;
-      const [xj, yj] = points[j]!;
-      if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
-    }
-  }
-  return inside;
+  const inBox = ({ box }: Ring) => lon >= box[0] && lon <= box[1] && lat >= box[2] && lat <= box[3];
+  const total = rings.filter(inBox).reduce((sum, ring) => sum + crossings(ring, lon, lat), 0);
+
+  return total % 2 === 1;
 }
 
-/** A point along the great circle from `a` to `b`, lifted off the surface towards the middle. */
+function landDots(count: number): Float32Array {
+  const cached = sampled.get(count);
+
+  if (cached) return cached;
+
+  const values: number[] = [];
+
+  for (let index = 0; index < count; index++) {
+    const lat = Math.asin(1 - (2 * (index + 0.5)) / count);
+    const lon = wrap(GOLDEN_ANGLE * index);
+
+    if (onLand((lon * 180) / Math.PI, (lat * 180) / Math.PI)) values.push(Math.sin(lat), Math.cos(lat), lon);
+  }
+
+  const dots = new Float32Array(values);
+
+  sampled.set(count, dots);
+
+  return dots;
+}
+
 function along(a: Vec, b: Vec, angle: number, t: number): Vec {
   const lift = 1 + LIFT * (angle / Math.PI) * Math.sin(Math.PI * t);
+
   if (angle < 1e-6) return [a[0] * lift, a[1] * lift, a[2] * lift];
-  const s = Math.sin(angle);
-  const ka = (Math.sin((1 - t) * angle) / s) * lift;
-  const kb = (Math.sin(t * angle) / s) * lift;
-  return [a[0] * ka + b[0] * kb, a[1] * ka + b[1] * kb, a[2] * ka + b[2] * kb];
+
+  const sine = Math.sin(angle);
+  const fromA = (Math.sin((1 - t) * angle) / sine) * lift;
+  const fromB = (Math.sin(t * angle) / sine) * lift;
+
+  return [a[0] * fromA + b[0] * fromB, a[1] * fromA + b[1] * fromB, a[2] * fromA + b[2] * fromB];
+}
+
+function readColors(canvas: HTMLCanvasElement, look: GlobeLook): Colors {
+  const css = getComputedStyle(canvas);
+  const custom = (name: string) => css.getPropertyValue(name).trim();
+  const given = look.colors ?? {};
+  const accent = given.accent ?? (css.accentColor && css.accentColor !== "auto" ? css.accentColor : css.color);
+  const [red, green, blue] = parseColor(accent);
+  const arc = typeof given.arc === "string" ? [given.arc] : given.arc?.length ? given.arc : [custom("--globe-arc") || accent];
+
+  return {
+    land: given.land ?? css.color,
+    sphere: given.sphere ?? custom("--globe-sphere"),
+    glow: given.glow ?? custom("--globe-glow"),
+    accent,
+    arc,
+    text: red * 0.299 + green * 0.587 + blue * 0.114 > 160 ? "#111" : "#fff",
+  };
+}
+
+function rotate(view: View, [x, y, z]: Vec): Vec {
+  const sinL = Math.sin(view.lon);
+  const cosL = Math.cos(view.lon);
+  const turnedX = x * cosL - z * sinL;
+  const turnedZ = x * sinL + z * cosL;
+
+  return [turnedX, Math.cos(view.lat) * y - Math.sin(view.lat) * turnedZ, Math.sin(view.lat) * y + Math.cos(view.lat) * turnedZ];
+}
+
+function projectionFor(view: View, width: number, height: number, scale: number): Projection {
+  const radius = (Math.min(width, height) / 2 - 2) * Math.max(0.1, Math.min(1, scale));
+  const cx = width / 2;
+  const cy = height / 2;
+
+  return {
+    radius,
+    cx,
+    cy,
+    sinV: Math.sin(view.lat),
+    cosV: Math.cos(view.lat),
+    turn: (vector) => rotate(view, vector),
+    screen: ([x, y]) => [cx + radius * x, cy - radius * y],
+  };
+}
+
+function drawGlow(context: CanvasRenderingContext2D, { radius, cx, cy }: Projection, color: string, width: number, height: number) {
+  const outer = Math.max(radius + 1, Math.min(radius * 1.25, Math.min(width, height) / 2));
+  const gradient = context.createRadialGradient(cx, cy, radius * 0.92, cx, cy, outer);
+
+  gradient.addColorStop(0, color);
+  gradient.addColorStop(1, "transparent");
+  context.globalAlpha = 0.6;
+  context.fillStyle = gradient;
+  context.beginPath();
+  context.arc(cx, cy, outer, 0, FULL_TURN);
+  context.fill();
+}
+
+function drawSphere(context: CanvasRenderingContext2D, { radius, cx, cy }: Projection, color: string) {
+  context.globalAlpha = 1;
+  context.fillStyle = color;
+  context.beginPath();
+  context.arc(cx, cy, radius, 0, FULL_TURN);
+  context.fill();
+}
+
+const depthBand = (z: number) => (z <= 0 ? -1 : Math.min(3, Math.floor(z * 4)));
+
+function drawLandBand(context: CanvasRenderingContext2D, dots: Float32Array, projection: Projection, lon: number, band: number, dotSize: number) {
+  const { radius, cx, cy, sinV, cosV } = projection;
+
+  context.globalAlpha = band < 0 ? 0.07 : 0.22 + band * 0.2;
+  context.beginPath();
+
+  for (let start = 0; start < dots.length; start += 3) {
+    const sin = dots[start]!;
+    const cos = dots[start + 1]!;
+    const delta = dots[start + 2]! - lon;
+    const z = sinV * sin + cosV * cos * Math.cos(delta);
+
+    if (depthBand(z) !== band) continue;
+
+    const x = cx + radius * cos * Math.sin(delta);
+    const y = cy - radius * (cosV * sin - sinV * cos * Math.cos(delta));
+    const size = (z <= 0 ? 0.7 : 0.7 + z * 0.75) * dotSize;
+
+    context.moveTo(x + size, y);
+    context.arc(x, y, size, 0, FULL_TURN);
+  }
+
+  context.fill();
+}
+
+function drawLand(context: CanvasRenderingContext2D, dots: Float32Array, projection: Projection, lon: number, colors: Colors, dotSize: number) {
+  context.fillStyle = colors.land;
+
+  for (let band = colors.sphere ? 0 : -1; band < 4; band++) drawLandBand(context, dots, projection, lon, band, dotSize);
+}
+
+function drawMarkers(context: CanvasRenderingContext2D, projection: Projection, markers: readonly GlobeMarker[], accent: string) {
+  for (const marker of markers) {
+    const turned = projection.turn(toVec(marker));
+
+    if (turned[2] <= 0.05) continue;
+
+    const [x, y] = projection.screen(turned);
+
+    context.globalAlpha = Math.min(1, turned[2] * 3);
+    context.fillStyle = marker.color ?? accent;
+    context.beginPath();
+    context.arc(x, y, marker.size ?? 3, 0, FULL_TURN);
+    context.fill();
+  }
+}
+
+function strokeArcPath(context: CanvasRenderingContext2D, projection: Projection, arc: Arc, head: number, tail: number): ScreenPoint | null {
+  const count = Math.max(2, Math.ceil(STEPS * (head - tail)));
+  let last: ScreenPoint | null = null;
+
+  for (let step = 0; step <= count; step++) {
+    const t = tail + ((head - tail) * step) / count;
+    const turned = projection.turn(along(arc.a, arc.b, arc.angle, t));
+    const hidden = turned[2] < 0 && turned[0] * turned[0] + turned[1] * turned[1] < 1;
+    const point = projection.screen(turned);
+
+    if (last && !hidden) {
+      context.globalAlpha = 0.25 + 0.75 * (step / count);
+      context.beginPath();
+      context.moveTo(last[0], last[1]);
+      context.lineTo(point[0], point[1]);
+      context.stroke();
+    }
+
+    last = hidden ? null : point;
+  }
+
+  return last;
+}
+
+function drawArc(context: CanvasRenderingContext2D, projection: Projection, arc: Arc, color: string, head: number, tail: number) {
+  context.strokeStyle = color;
+  context.lineWidth = 1.6;
+
+  const last = strokeArcPath(context, projection, arc, head, tail);
+
+  if (head >= 1 || !last) return;
+
+  context.globalAlpha = 1;
+  context.fillStyle = color;
+  context.beginPath();
+  context.arc(last[0], last[1], 2.5, 0, FULL_TURN);
+  context.fill();
+}
+
+function drawPulse(context: CanvasRenderingContext2D, projection: Projection, pulse: Pulse, colors: Colors, now: number, still: boolean) {
+  const turned = projection.turn(toVec(pulse));
+
+  if (turned[2] <= 0.05) return;
+
+  const [x, y] = projection.screen(turned);
+  const age = (now - pulse.t) / PULSE;
+  const fade = Math.min(1, turned[2] * 3);
+  const color = pulse.color ?? (pulse.turn === undefined ? colors.accent : colors.arc[pulse.turn % colors.arc.length]!);
+
+  context.fillStyle = color;
+  context.strokeStyle = color;
+
+  if (age < 1 && !still) {
+    context.globalAlpha = (1 - age) * 0.7 * fade;
+    context.beginPath();
+    context.arc(x, y, 3 + age * 16, 0, FULL_TURN);
+    context.stroke();
+  }
+
+  context.globalAlpha = Math.max(0, 1 - Math.max(0, age - 2) / 2) * fade;
+  context.beginPath();
+  context.arc(x, y, 3, 0, FULL_TURN);
+  context.fill();
+}
+
+function drawTag(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, label: string, x: number, y: number, depth: number, width: number, textColor: string) {
+  context.globalAlpha = Math.min(1, depth * 2);
+  context.font = `600 12px ${getComputedStyle(canvas).fontFamily}`;
+
+  const tagWidth = context.measureText(label).width + 20;
+  const left = Math.max(4, Math.min(width - tagWidth - 4, x - tagWidth / 2));
+
+  context.beginPath();
+  context.roundRect(left, y - 38, tagWidth, 26, 13);
+  context.fill();
+  context.fillStyle = textColor;
+  context.textBaseline = "middle";
+  context.fillText(label, left + 10, y - 24.5);
+}
+
+function drawFocus(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, projection: Projection, target: GlobeFocus, colors: Colors, width: number) {
+  const focused = projection.turn(toVec(target));
+
+  if (focused[2] <= 0.2) return;
+
+  const [x, y] = projection.screen(focused);
+
+  context.globalAlpha = 1;
+  context.fillStyle = colors.accent;
+  context.beginPath();
+  context.arc(x, y, 4, 0, FULL_TURN);
+  context.fill();
+
+  if (target.label) drawTag(context, canvas, target.label, x, y, focused[2], width, colors.text);
 }
 
 export function globe(canvas: HTMLCanvasElement, options: GlobeOptions = {}): Globe {
-  const dots = landDots(options.dots ?? 14000);
+  const dots = landDots(options.dots ?? DEFAULT_DOTS);
   const look: GlobeLook = { ...options };
-  const view = { lon: rad(options.start ?? 0), lat: rad(look.tilt ?? 18) };
-  let velocity = rad(look.spin ?? 7);
+  const view: View = { lon: rad(options.start ?? 0), lat: rad(look.tilt ?? DEFAULT_TILT) };
+
+  let velocity = rad(look.spin ?? DEFAULT_SPIN);
   let target: GlobeFocus | null = null;
   let drag: { x: number; t: number; y: number } | null = null;
-  let pulses: (GlobePulseOptions & { t: number; turn?: number })[] = [];
-  let arcs: { a: Vec; b: Vec; angle: number; to: GlobePoint; color?: string; pulse: boolean; t: number; landed: boolean; turn: number }[] = [];
-  let colors = { land: "#18181b", sphere: "", glow: "", accent: "#16a34a", arc: ["#16a34a"] as readonly string[], text: "#fff" };
+  let pulses: Pulse[] = [];
+  let arcs: Arc[] = [];
+  let colors: Colors = { land: "#18181b", sphere: "", glow: "", accent: "#16a34a", arc: ["#16a34a"], text: "#fff" };
   let launched = 0;
   let frames = 0;
 
-  const spin = () => rad(look.spin ?? 7);
-  const tilt = () => rad(look.tilt ?? 18);
+  const spin = () => rad(look.spin ?? DEFAULT_SPIN);
+  const tilt = () => rad(look.tilt ?? DEFAULT_TILT);
+  const refreshColors = () => (colors = readColors(canvas, look));
 
-  const readColors = () => {
-    const css = getComputedStyle(canvas);
-    const custom = (name: string) => css.getPropertyValue(name).trim();
-    const given = look.colors ?? {};
-    const accent = given.accent ?? (css.accentColor && css.accentColor !== "auto" ? css.accentColor : css.color);
-    const [r, g, b] = parseColor(accent);
-    colors = {
-      land: given.land ?? css.color,
-      sphere: given.sphere ?? custom("--globe-sphere"),
-      glow: given.glow ?? custom("--globe-glow"),
-      accent,
-      arc: typeof given.arc === "string" ? [given.arc] : given.arc?.length ? given.arc : [custom("--globe-arc") || accent],
-      text: r * 0.299 + g * 0.587 + b * 0.114 > 160 ? "#111" : "#fff",
-    };
+  const settled = () =>
+    !target || (Math.abs(wrap(rad(target.lon) - view.lon)) < 1e-3 && Math.abs(clamp(rad(target.lat), MAX_FOCUS_LAT) - view.lat) < 1e-3);
+
+  const steer = (dt: number, still: boolean) => {
+    if (target) {
+      const pull = still ? 1 : 1 - Math.exp(-dt * 5);
+
+      view.lon += wrap(rad(target.lon) - view.lon) * pull;
+      view.lat += (clamp(rad(target.lat), MAX_FOCUS_LAT) - view.lat) * pull;
+      velocity = 0;
+      return;
+    }
+
+    if (drag || still) return;
+
+    velocity += (spin() - velocity) * (1 - Math.exp(-dt * 1.2));
+
+    if (Math.abs(velocity - spin()) < 1e-4) velocity = spin();
+
+    view.lon += velocity * dt;
+    view.lat += (tilt() - view.lat) * (1 - Math.exp(-dt * 1.5));
   };
 
-  const turn = ([x, y, z]: Vec): Vec => {
-    const sinL = Math.sin(view.lon);
-    const cosL = Math.cos(view.lon);
-    const x1 = x * cosL - z * sinL;
-    const z1 = x * sinL + z * cosL;
-    return [x1, Math.cos(view.lat) * y - Math.sin(view.lat) * z1, Math.sin(view.lat) * y + Math.cos(view.lat) * z1];
+  const drawArcs = (context: CanvasRenderingContext2D, projection: Projection, now: number, still: boolean) => {
+    context.lineCap = "round";
+    arcs = arcs.filter((arc) => now - arc.t < GROW + HOLD + FADE);
+
+    for (const arc of arcs) {
+      const age = now - arc.t;
+      const head = still ? 1 : ease(Math.min(1, age / GROW));
+      const tail = still ? 0 : ease(Math.max(0, Math.min(1, (age - GROW - HOLD) / FADE)));
+
+      if (head >= 1 && !arc.landed) {
+        arc.landed = true;
+
+        if (arc.pulse) pulses.push({ ...arc.to, color: arc.color, turn: arc.turn, t: now });
+      }
+
+      drawArc(context, projection, arc, arc.color ?? colors.arc[arc.turn % colors.arc.length]!, head, tail);
+    }
   };
 
-  const settled = () => !target || (Math.abs(wrap(rad(target.lon) - view.lon)) < 1e-3 && Math.abs(clamp(rad(target.lat), 0.6) - view.lat) < 1e-3);
+  const drawPulses = (context: CanvasRenderingContext2D, projection: Projection, now: number, still: boolean) => {
+    pulses = pulses.filter((pulse) => now - pulse.t < LIT);
+    context.lineWidth = 1.5;
+
+    for (const pulse of pulses) drawPulse(context, projection, pulse, colors, now, still);
+  };
 
   const paint = painter(canvas, {
     label: options.label,
     reducedMotion: options.reducedMotion,
     maxPixelRatio: options.maxPixelRatio,
+
     get continuous() {
       return drag !== null || pulses.length > 0 || arcs.length > 0 || (target ? !settled() : spin() !== 0 || velocity !== 0);
     },
+
     draw(context, { width, height, dt, still }) {
-      if (frames++ % 30 === 0) readColors();
+      if (frames++ % COLOR_REFRESH === 0) refreshColors();
+
       const now = performance.now();
 
-      if (target) {
-        const pull = still ? 1 : 1 - Math.exp(-dt * 5);
-        view.lon += wrap(rad(target.lon) - view.lon) * pull;
-        view.lat += (clamp(rad(target.lat), 0.6) - view.lat) * pull;
-        velocity = 0;
-      } else if (!drag && !still) {
-        velocity += (spin() - velocity) * (1 - Math.exp(-dt * 1.2));
-        if (Math.abs(velocity - spin()) < 1e-4) velocity = spin();
-        view.lon += velocity * dt;
-        view.lat += (tilt() - view.lat) * (1 - Math.exp(-dt * 1.5));
-      }
+      steer(dt, still);
 
-      const r = (Math.min(width, height) / 2 - 2) * Math.max(0.1, Math.min(1, look.scale ?? 1));
-      const cx = width / 2;
-      const cy = height / 2;
-      const sinV = Math.sin(view.lat);
-      const cosV = Math.cos(view.lat);
-      const dotSize = look.dotSize ?? 1;
-      const screen = ([x, y]: Vec) => [cx + r * x, cy - r * y] as const;
+      const projection = projectionFor(view, width, height, look.scale ?? 1);
 
-      if (colors.glow) {
-        const outer = Math.max(r + 1, Math.min(r * 1.25, Math.min(width, height) / 2));
-        const halo = context.createRadialGradient(cx, cy, r * 0.92, cx, cy, outer);
-        halo.addColorStop(0, colors.glow);
-        halo.addColorStop(1, "transparent");
-        context.globalAlpha = 0.6;
-        context.fillStyle = halo;
-        context.beginPath();
-        context.arc(cx, cy, outer, 0, Math.PI * 2);
-        context.fill();
-      }
-      if (colors.sphere) {
-        context.globalAlpha = 1;
-        context.fillStyle = colors.sphere;
-        context.beginPath();
-        context.arc(cx, cy, r, 0, Math.PI * 2);
-        context.fill();
-      }
+      if (colors.glow) drawGlow(context, projection, colors.glow, width, height);
 
-      context.fillStyle = colors.land;
-      for (let band = colors.sphere ? 0 : -1; band < 4; band++) {
-        context.globalAlpha = band < 0 ? 0.07 : 0.22 + band * 0.2;
-        context.beginPath();
-        for (let i = 0; i < dots.length; i += 3) {
-          const sin = dots[i]!;
-          const cos = dots[i + 1]!;
-          const d = dots[i + 2]! - view.lon;
-          const z = sinV * sin + cosV * cos * Math.cos(d);
-          if ((z <= 0 ? -1 : Math.min(3, Math.floor(z * 4))) !== band) continue;
-          const x = cx + r * cos * Math.sin(d);
-          const y = cy - r * (cosV * sin - sinV * cos * Math.cos(d));
-          const size = (z <= 0 ? 0.7 : 0.7 + z * 0.75) * dotSize;
-          context.moveTo(x + size, y);
-          context.arc(x, y, size, 0, Math.PI * 2);
-        }
-        context.fill();
-      }
+      if (colors.sphere) drawSphere(context, projection, colors.sphere);
 
-      for (const marker of look.markers ?? []) {
-        const p = turn(toVec(marker));
-        if (p[2] <= 0.05) continue;
-        const [x, y] = screen(p);
-        context.globalAlpha = Math.min(1, p[2] * 3);
-        context.fillStyle = marker.color ?? colors.accent;
-        context.beginPath();
-        context.arc(x, y, marker.size ?? 3, 0, Math.PI * 2);
-        context.fill();
-      }
+      drawLand(context, dots, projection, view.lon, colors, look.dotSize ?? 1);
+      drawMarkers(context, projection, look.markers ?? [], colors.accent);
+      drawArcs(context, projection, now, still);
+      drawPulses(context, projection, now, still);
 
-      context.lineCap = "round";
-      arcs = arcs.filter((arc) => now - arc.t < GROW + HOLD + FADE);
-      for (const arc of arcs) {
-        const age = now - arc.t;
-        const head = still ? 1 : ease(Math.min(1, age / GROW));
-        const tail = still ? 0 : ease(Math.max(0, Math.min(1, (age - GROW - HOLD) / FADE)));
-        if (head >= 1 && !arc.landed) {
-          arc.landed = true;
-          if (arc.pulse) pulses.push({ ...arc.to, color: arc.color, turn: arc.turn, t: now });
-        }
-        const color = arc.color ?? colors.arc[arc.turn % colors.arc.length]!;
-        context.strokeStyle = color;
-        context.lineWidth = 1.6;
-        let last: readonly [number, number] | null = null;
-        const count = Math.max(2, Math.ceil(STEPS * (head - tail)));
-        for (let k = 0; k <= count; k++) {
-          const t = tail + ((head - tail) * k) / count;
-          const p = turn(along(arc.a, arc.b, arc.angle, t));
-          const hidden = p[2] < 0 && p[0] * p[0] + p[1] * p[1] < 1;
-          const point = screen(p);
-          if (last && !hidden) {
-            context.globalAlpha = 0.25 + 0.75 * (k / count);
-            context.beginPath();
-            context.moveTo(last[0], last[1]);
-            context.lineTo(point[0], point[1]);
-            context.stroke();
-          }
-          last = hidden ? null : point;
-        }
-        if (head < 1 && last) {
-          context.globalAlpha = 1;
-          context.fillStyle = color;
-          context.beginPath();
-          context.arc(last[0], last[1], 2.5, 0, Math.PI * 2);
-          context.fill();
-        }
-      }
+      if (target) drawFocus(context, canvas, projection, target, colors, width);
 
-      pulses = pulses.filter((p) => now - p.t < LIT);
-      context.lineWidth = 1.5;
-      for (const pulse of pulses) {
-        const p = turn(toVec(pulse));
-        if (p[2] <= 0.05) continue;
-        const [x, y] = screen(p);
-        const age = (now - pulse.t) / PULSE;
-        const fade = Math.min(1, p[2] * 3);
-        const color = pulse.color ?? (pulse.turn === undefined ? colors.accent : colors.arc[pulse.turn % colors.arc.length]!);
-        context.fillStyle = color;
-        context.strokeStyle = color;
-        if (age < 1 && !still) {
-          context.globalAlpha = (1 - age) * 0.7 * fade;
-          context.beginPath();
-          context.arc(x, y, 3 + age * 16, 0, Math.PI * 2);
-          context.stroke();
-        }
-        context.globalAlpha = Math.max(0, 1 - Math.max(0, age - 2) / 2) * fade;
-        context.beginPath();
-        context.arc(x, y, 3, 0, Math.PI * 2);
-        context.fill();
-      }
-
-      const focused = target && turn(toVec(target));
-      if (target && focused && focused[2] > 0.2) {
-        const [x, y] = screen(focused);
-        context.globalAlpha = 1;
-        context.fillStyle = colors.accent;
-        context.beginPath();
-        context.arc(x, y, 4, 0, Math.PI * 2);
-        context.fill();
-        if (target.label) {
-          context.globalAlpha = Math.min(1, focused[2] * 2);
-          context.font = `600 12px ${getComputedStyle(canvas).fontFamily}`;
-          const w = context.measureText(target.label).width + 20;
-          const lx = Math.max(4, Math.min(width - w - 4, x - w / 2));
-          context.beginPath();
-          context.roundRect(lx, y - 38, w, 26, 13);
-          context.fill();
-          context.fillStyle = colors.text;
-          context.textBaseline = "middle";
-          context.fillText(target.label, lx + 10, y - 24.5);
-        }
-      }
       context.globalAlpha = 1;
     },
   });
@@ -395,19 +521,24 @@ export function globe(canvas: HTMLCanvasElement, options: GlobeOptions = {}): Gl
     canvas.style.cursor = "grabbing";
     paint.redraw();
   };
+
   const move = (event: PointerEvent) => {
     if (!drag) return;
+
     const size = canvas.clientWidth || 300;
     const now = performance.now();
     const dx = ((event.clientX - drag.x) / size) * Math.PI;
+
     view.lon -= dx;
-    view.lat = clamp(view.lat + ((event.clientY - drag.y) / size) * Math.PI, 0.9);
+    view.lat = clamp(view.lat + ((event.clientY - drag.y) / size) * Math.PI, MAX_DRAG_LAT);
     velocity = velocity * 0.5 - (dx / (Math.max(1, now - drag.t) / 1000)) * 0.5;
     drag = { x: event.clientX, y: event.clientY, t: now };
     paint.redraw();
   };
+
   const up = () => {
-    if (drag && (performance.now() - drag.t > 80 || paint.still)) velocity = 0;
+    if (drag && (performance.now() - drag.t > FLING_WINDOW || paint.still)) velocity = 0;
+
     drag = null;
     canvas.style.cursor = "grab";
     paint.redraw();
@@ -427,26 +558,32 @@ export function globe(canvas: HTMLCanvasElement, options: GlobeOptions = {}): Gl
       pulses.push({ ...at, t: performance.now() });
       paint.redraw();
     },
+
     arc({ from, to, color, pulse = true }) {
       const a = toVec(from);
       const b = toVec(to);
       const angle = Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2])));
+
       arcs.push({ a, b, angle, to, color, pulse, t: performance.now(), landed: false, turn: launched++ });
       paint.redraw();
     },
+
     focus(at) {
       target = at;
       paint.redraw();
     },
+
     set(next) {
       Object.assign(look, next);
-      readColors();
+      refreshColors();
       paint.redraw();
     },
+
     redraw() {
-      readColors();
+      refreshColors();
       paint.redraw();
     },
+
     destroy() {
       paint.destroy();
       canvas.removeEventListener("pointerdown", down);

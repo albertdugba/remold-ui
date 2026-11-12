@@ -10,21 +10,6 @@ function isOnScreen(element: Element) {
   return box.top >= 0 && box.left >= 0 && box.bottom <= window.innerHeight && box.right <= window.innerWidth;
 }
 
-/**
- * Walks someone through an interface one step at a time. It holds the step and the elements each
- * step points at, and renders nothing itself: draw the tour with `Tour.Spotlight`, the buttons and
- * your own popover, anchored to `useTour().target`.
- *
- * @example
- * ```tsx
- * <Remold.Tour.Root steps={["search", "share"]} defaultStep="search">
- *   <Remold.Tour.Target name="search" render={<SearchField />} />
- *   <Remold.Tour.Target name="share" render={<button>Share</button>} />
- *   <Remold.Tour.Spotlight className="spotlight" />
- *   <TourCard />
- * </Remold.Tour.Root>
- * ```
- */
 export function TourRoot({
   steps,
   step: stepProp,
@@ -117,7 +102,6 @@ export function TourRoot({
   const target = step === null ? null : (targets.get(step) ?? null);
   const shownStep = useRef(step);
 
-  // Only a change of step scrolls: a tour that opens with the page leaves the page where it is.
   useIsoLayoutEffect(() => {
     if (shownStep.current === step) return;
     shownStep.current = step;

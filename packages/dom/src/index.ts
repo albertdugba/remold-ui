@@ -1,4 +1,3 @@
-// @remold-ui/dom: the bridge between the screen and the core.
 export { measureLayoutBox, normalizeLayoutBox, type LayoutBox } from "./layout-box";
 export { fingerprint, IGNORE_ATTRIBUTE, MEDIA_ATTRIBUTE, parseColor, readNodes, type PageSnapshot, type PixelBox } from "./snapshot";
 export {

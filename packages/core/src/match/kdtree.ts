@@ -1,22 +1,64 @@
-/**
- * A k-d tree: points sorted into nested boxes, split on alternating directions, so "which points
- * are nearest to here?" only looks inside the few boxes that could hold the answer instead of
- * at every point. Built once, queried many times; it never changes after building.
- */
-
-/** Ranges this small are searched directly; splitting them further costs more than it saves. */
 const LEAF = 8;
+const AXES = 3;
+const BOX_SIZE = AXES * 2;
 
 export interface KdTree {
-  /**
-   * Find up to `k` points nearest to (x, y, z) with a squared distance of at most `maxD2`.
-   * Writes their ids and squared distances into `ids` and `d2`, nearest first, and returns how
-   * many it found. Ties are broken the same way every time.
-   */
   nearest(x: number, y: number, z: number, k: number, maxD2: number, ids: Int32Array, d2: Float64Array): number;
 }
 
-/** Build a tree over the points with these `ids`, whose coordinates are `xs[id]`, `ys[id]`, `zs[id]`. */
+interface SelectOptions {
+  order: Int32Array;
+  coordinates: Float64Array;
+  start: number;
+  end: number;
+  target: number;
+}
+
+function medianOfThree(first: number, middle: number, last: number): number {
+  if (first < middle) return middle < last ? middle : Math.max(first, last);
+
+  return first < last ? first : Math.max(middle, last);
+}
+
+function swap(order: Int32Array, left: number, right: number) {
+  const held = order[left]!;
+
+  order[left] = order[right]!;
+  order[right] = held;
+}
+
+export function select({ order, coordinates, start, end, target }: SelectOptions): void {
+  const valueAt = (index: number) => coordinates[order[index]!]!;
+
+  while (end > start) {
+    const pivot = medianOfThree(valueAt(start), valueAt((start + end) >> 1), valueAt(end));
+    let left = start;
+    let right = end;
+
+    while (left <= right) {
+      while (valueAt(left) < pivot) left++;
+
+      while (valueAt(right) > pivot) right--;
+
+      if (left <= right) {
+        swap(order, left, right);
+        left++;
+        right--;
+      }
+    }
+
+    if (target <= right) end = right;
+    else if (target >= left) start = left;
+    else return;
+  }
+}
+
+const boxGap = (low: number, high: number, coordinate: number) => {
+  const below = low - coordinate;
+
+  return below > 0 ? below : Math.max(coordinate - high, 0);
+};
+
 export function kdTree({
   x: xs,
   y: ys,
@@ -30,103 +72,126 @@ export function kdTree({
 }): KdTree {
   const order = Int32Array.from(ids);
   const axes = new Uint8Array(order.length);
-  const boxes = new Float64Array(order.length * 6);
-  const coords = [xs, ys, zs] as const;
+  const boxes = new Float64Array(order.length * BOX_SIZE);
+  const coordinates = [xs, ys, zs] as const;
+
+  const measure = (start: number, end: number, middle: number) => {
+    let widestAxis = 0;
+    let widest = -1;
+
+    for (let axis = 0; axis < AXES; axis++) {
+      const values = coordinates[axis]!;
+      let min = Infinity;
+      let max = -Infinity;
+
+      for (let index = start; index < end; index++) {
+        const value = values[order[index]!]!;
+
+        if (value < min) min = value;
+        if (value > max) max = value;
+      }
+
+      boxes[middle * BOX_SIZE + axis] = min;
+      boxes[middle * BOX_SIZE + AXES + axis] = max;
+
+      if (max - min > widest) {
+        widest = max - min;
+        widestAxis = axis;
+      }
+    }
+
+    return widestAxis;
+  };
 
   const build = (start: number, end: number): void => {
     if (end - start <= LEAF) return;
 
     const middle = (start + end) >> 1;
-    let axis = 0;
-    let widest = -1;
+    const axis = measure(start, end, middle);
 
-    for (let axisIndex = 0; axisIndex < 3; axisIndex++) {
-      const coordinates = coords[axisIndex]!;
-      let min = Infinity;
-      let max = -Infinity;
-
-      for (let pointIndex = start; pointIndex < end; pointIndex++) {
-        const coordinate = coordinates[order[pointIndex]!]!;
-
-        if (coordinate < min) min = coordinate;
-        if (coordinate > max) max = coordinate;
-      }
-      boxes[middle * 6 + axisIndex] = min;
-      boxes[middle * 6 + 3 + axisIndex] = max;
-      if (max - min > widest) {
-        widest = max - min;
-        axis = axisIndex;
-      }
-    }
-    select({ order, coordinates: coords[axis]!, start, end: end - 1, target: middle });
+    select({ order, coordinates: coordinates[axis]!, start, end: end - 1, target: middle });
     axes[middle] = axis;
     build(start, middle);
     build(middle + 1, end);
   };
+
   build(0, order.length);
 
   return {
     nearest(x, y, z, k, maxD2, ids, d2) {
-      let count = 0;
       const query = [x, y, z] as const;
-      const maximumCandidateDistance = () => (count < k ? maxD2 : d2[k - 1]!);
+      let count = 0;
 
-      const consider = (pointId: number) => {
-        const deltaX = xs[pointId]! - x;
-        const deltaY = ys[pointId]! - y;
-        const deltaZ = zs[pointId]! - z;
-        const distanceSquared = deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;
+      const reach = () => (count < k ? maxD2 : d2[k - 1]!);
 
-        if (distanceSquared > maxD2) return;
+      const beatsWorst = (distance: number, id: number) =>
+        distance < d2[k - 1]! || (distance === d2[k - 1]! && id < ids[k - 1]!);
 
-        if (count === k && !(distanceSquared < d2[k - 1]! || (distanceSquared === d2[k - 1]! && pointId < ids[k - 1]!))) return;
+      const ranksAfter = (slot: number, distance: number, id: number) =>
+        d2[slot]! > distance || (d2[slot] === distance && ids[slot]! > id);
 
-        let insertionIndex = count < k ? count++ : k - 1;
+      const consider = (id: number) => {
+        const dx = xs[id]! - x;
+        const dy = ys[id]! - y;
+        const dz = zs[id]! - z;
+        const distance = dx * dx + dy * dy + dz * dz;
 
-        while (
-          insertionIndex > 0 &&
-          (d2[insertionIndex - 1]! > distanceSquared || (d2[insertionIndex - 1] === distanceSquared && ids[insertionIndex - 1]! > pointId))
-        ) {
-          d2[insertionIndex] = d2[insertionIndex - 1]!;
-          ids[insertionIndex] = ids[insertionIndex - 1]!;
-          insertionIndex--;
+        if (distance > maxD2) return;
+
+        if (count === k && !beatsWorst(distance, id)) return;
+
+        let slot = count < k ? count++ : k - 1;
+
+        while (slot > 0 && ranksAfter(slot - 1, distance, id)) {
+          d2[slot] = d2[slot - 1]!;
+          ids[slot] = ids[slot - 1]!;
+          slot--;
         }
-        d2[insertionIndex] = distanceSquared;
-        ids[insertionIndex] = pointId;
+
+        d2[slot] = distance;
+        ids[slot] = id;
+      };
+
+      const distanceToBox = (middle: number) => {
+        const offset = middle * BOX_SIZE;
+        let total = 0;
+
+        for (let axis = 0; axis < AXES; axis++) {
+          const gap = boxGap(boxes[offset + axis]!, boxes[offset + AXES + axis]!, query[axis]!);
+
+          total += gap * gap;
+        }
+
+        return total;
       };
 
       const search = (start: number, end: number): void => {
         if (end - start <= LEAF) {
-          for (let pointIndex = start; pointIndex < end; pointIndex++) consider(order[pointIndex]!);
+          for (let index = start; index < end; index++) consider(order[index]!);
 
           return;
         }
+
         const middle = (start + end) >> 1;
-        const boxOffset = middle * 6;
-        let boxDistanceSquared = 0;
 
-        for (let axisIndex = 0; axisIndex < 3; axisIndex++) {
-          const coordinate = query[axisIndex]!;
-          const distanceBelow = boxes[boxOffset + axisIndex]! - coordinate;
-          const distanceAbove = coordinate - boxes[boxOffset + 3 + axisIndex]!;
-          const distanceToBox = distanceBelow > 0 ? distanceBelow : Math.max(distanceAbove, 0);
+        if (distanceToBox(middle) > reach()) return;
 
-          boxDistanceSquared += distanceToBox * distanceToBox;
-        }
-        if (boxDistanceSquared > maximumCandidateDistance()) return;
-
-        const pointId = order[middle]!;
+        const id = order[middle]!;
         const axis = axes[middle]!;
 
-        consider(pointId);
-        const distanceFromPlane = query[axis]! - coords[axis]![pointId]!;
+        consider(id);
 
-        if (distanceFromPlane < 0) {
+        const fromPlane = query[axis]! - coordinates[axis]![id]!;
+        const planeDistance = fromPlane * fromPlane;
+
+        if (fromPlane < 0) {
           search(start, middle);
-          if (distanceFromPlane * distanceFromPlane <= maximumCandidateDistance()) search(middle + 1, end);
+
+          if (planeDistance <= reach()) search(middle + 1, end);
         } else {
           search(middle + 1, end);
-          if (distanceFromPlane * distanceFromPlane <= maximumCandidateDistance()) search(start, middle);
+
+          if (planeDistance <= reach()) search(start, middle);
         }
       };
 
@@ -135,56 +200,4 @@ export function kdTree({
       return count;
     },
   };
-}
-
-/**
- * Reorder `order[lo..hi]` (inclusive) so position `nth` holds the value that would be there if
- * sorted by `c[id]`, with smaller-or-equal values before it and larger-or-equal after
- * (Hoare's quickselect, with a median-of-three pivot so sorted input stays fast).
- */
-export function select({
-  order,
-  coordinates,
-  start,
-  end,
-  target,
-}: {
-  order: Int32Array;
-  coordinates: Float64Array;
-  start: number;
-  end: number;
-  target: number;
-}): void {
-  while (end > start) {
-    const middle = (start + end) >> 1;
-    const firstValue = coordinates[order[start]!]!;
-    const middleValue = coordinates[order[middle]!]!;
-    const lastValue = coordinates[order[end]!]!;
-    const pivot =
-      firstValue < middleValue
-        ? middleValue < lastValue
-          ? middleValue
-          : Math.max(firstValue, lastValue)
-        : firstValue < lastValue
-        ? firstValue
-        : Math.max(middleValue, lastValue);
-    let left = start;
-    let right = end;
-
-    while (left <= right) {
-      while (coordinates[order[left]!]! < pivot) left++;
-      while (coordinates[order[right]!]! > pivot) right--;
-      if (left <= right) {
-        const pointId = order[left]!;
-
-        order[left] = order[right]!;
-        order[right] = pointId;
-        left++;
-        right--;
-      }
-    }
-    if (target <= right) end = right;
-    else if (target >= left) start = left;
-    else return;
-  }
 }

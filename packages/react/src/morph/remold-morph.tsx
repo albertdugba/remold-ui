@@ -3,17 +3,6 @@ import { useRemoldMorph } from "../use-remold-morph/use-remold-morph.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldMorphProps, RemoldMorphState } from "./types.js";
 
-/**
- * Animates everything inside it whenever `trigger` changes. Pass an array to watch several
- * things; it's compared item by item, like an effect's dependencies.
- *
- * @example
- * ```tsx
- * <Remold.Morph trigger={[view, sort]}>
- *   {view === "grid" ? <PeopleGrid people={people} /> : <PeopleList people={people} />}
- * </Remold.Morph>
- * ```
- */
 export const RemoldMorph = forwardRef(function RemoldMorph(
   componentProps: RemoldMorph.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,

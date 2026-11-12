@@ -1,13 +1,6 @@
-/**
- * Path normalisation.
- *
- * Turns lines, quadratic curves and arcs into cubic Béziers, so every later stage (splitting,
- * matching, morphing) handles exactly one kind of segment: four points, eight numbers.
- */
 import { lerpPoint, type Point } from "../interpolate";
 import type { PathCommand } from "./parse";
 
-/** A cubic Bézier: start, two handles, end. */
 export interface Cubic {
   p0: Point;
   p1: Point;
@@ -15,7 +8,6 @@ export interface Cubic {
   p3: Point;
 }
 
-/** One unbroken stroke of the pen: everything between one M and the next. */
 export interface Subpath {
   segments: Cubic[];
   closed: boolean;
@@ -29,21 +21,27 @@ export interface Arc {
   sweep: boolean;
 }
 
-/** A point on the curve, `t` of the way along (0 is the start, 1 the end). */
-export function pointAt(c: Cubic, t: number): Point {
-  const a = lerpPoint(c.p0, c.p1, t);
-  const b = lerpPoint(c.p1, c.p2, t);
-  const d = lerpPoint(c.p2, c.p3, t);
+const SAME_POINT = 1e-9;
+const ANGLE_EPSILON = 1e-9;
+const QUARTER_TURN = Math.PI / 2;
+const FULL_TURN = 2 * Math.PI;
 
-  return lerpPoint(lerpPoint(a, b, t), lerpPoint(b, d, t), t);
+const at = (x: number, y: number): Point => ({ x, y });
+
+const isSamePoint = (p: Point, q: Point) => Math.abs(p.x - q.x) <= SAME_POINT && Math.abs(p.y - q.y) <= SAME_POINT;
+
+export function pointAt(curve: Cubic, t: number): Point {
+  const first = lerpPoint(curve.p0, curve.p1, t);
+  const middle = lerpPoint(curve.p1, curve.p2, t);
+  const last = lerpPoint(curve.p2, curve.p3, t);
+
+  return lerpPoint(lerpPoint(first, middle, t), lerpPoint(middle, last, t), t);
 }
 
-/** A straight line is a cubic whose handles sit a third and two thirds of the way along. */
 export function lineToCubic(from: Point, to: Point): Cubic {
   return { p0: from, p1: lerpPoint(from, to, 1 / 3), p2: lerpPoint(from, to, 2 / 3), p3: to };
 }
 
-/** A quadratic's one handle becomes two handles, each two thirds of the way towards it. */
 export function quadToCubic(from: Point, handle: Point, to: Point): Cubic {
   return {
     p0: from,
@@ -53,140 +51,166 @@ export function quadToCubic(from: Point, handle: Point, to: Point): Cubic {
   };
 }
 
-/**
- * An elliptical arc as cubics, at most a quarter turn each.
- * Follows the SVG spec's implementation notes (F.6.5 centre conversion, F.6.6 radius correction).
- */
+const angleBetween = (ux: number, uy: number, vx: number, vy: number) => Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy);
+
+interface Frame {
+  cos: number;
+  sin: number;
+  x: number;
+  y: number;
+}
+
+interface Ellipse {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  cos: number;
+  sin: number;
+}
+
+function uprightFrame(from: Point, to: Point, rotation: number): Frame {
+  const angle = (rotation * Math.PI) / 180;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const halfX = (from.x - to.x) / 2;
+  const halfY = (from.y - to.y) / 2;
+
+  return { cos, sin, x: cos * halfX + sin * halfY, y: -sin * halfX + cos * halfY };
+}
+
+function fittedRadii(arc: Arc, frame: Frame) {
+  const reach = (frame.x * frame.x) / (arc.rx * arc.rx) + (frame.y * frame.y) / (arc.ry * arc.ry);
+  const grow = reach > 1 ? Math.sqrt(reach) : 1;
+
+  return { rx: Math.abs(arc.rx) * grow, ry: Math.abs(arc.ry) * grow };
+}
+
+function uprightCentre(arc: Arc, frame: Frame, rx: number, ry: number) {
+  const rx2 = rx * rx;
+  const ry2 = ry * ry;
+  const numerator = rx2 * ry2 - rx2 * frame.y * frame.y - ry2 * frame.x * frame.x;
+  const denominator = rx2 * frame.y * frame.y + ry2 * frame.x * frame.x;
+  const side = arc.largeArc === arc.sweep ? -1 : 1;
+  const coefficient = side * Math.sqrt(Math.max(0, numerator / denominator));
+
+  return { x: (coefficient * rx * frame.y) / ry, y: (coefficient * -ry * frame.x) / rx };
+}
+
+function sweepFor(raw: number, clockwise: boolean): number {
+  if (!clockwise && raw > 0) return raw - FULL_TURN;
+
+  if (clockwise && raw < 0) return raw + FULL_TURN;
+
+  return raw;
+}
+
+function arcAngles(arc: Arc, frame: Frame, centre: Point, rx: number, ry: number) {
+  const ux = (frame.x - centre.x) / rx;
+  const uy = (frame.y - centre.y) / ry;
+  const vx = (-frame.x - centre.x) / rx;
+  const vy = (-frame.y - centre.y) / ry;
+
+  return { start: angleBetween(1, 0, ux, uy), sweep: sweepFor(angleBetween(ux, uy, vx, vy), arc.sweep) };
+}
+
+const onEllipse = ({ cx, cy, rx, ry, cos, sin }: Ellipse, u: number, v: number): Point => ({
+  x: cx + rx * cos * u - ry * sin * v,
+  y: cy + rx * sin * u + ry * cos * v,
+});
+
+function arcPieces(ellipse: Ellipse, from: Point, to: Point, start: number, sweep: number): Cubic[] {
+  const count = Math.max(1, Math.ceil(Math.abs(sweep) / QUARTER_TURN - ANGLE_EPSILON));
+  const step = sweep / count;
+  const handle = (4 / 3) * Math.tan(step / 4);
+
+  return Array.from({ length: count }, (_, index) => {
+    const startAngle = start + index * step;
+    const [cosStart, sinStart] = [Math.cos(startAngle), Math.sin(startAngle)];
+    const [cosEnd, sinEnd] = [Math.cos(startAngle + step), Math.sin(startAngle + step)];
+
+    return {
+      p0: index === 0 ? from : onEllipse(ellipse, cosStart, sinStart),
+      p1: onEllipse(ellipse, cosStart - handle * sinStart, sinStart + handle * cosStart),
+      p2: onEllipse(ellipse, cosEnd + handle * sinEnd, sinEnd - handle * cosEnd),
+      p3: index === count - 1 ? to : onEllipse(ellipse, cosEnd, sinEnd),
+    };
+  });
+}
+
 export function arcToCubics(from: Point, arc: Arc, to: Point): Cubic[] {
   if (from.x === to.x && from.y === to.y) return [];
 
-  let rx = Math.abs(arc.rx);
-  let ry = Math.abs(arc.ry);
+  if (arc.rx === 0 || arc.ry === 0) return [lineToCubic(from, to)];
 
-  if (rx === 0 || ry === 0) return [lineToCubic(from, to)];
+  const frame = uprightFrame(from, to, arc.rotation);
+  const { rx, ry } = fittedRadii(arc, frame);
+  const centre = uprightCentre(arc, frame, rx, ry);
+  const { start, sweep } = arcAngles(arc, frame, centre, rx, ry);
 
-  // 1. Turn the picture so the ellipse is upright, measured from the chord's middle.
-  const phi = (arc.rotation * Math.PI) / 180;
-  const cos = Math.cos(phi),
-    sin = Math.sin(phi);
-  const dx = (from.x - to.x) / 2,
-    dy = (from.y - to.y) / 2;
-  const x1 = cos * dx + sin * dy;
-  const y1 = -sin * dx + cos * dy;
+  const ellipse: Ellipse = {
+    cx: frame.cos * centre.x - frame.sin * centre.y + (from.x + to.x) / 2,
+    cy: frame.sin * centre.x + frame.cos * centre.y + (from.y + to.y) / 2,
+    rx,
+    ry,
+    cos: frame.cos,
+    sin: frame.sin,
+  };
 
-  // 2. If the ellipse is too small to reach both ends, grow it just enough.
-  const lambda = (x1 * x1) / (rx * rx) + (y1 * y1) / (ry * ry);
-
-  if (lambda > 1) {
-    rx *= Math.sqrt(lambda);
-    ry *= Math.sqrt(lambda);
-  }
-
-  // 3. Find the centre. The two flags choose one of four possible arcs.
-  const rx2 = rx * rx,
-    ry2 = ry * ry;
-  const num = rx2 * ry2 - rx2 * y1 * y1 - ry2 * x1 * x1;
-  const den = rx2 * y1 * y1 + ry2 * x1 * x1;
-  const coef = (arc.largeArc === arc.sweep ? -1 : 1) * Math.sqrt(Math.max(0, num / den));
-  const cx1 = (coef * rx * y1) / ry;
-  const cy1 = (coef * -ry * x1) / rx;
-  const cx = cos * cx1 - sin * cy1 + (from.x + to.x) / 2;
-  const cy = sin * cx1 + cos * cy1 + (from.y + to.y) / 2;
-
-  // 4. The start angle and how far round to go.
-  const angle = ({ fromX, fromY, toX, toY }: { fromX: number; fromY: number; toX: number; toY: number }) =>
-    Math.atan2(fromX * toY - fromY * toX, fromX * toX + fromY * toY);
-  const ux = (x1 - cx1) / rx,
-    uy = (y1 - cy1) / ry;
-  const vx = (-x1 - cx1) / rx,
-    vy = (-y1 - cy1) / ry;
-  const start = angle({ fromX: 1, fromY: 0, toX: ux, toY: uy });
-  let sweep = angle({ fromX: ux, fromY: uy, toX: vx, toY: vy });
-
-  if (!arc.sweep && sweep > 0) sweep -= 2 * Math.PI;
-  else if (arc.sweep && sweep < 0) sweep += 2 * Math.PI;
-
-  // 5. Cut it into quarter turns or less, and draw each piece as a cubic.
-  const count = Math.max(1, Math.ceil(Math.abs(sweep) / (Math.PI / 2) - 1e-9));
-  const step = sweep / count;
-  const k = (4 / 3) * Math.tan(step / 4);
-  const onEllipse = (u: number, v: number): Point => ({
-    x: cx + rx * cos * u - ry * sin * v,
-    y: cy + rx * sin * u + ry * cos * v,
-  });
-
-  const out: Cubic[] = [];
-
-  for (let n = 0; n < count; n++) {
-    const a1 = start + n * step,
-      a2 = a1 + step;
-    const c1 = Math.cos(a1),
-      s1 = Math.sin(a1),
-      c2 = Math.cos(a2),
-      s2 = Math.sin(a2);
-    out.push({
-      p0: n === 0 ? from : onEllipse(c1, s1),
-      p1: onEllipse(c1 - k * s1, s1 + k * c1),
-      p2: onEllipse(c2 + k * s2, s2 - k * c2),
-      p3: n === count - 1 ? to : onEllipse(c2, s2),
-    });
-  }
-  return out;
+  return arcPieces(ellipse, from, to, start, sweep);
 }
 
-/** Closer than this counts as the same point, absorbing rounding from relative coordinates. */
-const EPSILON = 1e-9;
+function segmentsFor(command: PathCommand, pen: Point, start: Point): Cubic[] {
+  switch (command.type) {
+    case "L":
+      return [lineToCubic(pen, at(command.x, command.y))];
+    case "C":
+      return [{ p0: pen, p1: at(command.x1, command.y1), p2: at(command.x2, command.y2), p3: at(command.x, command.y) }];
+    case "Q":
+      return [quadToCubic(pen, at(command.x1, command.y1), at(command.x, command.y))];
+    case "A":
+      return arcToCubics(pen, command, at(command.x, command.y));
+    case "Z":
+      return isSamePoint(pen, start) ? [] : [lineToCubic(pen, start)];
+    default:
+      return [];
+  }
+}
 
-/**
- * Turn parsed commands into subpaths made only of cubics.
- * Subpaths with no segments (a lone M, or "M0 0 Z") are dropped.
- */
+const openSubpath = (): Subpath => ({ segments: [], closed: false });
+
 export function toCubics(commands: PathCommand[]): Subpath[] {
-  const out: Subpath[] = [];
-  let current: Subpath = { segments: [], closed: false };
-  let pen: Point = { x: 0, y: 0 };
-  let start: Point = pen;
+  const subpaths: Subpath[] = [];
+  let current = openSubpath();
+  let pen = at(0, 0);
+  let start = pen;
 
   const finish = () => {
-    if (current.segments.length > 0) out.push(current);
-    current = { segments: [], closed: false };
-  };
-  const add = (c: Cubic) => {
-    current.segments.push(c);
-    pen = c.p3;
+    if (current.segments.length > 0) subpaths.push(current);
+
+    current = openSubpath();
   };
 
-  for (const cmd of commands) {
-    switch (cmd.type) {
-      case "M":
-        finish();
-        pen = start = { x: cmd.x, y: cmd.y };
-        break;
-      case "L":
-        add(lineToCubic(pen, { x: cmd.x, y: cmd.y }));
-        break;
-      case "C":
-        add({ p0: pen, p1: { x: cmd.x1, y: cmd.y1 }, p2: { x: cmd.x2, y: cmd.y2 }, p3: { x: cmd.x, y: cmd.y } });
-        break;
-      case "Q":
-        add(quadToCubic(pen, { x: cmd.x1, y: cmd.y1 }, { x: cmd.x, y: cmd.y }));
-        break;
-      case "A":
-        for (const c of arcToCubics(pen, cmd, { x: cmd.x, y: cmd.y })) add(c);
-        break;
-      case "Z":
-        // Draw the last edge home, unless the pen is already there. A zero-length segment
-        // would steal points from real edges when shapes are matched later.
-        if (Math.abs(pen.x - start.x) > EPSILON || Math.abs(pen.y - start.y) > EPSILON) {
-          add(lineToCubic(pen, start));
-        }
-        current.closed = true;
-        finish();
-        pen = start;
-        break;
+  for (const command of commands) {
+    if (command.type === "M") {
+      finish();
+      pen = start = at(command.x, command.y);
+      continue;
+    }
+
+    const segments = segmentsFor(command, pen, start);
+
+    current.segments.push(...segments);
+    pen = segments.at(-1)?.p3 ?? pen;
+
+    if (command.type === "Z") {
+      current.closed = true;
+      finish();
+      pen = start;
     }
   }
+
   finish();
 
-  return out;
+  return subpaths;
 }

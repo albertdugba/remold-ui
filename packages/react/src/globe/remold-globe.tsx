@@ -1,25 +1,39 @@
-import { forwardRef, useMemo, useRef, useState, type CanvasHTMLAttributes, type ForwardedRef } from "react";
+import { forwardRef, useMemo, useRef, useState, type CanvasHTMLAttributes, type ForwardedRef, type MutableRefObject } from "react";
 import { globe as createGlobe, type Globe } from "@remold-ui/canvas";
 import { useIsoLayoutEffect } from "../utils/hooks.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldGlobeProps, RemoldGlobeState } from "./types.js";
 
-/**
- * A dotted Earth that turns on its own and can be spun with a finger. Pass recent events as
- * `pulses` and each new one rings out where it happened; pass journeys as `arcs` and each new one
- * flies between two places; pass `focus` to turn to a place. Colour it with `colors`, or with CSS:
- * `color` paints the land and `accent-color` the pulses.
- *
- * @example
- * ```tsx
- * <Remold.Globe
- *   colors={{ sphere: "#0d1b3e", glow: "#3b82f6", arc: "#f472b6" }}
- *   pulses={signups.map((s) => ({ id: s.id, lat: s.lat, lon: s.lon }))}
- *   arcs={merges.map((m) => ({ id: m.id, from: m.author, to: m.repo }))}
- *   focus={city && { lat: city.lat, lon: city.lon, label: city.name }}
- * />
- * ```
- */
+type Seen = MutableRefObject<Set<string | number>>;
+
+function playOnce<T extends { id: string | number }>(seen: Seen, prefix: string, items: readonly T[] | undefined, play: (item: T) => void) {
+  for (const item of items ?? []) {
+    const key = `${prefix}:${item.id}`;
+
+    if (seen.current.has(key)) continue;
+
+    seen.current.add(key);
+    play(item);
+  }
+}
+
+function useGlobeEvents(instance: Globe | null, seen: Seen, pulses: RemoldGlobeProps["pulses"], arcs: RemoldGlobeProps["arcs"]) {
+  useIsoLayoutEffect(() => {
+    if (!instance) return;
+
+    playOnce(seen, "p", pulses, (pulse) => instance.pulse(pulse));
+    playOnce(seen, "a", arcs, (arc) => instance.arc(arc));
+  }, [instance, pulses, arcs]);
+}
+
+function useGlobeFocus(instance: Globe | null, focus: RemoldGlobeProps["focus"]) {
+  const target = focus ? `${focus.lat},${focus.lon},${focus.label ?? ""}` : "";
+
+  useIsoLayoutEffect(() => {
+    instance?.focus(focus ?? null);
+  }, [instance, target]);
+}
+
 export const RemoldGlobe = forwardRef(function RemoldGlobe(
   componentProps: RemoldGlobeProps,
   forwardedRef: ForwardedRef<HTMLCanvasElement>,
@@ -53,42 +67,23 @@ export const RemoldGlobe = forwardRef(function RemoldGlobe(
 
   useIsoLayoutEffect(() => {
     if (!element) return;
+
     const created = createGlobe(element, { ...look, start, draggable, dots, label, reducedMotion, maxPixelRatio });
     seen.current = new Set();
     setInstance(created);
+
     return () => {
       created.destroy();
       setInstance(null);
     };
-    // Built once per canvas; the look changes below without starting over.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [element, start, draggable, dots, label, reducedMotion, maxPixelRatio]);
 
   useIsoLayoutEffect(() => {
     instance?.set(look);
-    // Keyed by content, so inline objects don't redo anything.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instance, lookKey]);
 
-  useIsoLayoutEffect(() => {
-    if (!instance) return;
-    for (const pulse of pulses ?? []) {
-      if (seen.current.has(`p:${pulse.id}`)) continue;
-      seen.current.add(`p:${pulse.id}`);
-      instance.pulse(pulse);
-    }
-    for (const arc of arcs ?? []) {
-      if (seen.current.has(`a:${arc.id}`)) continue;
-      seen.current.add(`a:${arc.id}`);
-      instance.arc(arc);
-    }
-  }, [instance, pulses, arcs]);
-
-  const target = focus ? `${focus.lat},${focus.lon},${focus.label ?? ""}` : "";
-  useIsoLayoutEffect(() => {
-    instance?.focus(focus ?? null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [instance, target]);
+  useGlobeEvents(instance, seen, pulses, arcs);
+  useGlobeFocus(instance, focus);
 
   const state = useMemo<RemoldGlobeState>(() => ({}), []);
 

@@ -4,17 +4,6 @@ import { viewTransition, type TransitionOptions } from "@remold-ui/dom";
 import { useLatest } from "../utils/hooks.js";
 import type { UseViewTransitionReturnValue } from "./types.js";
 
-/**
- * Like `useRemold`, but uses the browser View Transitions API where it's supported.
- *
- * @example
- * ```tsx
- * const { ref, animate } = useViewTransition();
- *
- * <main ref={ref}>{page}</main>
- * <button onClick={() => animate(() => setPage("about"))}>About</button>
- * ```
- */
 export function useViewTransition<E extends HTMLElement = HTMLDivElement>(
   options: TransitionOptions = {},
 ): useViewTransition.ReturnValue<E> {

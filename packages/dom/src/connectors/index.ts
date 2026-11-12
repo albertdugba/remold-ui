@@ -1,42 +1,17 @@
-/**
- * Connectors: lines between elements that stay attached while the elements move.
- *
- * Mark an element with `data-rm-anchor="id"`, and mark another with `data-rm-link="id"` to draw
- * a line from the anchor to it: a folder to each file inside, a comment to each reply. The lines
- * live in an SVG laid over the content and are rebuilt every frame from where the elements are
- * on screen right now, so they follow a `transition()` (or anything else) the whole way instead
- * of jumping at the end. A new line draws itself in; a line whose element leaves draws itself
- * back out from where it last was.
- *
- * Each line can also say, on the linked element, where it leaves and arrives
- * (`data-rm-from-side`, `data-rm-to-side`), carry a label (`data-rm-label`) and an arrowhead
- * (`data-rm-arrow`), and send pulses along itself (`data-rm-pulse`: `"loop"` for a steady flow,
- * or any other value to send one pulse each time the value changes, after `data-rm-pulse-delay`
- * seconds).
- */
 import { parsePath, pointAt, springs, toCubics, value, type AnimatedValue, type SpringConfig } from "@remold-ui/core";
 import { resolveReducedMotion, type ReducedMotion } from "../accessibility";
 import { IGNORE_ATTRIBUTE } from "../snapshot";
 import { frames, type FrameLoop } from "../frames";
 import { containerScale } from "../transition";
 
-/** Names an element so lines can start from it. */
 export const ANCHOR_ATTRIBUTE = "data-rm-anchor";
-/** Draws a line to this element from the anchor it names. */
 export const LINK_ATTRIBUTE = "data-rm-link";
-/** Copied onto the line drawn to this element as `data-line`, so a line can be styled by state. */
 export const LINE_ATTRIBUTE = "data-rm-line";
-/** Which side of the anchor the line leaves from: top, bottom, left or right. */
 export const FROM_SIDE_ATTRIBUTE = "data-rm-from-side";
-/** Which side of the linked element the line arrives at. */
 export const TO_SIDE_ATTRIBUTE = "data-rm-to-side";
-/** Text shown halfway along the line. */
 export const LABEL_ATTRIBUTE = "data-rm-label";
-/** An arrowhead where the line arrives (`"false"` turns off one the connectors add to every line). */
 export const ARROW_ATTRIBUTE = "data-rm-arrow";
-/** `"loop"` for pulses that keep flowing, or any other value to send one pulse each time it changes. */
 export const PULSE_ATTRIBUTE = "data-rm-pulse";
-/** Seconds to wait before a one-off pulse sets off, to send pulses along a path in turn. */
 export const PULSE_DELAY_ATTRIBUTE = "data-rm-pulse-delay";
 
 export type ConnectorSide = "top" | "bottom" | "left" | "right";
@@ -44,43 +19,20 @@ export type ConnectorSide = "top" | "bottom" | "left" | "right";
 export type ConnectorShape = "elbow" | "curve" | "straight";
 
 export interface ConnectorOptions {
-  /**
-   * `"elbow"` goes straight down from the anchor, then turns across into the element with a
-   * rounded corner: file trees and comment threads. `"curve"` is one smooth bend. Default "elbow".
-   */
   shape?: ConnectorShape;
-  /** The elbow's corner radius, in pixels. Default 12. */
   radius?: number;
-  /**
-   * Where a line meets the linked element: the middle of its `"left"` edge (trees, threads; also
-   * called `"side"`), its `"top"` (a timeline or a list of steps), `"right"` or `"bottom"`.
-   * Default "side". A line can set its own with `data-rm-to-side`.
-   */
   end?: "side" | ConnectorSide;
-  /** Where lines leave the anchor. Default "bottom". A line can set its own with `data-rm-from-side`. */
   from?: ConnectorSide;
-  /** Put an arrowhead on every line where it arrives. Default false. */
   arrow?: boolean;
-  /**
-   * Pulses: how long one takes to travel the line (seconds), how much of the line it covers
-   * (0 to 1), and for `"loop"` lines how often one sets off (seconds). Default
-   * `{ duration: 1.2, length: 0.22, every: 2.4 }`. Pulses pause off screen and with reduced motion.
-   */
   pulse?: { duration?: number; length?: number; every?: number };
-  /** Space between each end of a line and the element it touches, in pixels. Default 4. */
   gap?: number;
-  /** How lines draw in and out. Default `springs.smooth`. */
   spring?: SpringConfig;
-  /** `"user"` (default) follows the system setting; with reduced motion lines appear and go at once. */
   reducedMotion?: ReducedMotion;
-  /** The frame loop to run on. Defaults to the page's shared loop. */
   loop?: FrameLoop;
 }
 
 export interface Connectors {
-  /** Redraw now, for changes the connectors can't see (a canvas resizing, say). */
   update(): void;
-  /** Stop watching and remove every line. */
   destroy(): void;
 }
 
@@ -89,11 +41,6 @@ interface End {
   y: number;
 }
 
-/**
- * The path from `from` (below the anchor) to `to` (beside the element). Elbows go down, then
- * across; when the element isn't below and to the right (mid-flight, say) they fall back to a
- * curve, which looks right any way round.
- */
 export function connectorPath({
   from,
   to,
@@ -126,7 +73,6 @@ const NORMAL: Record<ConnectorSide, End> = {
 const vertical = (side: ConnectorSide) => side === "top" || side === "bottom";
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
-/** A polyline with its corners rounded to `radius` (no more than half of either side of a corner). */
 function rounded(input: End[], radius: number): string {
   const points: End[] = [];
   for (const p of input) {
@@ -155,13 +101,6 @@ function rounded(input: End[], radius: number): string {
   return `${d}L${r2(last.x)} ${r2(last.y)}`;
 }
 
-/**
- * The path between any two sides: `from` leaves its anchor through `fromSide`, `to` arrives
- * through `toSide`. Elbows run at right angles with rounded corners (one corner when one side is
- * vertical and the other horizontal, two when they face the same way); curves bend smoothly out
- * of one side and into the other. When an elbow would have to double back (mid-flight, say), it
- * falls back to a curve.
- */
 export function connectorRoute({
   from,
   fromSide,
@@ -240,7 +179,6 @@ function curveRoute({ from, to, out, back }: { from: End; to: End; out: End; bac
   )} ${r2(to.x)} ${r2(to.y)}`;
 }
 
-/** The point `t` of the way along a path (by length), for labels. */
 export function pointAlong(d: string, t: number): End {
   const samples: End[] = [];
   for (const sub of toCubics(parsePath(d))) for (const c of sub.segments) for (let k = 0; k <= 12; k++) samples.push(pointAt(c, k / 12));
@@ -259,7 +197,6 @@ export function pointAlong(d: string, t: number): End {
   return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k };
 }
 
-/** Where on an element's box a side's middle is, `gap` pixels out. */
 function sidePoint(box: DOMRect, side: ConnectorSide, gap: number): End {
   if (side === "top") return { x: box.left + box.width / 2, y: box.top - gap };
   if (side === "bottom") return { x: box.left + box.width / 2, y: box.bottom + gap };
@@ -272,31 +209,220 @@ const sideOf = (raw: string | null, fallback: ConnectorSide): ConnectorSide => (
 
 interface Pulse {
   path: SVGPathElement;
-  /** The last value seen, so a change sends a pulse. */
   token: string | null;
-  /** Seconds since a one-off pulse was sent (negative while it waits), or null when none is running. */
   since: number | null;
 }
 
 interface Line {
   label: SVGTextElement | null;
   pulse: Pulse | null;
-  /** Where in the order of lines it was made: staggers looping pulses so they don't all set off at once. */
   index: number;
   path: SVGPathElement;
-  /** 0 → 1 as the line draws in; back to 0 as it leaves. */
   drawn: AnimatedValue;
   d: string;
   leaving: boolean;
 }
 
+interface Target {
+  from: Element;
+  to: Element;
+}
+
+interface PulseTiming {
+  duration: number;
+  length: number;
+  every: number;
+}
+
 const SVG = "http://www.w3.org/2000/svg";
+const STILL_FRAMES = 3;
+const DRAWN_PRECISION = 0.002;
+const ARROW_THRESHOLD = 0.98;
+const PULSE_THRESHOLD = 0.99;
+const GONE = 0.001;
+const LOOP_OFFSET = 0.37;
+
+const ARROW_MARKER = {
+  viewBox: "0 0 10 10",
+  refX: "8",
+  refY: "5",
+  markerWidth: "7",
+  markerHeight: "7",
+  markerUnits: "userSpaceOnUse",
+  orient: "auto-start-reverse",
+};
+
+const ARROW_HEAD = {
+  d: "M1 1L8 5L1 9",
+  fill: "none",
+  stroke: "context-stroke",
+  "stroke-width": "1.6",
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round",
+};
+
+const LINE_PATH = {
+  class: "rm-connector",
+  pathLength: "1",
+  fill: "none",
+  stroke: "currentColor",
+  "stroke-width": "1.5",
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round",
+};
+
+const LABEL_TEXT = {
+  class: "rm-connector-label",
+  "text-anchor": "middle",
+  "dominant-baseline": "middle",
+  fill: "currentColor",
+  "font-size": "11",
+  style: "paint-order: stroke; stroke: var(--rm-label-halo, #fff); stroke-width: 4px; stroke-linejoin: round",
+};
+
+const CONNECTOR_ATTRIBUTES = new Set([
+  ANCHOR_ATTRIBUTE,
+  LINK_ATTRIBUTE,
+  FROM_SIDE_ATTRIBUTE,
+  TO_SIDE_ATTRIBUTE,
+  LINE_ATTRIBUTE,
+  LABEL_ATTRIBUTE,
+  ARROW_ATTRIBUTE,
+  PULSE_ATTRIBUTE,
+  PULSE_DELAY_ATTRIBUTE,
+  IGNORE_ATTRIBUTE,
+]);
+
 let markers = 0;
 
-/**
- * Draw connector lines inside `root` onto `svg`, an element laid over `root` (absolutely
- * positioned, the same size). The SVG is marked as ignored, so transitions don't animate it.
- */
+function svgElement<Tag extends keyof SVGElementTagNameMap>(tag: Tag, attributes: Record<string, string>): SVGElementTagNameMap[Tag] {
+  const element = document.createElementNS(SVG, tag);
+
+  for (const [name, attribute] of Object.entries(attributes)) element.setAttribute(name, attribute);
+
+  return element;
+}
+
+function arrowDefs(id: string): SVGDefsElement {
+  const defs = document.createElementNS(SVG, "defs");
+  const marker = svgElement("marker", { id, ...ARROW_MARKER });
+
+  marker.append(svgElement("path", ARROW_HEAD));
+  defs.append(marker);
+
+  return defs;
+}
+
+const pulsePath = (length: number) =>
+  svgElement("path", {
+    class: "rm-connector-pulse",
+    pathLength: "1",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "2.5",
+    "stroke-linecap": "round",
+    "stroke-dasharray": `${length} 2`,
+    opacity: "0",
+  });
+
+function setOrRemove(element: Element, name: string, attribute: string | null) {
+  if (attribute === null) element.removeAttribute(name);
+  else element.setAttribute(name, attribute);
+}
+
+function isIgnored(element: Element, root: HTMLElement): boolean {
+  const hidden = element.closest(`[${IGNORE_ATTRIBUTE}]`);
+
+  return hidden !== null && hidden !== root && root.contains(hidden);
+}
+
+function scanTargets(root: HTMLElement): Map<string, Target> {
+  const anchors = new Map<string, Element>();
+
+  for (const element of root.querySelectorAll(`[${ANCHOR_ATTRIBUTE}]`)) {
+    if (!isIgnored(element, root)) anchors.set(element.getAttribute(ANCHOR_ATTRIBUTE)!, element);
+  }
+
+  const targets = new Map<string, Target>();
+
+  root.querySelectorAll(`[${LINK_ATTRIBUTE}]`).forEach((to, index) => {
+    if (isIgnored(to, root)) return;
+
+    const from = anchors.get(to.getAttribute(LINK_ATTRIBUTE)!);
+
+    if (!from) return;
+
+    targets.set(`${to.getAttribute(LINK_ATTRIBUTE)}→${to.getAttribute(ANCHOR_ATTRIBUTE) ?? `#${index}`}`, { from, to });
+  });
+
+  return targets;
+}
+
+function showProgress(line: Line) {
+  const progress = Math.max(0, Math.min(1, line.drawn.current));
+  const { path } = line;
+
+  if (progress >= 1) {
+    path.removeAttribute("stroke-dasharray");
+    path.removeAttribute("stroke-dashoffset");
+    path.removeAttribute("data-rm-drawing");
+  } else {
+    path.setAttribute("stroke-dasharray", "1 1");
+    path.setAttribute("stroke-dashoffset", String(1 - progress));
+    path.setAttribute("data-rm-drawing", "");
+  }
+
+  if (line.label) line.label.setAttribute("opacity", String(progress));
+}
+
+function placeLabel(line: Line, text: string, group: SVGGElement) {
+  if (!line.label) {
+    line.label = svgElement("text", LABEL_TEXT);
+    group.append(line.label);
+  }
+
+  if (line.label.textContent !== text) line.label.textContent = text;
+
+  const at = pointAlong(line.d, 0.5);
+
+  line.label.setAttribute("x", String(r2(at.x)));
+  line.label.setAttribute("y", String(r2(at.y)));
+}
+
+function triggeredProgress(pulse: Pulse, raw: string, to: Element, dt: number, timing: PulseTiming): number | null {
+  if (raw !== pulse.token) {
+    pulse.token = raw;
+    pulse.since = -Number(to.getAttribute(PULSE_DELAY_ATTRIBUTE) ?? 0);
+  }
+
+  if (pulse.since === null) return null;
+
+  pulse.since += dt;
+
+  const progress = pulse.since / timing.duration;
+
+  if (progress > 1) pulse.since = null;
+
+  return progress;
+}
+
+function loopProgress(line: Line, clock: number, timing: PulseTiming): number {
+  return ((clock + line.index * LOOP_OFFSET * timing.every) % timing.every) / timing.duration;
+}
+
+function showPulse(line: Line, pulse: Pulse, progress: number | null, length: number) {
+  const visible = progress !== null && progress >= 0 && progress <= 1 && line.drawn.current >= PULSE_THRESHOLD;
+
+  pulse.path.setAttribute("opacity", visible ? "1" : "0");
+
+  if (visible) pulse.path.setAttribute("stroke-dashoffset", String(r2(length - progress! * (1 + length) * 100) / 100));
+}
+
+function removePulse(line: Line) {
+  line.pulse?.path.remove();
+  line.pulse = null;
+}
+
 export function connectors(root: HTMLElement, svg: SVGSVGElement, options: ConnectorOptions = {}): Connectors {
   const shape = options.shape ?? "elbow";
   const radius = options.radius ?? 12;
@@ -305,47 +431,26 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
   const fromDefault: ConnectorSide = options.from ?? "bottom";
   const spring = options.spring ?? springs.smooth;
   const loop = options.loop ?? { add: frames };
-  const pulseDuration = options.pulse?.duration ?? 1.2;
-  const pulseLength = options.pulse?.length ?? 0.22;
-  const pulseEvery = options.pulse?.every ?? 2.4;
+  const timing: PulseTiming = {
+    duration: options.pulse?.duration ?? 1.2,
+    length: options.pulse?.length ?? 0.22,
+    every: options.pulse?.every ?? 2.4,
+  };
   const reduced = () => resolveReducedMotion(options.reducedMotion);
+
   svg.setAttribute(IGNORE_ATTRIBUTE, "");
   svg.setAttribute("aria-hidden", "true");
 
   const arrowId = `rm-arrow-${++markers}`;
-  const defs = document.createElementNS(SVG, "defs");
-  const marker = document.createElementNS(SVG, "marker");
-  for (const [k, v] of Object.entries({
-    id: arrowId,
-    viewBox: "0 0 10 10",
-    refX: "8",
-    refY: "5",
-    markerWidth: "7",
-    markerHeight: "7",
-    markerUnits: "userSpaceOnUse",
-    orient: "auto-start-reverse",
-  }))
-    marker.setAttribute(k, v);
-  const head = document.createElementNS(SVG, "path");
-  for (const [k, v] of Object.entries({
-    d: "M1 1L8 5L1 9",
-    fill: "none",
-    stroke: "context-stroke",
-    "stroke-width": "1.6",
-    "stroke-linecap": "round",
-    "stroke-linejoin": "round",
-  }))
-    head.setAttribute(k, v);
-  marker.append(head);
-  defs.append(marker);
-  svg.append(defs);
-  const labels = document.createElementNS(SVG, "g");
-  labels.setAttribute("class", "rm-connector-labels");
-  svg.append(labels);
-  /** Lines and pulses go under the labels. */
-  const under = (el: SVGElement) => svg.insertBefore(el, labels);
+  const defs = arrowDefs(arrowId);
+  const labels = svgElement("g", { class: "rm-connector-labels" });
 
+  svg.append(defs);
+  svg.append(labels);
+
+  const under = (element: SVGElement) => svg.insertBefore(element, labels);
   const lines = new Map<string, Line>();
+
   let made = 0;
   let clock = 0;
   let onScreen = true;
@@ -354,296 +459,261 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
   let still = 0;
   let destroyed = false;
   let targetsDirty = true;
-  let targets = new Map<string, { from: Element; to: Element }>();
+  let targets = new Map<string, Target>();
 
-  /** Inside something the transition ignores (its own exit layer, say), so not part of the content. */
-  const ignored = (el: Element) => {
-    const hidden = el.closest(`[${IGNORE_ATTRIBUTE}]`);
-    return hidden !== null && hidden !== root && root.contains(hidden);
-  };
+  const animate = (drawn: AnimatedValue, to: number) => (reduced() ? drawn.set(to) : drawn.to(to));
 
-  /** Lines that should exist now, by a key that survives the element being rebuilt. */
-  function scanTargets(): Map<string, { from: Element; to: Element }> {
-    const anchors = new Map<string, Element>();
-    for (const el of root.querySelectorAll(`[${ANCHOR_ATTRIBUTE}]`)) {
-      if (!ignored(el)) anchors.set(el.getAttribute(ANCHOR_ATTRIBUTE)!, el);
-    }
-    const out = new Map<string, { from: Element; to: Element }>();
-    root.querySelectorAll(`[${LINK_ATTRIBUTE}]`).forEach((to, i) => {
-      if (ignored(to)) return;
-      const from = anchors.get(to.getAttribute(LINK_ATTRIBUTE)!);
-      if (!from) return;
-      const key = `${to.getAttribute(LINK_ATTRIBUTE)}→${to.getAttribute(ANCHOR_ATTRIBUTE) ?? `#${i}`}`;
-      out.set(key, { from, to });
-    });
-    return out;
-  }
-
-  const connectorAttributes = new Set([
-    ANCHOR_ATTRIBUTE,
-    LINK_ATTRIBUTE,
-    FROM_SIDE_ATTRIBUTE,
-    TO_SIDE_ATTRIBUTE,
-    LINE_ATTRIBUTE,
-    LABEL_ATTRIBUTE,
-    ARROW_ATTRIBUTE,
-    PULSE_ATTRIBUTE,
-    PULSE_DELAY_ATTRIBUTE,
-    IGNORE_ATTRIBUTE,
-  ]);
-
-  function show(line: Line) {
-    const p = Math.max(0, Math.min(1, line.drawn.current));
-    if (p >= 1) {
-      line.path.removeAttribute("stroke-dasharray");
-      line.path.removeAttribute("stroke-dashoffset");
-      line.path.removeAttribute("data-rm-drawing");
-    } else {
-      line.path.setAttribute("stroke-dasharray", "1 1");
-      line.path.setAttribute("stroke-dashoffset", String(1 - p));
-      line.path.setAttribute("data-rm-drawing", "");
-    }
-    if (line.label) line.label.setAttribute("opacity", String(p));
-  }
-
-  /** Make or update the line's label: text halfway along, with a halo so it reads over the line. */
   function labelLine(line: Line, text: string | null) {
-    if (!text) {
-      line.label?.remove();
-      line.label = null;
+    if (text) {
+      placeLabel(line, text, labels);
       return;
     }
-    if (!line.label) {
-      const label = document.createElementNS(SVG, "text");
-      label.setAttribute("class", "rm-connector-label");
-      label.setAttribute("text-anchor", "middle");
-      label.setAttribute("dominant-baseline", "middle");
-      label.setAttribute("fill", "currentColor");
-      label.setAttribute("font-size", "11");
-      label.setAttribute("style", "paint-order: stroke; stroke: var(--rm-label-halo, #fff); stroke-width: 4px; stroke-linejoin: round");
-      labels.append(label);
-      line.label = label;
-    }
-    if (line.label.textContent !== text) line.label.textContent = text;
-    const at = pointAlong(line.d, 0.5);
-    line.label.setAttribute("x", String(r2(at.x)));
-    line.label.setAttribute("y", String(r2(at.y)));
+
+    line.label?.remove();
+    line.label = null;
   }
 
-  /**
-   * Pulses: a short dash that runs along the line. Returns true while one is on its way (or for
-   * looping lines, always), so the loop keeps going.
-   */
   function pulseLine(line: Line, to: Element, dt: number): boolean {
     const raw = to.getAttribute(PULSE_ATTRIBUTE);
+
     if (raw === null || reduced()) {
-      line.pulse?.path.remove();
-      line.pulse = null;
+      removePulse(line);
       return false;
     }
+
     if (!line.pulse) {
-      const path = document.createElementNS(SVG, "path");
-      path.setAttribute("class", "rm-connector-pulse");
-      path.setAttribute("pathLength", "1");
-      path.setAttribute("fill", "none");
-      path.setAttribute("stroke", "currentColor");
-      path.setAttribute("stroke-width", "2.5");
-      path.setAttribute("stroke-linecap", "round");
-      path.setAttribute("stroke-dasharray", `${pulseLength} 2`);
-      path.setAttribute("opacity", "0");
+      const path = pulsePath(timing.length);
+
       under(path);
       line.pulse = { path, token: raw, since: null };
     }
+
     const pulse = line.pulse;
+
     pulse.path.setAttribute("d", line.d);
-    let progress: number | null = null;
-    if (raw === "loop") {
-      const time = (clock + line.index * 0.37 * pulseEvery) % pulseEvery;
-      progress = time / pulseDuration;
-    } else {
-      if (raw !== pulse.token) {
-        pulse.token = raw;
-        pulse.since = -Number(to.getAttribute(PULSE_DELAY_ATTRIBUTE) ?? 0);
-      }
-      if (pulse.since !== null) {
-        pulse.since += dt;
-        progress = pulse.since / pulseDuration;
-        if (progress > 1) pulse.since = null;
-      }
-    }
-    const visible = progress !== null && progress >= 0 && progress <= 1 && line.drawn.current >= 0.99;
-    pulse.path.setAttribute("opacity", visible ? "1" : "0");
-    if (visible) pulse.path.setAttribute("stroke-dashoffset", String(r2(pulseLength - progress! * (1 + pulseLength) * 100) / 100));
-    if (raw === "loop") return onScreen;
-    return pulse.since !== null;
+
+    const progress = raw === "loop" ? loopProgress(line, clock, timing) : triggeredProgress(pulse, raw, to, dt, timing);
+
+    showPulse(line, pulse, progress, timing.length);
+
+    return raw === "loop" ? onScreen : pulse.since !== null;
   }
 
-  /** Rebuild every line from the elements' boxes. Returns true if anything changed or is moving. */
-  function draw(dt: number): boolean {
-    clock += dt;
-    const frame = svg.getBoundingClientRect();
-    const scale = containerScale(root);
-    const local = (p: End) => ({
-      x: (p.x - frame.left) / scale,
-      y: (p.y - frame.top) / scale,
-    });
-    let changed = false;
-    if (targetsDirty) {
-      targets = scanTargets();
-      targetsDirty = false;
-    }
-    const now = targets;
+  function newLine(): Line {
+    const path = svgElement("path", LINE_PATH);
 
-    for (const [key, { from, to }] of now) {
-      const a = from.getBoundingClientRect();
-      const b = to.getBoundingClientRect();
-      if (a.width * a.height === 0 || b.width * b.height === 0) continue;
-      const fromSide = sideOf(to.getAttribute(FROM_SIDE_ATTRIBUTE), fromDefault);
-      const toSide = sideOf(to.getAttribute(TO_SIDE_ATTRIBUTE), end);
-      const start = local(sidePoint(a, fromSide, gap));
-      const finish = local(sidePoint(b, toSide, gap));
-      const d =
-        fromSide === "bottom" && toSide === "left"
-          ? connectorPath({ from: start, to: finish, shape, radius })
-          : connectorRoute({
-              from: start,
-              fromSide,
-              to: finish,
-              toSide,
-              shape,
-              radius,
-            });
-      let line = lines.get(key);
-      if (!line) {
-        const path = document.createElementNS(SVG, "path");
-        path.setAttribute("class", "rm-connector");
-        path.setAttribute("pathLength", "1");
-        path.setAttribute("fill", "none");
-        path.setAttribute("stroke", "currentColor");
-        path.setAttribute("stroke-width", "1.5");
-        path.setAttribute("stroke-linecap", "round");
-        path.setAttribute("stroke-linejoin", "round");
-        under(path);
-        line = {
-          path,
-          drawn: value(first || reduced() ? 1 : 0, {
-            spring,
-            precision: 0.002,
-          }),
-          d: "",
-          leaving: false,
-          label: null,
-          pulse: null,
-          index: made++,
-        };
-        if (line.drawn.current < 1) line.drawn.to(1);
-        lines.set(key, line);
-        changed = true;
-      } else if (line.leaving) {
-        line.leaving = false;
-        if (reduced()) line.drawn.set(1);
-        else line.drawn.to(1);
-      }
-      if (d !== line.d) {
-        line.d = d;
-        line.path.setAttribute("d", d);
-        changed = true;
-      }
-      const state = to.getAttribute(LINE_ATTRIBUTE);
-      if (state !== line.path.getAttribute("data-line")) {
-        if (state === null) line.path.removeAttribute("data-line");
-        else line.path.setAttribute("data-line", state);
-      }
-      const arrowAttr = to.getAttribute(ARROW_ATTRIBUTE);
-      const wantsArrow = arrowAttr === null ? options.arrow === true : arrowAttr !== "false";
-      const arrowShown = wantsArrow && line.drawn.current >= 0.98 && !line.leaving;
-      if (arrowShown !== line.path.hasAttribute("marker-end")) {
-        if (arrowShown) line.path.setAttribute("marker-end", `url(#${arrowId})`);
-        else line.path.removeAttribute("marker-end");
-      }
-      labelLine(line, to.getAttribute(LABEL_ATTRIBUTE));
-      if (pulseLine(line, to, dt)) changed = true;
+    under(path);
+
+    const line: Line = {
+      path,
+      drawn: value(first || reduced() ? 1 : 0, { spring, precision: DRAWN_PRECISION }),
+      d: "",
+      leaving: false,
+      label: null,
+      pulse: null,
+      index: made++,
+    };
+
+    if (line.drawn.current < 1) line.drawn.to(1);
+
+    return line;
+  }
+
+  function pathBetween(from: Element, to: Element, frame: DOMRect, scale: number): string | null {
+    const a = from.getBoundingClientRect();
+    const b = to.getBoundingClientRect();
+
+    if (a.width * a.height === 0 || b.width * b.height === 0) return null;
+
+    const local = (point: End) => ({ x: (point.x - frame.left) / scale, y: (point.y - frame.top) / scale });
+    const fromSide = sideOf(to.getAttribute(FROM_SIDE_ATTRIBUTE), fromDefault);
+    const toSide = sideOf(to.getAttribute(TO_SIDE_ATTRIBUTE), end);
+    const start = local(sidePoint(a, fromSide, gap));
+    const finish = local(sidePoint(b, toSide, gap));
+
+    if (fromSide === "bottom" && toSide === "left") return connectorPath({ from: start, to: finish, shape, radius });
+
+    return connectorRoute({ from: start, fromSide, to: finish, toSide, shape, radius });
+  }
+
+  function syncArrow(line: Line, to: Element) {
+    const attribute = to.getAttribute(ARROW_ATTRIBUTE);
+    const wantsArrow = attribute === null ? options.arrow === true : attribute !== "false";
+    const shown = wantsArrow && line.drawn.current >= ARROW_THRESHOLD && !line.leaving;
+
+    if (shown !== line.path.hasAttribute("marker-end")) setOrRemove(line.path, "marker-end", shown ? `url(#${arrowId})` : null);
+  }
+
+  function lineFor(key: string): { line: Line; created: boolean } {
+    const existing = lines.get(key);
+
+    if (!existing) {
+      const line = newLine();
+
+      lines.set(key, line);
+
+      return { line, created: true };
     }
+
+    if (existing.leaving) {
+      existing.leaving = false;
+      animate(existing.drawn, 1);
+    }
+
+    return { line: existing, created: false };
+  }
+
+  function updateLine(key: string, { from, to }: Target, frame: DOMRect, scale: number, dt: number): boolean {
+    const d = pathBetween(from, to, frame, scale);
+
+    if (d === null) return false;
+
+    const { line, created } = lineFor(key);
+    let changed = created;
+
+    if (d !== line.d) {
+      line.d = d;
+      line.path.setAttribute("d", d);
+      changed = true;
+    }
+
+    const state = to.getAttribute(LINE_ATTRIBUTE);
+
+    if (state !== line.path.getAttribute("data-line")) setOrRemove(line.path, "data-line", state);
+
+    syncArrow(line, to);
+    labelLine(line, to.getAttribute(LABEL_ATTRIBUTE));
+
+    return pulseLine(line, to, dt) || changed;
+  }
+
+  function retire(line: Line) {
+    line.leaving = true;
+    line.path.removeAttribute("marker-end");
+    removePulse(line);
+    animate(line.drawn, 0);
+  }
+
+  function stepLines(current: ReadonlyMap<string, Target>, dt: number): boolean {
+    let changed = false;
 
     for (const [key, line] of lines) {
-      if (!now.has(key) && !line.leaving) {
-        line.leaving = true;
-        line.path.removeAttribute("marker-end");
-        line.pulse?.path.remove();
-        line.pulse = null;
-        if (reduced()) line.drawn.set(0);
-        else line.drawn.to(0);
-      }
+      if (!current.has(key) && !line.leaving) retire(line);
+
       if (line.drawn.step(dt)) changed = true;
-      show(line);
-      if (line.leaving && line.drawn.current <= 0.001) {
+
+      showProgress(line);
+
+      if (line.leaving && line.drawn.current <= GONE) {
         line.path.remove();
         line.label?.remove();
         lines.delete(key);
       }
     }
+
+    return changed;
+  }
+
+  function draw(dt: number): boolean {
+    clock += dt;
+
+    const frame = svg.getBoundingClientRect();
+    const scale = containerScale(root);
+
+    if (targetsDirty) {
+      targets = scanTargets(root);
+      targetsDirty = false;
+    }
+
+    const current = targets;
+    let changed = false;
+
+    for (const [key, target] of current) {
+      if (updateLine(key, target, frame, scale, dt)) changed = true;
+    }
+
+    if (stepLines(current, dt)) changed = true;
+
     first = false;
+
     return changed;
   }
 
   const tick = (dt: number) => {
     if (destroyed) return false;
-    if (draw(dt)) still = 0;
-    else still++;
-    const keepGoing = still < 3;
+
+    still = draw(dt) ? 0 : still + 1;
+
+    const keepGoing = still < STILL_FRAMES;
+
     if (!keepGoing) stop = null;
+
     return keepGoing;
   };
+
   const wake = () => {
     if (destroyed) return;
+
     still = 0;
+
     if (!stop) stop = loop.add(tick);
   };
 
+  const touchesConnectors = (records: MutationRecord[]) =>
+    records.some(
+      (record) => record.type === "childList" || (record.type === "attributes" && CONNECTOR_ATTRIBUTES.has(record.attributeName ?? "")),
+    );
+
   draw(0);
-  if ([...lines.values()].some((l) => l.pulse)) wake();
+
+  if ([...lines.values()].some((line) => line.pulse)) wake();
+
   const watch =
     typeof MutationObserver === "function"
       ? new MutationObserver((records) => {
-          const contentChanged = records.filter((record) => !svg.contains(record.target));
-          if (contentChanged.length === 0) return;
-          if (
-            contentChanged.some(
-              (record) =>
-                record.type === "childList" ||
-                (record.type === "attributes" && connectorAttributes.has(record.attributeName ?? "")),
-            )
-          ) {
-            targetsDirty = true;
-          }
+          const outside = records.filter((record) => !svg.contains(record.target));
+
+          if (outside.length === 0) return;
+
+          if (touchesConnectors(outside)) targetsDirty = true;
+
           wake();
         })
       : null;
+
   watch?.observe(root, { subtree: true, childList: true, attributes: true });
+
   const resize = typeof ResizeObserver === "function" ? new ResizeObserver(wake) : null;
+
   resize?.observe(root);
+
   const sight =
     typeof IntersectionObserver === "function"
       ? new IntersectionObserver(([entry]) => {
           onScreen = entry?.isIntersecting ?? true;
+
           if (onScreen) wake();
         })
       : null;
+
   sight?.observe(root);
 
   return {
     update: wake,
+
     destroy() {
       destroyed = true;
       stop?.();
       watch?.disconnect();
       resize?.disconnect();
       sight?.disconnect();
+
       for (const line of lines.values()) {
         line.path.remove();
         line.label?.remove();
         line.pulse?.path.remove();
       }
+
       lines.clear();
       defs.remove();
       labels.remove();

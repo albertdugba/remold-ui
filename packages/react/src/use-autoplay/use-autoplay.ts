@@ -3,29 +3,10 @@ import type { Autoplay, AutoplayControlAttribute, AutoplayOptions } from "./type
 
 const CONTROL: AutoplayControlAttribute = "data-rm-autoplay-control";
 
-/**
- * Steps through a sequence by itself while it's on screen, and stops when someone takes over.
- * `active` also lets nested work pause with the sequence rather than continuing offscreen.
- * Anything that moves by itself for more than five seconds needs a way to pause it (WCAG 2.2.2):
- * `toggleProps` makes any button that control.
- *
- * @example
- * ```tsx
- * const autoplay = useAutoplay(VIEWS.length, { every: 2000 });
- *
- * <section ref={autoplay.ref}>
- *   <Remold.Morph trigger={autoplay.step}>{renderView(VIEWS[autoplay.step])}</Remold.Morph>
- *   <button {...autoplay.toggleProps}>{autoplay.playing ? "Pause" : "Play"}</button>
- * </section>
- * ```
- */
-export function useAutoplay(count: number, options: AutoplayOptions = {}): Autoplay {
-  const { every = 2400, initial = 0, stopOnInteraction = true, autoStart = true } = options;
+const VISIBLE_SHARE = 0.25;
 
-  const [step, setStep] = useState(initial);
-  const [playing, setPlaying] = useState(autoStart);
+function useInView(element: HTMLElement | null): boolean {
   const [visible, setVisible] = useState(false);
-  const [element, setElement] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!element) return;
@@ -35,12 +16,43 @@ export function useAutoplay(count: number, options: AutoplayOptions = {}): Autop
       return;
     }
 
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry?.isIntersecting ?? false), { threshold: 0.25 });
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry?.isIntersecting ?? false), { threshold: VISIBLE_SHARE });
 
     observer.observe(element);
 
     return () => observer.disconnect();
   }, [element]);
+
+  return visible;
+}
+
+function useStopOnInteraction(element: HTMLElement | null, enabled: boolean, stop: () => void) {
+  useEffect(() => {
+    if (!element || !enabled) return;
+
+    const onInteract = (event: Event) => {
+      if (event.target instanceof Element && event.target.closest(`[${CONTROL}]`)) return;
+
+      stop();
+    };
+
+    element.addEventListener("pointerdown", onInteract, true);
+    element.addEventListener("keydown", onInteract, true);
+
+    return () => {
+      element.removeEventListener("pointerdown", onInteract, true);
+      element.removeEventListener("keydown", onInteract, true);
+    };
+  }, [element, enabled, stop]);
+}
+
+export function useAutoplay(count: number, options: AutoplayOptions = {}): Autoplay {
+  const { every = 2400, initial = 0, stopOnInteraction = true, autoStart = true } = options;
+
+  const [step, setStep] = useState(initial);
+  const [playing, setPlaying] = useState(autoStart);
+  const [element, setElement] = useState<HTMLElement | null>(null);
+  const visible = useInView(element);
 
   const shown = Math.min(step, Math.max(0, count - 1));
   const delay = typeof every === "function" ? every(shown) : every;
@@ -50,31 +62,17 @@ export function useAutoplay(count: number, options: AutoplayOptions = {}): Autop
   useEffect(() => {
     if (!active || count < 2) return;
 
-    const timer = setTimeout(() => setStep((s) => (s + 1) % count), delay);
+    const timer = setTimeout(() => setStep((current) => (current + 1) % count), delay);
 
     return () => clearTimeout(timer);
   }, [active, count, delay, shown]);
 
-  useEffect(() => {
-    if (!element || !stopOnInteraction || !playing) return;
+  const stop = useCallback(() => setPlaying(false), []);
 
-    const stop = (event: Event) => {
-      if (event.target instanceof Element && event.target.closest(`[${CONTROL}]`)) return;
+  useStopOnInteraction(element, stopOnInteraction && playing, stop);
 
-      setPlaying(false);
-    };
-
-    element.addEventListener("pointerdown", stop, true);
-    element.addEventListener("keydown", stop, true);
-
-    return () => {
-      element.removeEventListener("pointerdown", stop, true);
-      element.removeEventListener("keydown", stop, true);
-    };
-  }, [element, stopOnInteraction, playing]);
-
-  const next = useCallback(() => setStep((s) => (s + 1) % Math.max(1, count)), [count]);
-  const toggle = useCallback(() => setPlaying((p) => !p), []);
+  const next = useCallback(() => setStep((current) => (current + 1) % Math.max(1, count)), [count]);
+  const toggle = useCallback(() => setPlaying((current) => !current), []);
 
   return {
     ref: setElement,
