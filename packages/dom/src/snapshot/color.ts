@@ -211,6 +211,7 @@ const toRgba = (parsed: [Vector, number] | null): Rgba | null =>
 
 const colorCache = new Map<string, Rgba>();
 
+/** Convert a computed CSS colour to sRGB byte channels and a unit alpha. */
 export function parseColor(value: string): Rgba {
   if (!value || value === "none") return [0, 0, 0, 0];
 

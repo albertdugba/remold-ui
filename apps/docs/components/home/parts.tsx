@@ -248,6 +248,7 @@ function PartCard({
   tall = false,
   dark = false,
   minHeight,
+  isNew = false,
   children,
 }: {
   /** One of the cards the page leads with. */
@@ -278,6 +279,8 @@ function PartCard({
   dark?: boolean;
   /** A fixed minimum height for a spanning feature card that needs a larger canvas. */
   minHeight?: number;
+  /** Marked with a "New" badge, here and on the components page. */
+  isNew?: boolean;
   children: (step: number, playing: boolean) => ReactNode;
 }) {
   // Cards play on their own, but only while on screen, so a long page stays cheap. Touching a card
@@ -296,11 +299,14 @@ function PartCard({
       ref={autoplay.ref}
       id={slugOf(title)}
       className={cls}
-      style={
-        minHeight && (wide || full || tall) ? { minHeight } : undefined
-      }
+      style={minHeight ? { minHeight } : undefined}
       aria-label={`${title}: ${states[autoplay.step]}`}
     >
+      {isNew && (
+        <span className="absolute top-[22px] left-[22px] z-2 rounded-full bg-fd-background px-2.5 py-1 text-[10px] font-bold tracking-[0.08em] text-fd-primary uppercase shadow-[0_0_0_1px_var(--color-fd-border)]">
+          New
+        </span>
+      )}
       <button
         type="button"
         {...autoplay.toggleProps}
@@ -422,6 +428,7 @@ export interface LandingCard {
   bare: boolean;
   bleed: boolean;
   spotlight: boolean;
+  isNew: boolean;
   render: (step: number, playing: boolean) => ReactNode;
 }
 
@@ -442,6 +449,7 @@ export function landingCards(): LandingCard[] {
       bare: Boolean(props.bare),
       bleed: Boolean(props.bleed),
       spotlight: Boolean(props.spotlight),
+      isNew: Boolean(props.isNew),
       render: props.children,
     }),
   );
@@ -467,6 +475,16 @@ export function Parts() {
         />
       </div>
 
+      <p className="m-0 mb-5 flex w-fit max-w-full items-start gap-2.5 rounded-2xl border border-fd-foreground/6 bg-fd-foreground/3 px-3.5 py-2 text-[13px] leading-5 text-fd-muted-foreground">
+        <span className="relative mt-[7px] flex size-1.5 flex-none" aria-hidden="true">
+          <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-60 motion-safe:animate-ping" />
+          <span className="relative size-1.5 rounded-full bg-emerald-500" />
+        </span>
+        <span>
+          <strong className="font-medium text-fd-foreground">Every demo is live.</strong> Click, type or drag in
+          any of them and it hands the controls to you.
+        </span>
+      </p>
       <div ref={grid} className="hp">
         {shown}
       </div>
@@ -607,8 +625,20 @@ function allCards() {
         title="Code to verified"
         docs="/docs/components/otp-input"
         states={["Code"]}
+        minHeight={560}
       >
         {(_, playing) => <OtpInputDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        featured
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Event RSVP"
+        docs="/docs/components/event-rsvp"
+        states={["RSVP"]}
+        minHeight={600}
+      >
+        {(_, playing) => <EventRsvpDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Base UI · Motion"
@@ -644,6 +674,7 @@ function allCards() {
         kicker="Base UI · Motion"
         category="forms"
         title="Notification inbox"
+        isNew
         docs="/docs/components/notification-inbox"
         states={["Inbox"]}
         minHeight={700}
@@ -685,20 +716,8 @@ function allCards() {
         title="Tag input"
         docs="/docs/components/tag-input"
         states={["Tags"]}
-        minHeight={560}
       >
         {(_, playing) => <TagInputDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        featured
-        kicker="Base UI · Motion"
-        category="forms"
-        title="Event RSVP"
-        docs="/docs/components/event-rsvp"
-        states={["RSVP"]}
-        minHeight={600}
-      >
-        {(_, playing) => <EventRsvpDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="SVG · Branding"
@@ -860,6 +879,26 @@ function allCards() {
         {(_, playing) => <SendMessageDemo playing={playing} />}
       </PartCard>
       <PartCard
+        featured
+        kicker="Base UI · Motion"
+        category="forms"
+        title="API keys"
+        docs="/docs/components/api-keys"
+        states={["Keys"]}
+        minHeight={600}
+      >
+        {(_, playing) => <ApiKeysDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Stepper slider"
+        docs="/docs/components/stepper-slider"
+        states={["Months"]}
+      >
+        {(_, playing) => <StepperSliderDemo playing={playing} />}
+      </PartCard>
+      <PartCard
         kicker="Motion · Media"
         category="morphing"
         title="Mini player to full"
@@ -877,26 +916,6 @@ function allCards() {
             compact
           />
         )}
-      </PartCard>
-      <PartCard
-        kicker="Base UI · Motion"
-        category="forms"
-        title="Stepper slider"
-        docs="/docs/components/stepper-slider"
-        states={["Months"]}
-      >
-        {(_, playing) => <StepperSliderDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        featured
-        kicker="Base UI · Motion"
-        category="forms"
-        title="API keys"
-        docs="/docs/components/api-keys"
-        states={["Keys"]}
-        minHeight={600}
-      >
-        {(_, playing) => <ApiKeysDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured

@@ -1,10 +1,15 @@
 import type { Point } from "../interpolate";
 
 export interface SampleOptions {
+  /** How many points. The spacing is tuned to fit about this many. */
   count?: number;
+  /** The gap between neighbouring points, in the shape's units. */
   spacing?: number;
+  /** `"hex"` (default): staggered rows, the most even packing. */
   pattern?: "hex" | "grid";
+  /** Nudge each point off the lattice by up to this share of the spacing (0 to 1), for a hand-made look. */
   jitter?: number;
+  /** The seed for `jitter`: the same seed always gives the same points. */
   seed?: number;
 }
 

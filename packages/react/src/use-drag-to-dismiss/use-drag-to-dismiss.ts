@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "../utils/hooks.js";
 import type { UseDragToDismiss, UseDragToDismissOptions } from "./types.js";
 
+/** Lets an element be dragged away to dismiss it, settling back if the drag falls short. */
 export function useDragToDismiss(options: UseDragToDismissOptions): UseDragToDismiss {
   const { disabled = false, axis, direction, distance, velocity, resistance, spring, slop, reducedMotion, loop } = options;
 

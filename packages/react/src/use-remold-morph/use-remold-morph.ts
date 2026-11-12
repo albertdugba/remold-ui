@@ -3,6 +3,7 @@ import { prepareTransition, type PreparedTransition } from "@remold-ui/dom";
 import { useIsoLayoutEffect, useLatest } from "../utils/hooks.js";
 import type { UseRemoldMorphOptions, UseRemoldMorphReturnValue } from "./types.js";
 
+/** `Remold.Morph` as a ref: animates the element you attach it to whenever `trigger` changes. */
 export function useRemoldMorph<E extends HTMLElement = HTMLDivElement>(
   trigger: unknown,
   options: UseRemoldMorphOptions = {},

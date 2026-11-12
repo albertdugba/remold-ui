@@ -3,22 +3,33 @@ import { matchPoints, type MatchPointsOptions, type PointMatches } from "../matc
 import type { SpringConfig } from "../motion/spring";
 import { values, type AnimatedValues } from "../motion/values";
 
+/** A point in a cloud, with an optional tone and depth that spring along with it (both default 0). */
 export interface CloudPoint extends Point {
   tone?: number;
+  /** Depth, in the same units as `x` and `y`. */
   z?: number;
 }
 
 export interface PointCloudOptions {
+  /** Default `{ duration: 0.9, bounce: 0.2 }`: a little settle, like dots finding their place. */
   spring?: SpringConfig;
+  /** How close counts as arrived, in your units. */
   precision?: number;
+  /** Where arriving points start, relative to where they land. */
   enter?: { x?: number; y?: number; z?: number };
+  /** Passed to `matchPoints`, for example `{ maxDistance }`. */
   match?: MatchPointsOptions;
 }
 
+/** How a `scatter` change spreads out before it gathers. */
 export interface PointCloudScatter {
+  /** How far the cloud spreads, as a multiple of the area both shapes cover. */
   spread?: number;
+  /** Seconds the points stay spread out before they start to gather. */
   hold?: number;
+  /** Up to how many seconds later some points set off than others, so they gather like a breath. */
   stagger?: number;
+  /** Seeds where each point drifts to, so the same change spreads the same way. */
   seed?: number;
 }
 
@@ -29,15 +40,23 @@ export interface CloudToOptions {
 }
 
 export interface PointCloud {
+  /** Every point being drawn as `[x, y, size, tone, z, x, y, size, tone, z, …]`. */
   readonly data: Float64Array;
+  /** How many points are being drawn, including ones still shrinking away. */
   readonly length: number;
+  /** How many points make up the current shape. */
   readonly live: number;
+  /** True when nothing is moving. */
   readonly settled: boolean;
+  /** Where the current shape's points are heading, as `{ x, y, z }`. */
   heading(): { x: number; y: number; z: number }[];
+  /** Rebuild into `points`. */
   to(points: readonly CloudPoint[], options?: CloudToOptions): PointMatches;
+  /** Advance by `dt` seconds. */
   step(dt: number): boolean;
 }
 
+/** How many numbers each point takes in `PointCloud.data`: x, y, size, tone, z. */
 export const STRIDE = 5;
 
 const X = 0;
@@ -290,6 +309,7 @@ function releaseDue(batch: AnimatedValues, gather: Gather, live: number) {
   }
 }
 
+/** Create a cloud, starting at rest at `initial`. */
 export function pointCloud(initial: readonly CloudPoint[] = [], options: PointCloudOptions = {}): PointCloud {
   const enter = resolveEnter(options.enter);
   const batch = values(packInitial(initial), {

@@ -3,6 +3,7 @@ import { frames, prefersReducedMotion } from "@remold-ui/dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UseSpringPress, UseSpringPressOptions } from "./types.js";
 
+/** Gives a directly pressed control a small, interruptible spring scale. */
 export function useSpringPress({
   scale = 0.97,
   spring = springs.snappy,

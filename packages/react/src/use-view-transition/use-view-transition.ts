@@ -4,6 +4,7 @@ import { viewTransition, type TransitionOptions } from "@remold-ui/dom";
 import { useLatest } from "../utils/hooks.js";
 import type { UseViewTransitionReturnValue } from "./types.js";
 
+/** Like `useRemold`, but uses the browser View Transitions API where it's supported. */
 export function useViewTransition<E extends HTMLElement = HTMLDivElement>(
   options: TransitionOptions = {},
 ): useViewTransition.ReturnValue<E> {

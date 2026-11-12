@@ -2,42 +2,68 @@ import { value, type AnimatedValue, type SpringConfig } from "@remold-ui/core";
 import { frames, prefersReducedMotion, type FrameLoop, type ReducedMotion } from "@remold-ui/dom";
 import { fitCanvas, type CanvasSize } from "../canvas-size";
 
+/** Named numbers the painter springs between. */
 export type PainterValues = Record<string, number>;
 
+/** One spring for every value, or one per value name (names left out use core's smooth spring). */
 export type PainterSpring<V extends PainterValues> = SpringConfig | Partial<Record<keyof V & string, SpringConfig>>;
 
 export interface PainterToOptions<V extends PainterValues> {
+  /** A different spring for this move. */
   spring?: PainterSpring<V>;
+  /** Start values moving at these speeds (units per second): hand over a flick's velocity. */
   velocity?: Partial<Record<keyof V & string, number>>;
 }
 
+/** Everything `draw` gets besides the context. */
 export interface PainterFrame<V extends PainterValues> extends CanvasSize {
+  /** Every value where it is this frame. */
   values: Readonly<V>;
+  /** Seconds of motion so far. */
   time: number;
+  /** Seconds since the last frame; 0 for a frame drawn outside the loop (a resize, a `redraw`). */
   dt: number;
+  /** True when motion is reduced: draw a calm, still frame. */
   still: boolean;
 }
 
 export interface PainterOptions<V extends PainterValues> {
+  /** Paint one frame. The canvas is already cleared and scaled, so draw in CSS pixels from. */
   draw: (context: CanvasRenderingContext2D, frame: PainterFrame<V>) => void;
+  /** The values to start at. */
   values?: V;
+  /** How values spring: one spring, or one per name. */
   spring?: PainterSpring<V>;
+  /** How close counts as arrived, in the values' own units. */
   precision?: number;
+  /** Keep drawing every frame, for things that move on their own (drifting, breathing, reacting to live audio). */
   continuous?: boolean;
+  /** Clear the canvas before each frame. */
   clear?: boolean;
+  /** "user" (default) follows the system setting; "always" and "never" override it. */
   reducedMotion?: ReducedMotion;
+  /** Stored pixels per CSS pixel are capped at this. */
   maxPixelRatio?: number;
+  /** The canvas's accessible name. */
   label?: string;
+  /** The frame loop to run on. */
   loop?: FrameLoop;
 }
 
 export interface Painter<V extends PainterValues> {
+  /** Every value where it is now. */
   readonly values: Readonly<V>;
+  /** True when motion is reduced: skip flings and other extra motion in your handlers. */
   readonly still: boolean;
+  /** Spring values to new targets, from wherever they are. */
   to(targets: Partial<V>, options?: PainterToOptions<V>): void;
+  /** Jump values to new numbers and stop them, without springing. */
   set(values: Partial<V>): void;
+  /** Draw again now, for a change `draw` reads that isn't a value (a colour, a font, a prop). */
   redraw(): void;
+  /** Change the canvas's accessible name. */
   label(label: string | undefined): void;
+  /** Stop drawing and let go of the canvas. */
   destroy(): void;
 }
 
@@ -103,6 +129,7 @@ function observeVisibility(canvas: HTMLCanvasElement, onChange: (visible: boolea
   return observer;
 }
 
+/** A sharp canvas that redraws only while its sprung values move. */
 export function painter<V extends PainterValues = PainterValues>(canvas: HTMLCanvasElement, options: PainterOptions<V>): Painter<V> {
   const context = contextOf(canvas, options);
   const precision = options.precision ?? DEFAULT_PRECISION;

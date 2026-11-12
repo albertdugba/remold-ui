@@ -1,22 +1,31 @@
 import { normalizeText, textFeatures, tokenize, type TextFeatures } from "./text";
 
+/** What sort of thing an element is, as a person would perceive it. */
 export type NodeKind = "heading" | "text" | "control" | "media" | "box";
 
+/** A colour as [red, green, blue, alpha], with channels 0–255 and alpha 0–1. */
 export type Rgba = readonly [number, number, number, number];
 
 export interface MatchNode {
   kind: NodeKind;
+  /** Visible text, or the accessible label for things like icon buttons. */
   text: string;
+  /** An identity for an image or icon, such as a hash of its source. */
   media?: string;
+  /** The element's box relative to the root, divided by the root's width, so different screen sizes compare. */
   x: number;
   y: number;
   width: number;
   height: number;
+  /** Index of the nearest ancestor in the same list, or -1. */
   parent: number;
   color?: Rgba;
   background?: Rgba;
+  /** In pixels. */
   fontSize?: number;
+  /** 100–900. */
   fontWeight?: number;
+  /** Corner radius in pixels. */
   radius?: number;
 }
 

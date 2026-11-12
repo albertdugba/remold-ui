@@ -2,6 +2,7 @@ import { fitPoints, type CloudPoint } from "@remold-ui/core";
 import type { CanvasSize } from "../canvas-size";
 import type { ParticleCamera, ParticleFit } from "./types";
 
+/** A camera in radians, checked. */
 export interface Camera {
   spin: number;
   sway: number;

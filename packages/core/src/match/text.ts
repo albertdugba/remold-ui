@@ -130,6 +130,7 @@ export function compareText(a: TextFeatures, b: TextFeatures): number {
   return Math.max(dice, contained, characters, numbersChanged(a, b));
 }
 
+/** Similarity of two texts, from 0 (unrelated) to 1 (identical after normalising). */
 export function textSimilarity(a: string, b: string): number {
   return compareText(textFeatures(a), textFeatures(b));
 }

@@ -4,14 +4,23 @@ import { IGNORE_ATTRIBUTE } from "../snapshot";
 import { frames, type FrameLoop } from "../frames";
 import { containerScale } from "../transition";
 
+/** Names an element so lines can start from it. */
 export const ANCHOR_ATTRIBUTE = "data-rm-anchor";
+/** Draws a line to this element from the anchor it names. */
 export const LINK_ATTRIBUTE = "data-rm-link";
+/** Copied onto the line drawn to this element as `data-line`, so a line can be styled by state. */
 export const LINE_ATTRIBUTE = "data-rm-line";
+/** Which side of the anchor the line leaves from: top, bottom, left or right. */
 export const FROM_SIDE_ATTRIBUTE = "data-rm-from-side";
+/** Which side of the linked element the line arrives at. */
 export const TO_SIDE_ATTRIBUTE = "data-rm-to-side";
+/** Text shown halfway along the line. */
 export const LABEL_ATTRIBUTE = "data-rm-label";
+/** An arrowhead where the line arrives (`"false"` turns off one the connectors add to every line). */
 export const ARROW_ATTRIBUTE = "data-rm-arrow";
+/** `"loop"` for pulses that keep flowing, or any other value to send one pulse each time it changes. */
 export const PULSE_ATTRIBUTE = "data-rm-pulse";
+/** Seconds to wait before a one-off pulse sets off, to send pulses along a path in turn. */
 export const PULSE_DELAY_ATTRIBUTE = "data-rm-pulse-delay";
 
 export type ConnectorSide = "top" | "bottom" | "left" | "right";
@@ -19,20 +28,32 @@ export type ConnectorSide = "top" | "bottom" | "left" | "right";
 export type ConnectorShape = "elbow" | "curve" | "straight";
 
 export interface ConnectorOptions {
+  /** `"elbow"` goes straight down from the anchor, then turns across into the element with a rounded corner. */
   shape?: ConnectorShape;
+  /** The elbow's corner radius, in pixels. */
   radius?: number;
+  /** Where a line meets the linked element. */
   end?: "side" | ConnectorSide;
+  /** Where lines leave the anchor. */
   from?: ConnectorSide;
+  /** Put an arrowhead on every line where it arrives. */
   arrow?: boolean;
+  /** Pulses: how long one takes to travel the line. */
   pulse?: { duration?: number; length?: number; every?: number };
+  /** Space between each end of a line and the element it touches, in pixels. */
   gap?: number;
+  /** How lines draw in and out. */
   spring?: SpringConfig;
+  /** `"user"` (default) follows the system setting; with reduced motion lines appear and go at once. */
   reducedMotion?: ReducedMotion;
+  /** The frame loop to run on. */
   loop?: FrameLoop;
 }
 
 export interface Connectors {
+  /** Redraw now, for changes the connectors can't see (a canvas resizing, say). */
   update(): void;
+  /** Stop watching and remove every line. */
   destroy(): void;
 }
 
@@ -41,6 +62,7 @@ interface End {
   y: number;
 }
 
+/** The path from `from` (below the anchor) to `to` (beside the element). */
 export function connectorPath({
   from,
   to,
@@ -101,6 +123,7 @@ function rounded(input: End[], radius: number): string {
   return `${d}L${r2(last.x)} ${r2(last.y)}`;
 }
 
+/** The path between any two sides: `from` leaves its anchor through `fromSide`, `to` arrives through `toSide`. */
 export function connectorRoute({
   from,
   fromSide,
@@ -179,6 +202,7 @@ function curveRoute({ from, to, out, back }: { from: End; to: End; out: End; bac
   )} ${r2(to.x)} ${r2(to.y)}`;
 }
 
+/** The point `t` of the way along a path (by length), for labels. */
 export function pointAlong(d: string, t: number): End {
   const samples: End[] = [];
   for (const sub of toCubics(parsePath(d))) for (const c of sub.segments) for (let k = 0; k <= 12; k++) samples.push(pointAt(c, k / 12));
@@ -423,6 +447,7 @@ function removePulse(line: Line) {
   line.pulse = null;
 }
 
+/** Draw connector lines inside `root` onto `svg`, an element laid over `root` (absolutely positioned, the same size). */
 export function connectors(root: HTMLElement, svg: SVGSVGElement, options: ConnectorOptions = {}): Connectors {
   const shape = options.shape ?? "elbow";
   const radius = options.radius ?? 12;

@@ -1,6 +1,7 @@
 import { lerpPoint, type Point } from "../interpolate";
 import type { PathCommand } from "./parse";
 
+/** A cubic Bézier: start, two handles, end. */
 export interface Cubic {
   p0: Point;
   p1: Point;
@@ -8,6 +9,7 @@ export interface Cubic {
   p3: Point;
 }
 
+/** One unbroken stroke of the pen: everything between one M and the next. */
 export interface Subpath {
   segments: Cubic[];
   closed: boolean;
@@ -30,6 +32,7 @@ const at = (x: number, y: number): Point => ({ x, y });
 
 const isSamePoint = (p: Point, q: Point) => Math.abs(p.x - q.x) <= SAME_POINT && Math.abs(p.y - q.y) <= SAME_POINT;
 
+/** A point on the curve, `t` of the way along (0 is the start, 1 the end). */
 export function pointAt(curve: Cubic, t: number): Point {
   const first = lerpPoint(curve.p0, curve.p1, t);
   const middle = lerpPoint(curve.p1, curve.p2, t);
@@ -179,6 +182,7 @@ function segmentsFor(command: PathCommand, pen: Point, start: Point): Cubic[] {
 
 const openSubpath = (): Subpath => ({ segments: [], closed: false });
 
+/** Turn parsed commands into subpaths made only of cubics. */
 export function toCubics(commands: PathCommand[]): Subpath[] {
   const subpaths: Subpath[] = [];
   let current = openSubpath();

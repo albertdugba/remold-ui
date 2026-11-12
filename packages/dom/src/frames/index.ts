@@ -1,6 +1,8 @@
 
+/** A frame callback. Receives seconds since the last frame; return `true` to keep running. */
 export type FrameCallback = (dt: number) => boolean;
 
+/** What the loop needs from the platform. */
 export interface FrameScheduler {
   request(callback: (time: number) => void): number;
   cancel(id: number): void;
@@ -9,10 +11,12 @@ export interface FrameScheduler {
 
 export interface FrameLoopOptions {
   scheduler?: FrameScheduler;
+  /** The longest step a callback will see, in seconds (default 1/30). */
   maxDelta?: number;
 }
 
 export interface FrameLoop {
+  /** Run `callback` every frame until it returns false. */
   add(callback: FrameCallback): () => void;
 }
 
@@ -43,6 +47,7 @@ function advanceCallbacks({ callbacks, delta }: { callbacks: Set<FrameCallback>;
   }
 }
 
+/** A frame loop on your own scheduler, for tests and custom runtimes. */
 export function createFrameLoop({ scheduler, maxDelta = 1 / 30 }: FrameLoopOptions = {}): FrameLoop {
   const callbacks = new Set<FrameCallback>();
   let platform: FrameScheduler | undefined = scheduler;
@@ -79,6 +84,7 @@ export function createFrameLoop({ scheduler, maxDelta = 1 / 30 }: FrameLoopOptio
 
 let shared: FrameLoop | undefined;
 
+/** Run `callback` every frame on the page's shared loop until it returns false. */
 export function frames(callback: FrameCallback): () => void {
   shared ??= createFrameLoop();
 

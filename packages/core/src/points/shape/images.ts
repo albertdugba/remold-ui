@@ -20,7 +20,9 @@ export interface FromPixelsOptions {
   colors?: number;
 }
 
+/** A shape made from an image, with the colours it found in it. */
 export interface PixelShape extends Shape {
+  /** The image's main colours by name (`color1` darkest, then lighter), for `particles`' `palette`. */
   readonly palette: Readonly<Record<string, string>>;
 }
 
@@ -64,6 +66,7 @@ function pathSample({ scale, centreX, centreY }: Placement, { x, y }: Point, z: 
   return { at: [px, py, z], along: (px + 1) / 2, group: 0 };
 }
 
+/** An SVG path made solid: its fill on a front and a back face, `depth` apart, joined round the edges. */
 export function fromPath(path: string, { depth = 0.3, fillRule = "nonzero" }: FromPathOptions = {}): Shape {
   checkPositive(depth, "fromPath.depth");
 
@@ -147,6 +150,7 @@ function reliefSample({ pixels, subject, found, names, depth, bulge }: Relief, {
   };
 }
 
+/** An image as a 3D relief of dots, in its own colours. */
 export function fromPixels(
   pixels: Pixels,
   { by = "alpha", threshold = 128, depth = 0.25, bulge = 0, colors = 10 }: FromPixelsOptions = {},

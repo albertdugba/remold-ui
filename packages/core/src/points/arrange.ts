@@ -1,14 +1,19 @@
 import type { Point } from "../interpolate";
 
 export interface FitOptions {
+  /** Space to leave around the points, in the box's units. */
   padding?: number;
+  /** `"contain"` (default) scales to fit inside, keeping proportions; `"none"` only centres. */
   mode?: "contain" | "none";
+  /** The frame the points are drawn in, fitted instead of the points' own bounds. */
   from?: { x?: number; y?: number; width: number; height: number };
 }
 
 export interface ClusterOptions {
+  /** Where the heap sits. */
   x: number;
   y: number;
+  /** How far the heap reaches from its middle, in the points' units. */
   radius?: number;
 }
 
@@ -52,6 +57,7 @@ function scaleFor(frame: Frame, box: { width: number; height: number }, padding:
   return mode === "none" || !Number.isFinite(fit) ? 1 : fit;
 }
 
+/** Scale and move `points` so they sit centred in `box`, keeping their proportions. */
 export function fitPoints<T extends Point>(
   points: readonly T[],
   box: { x: number; y: number; width: number; height: number },
@@ -69,6 +75,7 @@ export function fitPoints<T extends Point>(
   return points.map((point) => ({ ...point, x: centreX + (point.x - middleX) * scale, y: centreY + (point.y - middleY) * scale }));
 }
 
+/** The same points gathered into a small, round heap at one spot: a bin, a cart, an inbox. */
 export function clusterPoints<T extends Point>(points: readonly T[], options: ClusterOptions): T[] {
   const radius = options.radius ?? DEFAULT_RADIUS;
 

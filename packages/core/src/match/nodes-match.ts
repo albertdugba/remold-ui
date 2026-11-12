@@ -5,17 +5,26 @@ import { splitsAndMerges, type Merge, type Split } from "./split-merge";
 import { structureContext, withContext } from "./structure";
 
 export interface MatchNodesOptions {
+  /** Pairs scoring below this (0–1) are left unmatched. */
   threshold?: number;
+  /** Use family context to settle ambiguous pairs. */
   structure?: boolean;
+  /** Detect one-to-many and many-to-one changes in text. */
   splits?: boolean;
+  /** Maximum score-table size for the optimal matcher. */
   maxPairComparisons?: number;
 }
 
 export interface NodeMatches {
+  /** One old element became one new element. */
   pairs: Assignment[];
+  /** One old element became several new ones. */
   splits: Split[];
+  /** Several old elements became one new one. */
   merges: Merge[];
+  /** Old elements with no counterpart. */
   removed: number[];
+  /** New elements with no counterpart. */
   added: number[];
 }
 
@@ -232,6 +241,7 @@ function validate(threshold: number, maxPairComparisons: number) {
   }
 }
 
+/** Works out which old elements became which new ones, without keys or ids. */
 export function matchNodes(
   from: readonly MatchNode[],
   to: readonly MatchNode[],

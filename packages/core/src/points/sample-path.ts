@@ -4,7 +4,9 @@ import { parsePath } from "../path/parse";
 import { checkSampleOptions, DEFAULT_COUNT, MAX_POINTS, sampleLattice, type Box, type SampleOptions } from "./lattice";
 
 export interface PathSampleOptions extends SampleOptions {
+  /** `"fill"` (default) covers the inside; `"outline"` spaces points evenly along the edges. */
   mode?: "fill" | "outline";
+  /** Which parts count as inside when outlines overlap, as in SVG. */
   fillRule?: "nonzero" | "evenodd";
 }
 
@@ -217,6 +219,7 @@ function checkPathOptions(mode: string, fillRule: string) {
   }
 }
 
+/** Points evenly spread over an SVG path: inside it (`mode: "fill"`) or along its edges (`mode: "outline"`). */
 export function samplePath(path: string | readonly Subpath[], options: PathSampleOptions = {}): Point[] {
   const subpaths = typeof path === "string" ? toCubics(parsePath(path)) : path;
   const mode = options.mode ?? "fill";

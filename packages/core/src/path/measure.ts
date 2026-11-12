@@ -31,6 +31,7 @@ export function samplePoints(subpath: Subpath, perSegment = 4): Point[] {
   return last && !subpath.closed ? [...along, last.p3] : along;
 }
 
+/** Signed area enclosed by the outline (shoelace formula). */
 export function signedArea(subpath: Subpath): number {
   const points = samplePoints(subpath);
   const twice = points.reduce((total, point, index) => total + cross(point, points[(index + 1) % points.length]!), 0);
@@ -38,6 +39,7 @@ export function signedArea(subpath: Subpath): number {
   return twice / 2;
 }
 
+/** The average of the sampled outline points: a cheap centre for comparing positions. */
 export function centroid(subpath: Subpath): Point {
   const points = samplePoints(subpath);
 
@@ -48,6 +50,7 @@ export function centroid(subpath: Subpath): Point {
   return { x: total.x / points.length, y: total.y / points.length };
 }
 
+/** A box around every point and handle. */
 export function bounds(subpaths: readonly Subpath[]): Bounds | null {
   const points = subpaths.flatMap((subpath) => subpath.segments.flatMap(({ p0, p1, p2, p3 }) => [p0, p1, p2, p3]));
 

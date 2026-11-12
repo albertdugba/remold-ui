@@ -2,7 +2,9 @@ import { roundedRect } from "../geometry";
 import type { Look } from "../object-looks";
 
 export interface CalloutOptions {
+  /** Which way the line runs from the point it marks. */
   side?: "left" | "right";
+  /** The line's length in CSS pixels. */
   length?: number;
 }
 
@@ -12,6 +14,7 @@ const DEFAULT_LENGTH = 96;
 
 const flatOutline: Look["outline"] = (box) => roundedRect({ x: box.x, y: box.y, width: box.width, depth: box.depth, radius: 0 });
 
+/** A caption that always faces the screen, like a note on a diagram: mono, upper case and spaced out. */
 export const caption: Look = {
   defaultHeight: 0,
   passive: true,
@@ -37,6 +40,7 @@ export const caption: Look = {
   },
 };
 
+/** A label on a leader line, like a technical drawing. */
 export function callout(options: CalloutOptions = {}): Look {
   const side = options.side ?? "right";
   const length = options.length ?? DEFAULT_LENGTH;

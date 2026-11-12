@@ -10,6 +10,7 @@ function isOnScreen(element: Element) {
   return box.top >= 0 && box.left >= 0 && box.bottom <= window.innerHeight && box.right <= window.innerWidth;
 }
 
+/** Walks someone through an interface one step at a time. */
 export function TourRoot({
   steps,
   step: stepProp,

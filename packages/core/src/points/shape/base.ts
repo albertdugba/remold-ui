@@ -1,21 +1,29 @@
+/** A point in a shape's own space: `[x, y, z]`, with y up. */
 export type Vec3 = readonly [number, number, number];
 
+/** A sampled point, ready for `pointCloud` or `particles`. */
 export interface ShapePoint {
   x: number;
   y: number;
   z: number;
+  /** A colour: a number from 0 to 1 along a palette, or a palette colour's name. */
   tone?: number | string;
+  /** Where the point sits along its shape, from 0 to 1 (out from a spiral's core, down a helix, along a path). */
   order?: number;
 }
 
+/** A point as a tone rule sees it: where it is (y up), and where along its shape. */
 export interface ShapeSample {
   x: number;
   y: number;
   z: number;
+  /** From 0 to 1 along the shape. */
   along: number;
+  /** Which arm, strand or part of a shape it belongs to, from 0. */
   group: number;
 }
 
+/** A tone, or a rule that picks one for each point. */
 export type ToneRule = number | string | ((point: ShapeSample) => number | string);
 
 export type Axis = "x" | "y" | "z";
@@ -30,16 +38,27 @@ export interface Sample {
 export type Generate = (count: number, random: () => number) => Sample[];
 
 export interface Shape {
+  /** Roughly how much surface the shape has, in square units. */
   readonly area: number;
+  /** `count` points on the shape, the same ones every time for the same `seed`. */
   points(count: number, options?: { seed?: number }): ShapePoint[];
+  /** Moved by `[x, y, z]`. */
   at(offset: Vec3): Shape;
+  /** Scaled about its origin, evenly or per axis. */
   scale(by: number | Vec3): Shape;
+  /** Turned about its origin, in degrees: first about x, then y, then z. */
   rotate(degrees: { x?: number; y?: number; z?: number }): Shape;
+  /** The shape and its reflection across the plane where `axis` is 0, sharing the points. */
   mirror(axis: Axis): Shape;
+  /** Coloured: one tone for every point, or a rule that picks one per point. */
   tone(rule: ToneRule): Shape;
+  /** Banded: tones that take turns every `every` units along `axis`. */
   stripes(options: { every: number; tones: readonly (number | string)[]; axis?: Axis }): Shape;
+  /** Loosened: each point nudged by up to about `amount` in a random direction. */
   fuzz(amount: number): Shape;
+  /** Reshaped point by point: `move` gets each point. */
   warp(move: (point: ShapeSample) => Vec3): Shape;
+  /** Copies of the shape: turned evenly about an axis. */
   repeat(options: { copies: number; around?: Axis; step?: Vec3 }): Shape;
 }
 

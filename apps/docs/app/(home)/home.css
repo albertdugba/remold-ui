@@ -2070,7 +2070,7 @@
   min-height: 740px;
 }
 
-.hp-stage > .relative {
+.hp-stage > .relative:not(.otp, .fx, .ak) {
   width: 100%;
 }
 
@@ -2110,7 +2110,11 @@
     margin: 0 -16px;
     padding: 0 16px;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     scrollbar-width: none;
+  }
+  .hp-chips::-webkit-scrollbar {
+    display: none;
   }
   .hp-card:not(.wide, .full, .tall) {
     aspect-ratio: auto;
@@ -2127,12 +2131,15 @@
     top: auto;
   }
 
-  /* On a phone every category shows at once: the chips wrap instead of scrolling sideways. */
   .hp-chips {
-    flex-wrap: wrap;
-    margin: 0;
-    padding: 0;
-    overflow: visible;
+    margin: 0 calc(var(--hm-pad) * -1);
+    padding: 0 var(--hm-pad);
+    scroll-padding-inline: var(--hm-pad);
+    scroll-snap-type: x proximity;
+  }
+
+  .hp-chip {
+    scroll-snap-align: start;
   }
 
   .hm {

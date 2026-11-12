@@ -3,21 +3,32 @@ import { resolveReducedMotion, type ReducedMotion } from "./accessibility";
 import { frames as sharedFrames, type FrameLoop } from "./frames";
 
 export interface DragToDismissOptions {
+  /** Called once when the drag ends far enough or fast enough. */
   onDismiss: () => void;
+  /** The axis it moves along. */
   axis?: "x" | "y";
+  /** Which way dismisses: `1` is down or right, `-1` up or left. */
   direction?: 1 | -1;
+  /** Pixels past which letting go dismisses. */
   distance?: number;
+  /** A flick faster than this (pixels per second) dismisses, once it has moved 24 px. */
   velocity?: number;
+  /** How far the wrong way can stretch before it stiffens, in pixels. */
   resistance?: number;
+  /** The spring back. Default `{ duration: 0.45, bounce: 0.2 }`. */
   spring?: SpringConfig;
+  /** Movement before a press becomes a drag, so taps and clicks inside still work. */
   slop?: number;
+  /** Called with the offset on every move, for dimming a backdrop as it goes. */
   onDrag?: (offset: number) => void;
   reducedMotion?: ReducedMotion;
   loop?: FrameLoop;
 }
 
 export interface DragToDismiss {
+  /** Put the element back where it started, at once. */
   reset(): void;
+  /** Stop listening and clear what it set on the element. */
   destroy(): void;
 }
 
@@ -53,6 +64,7 @@ const currentOffset = (element: HTMLElement) => Number.parseFloat(TRANSFORM_NUMB
 
 const startsOnField = (event: PointerEvent) => event.target instanceof Element && Boolean(event.target.closest(FIELDS));
 
+/** Lets an element be dragged away to dismiss it, springing back when let go too soon. */
 export function dragToDismiss(element: HTMLElement, options: DragToDismissOptions): DragToDismiss {
   const { axis, direction, distance, flick, resistance, spring, slop, add } = settingsOf(options);
   const saved = { transform: element.style.transform, touchAction: element.style.touchAction };

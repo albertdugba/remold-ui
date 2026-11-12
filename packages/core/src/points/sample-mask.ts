@@ -4,10 +4,12 @@ import { checkSampleOptions, sampleLattice, type Box, type SampleOptions } from 
 export interface Mask {
   width: number;
   height: number;
+  /** One value per pixel, row by row, or four (red, green, blue, alpha, as in `ImageData`), in which case alpha is used. */
   data: ArrayLike<number>;
 }
 
 export interface MaskSampleOptions extends SampleOptions {
+  /** Pixels at or above this count as inside. */
   threshold?: number;
 }
 
@@ -88,6 +90,7 @@ const maskRow = (box: Box, filled: (x: number, y: number) => boolean) => (y: num
   }
 };
 
+/** Points evenly spread over the filled pixels of a mask: text drawn to a canvas, an image's alpha, a heat map. */
 export function sampleMask(mask: Mask, options: MaskSampleOptions = {}): Point[] {
   checkSize(mask);
   checkSampleOptions(options, "sampleMask");

@@ -25,7 +25,9 @@ export type RenderProp<State, E extends Element = HTMLElement> =
   | ((props: HTMLProps<E>, state: State) => ReactElement);
 
 export interface BaseProps<State, E extends Element = HTMLElement> {
+  /** Replace the default element, keeping Remold's props and ref. */
   render?: RenderProp<State, E>;
+  /** A class name, or a function that returns one from the part's state. */
   className?: string | ((state: State) => string | undefined);
 }
 

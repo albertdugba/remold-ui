@@ -567,7 +567,7 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
       <LayoutGroup>
         <motion.section
           ref={card}
-          className={`not-prose relative box-border block w-[min(100%,420px)] overflow-clip rounded-[28px] bg-(--fx-surface) p-3 font-sans text-(--fx-ink) transition-[background-color] duration-300 data-picking:bg-(--fx-well) ${PALETTE}`}
+          className={`fx not-prose relative box-border block w-[min(100%,420px)] overflow-clip rounded-[28px] bg-(--fx-surface) p-3 font-sans text-(--fx-ink) transition-[background-color] duration-300 data-picking:bg-(--fx-well) ${PALETTE}`}
           aria-label="Currency converter"
           data-picking={picking ?? undefined}
           initial={false}

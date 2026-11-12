@@ -9,14 +9,21 @@ export interface TransitionOptions {
   reducedMotion?: ReducedMotion;
   announce?: boolean | ((summary: ChangeSummary) => string);
   loop?: FrameLoop;
+  /** Raise elements above their neighbours while they travel. */
   lift?: boolean;
+  /** Play the change in beats instead of all at once. */
   choreography?: boolean | Choreography;
 }
 
+/** When each part of a change starts, in seconds. */
 export interface Choreography {
+  /** How long moves wait once something starts leaving, so it clears the way first. */
   move?: number;
+  /** How long arrivals wait after moves start, so the space they need has opened. */
   enter?: number;
+  /** The gap between one arrival and the next, in document order. */
   stagger?: number;
+  /** The longest the whole stagger may take, however many arrive. */
   maxStagger?: number;
 }
 

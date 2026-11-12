@@ -34,6 +34,7 @@ function useGlobeFocus(instance: Globe | null, focus: RemoldGlobeProps["focus"])
   }, [instance, target]);
 }
 
+/** A dotted Earth that turns on its own and can be spun with a finger. */
 export const RemoldGlobe = forwardRef(function RemoldGlobe(
   componentProps: RemoldGlobeProps,
   forwardedRef: ForwardedRef<HTMLCanvasElement>,

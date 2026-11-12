@@ -1,9 +1,11 @@
 import { sampleMask, type CloudPoint, type MaskSampleOptions, type Point } from "@remold-ui/core";
 
 export interface TextSampleOptions extends MaskSampleOptions {
+  /** A CSS font. Make sure web fonts have loaded first. */
   font?: string;
 }
 
+/** Points evenly spread over `text` as drawn in `font`. */
 export function sampleTextPoints(text: string, options: TextSampleOptions = {}): Point[] {
   const font = options.font ?? "700 160px system-ui, sans-serif";
   const measurementContext = createScratchContext({ width: 1, height: 1 });
@@ -29,10 +31,14 @@ export function sampleTextPoints(text: string, options: TextSampleOptions = {}):
 }
 
 export interface ImageSampleOptions extends MaskSampleOptions {
+  /** The size to sample at, in pixels. */
   width?: number;
   height?: number;
+  /** Which pixels count as the shape. */
   by?: "alpha" | "dark" | "light" | "saturation";
+  /** Colours to assign to sampled dots from the image's pixels: any CSS colours. */
   palette?: readonly string[];
+  /** Extra dots at normalized image coordinates, for small details that the mask omits. */
   details?: readonly { x: number; y: number; tone?: number }[];
 }
 
@@ -193,6 +199,7 @@ function sampleCount(options: ImageSampleOptions, details: number): number | und
   return count === undefined ? undefined : count - details;
 }
 
+/** Points over an image's opaque, dark, light, or saturated pixels. */
 export function sampleImagePoints(image: CanvasImageSource, options: ImageSampleOptions = {}): CloudPoint[] {
   const pixels = readImage(image, options);
   const by = options.by ?? "alpha";

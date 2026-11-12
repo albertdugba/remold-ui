@@ -4,17 +4,23 @@ import { kdTree, select, type KdTree } from "./kdtree";
 export interface Point3 {
   x: number;
   y: number;
+  /** Optional; treated as 0 for flat data. */
   z?: number;
 }
 
 export interface PointMatches {
+  /** [old index, new index], sorted by old index. */
   pairs: [number, number][];
+  /** Old points with no partner: they should shrink or fade away. */
   leaving: number[];
+  /** New points with no partner: they should grow or fade in. */
   arriving: number[];
 }
 
 export interface MatchPointsOptions {
+  /** `"nearest"` (default) pairs points to minimise the total squared distance travelled. */
   by?: "nearest" | "order";
+  /** Pairs further apart than this leave and arrive instead of travelling. */
   maxDistance?: number;
 }
 
@@ -101,6 +107,7 @@ function withinReach(pairs: readonly Pair[], from: readonly Point3[], to: readon
     .sort(([first], [second]) => first - second);
 }
 
+/** Decides which old point travels to which new one so a change reads as one motion. */
 export function matchPoints(from: readonly Point3[], to: readonly Point3[], options: MatchPointsOptions = {}): PointMatches {
   const { by, maxDistance } = validateOptions(options);
 
