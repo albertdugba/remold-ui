@@ -3,14 +3,6 @@ import { useRenderElement } from "../utils/use-render-element.js";
 import { useTourContext } from "./tour-context.js";
 import type { TourTargetProps, TourTargetState } from "./types.js";
 
-/**
- * Marks the element a step points at. Renders a `span`; `render` puts it on your own element.
- *
- * @example
- * ```tsx
- * <Remold.Tour.Target name="share" render={<button type="button" />}>Share</Remold.Tour.Target>
- * ```
- */
 export const TourTarget = forwardRef(function TourTarget(
   componentProps: TourTarget.Props,
   forwardedRef: ForwardedRef<HTMLElement>,

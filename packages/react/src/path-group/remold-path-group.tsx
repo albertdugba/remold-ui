@@ -3,22 +3,6 @@ import { RemoldIcon } from "../icon/remold-icon.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldPathGroupProps, RemoldPathGroupState } from "./types.js";
 
-/**
- * A multi-part SVG illustration whose parts each morph on their own. Parts are matched by `id`
- * and drawn in the order listed.
- *
- * @example
- * ```tsx
- * <Remold.PathGroup
- *   viewBox="0 0 200 200"
- *   paths={[
- *     { id: "face", path: face },
- *     { id: "eyes", path: mood.eyes },
- *     { id: "mouth", path: mood.mouth },
- *   ]}
- * />
- * ```
- */
 export const RemoldPathGroup = forwardRef(function RemoldPathGroup(
   componentProps: RemoldPathGroup.Props,
   forwardedRef: ForwardedRef<SVGSVGElement>,

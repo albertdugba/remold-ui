@@ -5,15 +5,6 @@ import { useEffectEvent, useIsoLayoutEffect } from "../utils/hooks.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldIconProps, RemoldIconState } from "./types.js";
 
-/**
- * An icon that reshapes into the next one. Pass any icon component or element as `icon`, or SVG
- * path data as `path`.
- *
- * @example
- * ```tsx
- * <Remold.Icon icon={open ? X : Menu} className="size-5" />
- * ```
- */
 export const RemoldIcon = forwardRef(function RemoldIcon(
   componentProps: RemoldIcon.Props,
   forwardedRef: ForwardedRef<SVGSVGElement>,
@@ -47,8 +38,6 @@ export const RemoldIcon = forwardRef(function RemoldIcon(
 
   const pathElement = useRef<SVGPathElement>(null);
   const shown = useRef(pathData);
-  // One identity for the life of the icon, so a layout transition sees it as the same element
-  // while it reshapes, and leaves the reshaping to it.
   const identity = useId();
   const target = useRef(pathData);
   const run = useRef(0);
@@ -76,8 +65,6 @@ export const RemoldIcon = forwardRef(function RemoldIcon(
     });
   });
 
-  // `spring`, `reducedMotion`, `match` and `loop` are read here so a new path uses the latest
-  // options, without restarting the morph when only those options change.
   const play = useEffectEvent((element: SVGPathElement, next: string) => {
     const reduced = reducedMotion === "always" || (reducedMotion === "user" && prefersReducedMotion());
     const token = ++run.current;
@@ -93,7 +80,7 @@ export const RemoldIcon = forwardRef(function RemoldIcon(
     try {
       morph = reduced ? null : createMorph(shown.current ?? next, next, { padding: "merge", ...match });
     } catch {
-      morph = null; // An empty or unparseable path: just show the new one.
+      morph = null;
     }
 
     if (!morph) {
@@ -195,7 +182,6 @@ function sameLook(previous: IconPath["look"], next: IconPath["look"]): boolean {
   return true;
 }
 
-/** An icon's look as SVG props, leaving out the viewBox (handled on its own) and anything unset. */
 function paintOf(look: IconPath["look"] | undefined): SVGAttributes<SVGSVGElement> {
   if (!look) return {};
 

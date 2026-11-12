@@ -29,13 +29,13 @@ export function createParticleRenderer({
   getPalette: () => readonly string[] | undefined;
   shape: "circle" | "square";
   blend: "normal" | "add";
-  /** Where a point lands on screen and how big it draws there, for a 3D camera; null draws points where they are. */
   project: ((x: number, y: number, z: number) => { x: number; y: number; scale: number }) | null;
   pointerEffect: { radius: number; strength: number } | null;
   reducedMotion: () => boolean;
   isDestroyed: () => boolean;
 }): { render: () => void; resetFill: () => void } {
   let fill: ParticleFill | null = null;
+
   const resolveFill = (drawingContext: CanvasRenderingContext2D) => {
     const resolved = typeof color === "function" ? color(drawingContext, getSize()) : color;
 
@@ -43,32 +43,32 @@ export function createParticleRenderer({
 
     return (typeof getComputedStyle === "function" ? getComputedStyle(canvas).color : "") || "#000";
   };
+
+  const singleFill = (drawingContext: CanvasRenderingContext2D, palette: readonly string[] | undefined) => {
+    if (palette) return palette[0]!;
+
+    fill ??= resolveFill(drawingContext);
+
+    return fill;
+  };
+
   const render = () => {
     if (!context || isDestroyed()) return;
 
     const size = getSize();
+    const drawParticle = createParticleDrawer({ context, cloud, radius, pointer, shape, project, pointerEffect, reducedMotion });
+    const palette = getPalette();
 
     context.setTransform(size.pixelRatio, 0, 0, size.pixelRatio, 0, 0);
     context.clearRect(0, 0, size.width, size.height);
     context.globalCompositeOperation = blend === "add" ? "lighter" : "source-over";
-    const drawParticle = createParticleDrawer({ context, cloud, radius, pointer, shape, project, pointerEffect, reducedMotion });
-    const palette = getPalette();
 
-    if (!palette || palette.length === 1) {
-      if (palette) {
-        context.fillStyle = palette[0]!;
-      } else {
-        if (fill === null) fill = resolveFill(context);
-        context.fillStyle = fill;
-      }
-      context.beginPath();
-      drawAll({ count: cloud.length, drawParticle });
-      context.fill();
-    } else {
-      drawPalette({ context, cloud, palette, drawParticle });
-    }
+    if (!palette || palette.length === 1) drawSolid(context, singleFill(context, palette), cloud.length, drawParticle);
+    else drawPalette({ context, cloud, palette, drawParticle });
+
     context.globalCompositeOperation = "source-over";
   };
+
   return { render, resetFill: () => (fill = null) };
 }
 
@@ -112,11 +112,13 @@ function createParticleDrawer({
     });
     const particleRadius = radius.current * scale * (seen ? seen.scale : 1);
 
-    if (shape === "square") context.rect(point.x - particleRadius, point.y - particleRadius, particleRadius * 2, particleRadius * 2);
-    else {
-      context.moveTo(point.x + particleRadius, point.y);
-      context.arc(point.x, point.y, particleRadius, 0, Math.PI * 2);
+    if (shape === "square") {
+      context.rect(point.x - particleRadius, point.y - particleRadius, particleRadius * 2, particleRadius * 2);
+      return;
     }
+
+    context.moveTo(point.x + particleRadius, point.y);
+    context.arc(point.x, point.y, particleRadius, 0, Math.PI * 2);
   };
 }
 
@@ -148,8 +150,13 @@ function leanPoint({
   return { x: x + (deltaX / distance) * lean, y: y + (deltaY / distance) * lean };
 }
 
-function drawAll({ count, drawParticle }: { count: number; drawParticle: (index: number) => void }): void {
+function drawSolid(context: CanvasRenderingContext2D, fill: ParticleFill, count: number, drawParticle: (index: number) => void): void {
+  context.fillStyle = fill;
+  context.beginPath();
+
   for (let index = 0; index < count; index++) drawParticle(index);
+
+  context.fill();
 }
 
 function drawPalette({
@@ -171,12 +178,15 @@ function drawPalette({
 
     buckets[colorIndex]!.push(index);
   }
+
   for (let colorIndex = 0; colorIndex <= lastColor; colorIndex++) {
     if (buckets[colorIndex]!.length === 0) continue;
 
     context.fillStyle = palette[colorIndex]!;
     context.beginPath();
+
     for (const pointIndex of buckets[colorIndex]!) drawParticle(pointIndex);
+
     context.fill();
   }
 }

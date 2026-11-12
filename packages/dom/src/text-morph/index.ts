@@ -1,11 +1,3 @@
-/**
- * Text morph: change an element's text so that letters the old and new text share slide to
- * their new places, while the rest fade out or in. "Saving…" → "Saved" keeps "Sav".
- *
- * The element gets two children: the plain text for screen readers, and an `aria-hidden`
- * layer of letters for the eye. Letters are inline blocks so they can move; that disables
- * kerning and ligatures across letters, which is invisible for most UI text.
- */
 import { springs, value, type AnimatedValue, type SpringConfig } from "@remold-ui/core";
 import { resolveReducedMotion, type ReducedMotion } from "../accessibility";
 import { morphedText } from "../snapshot";
@@ -13,21 +5,14 @@ import { frames, type FrameLoop } from "../frames";
 import { containerScale } from "../transition";
 
 export interface MorphTextOptions {
-  /** Default `springs.snappy`. */
   spring?: SpringConfig;
   reducedMotion?: ReducedMotion;
-  /**
-   * The largest text change to animate character by character. Longer text updates immediately
-   * so a paragraph cannot create hundreds of DOM nodes, layout reads, and animation values.
-   * Default 120.
-   */
   maxGraphemes?: number;
   loop?: FrameLoop;
 }
 
 const DEFAULT_MAX_GRAPHEMES = 120;
 
-/** Split text into user-perceived characters, keeping emoji and accents intact. */
 export function graphemes(text: string): string[] {
   if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
     return [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text)].map((s) => s.segment);
@@ -35,11 +20,6 @@ export function graphemes(text: string): string[] {
   return Array.from(text);
 }
 
-/**
- * Which letters of `a` and `b` are the same letter: the longest common subsequence, keeping
- * only runs of two or more in a row, so a stray shared "e" doesn't fly across the word.
- * Returns [index in a, index in b] pairs.
- */
 export function sharedLetters(previousText: readonly string[], nextText: readonly string[]): [number, number][] {
   const previousLength = previousText.length;
   const nextLength = nextText.length;
@@ -118,42 +98,49 @@ interface TextMorphState {
 const states = new WeakMap<HTMLElement, TextMorphState>();
 const sharedLoop: FrameLoop = { add: frames };
 
-function createTextMorphState(element: HTMLElement, maxGraphemes: number): TextMorphState {
-  const initial = element.textContent ?? "";
-  const screenReaderText = document.createElement("span");
+const SCREEN_READER_ONLY = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+};
 
-  Object.assign(screenReaderText.style, {
-    position: "absolute",
-    width: "1px",
-    height: "1px",
-    margin: "-1px",
-    overflow: "hidden",
-    clip: "rect(0 0 0 0)",
-    whiteSpace: "nowrap",
-  });
+function screenReaderSpan(): HTMLSpanElement {
+  const span = document.createElement("span");
+
+  Object.assign(span.style, SCREEN_READER_ONLY);
+
+  return span;
+}
+
+function visualLayers() {
   const visualLayer = document.createElement("span");
-
-  visualLayer.setAttribute("aria-hidden", "true");
-  visualLayer.style.position = "relative";
   const liveLetters = document.createElement("span");
   const exitingLetters = document.createElement("span");
 
+  visualLayer.setAttribute("aria-hidden", "true");
+  visualLayer.style.position = "relative";
   visualLayer.append(liveLetters, exitingLetters);
-  element.replaceChildren(screenReaderText, visualLayer);
-  const state: TextMorphState = {
-    text: [],
-    letterElements: [],
-    screenReaderText,
-    visualLayer,
-    liveLetters,
-    exitingLetters,
-    motion: new Map(),
-    token: 0,
-  };
+
+  return { visualLayer, liveLetters, exitingLetters };
+}
+
+function createTextMorphState(element: HTMLElement, maxGraphemes: number): TextMorphState {
+  const initial = element.textContent ?? "";
+  const screenReaderText = screenReaderSpan();
+  const layers = visualLayers();
+
+  element.replaceChildren(screenReaderText, layers.visualLayer);
+
+  const state: TextMorphState = { text: [], letterElements: [], screenReaderText, ...layers, motion: new Map(), token: 0 };
   const initialText = graphemes(initial);
 
   if (initialText.length > maxGraphemes) renderPlainText(state, initialText);
   else renderLetters(state, initialText);
+
   screenReaderText.textContent = initial;
   states.set(element, state);
   morphedText.set(element, screenReaderText);
@@ -221,10 +208,6 @@ function stepMotions(motions: ReadonlyMap<HTMLSpanElement, LetterMotion>, deltaT
   return isMoving;
 }
 
-/**
- * Change `element`'s text, animating the letters. Safe to call again mid-animation: letters
- * that are moving keep their speed. Resolves when everything has settled.
- */
 export function morphText(element: HTMLElement, text: string, options: MorphTextOptions = {}): Promise<void> {
   const maxGraphemes = Math.max(0, options.maxGraphemes ?? DEFAULT_MAX_GRAPHEMES);
   const state = states.get(element) ?? createTextMorphState(element, maxGraphemes);

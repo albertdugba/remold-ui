@@ -13,14 +13,6 @@ import {
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldAnchorProps, RemoldAnchorState } from "./types.js";
 
-/**
- * One end of a connector line: give it a `name`, and `linkTo` the anchor its line comes from.
- *
- * @example
- * ```tsx
- * <Remold.Anchor name={comment.id} linkTo={comment.parentId} render={<Avatar user={comment.author} />} />
- * ```
- */
 export const RemoldAnchor = forwardRef(function RemoldAnchor(
   componentProps: RemoldAnchor.Props,
   forwardedRef: ForwardedRef<HTMLSpanElement>,

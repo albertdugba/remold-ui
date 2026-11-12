@@ -14,77 +14,82 @@ interface Box {
 const sameBox = (a: Box | null, b: Box) =>
   a !== null && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 
-/**
- * Covers the current step's target, plus `padding`, wherever it is. It has no look of its own:
- * give it a ring, or a huge spread shadow to dim everything around the target, and a CSS
- * transition so it glides from step to step. Its box is also set as `--rm-tour-x`, `--rm-tour-y`,
- * `--rm-tour-width` and `--rm-tour-height`, measured from its offset parent (or the viewport, when
- * it's `position: fixed`). While the tour is closed it covers that whole box, so it closes in on the
- * first target as the tour starts and opens back out when it ends. A step without a target closes
- * it to a point in the middle.
- *
- * @example
- * ```css
- * .spotlight {
- *   border-radius: 12px;
- *   box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.5);
- *   transition: transform 0.5s, width 0.5s, height 0.5s;
- * }
- * ```
- */
-export const TourSpotlight = forwardRef(function TourSpotlight(
-  componentProps: TourSpotlight.Props,
-  forwardedRef: ForwardedRef<HTMLDivElement>,
-) {
-  const { padding = 8, render, className, style, ...elementProps } = componentProps;
-  const { step, open, target } = useTourContext("Tour.Spotlight");
-  const [element, setElement] = useState<HTMLDivElement | null>(null);
+interface Frame {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+function frameOf(element: HTMLElement): Frame {
+  const parent = element.offsetParent;
+
+  if (!parent) return { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+
+  const rect = parent.getBoundingClientRect();
+
+  return {
+    left: rect.left + parent.clientLeft - parent.scrollLeft,
+    top: rect.top + parent.clientTop - parent.scrollTop,
+    width: parent.clientWidth,
+    height: parent.clientHeight,
+  };
+}
+
+function spotlightBox(frame: Frame, open: boolean, target: Element | null, padding: number): Box {
+  if (!open) return { x: 0, y: 0, width: frame.width, height: frame.height };
+
+  if (!target) return { x: frame.width / 2, y: frame.height / 2, width: 0, height: 0 };
+
+  const rect = target.getBoundingClientRect();
+
+  return {
+    x: rect.left - frame.left - padding,
+    y: rect.top - frame.top - padding,
+    width: rect.width + padding * 2,
+    height: rect.height + padding * 2,
+  };
+}
+
+function geometryStyle(box: Box | null): CSSProperties {
+  if (!box) return { visibility: "hidden" };
+
+  return {
+    "--rm-tour-x": `${box.x}px`,
+    "--rm-tour-y": `${box.y}px`,
+    "--rm-tour-width": `${box.width}px`,
+    "--rm-tour-height": `${box.height}px`,
+    width: box.width,
+    height: box.height,
+    transform: `translate(${box.x}px, ${box.y}px)`,
+  } as CSSProperties;
+}
+
+function useSpotlightBox(element: HTMLDivElement | null, open: boolean, target: Element | null, padding: number): Box | null {
   const [box, setBox] = useState<Box | null>(null);
 
   const measure = useCallback(() => {
     if (!element) return;
 
-    const parent = element.offsetParent;
-    const frame = parent
-      ? (() => {
-          const rect = parent.getBoundingClientRect();
-          return {
-            left: rect.left + parent.clientLeft - parent.scrollLeft,
-            top: rect.top + parent.clientTop - parent.scrollTop,
-            width: parent.clientWidth,
-            height: parent.clientHeight,
-          };
-        })()
-      : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
-
-    let next: Box;
-    if (!open) {
-      next = { x: 0, y: 0, width: frame.width, height: frame.height };
-    } else if (target) {
-      const rect = target.getBoundingClientRect();
-      next = {
-        x: rect.left - frame.left - padding,
-        y: rect.top - frame.top - padding,
-        width: rect.width + padding * 2,
-        height: rect.height + padding * 2,
-      };
-    } else {
-      next = { x: frame.width / 2, y: frame.height / 2, width: 0, height: 0 };
-    }
+    const next = spotlightBox(frameOf(element), open, target, padding);
 
     setBox((current) => (sameBox(current, next) ? current : next));
   }, [element, open, target, padding]);
 
   useIsoLayoutEffect(() => {
     measure();
+
     if (!element || !open) return;
 
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+
     if (target) observer?.observe(target);
+
     if (element.offsetParent) observer?.observe(element.offsetParent);
 
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, { capture: true, passive: true });
+
     return () => {
       observer?.disconnect();
       window.removeEventListener("resize", measure);
@@ -92,19 +97,21 @@ export const TourSpotlight = forwardRef(function TourSpotlight(
     };
   }, [element, open, target, measure]);
 
+  return box;
+}
+
+export const TourSpotlight = forwardRef(function TourSpotlight(
+  componentProps: TourSpotlight.Props,
+  forwardedRef: ForwardedRef<HTMLDivElement>,
+) {
+  const { padding = 8, render, className, style, ...elementProps } = componentProps;
+  const { step, open, target } = useTourContext("Tour.Spotlight");
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const box = useSpotlightBox(element, open, target, padding);
+
   const state: TourSpotlight.State = { open, step, centered: open && !target };
 
-  const geometry: CSSProperties = box
-    ? ({
-        "--rm-tour-x": `${box.x}px`,
-        "--rm-tour-y": `${box.y}px`,
-        "--rm-tour-width": `${box.width}px`,
-        "--rm-tour-height": `${box.height}px`,
-        width: box.width,
-        height: box.height,
-        transform: `translate(${box.x}px, ${box.y}px)`,
-      } as CSSProperties)
-    : { visibility: "hidden" };
+  const geometry = geometryStyle(box);
 
   return useRenderElement(
     "div",
