@@ -315,7 +315,7 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
     <MotionConfig transition={SPRING} reducedMotion="user">
       <motion.section
         ref={ref}
-        className={`not-prose relative box-border block w-[min(100%,420px)] min-w-0 overflow-clip rounded-[22px] bg-(--ak-surface) p-[18px] font-sans text-(--ak-ink) @max-[520px]:w-[min(100%,360px)] @max-[520px]:rounded-[20px] @max-[520px]:p-4 ${PALETTE}`}
+        className={`ak not-prose relative box-border block w-[min(100%,420px)] min-w-0 overflow-clip rounded-[22px] bg-(--ak-surface) p-[18px] font-sans text-(--ak-ink) @max-[520px]:w-[min(100%,360px)] @max-[520px]:rounded-[20px] @max-[520px]:p-4 ${PALETTE}`}
         aria-label="API keys"
         initial={false}
         animate={{ height: height ? height.value + CARD_PADDING * 2 : "auto" }}

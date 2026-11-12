@@ -33,17 +33,16 @@ interface Item {
   id: string;
   kind: Kind;
   size: number;
-  photo: number;
   length?: string;
 }
 
 const ITEMS: Item[] = [
-  { id: "canyon", kind: "video", size: 2.4, photo: 1016, length: "6:42" },
-  { id: "valley", kind: "burst", size: 0.9, photo: 1015 },
-  { id: "city", kind: "video", size: 1.6, photo: 1043, length: "4:18" },
-  { id: "berries", kind: "duplicate", size: 0.4, photo: 1080 },
-  { id: "snow", kind: "duplicate", size: 0.5, photo: 1036 },
-  { id: "jelly", kind: "video", size: 1.2, photo: 1069, length: "2:51" },
+  { id: "canyon", kind: "video", size: 2.4, length: "6:42" },
+  { id: "valley", kind: "burst", size: 0.9 },
+  { id: "city", kind: "video", size: 1.6, length: "4:18" },
+  { id: "berries", kind: "duplicate", size: 0.4 },
+  { id: "snow", kind: "duplicate", size: 0.5 },
+  { id: "octopus", kind: "video", size: 1.2, length: "2:51" },
 ];
 
 const TOTAL = 100;
@@ -83,7 +82,7 @@ const CHECK =
 
 const LABEL = "absolute left-2 z-1 text-[11px] font-semibold text-white";
 
-const photoUrl = (id: number) => `https://picsum.photos/id/${id}/320/320`;
+const photoUrl = (id: string) => `/storage/${id}.jpg`;
 const gigabytes = (value: number) => value.toFixed(1);
 const sizeOf = (ids: readonly string[]) =>
   ITEMS.filter((item) => ids.includes(item.id)).reduce((sum, item) => sum + item.size, 0);
@@ -190,8 +189,7 @@ function Tile({
         }}
       >
         <img
-          src={photoUrl(item.photo)}
-          crossOrigin="anonymous"
+          src={photoUrl(item.id)}
           alt=""
           draggable={false}
           className="block size-full object-cover select-none group-data-checked/tile:brightness-88 motion-reduce:transition-none!"

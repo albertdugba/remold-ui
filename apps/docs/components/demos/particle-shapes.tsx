@@ -206,7 +206,7 @@ export function ParticleShapes({
         spring={{ duration, bounce }}
         className={CANVAS}
       />
-      <figcaption className="absolute inset-x-0 bottom-[18px] flex justify-center px-3">
+      <figcaption data-shape-picker className="absolute inset-x-0 bottom-[18px] flex justify-center px-3">
         <ToggleGroup
           className="inline-flex max-w-full overflow-x-auto rounded-full bg-[rgb(20_20_28/0.55)] p-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.07),inset_0_1px_0_rgb(255_255_255/0.08),0_10px_30px_-12px_rgb(0_0_0/0.6)] backdrop-blur-[14px] backdrop-saturate-[1.4] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label="Shape"
