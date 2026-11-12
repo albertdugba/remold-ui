@@ -665,7 +665,7 @@ function allCards() {
         category="morphing"
         title="Button to dialog"
         docs="/docs/components/morphing-dialog"
-        states={["New trip"]}
+        states={["New habit"]}
         minHeight={560}
       >
         {(_, playing) => <MorphingDialogDemo playing={playing} />}

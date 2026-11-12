@@ -37,7 +37,7 @@ const LANDING_HEIGHT: Record<string, number> = {
 
 const LANDING_COPY: Record<string, string> = {
   mentions: "Type @ and a person leaves the picker to become part of the message.",
-  "button-to-dialog": "The New trip button grows into the dialog, and the dialog shrinks into the trip it planned.",
+  "button-to-dialog": "The New habit button grows into the dialog, and the dialog shrinks into the habit it added.",
   "post-and-comments": "A reply grows from the composer into the conversation it belongs to.",
   "code-to-verified": "Six code cells fold into one verifying state, then resolve as a check.",
   "voice-states": "One orb changes its texture and pace as a voice interaction moves forward.",

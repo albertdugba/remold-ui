@@ -5,7 +5,7 @@ import { Field } from "@base-ui/react/field";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Airplane01Icon, Cancel01Icon, Loading03Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, RepeatIcon, Cancel01Icon, Loading03Icon } from "@hugeicons/core-free-icons";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { typing, useScene } from "./use-scene";
@@ -40,12 +40,12 @@ function useColours() {
   return dark ? COLOURS.dark : COLOURS.light;
 }
 
-const GROUPS = ["Solo", "Couple", "Family", "Friends"] as const;
-type Group = (typeof GROUPS)[number];
+const FREQUENCIES = ["Daily", "Weekdays", "Weekly", "Monthly"] as const;
+type Frequency = (typeof FREQUENCIES)[number];
 
-export interface Trip {
+export interface Habit {
   name: string;
-  group: Group;
+  frequency: Frequency;
   surface?: number;
 }
 
@@ -54,8 +54,8 @@ export interface MorphingDialogProps {
   onOpenChange: (open: boolean) => void;
   name: string;
   onNameChange: (name: string) => void;
-  group: Group;
-  onGroupChange: (group: Group) => void;
+  frequency: Frequency;
+  onFrequencyChange: (frequency: Frequency) => void;
   creating: boolean;
   onCreate: () => void;
   surface: number;
@@ -68,8 +68,8 @@ export function MorphingDialog({
   onOpenChange,
   name,
   onNameChange,
-  group,
-  onGroupChange,
+  frequency,
+  onFrequencyChange,
   creating,
   onCreate,
   surface,
@@ -113,7 +113,7 @@ export function MorphingDialog({
           transition={{ duration: open ? 0.08 : 0.2, delay: open ? 0 : 0.18 }}
         >
           <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} />
-          New trip
+          New habit
         </motion.span>
       </Dialog.Trigger>
 
@@ -143,15 +143,15 @@ export function MorphingDialog({
                 className="grid size-[38px] flex-none place-items-center rounded-[14px] bg-(--mdg-well) text-(--mdg-ink) [&_svg]:size-[19px]"
                 aria-hidden="true"
               >
-                <HugeiconsIcon icon={Airplane01Icon} strokeWidth={1.8} />
+                <HugeiconsIcon icon={RepeatIcon} strokeWidth={1.8} />
               </span>
               <span className="grid min-w-0 flex-1 gap-0.5">
-                <Dialog.Title className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Plan a trip</Dialog.Title>
+                <Dialog.Title className="m-0 text-[15px] font-semibold tracking-[-0.01em]">New habit</Dialog.Title>
                 <Dialog.Description
                   id={`${id}-description`}
                   className="m-0 text-[13px] leading-[1.4] text-(--mdg-muted)"
                 >
-                  Start with where you're going. Dates and stays can come later.
+                  Name it and pick how often. Reminders can come later.
                 </Dialog.Description>
               </span>
               <Dialog.Close
@@ -165,11 +165,11 @@ export function MorphingDialog({
 
             <motion.div {...fade(0.26)}>
               <Field.Root className={FIELD}>
-                <Field.Label className={LABEL}>Destination</Field.Label>
+                <Field.Label className={LABEL}>Habit</Field.Label>
                 <Field.Control
                   ref={nameField}
                   className="h-[42px] rounded-2xl border-[1.8px] border-solid border-(--mdg-input-line) bg-(--mdg-surface) px-3 text-[15px] text-(--mdg-ink) outline-none transition-[border-color] duration-[180ms] placeholder:text-(--mdg-muted) focus:border-(--mdg-ink)"
-                  placeholder="Where to?"
+                  placeholder="What do you want to do?"
                   autoComplete="off"
                   value={name}
                   readOnly={creating}
@@ -179,28 +179,28 @@ export function MorphingDialog({
             </motion.div>
 
             <motion.div className={FIELD} {...fade(0.3)}>
-              <span className={LABEL} id={`${id}-group`}>
-                Who's going
+              <span className={LABEL} id={`${id}-frequency`}>
+                How often
               </span>
               <ToggleGroup
                 className="grid grid-cols-4 gap-0.5 rounded-2xl bg-(--mdg-well) p-[3px]"
-                aria-labelledby={`${id}-group`}
-                value={[group]}
+                aria-labelledby={`${id}-frequency`}
+                value={[frequency]}
                 disabled={creating}
                 onValueChange={(next) => {
-                  const picked = (next as Group[])[0];
-                  if (picked) onGroupChange(picked);
+                  const picked = (next as Frequency[])[0];
+                  if (picked) onFrequencyChange(picked);
                 }}
               >
-                {GROUPS.map((option) => (
+                {FREQUENCIES.map((option) => (
                   <Toggle
                     key={option}
                     value={option}
                     className="relative h-[34px] cursor-pointer rounded-[13px] border-0 bg-transparent p-0 text-[13px] font-medium text-(--mdg-muted) outline-none transition-colors duration-[180ms] focus-visible:shadow-[inset_0_0_0_2px_var(--mdg-ink)] data-pressed:text-(--mdg-ink)"
                   >
-                    {group === option && (
+                    {frequency === option && (
                       <motion.span
-                        layoutId={`${id}-group`}
+                        layoutId={`${id}-frequency`}
                         className="absolute inset-0 rounded-[inherit] bg-(--mdg-surface) shadow-[0_0_0_1px_var(--mdg-line),0_1px_2px_rgb(0_0_0/0.06)]"
                         transition={reduced ? { duration: 0 } : SETTLE}
                       />
@@ -236,11 +236,11 @@ export function MorphingDialog({
                       transition={SETTLE}
                     >
                       <HugeiconsIcon icon={Loading03Icon} strokeWidth={2.2} />
-                      <span className="sr-only">Creating</span>
+                      <span className="sr-only">Adding</span>
                     </motion.span>
                   ) : (
                     <motion.span key="label" exit={{ opacity: 0, filter: "blur(3px)" }} transition={SETTLE}>
-                      Create trip
+                      Add habit
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -253,7 +253,7 @@ export function MorphingDialog({
   );
 }
 
-function TripRow({ trip, fresh }: { trip: Trip; fresh: boolean }) {
+function HabitRow({ habit, fresh }: { habit: Habit; fresh: boolean }) {
   const colours = useColours();
   const reduced = useReducedMotion();
   return (
@@ -264,9 +264,9 @@ function TripRow({ trip, fresh }: { trip: Trip; fresh: boolean }) {
       exit={{ opacity: 0, transition: { duration: 0.15 } }}
       transition={SETTLE}
     >
-      {trip.surface !== undefined ? (
+      {habit.surface !== undefined ? (
         <motion.span
-          layoutId={`mdg-surface-${trip.surface}`}
+          layoutId={`mdg-surface-${habit.surface}`}
           className={SURFACE_CLASS}
           initial={false}
           style={{ borderRadius: 14, backgroundColor: colours.sheet }}
@@ -281,8 +281,8 @@ function TripRow({ trip, fresh }: { trip: Trip; fresh: boolean }) {
         animate={{ opacity: 1, filter: "blur(0px)" }}
         transition={{ ...SETTLE, delay: fresh ? 0.28 : 0 }}
       >
-        <span className="min-w-0 flex-1 truncate text-[14px] font-medium">{trip.name}</span>
-        <span className="text-[12.5px] text-(--mdg-muted)">{trip.group}</span>
+        <span className="min-w-0 flex-1 truncate text-[14px] font-medium">{habit.name}</span>
+        <span className="text-[12.5px] text-(--mdg-muted)">{habit.frequency}</span>
         {fresh && (
           <span className="h-5 rounded-full bg-[#dcfce7] px-[7px] text-[11px] leading-5 font-semibold text-[#15803d]">
             New
@@ -293,32 +293,32 @@ function TripRow({ trip, fresh }: { trip: Trip; fresh: boolean }) {
   );
 }
 
-const STARTING: Trip[] = [
-  { name: "Lisbon", group: "Couple" },
-  { name: "Cape Coast", group: "Friends" },
+const STARTING: Habit[] = [
+  { name: "Morning run", frequency: "Daily" },
+  { name: "Read 20 pages", frequency: "Weekdays" },
 ];
 
 interface State {
   open: boolean;
   name: string;
-  group: Group;
+  frequency: Frequency;
   creating: boolean;
-  made: Trip[];
+  made: Habit[];
 }
 
 const REQUEST = 1000;
 
-const CLOSED: State = { open: false, name: "", group: "Solo", creating: false, made: [] };
+const CLOSED: State = { open: false, name: "", frequency: "Daily", creating: false, made: [] };
 const OPEN: State = { ...CLOSED, open: true };
-const NAMED: State = { ...OPEN, name: "Zanzibar" };
+const NAMED: State = { ...OPEN, name: "Call Mum" };
 
 const BEATS: readonly (State & { ms: number })[] = [
   { ...CLOSED, ms: 1400 },
   { ...OPEN, ms: 900 },
-  ...typing("Zanzibar", (name) => ({ ...OPEN, name }), { every: 70, hold: 500 }),
-  { ...NAMED, group: "Family", ms: 900 },
-  { ...NAMED, group: "Family", creating: true, ms: REQUEST },
-  { ...CLOSED, made: [{ name: "Zanzibar", group: "Family", surface: 0 }], ms: 2800 },
+  ...typing("Call Mum", (name) => ({ ...OPEN, name }), { every: 70, hold: 500 }),
+  { ...NAMED, frequency: "Weekly", ms: 900 },
+  { ...NAMED, frequency: "Weekly", creating: true, ms: REQUEST },
+  { ...CLOSED, made: [{ name: "Call Mum", frequency: "Weekly", surface: 0 }], ms: 2800 },
 ];
 
 const fromBeat = (step: number): State => {
@@ -326,7 +326,7 @@ const fromBeat = (step: number): State => {
   return state;
 };
 
-const STILL: State = { ...CLOSED, made: [{ name: "Zanzibar", group: "Family", surface: 0 }] };
+const STILL: State = { ...CLOSED, made: [{ name: "Call Mum", frequency: "Weekly", surface: 0 }] };
 
 interface MorphingDialogDemoProps {
   playing?: boolean;
@@ -346,9 +346,9 @@ export function MorphingDialogDemo({ playing, preview }: MorphingDialogDemoProps
       () =>
         takeOver((current) => ({
           ...CLOSED,
-          group: current.group,
+          frequency: current.frequency,
           made: [
-            { name: current.name.trim(), group: current.group, surface: current.made.length },
+            { name: current.name.trim(), frequency: current.frequency, surface: current.made.length },
             ...current.made,
           ],
         })),
@@ -357,7 +357,7 @@ export function MorphingDialogDemo({ playing, preview }: MorphingDialogDemoProps
     return () => clearTimeout(timer);
   }, [state.creating, live, preview, takeOver]);
 
-  const trips = [...state.made, ...STARTING];
+  const habits = [...state.made, ...STARTING];
 
   return (
     <div ref={ref} className="not-prose grid w-full place-items-center font-sans antialiased">
@@ -367,12 +367,12 @@ export function MorphingDialogDemo({ playing, preview }: MorphingDialogDemoProps
         className="grid min-h-[460px] w-full place-items-center text-[14px] text-(--mdg-ink) [--mdg-ink:#0a0a0b] [--mdg-input-line:rgb(10_10_11/0.12)] [--mdg-line:rgb(10_10_11/0.08)] [--mdg-muted:#71717a] [--mdg-surface:#ffffff] [--mdg-well:#f4f4f5] dark:[--mdg-ink:#fafafa] dark:[--mdg-input-line:rgb(255_255_255/0.14)] dark:[--mdg-line:rgb(255_255_255/0.1)] dark:[--mdg-muted:#a1a1aa] dark:[--mdg-surface:#1f1f23] dark:[--mdg-well:#2a2a2f]"
       >
         <LayoutGroup>
-          <section className="w-[min(100%,380px)] rounded-[22px] bg-(--mdg-surface) p-2" aria-label="Trips">
+          <section className="w-[min(100%,380px)] rounded-[22px] bg-(--mdg-surface) p-2" aria-label="Habits">
             <header className="flex items-center justify-between gap-3 pt-1.5 pr-1.5 pb-2.5 pl-2.5">
               <span className="inline-flex items-center gap-2 text-[15px] font-semibold tracking-[-0.01em]">
-                Trips{" "}
+                Habits{" "}
                 <span className="inline-grid h-5 min-w-[22px] place-items-center rounded-full bg-(--mdg-well) px-1.5 text-[12px] font-semibold text-(--mdg-muted) tabular-nums">
-                  {trips.length}
+                  {habits.length}
                 </span>
               </span>
               <span onPointerDownCapture={() => setModal(true)} onKeyDownCapture={() => setModal(true)}>
@@ -381,8 +381,8 @@ export function MorphingDialogDemo({ playing, preview }: MorphingDialogDemoProps
                   onOpenChange={(open) => takeOver((current) => ({ ...current, open, creating: false }))}
                   name={state.name}
                   onNameChange={(name) => takeOver((current) => ({ ...current, name }))}
-                  group={state.group}
-                  onGroupChange={(group) => takeOver((current) => ({ ...current, group }))}
+                  frequency={state.frequency}
+                  onFrequencyChange={(frequency) => takeOver((current) => ({ ...current, frequency }))}
                   creating={state.creating}
                   onCreate={() => takeOver((current) => ({ ...current, creating: true }))}
                   surface={state.made.length}
@@ -393,11 +393,11 @@ export function MorphingDialogDemo({ playing, preview }: MorphingDialogDemoProps
             </header>
             <ul className="m-0 grid list-none gap-1 p-0">
               <AnimatePresence initial={false}>
-                {trips.map((trip, index) => (
-                  <TripRow
-                    key={trip.name + (trip.surface ?? "")}
-                    trip={trip}
-                    fresh={trip.surface !== undefined && index === 0}
+                {habits.map((habit, index) => (
+                  <HabitRow
+                    key={habit.name + (habit.surface ?? "")}
+                    habit={habit}
+                    fresh={habit.surface !== undefined && index === 0}
                   />
                 ))}
               </AnimatePresence>
