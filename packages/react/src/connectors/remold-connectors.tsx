@@ -15,6 +15,7 @@ const overlayStyles: CSSProperties = {
   pointerEvents: "none",
 };
 
+/** Draws lines between the `Remold.Anchor`s inside it, and keeps them attached while the elements move. */
 export const RemoldConnectors = forwardRef(function RemoldConnectors(
   componentProps: RemoldConnectors.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,

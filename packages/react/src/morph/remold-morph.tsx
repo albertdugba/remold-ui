@@ -3,6 +3,7 @@ import { useRemoldMorph } from "../use-remold-morph/use-remold-morph.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldMorphProps, RemoldMorphState } from "./types.js";
 
+/** Animates everything inside it whenever `trigger` changes. */
 export const RemoldMorph = forwardRef(function RemoldMorph(
   componentProps: RemoldMorph.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,

@@ -3,8 +3,11 @@ import type { Outline, ScreenPoint } from "../geometry";
 import { outlineArea } from "./rings";
 
 export interface Wall {
+  /** The wall's four corners on screen: bottom start, bottom end, top end, top start. */
   quad: [ScreenPoint, ScreenPoint, ScreenPoint, ScreenPoint];
+  /** -1 (turned away to the left, in shadow) to 1 (to the right, lit). */
   light: number;
+  /** Larger is nearer; paint in increasing order. */
   depth: number;
 }
 
@@ -47,6 +50,7 @@ function lightOf(view: Projector, a: { x: number; y: number }, b: { x: number; y
   return { light: dx / (Math.hypot(dx, dy) || 1), depth: view.depth(middleX, middleY) };
 }
 
+/** The walls of an outline raised from z0 to z1 that face the viewer, far to near. */
 export function walls({ outline, z0, z1, view, inward = false }: WallOptions): Wall[] {
   if (outline.length < 3 || z1 - z0 <= 0) return [];
 
@@ -87,6 +91,7 @@ function isCrease(previous: { x: number; y: number }, a: { x: number; y: number 
   return cos < CREASE;
 }
 
+/** The ink lines of an outline raised from z0 to z1, as segments on screen. */
 export function inkLines({ outline, z0, z1, view, inward = false, uprights = true }: InkLinesOptions): Line[] {
   if (outline.length < 3 || z1 - z0 <= 0) return [];
 

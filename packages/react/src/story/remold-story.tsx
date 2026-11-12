@@ -5,6 +5,7 @@ import { useControlled, useIsoLayoutEffect, useLatest } from "../utils/hooks.js"
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldStoryActions, RemoldStoryAnnotation, RemoldStoryChapter, RemoldStoryProps, RemoldStoryState } from "./types.js";
 
+/** A Scene told in chapters. */
 export const RemoldStory = forwardRef(function RemoldStory(
   componentProps: RemoldStory.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,

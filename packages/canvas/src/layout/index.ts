@@ -87,4 +87,5 @@ function grid(ids: readonly string[], { columns, gap, size, at = [0, 0], extra }
   );
 }
 
+/** Helpers that place scene objects in a box, square, ring, row, stack or grid. */
 export const layout = { box, square, ring, row, stack, grid };

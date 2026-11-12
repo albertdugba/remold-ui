@@ -100,6 +100,7 @@ function useShapeSync(instance: Particles | null, key: string, request: MutableR
   }, [instance, key]);
 }
 
+/** Thousands of dots that rebuild themselves into each new `shape`. */
 export const RemoldParticles = forwardRef(function RemoldParticles(
   componentProps: RemoldParticles.Props,
   forwardedRef: ForwardedRef<HTMLCanvasElement>,

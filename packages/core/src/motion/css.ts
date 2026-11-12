@@ -1,7 +1,9 @@
 import { isSettled, springCoefficients, stepSpring, type SpringCoefficients, type SpringConfig } from "./spring";
 
 export interface CssSpring {
+  /** How long the spring takes to settle, in milliseconds. */
   duration: number;
+  /** A CSS `linear()` easing function that follows the spring from 0 to 1. */
   easing: string;
 }
 
@@ -39,6 +41,7 @@ function sampleCurve(spring: SpringCoefficients, duration: number, samples: numb
   return [0, ...following];
 }
 
+/** Sample a spring going from 0 to 1 into a CSS `linear()` easing. */
 export function springToCss(config: SpringConfig, samples = 40): CssSpring {
   if (!isValidSampleCount(samples)) {
     throw new RangeError(`springToCss: samples must be a whole number of at least 2, got ${samples}`);

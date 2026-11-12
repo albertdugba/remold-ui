@@ -25,6 +25,7 @@ function invert(rowOf: ArrayLike<number>, rows: number): Int32Array {
   return columnOf;
 }
 
+/** Minimum-cost assignment. */
 export function hungarian(cost: readonly (readonly number[])[]): number[] {
   const rows = cost.length;
   const cols = rows > 0 ? cost[0]!.length : 0;
@@ -170,6 +171,7 @@ function keepConfident(columnOf: ArrayLike<number>, scoreAt: (from: number, to: 
   });
 }
 
+/** Pair rows with columns to maximise total similarity (each 0 to 1). */
 export function assign(similarity: readonly (readonly number[])[], threshold: number): Assignment[] {
   const cost = similarity.map((row) => row.map((score) => costOf(score, threshold)));
 

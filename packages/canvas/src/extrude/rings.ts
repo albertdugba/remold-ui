@@ -17,6 +17,7 @@ const UNIT_PATH_SCALE = 100;
 
 const pathCache = new Map<string, Rings>();
 
+/** Twice the signed area of an outline on the floor: the sign gives its direction. */
 export function outlineArea(outline: Outline): number {
   return outline.reduce((sum, point, index) => {
     const previous = outline[(index + outline.length - 1) % outline.length]!;
@@ -84,6 +85,7 @@ const toPath = (rings: Rings, scale: number) =>
     .map((outline) => `M${outline.map((point) => `${(point.x * scale).toFixed(2)} ${(point.y * scale).toFixed(2)}`).join("L")}Z`)
     .join("");
 
+/** The outline (and holes) of `shape` filling the footprint of `box`. */
 export function shapeRings(shape: ExtrudeShape, box: FlatBox, radius = 0.14): Rings {
   if (shape === "rect") {
     const corner = Math.min(box.width, box.depth) * radius;
@@ -99,6 +101,7 @@ export function shapeRings(shape: ExtrudeShape, box: FlatBox, radius = 0.14): Ri
   return { outer: place(unit.outer), holes: unit.holes.map(place) };
 }
 
+/** Path data for a shape in a 100 × 100 box, so two shapes drawn at different sizes can morph into each other. */
 export function unitPath(shape: ExtrudeShape, radius = 0.14): string {
   if (shape === "rect" || shape === "ellipse") return toPath(shapeRings(shape, { x: 0, y: 0, width: 1, depth: 1 }, radius), UNIT_PATH_SCALE);
 

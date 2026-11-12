@@ -6,6 +6,7 @@ const LONG_HEX = /^#?([0-9a-f]{6})$/i;
 const SHORT_HEX = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
 const RGB_FUNCTION = /^(?:rgba?\()?\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i;
 
+/** A colour as red, green, blue: `#rgb`, `#rrggbb`, `rgb(r, g, b)` or the palettes' bare `"r, g, b"`. */
 export function parseColor(color: string): Rgb {
   const trimmed = color.trim();
   const long = LONG_HEX.exec(trimmed);

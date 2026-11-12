@@ -4,6 +4,7 @@ import { useLatest } from "../utils/hooks.js";
 
 export type UseDust = Pick<Dust, "away" | "back">;
 
+/** Parts of the page that break into dots and pour somewhere else, drawn over `ref`'s element. */
 export function useDust(ref: RefObject<HTMLElement | null>, options?: DustOptions): UseDust {
   const latest = useLatest(options);
   const instance = useRef<Dust | null>(null);

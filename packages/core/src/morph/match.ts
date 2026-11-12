@@ -5,12 +5,17 @@ import { subdivide } from "../path/subdivide";
 import { hungarian } from "../match/hungarian";
 
 export interface MatchOptions {
+  /** How subpaths are paired. */
   pairing?: "auto" | "order";
+  /** What an unpaired subpath turns into. */
   padding?: "collapse" | "merge";
+  /** Make paired subpaths run the same way round (default true). */
   orient?: boolean;
+  /** Rotate closed loops to the start point that travels least (default true). */
   rotate?: boolean;
 }
 
+/** Two lists of subpaths of equal length, where each pair has the same number of segments. */
 export interface MatchedShapes {
   from: Subpath[];
   to: Subpath[];
@@ -33,6 +38,7 @@ const squared = (p: Point, q: Point) => (p.x - q.x) ** 2 + (p.y - q.y) ** 2;
 
 const gap = (p: Point, q: Point) => Math.hypot(p.x - q.x, p.y - q.y);
 
+/** The same outline, drawn from the other end. */
 export function reverseSubpath(subpath: Subpath): Subpath {
   const segments = subpath.segments
     .slice()
@@ -166,6 +172,7 @@ function matchPair([from, to]: Pair, shapeA: readonly Subpath[], shapeB: readonl
   };
 }
 
+/** Match two shapes so they can be interpolated point for point. */
 export function matchShapes(a: readonly Subpath[], b: readonly Subpath[], options: MatchOptions = {}): MatchedShapes {
   const shapeA = a.filter((subpath) => subpath.segments.length > 0);
   const shapeB = b.filter((subpath) => subpath.segments.length > 0);

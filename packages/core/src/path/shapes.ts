@@ -1,7 +1,9 @@
 import { pathReader } from "./parse";
 
+/** A shape's attributes, as an SVG element or an icon set (`[tag, attributes]`) gives them. */
 export type ShapeAttributes = Readonly<Record<string, string | number | undefined>>;
 
+/** One element of an icon: its tag and attributes. */
 export type ShapeNode = readonly [tag: string, attributes: ShapeAttributes];
 
 const SHAPES = new Set(["path", "circle", "ellipse", "rect", "line", "polyline", "polygon"]);
@@ -102,6 +104,7 @@ function polyPath(tag: string, raw: string | number | undefined, closed: boolean
   return closed ? `${path}Z` : path;
 }
 
+/** The path data for one SVG shape, or `""` when it draws nothing. */
 export function shapeToPath(tag: string, attributes: ShapeAttributes): string {
   const name = tag.toLowerCase();
 
@@ -142,6 +145,7 @@ function absoluteStart(path: string): string {
   return `M${x} ${y}${following}`;
 }
 
+/** Several shapes as one path, in drawing order. */
 export function shapesToPath(nodes: Iterable<ShapeNode>): string {
   return Array.from(nodes, ([tag, attributes]) => absoluteStart(shapeToPath(tag, attributes))).join("");
 }

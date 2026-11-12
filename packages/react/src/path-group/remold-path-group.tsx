@@ -3,6 +3,7 @@ import { RemoldIcon } from "../icon/remold-icon.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldPathGroupProps, RemoldPathGroupState } from "./types.js";
 
+/** A multi-part SVG illustration whose parts each morph on their own. */
 export const RemoldPathGroup = forwardRef(function RemoldPathGroup(
   componentProps: RemoldPathGroup.Props,
   forwardedRef: ForwardedRef<SVGSVGElement>,

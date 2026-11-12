@@ -1,6 +1,7 @@
 import { lerpPoint } from "../interpolate";
 import type { Cubic, Subpath } from "./normalize";
 
+/** Split a cubic at `t` (de Casteljau). */
 export function splitCubic(curve: Cubic, t = 0.5): [Cubic, Cubic] {
   const first = lerpPoint(curve.p0, curve.p1, t);
   const middle = lerpPoint(curve.p1, curve.p2, t);
@@ -21,6 +22,7 @@ const hullLength = ({ p0, p1, p2, p3 }: Cubic) =>
 const indexOfLongest = (lengths: readonly number[]) =>
   lengths.reduce((longest, length, index) => (length > lengths[longest]! ? index : longest), 0);
 
+/** Return a copy of `subpath` with exactly `count` segments, made by repeatedly halving the longest segment. */
 export function subdivide(subpath: Subpath, count: number): Subpath {
   if (!Number.isInteger(count) || count < 0) {
     throw new RangeError(`subdivide: count must be a whole number, got ${count}`);

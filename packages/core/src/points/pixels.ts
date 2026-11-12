@@ -1,9 +1,11 @@
+/** An image as RGBA numbers from 0 to 255, row by row, four per pixel (as in `ImageData`). */
 export interface Pixels {
   width: number;
   height: number;
   data: ArrayLike<number>;
 }
 
+/** Which pixels are the subject: opaque ones, dark ones on a light ground, light ones on a dark ground, or vivid ones. */
 export type PixelSubject = "alpha" | "dark" | "light" | "saturation";
 
 export type Rgb = readonly [number, number, number];

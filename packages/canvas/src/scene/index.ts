@@ -59,6 +59,7 @@ function screenEdge(points: readonly { x: number; y: number }[], left: boolean) 
   return best ? { x: best.x, y: best.y } : null;
 }
 
+/** An isometric scene whose objects spring between named layouts. */
 export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
   const layoutNames = Object.keys(options.layouts);
 

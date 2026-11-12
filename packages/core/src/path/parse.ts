@@ -200,6 +200,7 @@ function readersFor(reader: PathReader, pen: Pen, relative: boolean): Readers {
   return { read, readX, readY, point: () => [readX(), readY()], flag: () => reader.flag() };
 }
 
+/** Parse path data into absolute M, L, C, Q, A and Z commands. */
 export function parsePath(source: string): PathCommand[] {
   const reader = pathReader(source);
   const commands: PathCommand[] = [];

@@ -4,6 +4,7 @@ import { transition, type TransitionOptions } from "@remold-ui/dom";
 import { useLatest } from "../utils/hooks.js";
 import type { UseRemoldReturnValue } from "./types.js";
 
+/** Animates a state change you make from an event handler. */
 export function useRemold<E extends HTMLElement = HTMLDivElement>(options: TransitionOptions = {}): useRemold.ReturnValue<E> {
   const element = useRef<E | null>(null);
   const latest = useLatest(options);

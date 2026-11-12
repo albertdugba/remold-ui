@@ -4,6 +4,7 @@ import type { ParticlePoint } from "@remold-ui/canvas";
 import type { Shape } from "@remold-ui/core";
 import type { BaseProps } from "../utils/use-render-element.js";
 
+/** What the dots make up. */
 export type ParticleShape =
   | string
   | { text: string; font?: string }
@@ -31,12 +32,20 @@ export interface RemoldParticlesProps
       ParticlesOptions,
       "color" | "palette" | "fit" | "padding" | "pointer" | "spring" | "enter" | "reducedMotion" | "loop" | "maxPixelRatio" | "blend"
     > {
+  /** What the dots show: words. */
   shape: ParticleShape;
+  /** How many dots. Default 1200. */
   count?: number;
+  /** What the dots show, for screen readers. */
   label?: string;
+  /** How dots find their place in the next shape. */
   pairing?: ParticlesToOptions["pairing"];
+  /** How dots get to the next shape. */
   transition?: ParticlesToOptions["transition"];
+  /** Dot radius in CSS pixels. */
   radius?: number;
+  /** Dot shape. Default `"circle"`; squares are cheaper for very large clouds. */
   dot?: "circle" | "square";
+  /** Turn the dots in 3D and draw them with perspective; give `{ points }` a `z` for depth. */
   camera?: ParticlesOptions["camera"];
 }

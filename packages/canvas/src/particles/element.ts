@@ -3,9 +3,13 @@ import { resolveColors } from "./css-colors";
 import { createScratchContext, sampleImagePoints } from "./sampling";
 
 export interface ElementSampleOptions extends SampleOptions {
+  /** Measure from this element, in its CSS pixels. */
   relativeTo?: Element;
+  /** Colours to sort dots into, as tones: any CSS colours, `var(--name)` included. */
   palette?: readonly string[];
+  /** Canvas pixels per CSS pixel to draw at. */
   resolution?: number;
+  /** Whether the element's own background becomes dots too. */
   background?: boolean;
 }
 
@@ -162,6 +166,7 @@ function paintReadable(painting: Painting): CanvasRenderingContext2D {
   }
 }
 
+/** Points over `element` as it looks: its background boxes, text and images, in place. */
 export function sampleElementPoints(element: Element, options: ElementSampleOptions = {}): CloudPoint[] {
   const relativeTo = options.relativeTo ?? element;
   const origin = relativeTo.getBoundingClientRect();

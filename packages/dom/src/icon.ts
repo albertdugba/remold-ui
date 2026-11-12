@@ -1,5 +1,6 @@
 import { shapesToPath, type ShapeNode } from "@remold-ui/core";
 
+/** How the icon is painted, from its `<svg>` or else its first shape. */
 export interface IconLook {
   viewBox?: string;
   fill?: string;
@@ -11,6 +12,7 @@ export interface IconLook {
 }
 
 export interface IconPath {
+  /** Every shape of the icon as one path. */
   d: string;
   look: IconLook;
 }
@@ -28,6 +30,7 @@ const LOOK: [keyof IconLook, string][] = [
   ["fillRule", "fill-rule"],
 ];
 
+/** The icon in `source` (an `<svg>`. */
 export function iconToPath(source: Element): IconPath | null {
   const svg = source.localName === "svg" ? source : source.querySelector("svg");
   const root = svg ?? source;

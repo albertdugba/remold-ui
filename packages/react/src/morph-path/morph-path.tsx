@@ -12,12 +12,17 @@ import { useEffect, useMemo } from "react";
 
 export interface MorphPathProps
   extends Omit<SVGMotionProps<SVGPathElement>, "d"> {
+  /** Starting SVG path data. */
   from: string;
+  /** Destination SVG path data. */
   to: string;
+  /** Whether the path is shown at `to`. */
   active?: boolean;
+  /** How subpaths are paired before Motion animates progress. */
   match?: MatchOptions;
 }
 
+/** A Motion-driven SVG path whose geometry comes from `@remold-ui/morph`. */
 export function MorphPath({
   from,
   to,

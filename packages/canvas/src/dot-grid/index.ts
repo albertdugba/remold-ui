@@ -14,39 +14,61 @@ export type DotGridShape =
     };
 
 export interface DotGridColors {
+  /** Resting dots. Default: CSS `color`. */
   dot?: string;
+  /** Dots under the pointer, in a ripple or in the shape. */
   active?: string;
 }
 
+/** Everything that can change after the grid is made. */
 export interface DotGridLook {
+  /** Space between dots, in CSS pixels. */
   gap?: number;
+  /** Resting dot radius, in CSS pixels. */
   size?: number;
+  /** How far the pointer's influence reaches, in CSS pixels. */
   reach?: number;
+  /** How much dots grow under the pointer: 1 doubles them. */
   swell?: number;
+  /** How far dots lean away from the pointer, in CSS pixels. */
   push?: number;
+  /** Words or a path to light up in the dots. */
   shape?: DotGridShape | null;
+  /** A slow shimmer across the grid while nothing else is happening. */
   ambient?: boolean;
   colors?: DotGridColors;
 }
 
 export interface DotGridOptions extends DotGridLook {
+  /** Ripple on click. Default true. */
   ripples?: boolean;
+  /** The element whose pointer it follows. */
   track?: HTMLElement | null;
+  /** The canvas's accessible name. */
   label?: string;
+  /** "user" (default) follows the system setting; "always" and "never" override it. */
   reducedMotion?: ReducedMotion;
+  /** Stored pixels per CSS pixel are capped at this. */
   maxPixelRatio?: number;
 }
 
 export interface DotGridPoint {
+  /** CSS pixels from the canvas's left edge. */
   x: number;
+  /** CSS pixels from the canvas's top edge. */
   y: number;
 }
 
 export interface DotGrid {
+  /** Move the glow as if the pointer were here, or `null` to let it fade. */
   hover(at: DotGridPoint | null): void;
+  /** Send a ripple out from a point. */
   ripple(at?: DotGridPoint): void;
+  /** Change gap, size, reach, swell, push, shape, shimmer or colours. */
   set(look: DotGridLook): void;
+  /** Draw again now, after a CSS change. */
   redraw(): void;
+  /** Stop drawing and let go of the canvas. */
   destroy(): void;
 }
 
@@ -340,6 +362,7 @@ function aim(pointer: Pointer, x: number, y: number) {
   pointer.inside = true;
 }
 
+/** A grid of dots that swell near the pointer, ripple on click and can spell a shape. */
 export function dotGrid(canvas: HTMLCanvasElement, options: DotGridOptions = {}): DotGrid {
   const look: DotGridLook = { ...options };
   const track = options.track ?? canvas.parentElement ?? canvas;
