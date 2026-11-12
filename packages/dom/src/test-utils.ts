@@ -1,13 +1,7 @@
-/**
- * Test helpers. happy-dom has no layout engine, so elements report the box written in their
- * `data-box="x y width height"` attribute (anything without one is 0 × 0), and frames are
- * stepped by hand.
- */
 import type { FrameCallback, FrameLoop } from "./frames";
 
 let installed = false;
 
-/** Make `getBoundingClientRect` read `data-box`. */
 export function useFakeLayout(): void {
   if (installed) return;
 
@@ -31,7 +25,6 @@ export function useFakeLayout(): void {
   };
 }
 
-/** A frame loop you advance yourself. */
 export function manualLoop() {
   const callbacks = new Set<FrameCallback>();
   const loop: FrameLoop = {
@@ -47,7 +40,6 @@ export function manualLoop() {
   return {
     loop,
     step,
-    /** Step until nothing is running, or `seconds` have passed. */
     run(seconds = 3) {
       for (let t = 0; t < seconds && callbacks.size > 0; t += 1 / 60) step();
     },
@@ -57,7 +49,6 @@ export function manualLoop() {
   };
 }
 
-/** Build elements from HTML inside a fresh root attached to the document. */
 export function mount(html: string, box = "0 0 1000 800"): HTMLElement {
   document.body.replaceChildren();
   const root = document.createElement("div");

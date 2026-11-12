@@ -1,14 +1,6 @@
-/**
- * The frame loop: one shared `requestAnimationFrame` loop for every animation on the page.
- *
- * Callbacks receive the real time since the last frame in seconds, so motion runs at the same
- * speed on 60 Hz and 120 Hz screens. The loop sleeps when nothing is animating.
- */
 
-/** A frame callback. Receives seconds since the last frame; return `true` to keep running. */
 export type FrameCallback = (dt: number) => boolean;
 
-/** What the loop needs from the platform. Defaults to `requestAnimationFrame` and `performance.now`. */
 export interface FrameScheduler {
   request(callback: (time: number) => void): number;
   cancel(id: number): void;
@@ -17,15 +9,10 @@ export interface FrameScheduler {
 
 export interface FrameLoopOptions {
   scheduler?: FrameScheduler;
-  /**
-   * The longest step a callback will see, in seconds (default 1/30). After a stall, such as a
-   * background tab, things carry on from where they were instead of leaping ahead.
-   */
   maxDelta?: number;
 }
 
 export interface FrameLoop {
-  /** Run `callback` every frame until it returns false. Returns a function that stops it early. */
   add(callback: FrameCallback): () => void;
 }
 
@@ -92,19 +79,6 @@ export function createFrameLoop({ scheduler, maxDelta = 1 / 30 }: FrameLoopOptio
 
 let shared: FrameLoop | undefined;
 
-/**
- * Run `callback` every frame on the page's shared loop until it returns false.
- *
- * ```ts
- * const x = value(0);
- * x.to(100);
- * frames((dt) => {
- *   x.step(dt);
- *   el.style.translate = `${x.current}px`;
- *   return !x.settled;
- * });
- * ```
- */
 export function frames(callback: FrameCallback): () => void {
   shared ??= createFrameLoop();
 

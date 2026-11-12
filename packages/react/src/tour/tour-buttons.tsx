@@ -37,7 +37,6 @@ function useTourButton(
   );
 }
 
-/** Goes to the next step. On the last step it finishes the tour. */
 export const TourNext = forwardRef(function TourNext(
   componentProps: TourNext.Props,
   forwardedRef: ForwardedRef<HTMLButtonElement>,
@@ -45,7 +44,6 @@ export const TourNext = forwardRef(function TourNext(
   return useTourButton("next", "Tour.Next", componentProps, forwardedRef);
 });
 
-/** Goes back a step. Disabled on the first step. */
 export const TourPrevious = forwardRef(function TourPrevious(
   componentProps: TourPrevious.Props,
   forwardedRef: ForwardedRef<HTMLButtonElement>,
@@ -53,7 +51,6 @@ export const TourPrevious = forwardRef(function TourPrevious(
   return useTourButton("previous", "Tour.Previous", componentProps, forwardedRef);
 });
 
-/** Closes the tour. */
 export const TourClose = forwardRef(function TourClose(
   componentProps: TourClose.Props,
   forwardedRef: ForwardedRef<HTMLButtonElement>,

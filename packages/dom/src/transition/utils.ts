@@ -25,17 +25,11 @@ export interface MotionRecord {
   anchor: MotionRecord | null;
   depth: number;
   saved: Record<"translate" | "scale" | "opacity" | "borderRadius" | "boxShadow", string>;
-  /**
-   * The element's box-shadow split around its lengths, so they can be divided by the scale each
-   * frame: otherwise a 1px ring or border-like shadow thins to nothing while the box is squeezed.
-   */
   shadow: ShadowTemplate | null;
   marks: string[];
-  /** Seconds this element holds where it starts before it moves, when the change is choreographed. */
   delay: number;
 }
 
-/** A box-shadow as text pieces and the pixel lengths between them: `[text, px, text, px, …, text]`. */
 export interface ShadowTemplate {
   text: string[];
   lengths: number[];
@@ -43,7 +37,6 @@ export interface ShadowTemplate {
 
 const LENGTH = /(-?\d*\.?\d+)px/g;
 
-/** Splits a computed box-shadow around its pixel lengths; `null` when there's nothing to correct. */
 export function parseShadow(value: string): ShadowTemplate | null {
   if (!value || value === "none") return null;
 
@@ -61,7 +54,6 @@ export function parseShadow(value: string): ShadowTemplate | null {
   return lengths.some((n) => n !== 0) ? { text, lengths } : null;
 }
 
-/** The shadow with every length divided by `scale`, so it looks the same size on the scaled box. */
 export function scaledShadow(template: ShadowTemplate, scale: number): string {
   let out = template.text[0]!;
 
@@ -229,24 +221,14 @@ export function restoreRecord(record: MotionRecord): void {
   for (const mark of record.marks) record.el.removeAttribute(mark);
 }
 
-/** Pixels a record has to travel: how far its box moves plus how much it grows or shrinks. */
 export function travelOf(record: MotionRecord): number {
   const c = record.channels;
   const gap = (v?: AnimatedValue) => (v ? Math.abs(v.target - v.current) : 0);
   return Math.hypot(gap(c.x), gap(c.y)) + Math.max(gap(c.width), gap(c.height));
 }
 
-/** Moving less than this is a nudge, not a flight: nothing is lifted for it. */
 const LIFT_FROM = 12;
 
-/**
- * Raises elements above their neighbours while they fly, farthest on top, and returns a function
- * that puts everything back. Every element between a mover and the root is raised too: a parent
- * that is positioned, or animating (a stacking context while it moves), would otherwise keep the
- * child under that parent's siblings. z-index only works on positioned boxes and flex or grid
- * items, so a plain block is made `position: relative` (which doesn't move it), unless something
- * absolutely positioned inside would then be placed against it instead.
- */
 export function liftMovers(ordered: readonly MotionRecord[], root: HTMLElement): () => void {
   const movers = ordered
     .filter((r) => r.mode === "box" && travelOf(r) > LIFT_FROM)
@@ -283,7 +265,6 @@ export function liftMovers(ordered: readonly MotionRecord[], root: HTMLElement):
   };
 }
 
-/** True when something inside is placed against its nearest positioned ancestor (checked shallowly). */
 function holdsPlacedChildren(el: Element): boolean {
   const all = el.getElementsByTagName("*");
   const limit = Math.min(all.length, 300);

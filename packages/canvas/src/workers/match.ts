@@ -1,8 +1,3 @@
-/**
- * The worker that pairs large point clouds off the main thread. It's bundled with the matcher
- * into a string at build time (`scripts/build-worker.mjs`) and started from a Blob, so it works
- * with any bundler and needs no file of its own.
- */
 import { matchPoints, type MatchPointsOptions } from "@remold-ui/core";
 
 export interface MatchRequest {

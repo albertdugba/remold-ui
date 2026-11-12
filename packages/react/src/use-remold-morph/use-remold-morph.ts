@@ -3,17 +3,6 @@ import { prepareTransition, type PreparedTransition } from "@remold-ui/dom";
 import { useIsoLayoutEffect, useLatest } from "../utils/hooks.js";
 import type { UseRemoldMorphOptions, UseRemoldMorphReturnValue } from "./types.js";
 
-/**
- * `Remold.Morph` as a ref: animates the element you attach it to whenever `trigger` changes.
- * Use it on components you don't render yourself, like a Base UI or MUI part.
- *
- * @example
- * ```tsx
- * const { ref } = useRemoldMorph([view, sort]);
- *
- * <Stack ref={ref}>{people.map(renderPerson)}</Stack>
- * ```
- */
 export function useRemoldMorph<E extends HTMLElement = HTMLDivElement>(
   trigger: unknown,
   options: UseRemoldMorphOptions = {},
@@ -26,7 +15,6 @@ export function useRemoldMorph<E extends HTMLElement = HTMLDivElement>(
   const [running, setRunning] = useState(0);
   const onStart = useLatest(onTransition);
 
-  // Read the old page now, during the render that changes it, before React commits the new one.
   if (!sameTrigger(committedTrigger, trigger)) {
     setCommittedTrigger(trigger);
     setPending(!disabled && element ? prepareTransition(element, { spring, match, reducedMotion, announce, loop, lift, choreography }) : null);
@@ -48,7 +36,6 @@ export function useRemoldMorph<E extends HTMLElement = HTMLDivElement>(
   return { ref: setElement, animating: running > 0 };
 }
 
-/** Like React's effect dependencies: an array changes when any item does; anything else by `Object.is`. */
 function sameTrigger(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
 

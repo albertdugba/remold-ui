@@ -25,9 +25,7 @@ export type RenderProp<State, E extends Element = HTMLElement> =
   | ((props: HTMLProps<E>, state: State) => ReactElement);
 
 export interface BaseProps<State, E extends Element = HTMLElement> {
-  /** Replace the default element, keeping Remold's props and ref. */
   render?: RenderProp<State, E>;
-  /** A class name, or a function that returns one from the part's state. */
   className?: string | ((state: State) => string | undefined);
 }
 
@@ -69,7 +67,6 @@ export function useRenderElement<State, Tag extends IntrinsicElementName>(
   if (!isValidElement(render)) return createElement(tag, elementProps);
 
   const renderedProps = render.props;
-  // React 19 keeps an element's ref in props; React 18 stores it on the element.
   const renderedRef = (renderedProps.ref ?? (render as unknown as { ref?: Ref<ElementFromTag<Tag>> }).ref) as
     | Ref<ElementFromTag<Tag>>
     | undefined;

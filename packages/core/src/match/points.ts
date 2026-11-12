@@ -1,456 +1,583 @@
-/**
- * Keyless point matching: given two clouds of points (voxels in a shape, dots on a map, bars in
- * a chart), decide which old point travels to which new one so the change reads as one motion.
- */
 import { hungarian, solve } from "./hungarian";
 import { kdTree, select, type KdTree } from "./kdtree";
 
 export interface Point3 {
   x: number;
   y: number;
-  /** Optional; treated as 0 for flat data. */
   z?: number;
 }
 
 export interface PointMatches {
-  /** [old index, new index], sorted by old index. */
   pairs: [number, number][];
-  /** Old points with no partner: they should shrink or fade away. */
   leaving: number[];
-  /** New points with no partner: they should grow or fade in. */
   arriving: number[];
 }
 
 export interface MatchPointsOptions {
-  /**
-   * `"nearest"` (default) pairs points to minimise the total squared distance travelled, so
-   * nothing crosses the whole scene when a closer partner exists. `"order"` pairs by index.
-   */
   by?: "nearest" | "order";
-  /**
-   * Pairs further apart than this leave and arrive instead of travelling. The pairing keeps as
-   * many pairs within the limit as it can. Default: no limit.
-   */
   maxDistance?: number;
 }
 
-/**
- * Up to this many cells (old points × new points), the best pairing is found exactly. Beyond it
- * the exact solver gets slow (it grows with the cube of the cloud size), so a fast approximate
- * matcher takes over. It lands within a few percent of the best total, and 10,000 points take a
- * few hundred milliseconds (run it in a Worker for clouds that big: core needs no DOM).
- */
-const EXACT_LIMIT = 250_000;
+type Pair = [number, number];
 
-/** Pieces of the cloud this small are paired exactly while halving. */
+interface Cloud {
+  x: Float64Array;
+  y: Float64Array;
+  z: Float64Array;
+  axes: readonly [Float64Array, Float64Array, Float64Array];
+  tree: KdTree;
+}
+
+interface Matcher {
+  from: Cloud;
+  to: Cloud;
+  fromCount: number;
+  toCount: number;
+  distance: (fromIndex: number, toIndex: number) => number;
+  ids: Int32Array;
+  distances: Float64Array;
+}
+
+const EXACT_LIMIT = 250_000;
 const EXACT_PIECE = 32;
-/** How many neighbouring pairs each window re-pairs exactly, and how many sweeps of windows. */
 const WINDOW = 32;
 const WINDOW_PASSES = 2;
-/** How many nearby points the nearest-first guess starts with, and the swaps look at. */
 const NEIGHBOURS = 8;
-/** Rounds of the nearest-first guess (the search widens 8, 16, 32, 64). */
 const NEAREST_ROUNDS = 4;
-/** Stop the nearest-first rounds early once a round pairs less than this share of who's left. */
 const NEAREST_GIVE_UP = 0.25;
-/** A ceiling on the swaps' work, in sweeps of every point. */
 const SWAP_PASSES = 12;
+const SWAP_TOLERANCE = 1e-9;
+const UNPAIRED = -1;
 
-const squaredDistance = (from: Point3, to: Point3) => (from.x - to.x) ** 2 + (from.y - to.y) ** 2 + ((from.z ?? 0) - (to.z ?? 0)) ** 2;
+const squaredDistance = (from: Point3, to: Point3) =>
+  (from.x - to.x) ** 2 + (from.y - to.y) ** 2 + ((from.z ?? 0) - (to.z ?? 0)) ** 2;
+
+const allIndexes = (length: number) => Int32Array.from({ length }, (_, index) => index);
+
+const unmatched = (length: number, paired: ReadonlySet<number>) =>
+  Array.from({ length }, (_, index) => index).filter((index) => !paired.has(index));
+
+function validateOptions({ by = "nearest", maxDistance = Infinity }: MatchPointsOptions): Required<MatchPointsOptions> {
+  if (!(maxDistance > 0)) throw new RangeError(`matchPoints: maxDistance must be positive, got ${maxDistance}`);
+
+  if (by !== "nearest" && by !== "order") throw new RangeError(`matchPoints: by must be "nearest" or "order", got ${by}`);
+
+  return { by, maxDistance };
+}
+
+function checkPoints(points: readonly Point3[], name: string): void {
+  points.forEach((point, index) => {
+    const finite = Number.isFinite(point.x) && Number.isFinite(point.y) && (point.z === undefined || Number.isFinite(point.z));
+
+    if (!finite) {
+      throw new RangeError(`matchPoints: ${name}[${index}] must have finite coordinates, got (${point.x}, ${point.y}, ${point.z})`);
+    }
+  });
+}
+
+const pairsByOrder = (fromLength: number, toLength: number) =>
+  Array.from({ length: Math.min(fromLength, toLength) }, (_, index): Pair => [index, index]);
+
+function pairsExactly(from: readonly Point3[], to: readonly Point3[], maxDistance: number): Pair[] {
+  const limit = maxDistance ** 2;
+  const costs = from.map((source) => to.map((target) => Math.min(squaredDistance(source, target), limit)));
+
+  return hungarian(costs).flatMap((target, source): Pair[] => (target >= 0 ? [[source, target]] : []));
+}
+
+function findPairs(from: readonly Point3[], to: readonly Point3[], by: "nearest" | "order", maxDistance: number): Pair[] {
+  if (by === "order") return pairsByOrder(from.length, to.length);
+
+  if (from.length * to.length <= EXACT_LIMIT) return pairsExactly(from, to, maxDistance);
+
+  return approximate(from, to, maxDistance);
+}
+
+function withinReach(pairs: readonly Pair[], from: readonly Point3[], to: readonly Point3[], maxDistance: number): Pair[] {
+  const limit = maxDistance ** 2;
+
+  return pairs
+    .filter(([source, target]) => squaredDistance(from[source]!, to[target]!) <= limit)
+    .sort(([first], [second]) => first - second);
+}
 
 export function matchPoints(from: readonly Point3[], to: readonly Point3[], options: MatchPointsOptions = {}): PointMatches {
   const { by, maxDistance } = validateOptions(options);
 
   checkPoints(from, "a");
   checkPoints(to, "b");
-  const pairs = filterDistantPairs(findPairs(from, to, by, maxDistance), from, to, maxDistance);
 
-  return toMatchResult(pairs, from.length, to.length);
-}
+  const pairs = withinReach(findPairs(from, to, by, maxDistance), from, to, maxDistance);
 
-function validateOptions(options: MatchPointsOptions): Required<MatchPointsOptions> {
-  const { by = "nearest", maxDistance = Infinity } = options;
-
-  if (!(maxDistance > 0)) throw new RangeError(`matchPoints: maxDistance must be positive, got ${maxDistance}`);
-  if (by !== "nearest" && by !== "order") throw new RangeError(`matchPoints: by must be "nearest" or "order", got ${by}`);
-  return { by, maxDistance };
-}
-
-function findPairs(
-  from: readonly Point3[],
-  to: readonly Point3[],
-  by: NonNullable<MatchPointsOptions["by"]>,
-  maxDistance: number,
-): [number, number][] {
-  if (by === "order") {
-    return pairsByOrder(from.length, to.length);
-  }
-  if (from.length * to.length <= EXACT_LIMIT) return pairsExactly(from, to, maxDistance);
-  return approximate(from, to, maxDistance);
-}
-
-function pairsByOrder(fromLength: number, toLength: number): [number, number][] {
-  return Array.from({ length: Math.min(fromLength, toLength) }, (_, index): [number, number] => [index, index]);
-}
-
-function pairsExactly(from: readonly Point3[], to: readonly Point3[], maxDistance: number): [number, number][] {
-  const distanceLimit = maxDistance ** 2;
-  const costs = from.map((source) => to.map((target) => Math.min(squaredDistance(source, target), distanceLimit)));
-  return hungarian(costs).flatMap((targetIndex, sourceIndex): [number, number][] => (targetIndex >= 0 ? [[sourceIndex, targetIndex]] : []));
-}
-
-function filterDistantPairs(
-  pairs: readonly [number, number][],
-  from: readonly Point3[],
-  to: readonly Point3[],
-  maxDistance: number,
-): [number, number][] {
-  const distanceLimit = maxDistance ** 2;
-  return pairs
-    .filter(([sourceIndex, targetIndex]) => squaredDistance(from[sourceIndex]!, to[targetIndex]!) <= distanceLimit)
-    .sort(([firstSourceIndex], [secondSourceIndex]) => firstSourceIndex - secondSourceIndex);
-}
-
-function toMatchResult(pairs: [number, number][], fromLength: number, toLength: number): PointMatches {
-  const pairedFrom = new Set(pairs.map(([sourceIndex]) => sourceIndex));
-  const pairedTo = new Set(pairs.map(([, targetIndex]) => targetIndex));
   return {
     pairs,
-    leaving: unmatchedIndexes(fromLength, pairedFrom),
-    arriving: unmatchedIndexes(toLength, pairedTo),
+    leaving: unmatched(from.length, new Set(pairs.map(([source]) => source))),
+    arriving: unmatched(to.length, new Set(pairs.map(([, target]) => target))),
   };
 }
 
-function unmatchedIndexes(length: number, pairedIndexes: ReadonlySet<number>): number[] {
-  return Array.from({ length }, (_, index) => index).filter((index) => !pairedIndexes.has(index));
-}
-
-function checkPoints(points: readonly Point3[], name: string): void {
-  for (let index = 0; index < points.length; index++) {
-    const point = points[index]!;
-    if (!Number.isFinite(point.x) || !Number.isFinite(point.y) || (point.z !== undefined && !Number.isFinite(point.z))) {
-      throw new RangeError(`matchPoints: ${name}[${index}] must have finite coordinates, got (${point.x}, ${point.y}, ${point.z})`);
-    }
-  }
-}
-
-interface PointCloudCoordinates {
-  readonly x: Float64Array;
-  readonly y: Float64Array;
-  readonly z: Float64Array;
-  readonly axes: readonly [Float64Array, Float64Array, Float64Array];
-  readonly tree: KdTree;
-}
-
-function toCoordinateCloud(points: readonly Point3[]): PointCloudCoordinates {
+function toCloud(points: readonly Point3[]): Cloud {
   const x = Float64Array.from(points, (point) => point.x);
   const y = Float64Array.from(points, (point) => point.y);
   const z = Float64Array.from(points, (point) => point.z ?? 0);
-  const axes = [x, y, z] as const;
-  return { x, y, z, axes, tree: kdTree({ x, y, z, ids: allIndexes(points.length) }) };
+
+  return { x, y, z, axes: [x, y, z], tree: kdTree({ x, y, z, ids: allIndexes(points.length) }) };
 }
 
-function allIndexes(length: number): Int32Array {
-  return Int32Array.from({ length }, (_, index) => index);
-}
+function closestToOther(cloud: Cloud, other: KdTree, wanted: number): Int32Array {
+  const id = new Int32Array(1);
+  const distance = new Float64Array(1);
 
-function cappedDistance(
-  from: PointCloudCoordinates,
-  to: PointCloudCoordinates,
-  fromIndex: number,
-  toIndex: number,
-  distanceLimit: number,
-): number {
-  return Math.min(
-    (from.x[fromIndex]! - to.x[toIndex]!) ** 2 + (from.y[fromIndex]! - to.y[toIndex]!) ** 2 + (from.z[fromIndex]! - to.z[toIndex]!) ** 2,
-    distanceLimit,
-  );
-}
+  const nearest = Float64Array.from(cloud.x, (_, index) => {
+    other.nearest(cloud.x[index]!, cloud.y[index]!, cloud.z[index]!, 1, Infinity, id, distance);
 
-function closestIndexes(cloud: PointCloudCoordinates, otherTree: KdTree, wanted: number): Int32Array {
-  const pointIds = new Int32Array(1);
-  const distances = new Float64Array(1);
-  const nearestDistances = new Float64Array(cloud.x.length);
-  for (let index = 0; index < cloud.x.length; index++) {
-    otherTree.nearest(cloud.x[index]!, cloud.y[index]!, cloud.z[index]!, 1, Infinity, pointIds, distances);
-    nearestDistances[index] = distances[0]!;
-  }
+    return distance[0]!;
+  });
+
   return allIndexes(cloud.x.length)
-    .sort((firstIndex, secondIndex) => nearestDistances[firstIndex]! - nearestDistances[secondIndex]! || firstIndex - secondIndex)
+    .sort((first, second) => nearest[first]! - nearest[second]! || first - second)
     .subarray(0, wanted);
 }
 
-/**
- * The fast matcher for big clouds.
- *
- * 1. **Same count.** When one cloud is bigger, its points furthest from the other cloud are the
- *    ones that leave, as with the exact solver.
- * 2. **Two first guesses.** Clouds that overlap (a wobble, one word becoming another) are best
- *    paired nearest-first. Clouds that move as a whole (shifted, stretched) are best paired by
- *    relative place: split both at their middle along their widest direction, pair lower half
- *    with lower half and upper with upper, and repeat down to small pieces solved exactly.
- *    Both are polished (below), and the one with the lower total wins.
- * 3. **Polish.** Single swaps: every point looks at the new points nearer to it than its
- *    partner and trades whenever the total goes down (any helpful swap involves at least one
- *    point seeing a nearer partner, so this finds them). Then overlapping windows of nearby
- *    points are re-paired exactly, which also decides who is left out, and swaps once more.
- *
- * Nothing here ever compares a point with the whole other cloud, so it stays close to
- * O(n log n) whatever the layout: 10,000 points in a few hundred milliseconds.
- */
-export function approximate(a: readonly Point3[], b: readonly Point3[], maxDistance = Infinity): [number, number][] {
-  const n = a.length;
-  const m = b.length;
-  const from = toCoordinateCloud(a);
-  const to = toCoordinateCloud(b);
-  const { x: ax, y: ay, z: az, axes: aAxes, tree: treeA } = from;
-  const { x: bx, y: by, z: bz, axes: bAxes, tree: treeB } = to;
+function createMatcher(from: Cloud, to: Cloud, maxDistance: number): Matcher {
   const limit = maxDistance ** 2;
-  const d2 = (fromIndex: number, toIndex: number) => cappedDistance(from, to, fromIndex, toIndex, limit);
-  const ids = new Int32Array(Math.max(WINDOW, NEIGHBOURS));
-  const ds = new Float64Array(ids.length);
-  const keptA = n > m ? closestIndexes(from, treeB, m) : allIndexes(n);
-  const keptB = m > n ? closestIndexes(to, treeA, n) : allIndexes(m);
+  const scratch = Math.max(WINDOW, NEIGHBOURS);
 
-  interface HalveOptions {
-    ia: Int32Array;
-    ib: Int32Array;
-    partnerOfA: Int32Array;
-    lo: number;
-    hi: number;
+  return {
+    from,
+    to,
+    fromCount: from.x.length,
+    toCount: to.x.length,
+    ids: new Int32Array(scratch),
+    distances: new Float64Array(scratch),
+    distance: (source, target) =>
+      Math.min(
+        (from.x[source]! - to.x[target]!) ** 2 + (from.y[source]! - to.y[target]!) ** 2 + (from.z[source]! - to.z[target]!) ** 2,
+        limit,
+      ),
+  };
+}
+
+const nearestIn = (tree: KdTree, cloud: Cloud, index: number, count: number, reach: number, ids: Int32Array, distances: Float64Array) =>
+  tree.nearest(cloud.x[index]!, cloud.y[index]!, cloud.z[index]!, count, reach, ids, distances);
+
+function extentOnAxis(matcher: Matcher, axis: number, fromOrder: Int32Array, toOrder: Int32Array, start: number, end: number): number {
+  const fromValues = matcher.from.axes[axis]!;
+  const toValues = matcher.to.axes[axis]!;
+  let min = Infinity;
+  let max = -Infinity;
+
+  for (let index = start; index < end; index++) {
+    const fromValue = fromValues[fromOrder[index]!]!;
+    const toValue = toValues[toOrder[index]!]!;
+
+    min = Math.min(min, fromValue, toValue);
+    max = Math.max(max, fromValue, toValue);
   }
 
-  /** Pair `ia[i]` with `ib[i]` after shuffling both so equal positions hold matching places. */
-  const halve = ({ ia, ib, partnerOfA, lo, hi }: HalveOptions): void => {
-    const size = hi - lo;
-    if (size <= EXACT_PIECE) {
-      const cost = new Float64Array(size * size);
-      for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) cost[r * size + c] = d2(ia[lo + r]!, ib[lo + c]!);
-      solve({ cost, rows: size, cols: size }).forEach((targetOffset, sourceOffset) => {
-        partnerOfA[ia[lo + sourceOffset]!] = ib[lo + targetOffset]!;
-      });
-      return;
+  return max - min;
+}
+
+function widestAxis(matcher: Matcher, fromOrder: Int32Array, toOrder: Int32Array, start: number, end: number): number {
+  const extents = [0, 1, 2].map((axis) => extentOnAxis(matcher, axis, fromOrder, toOrder, start, end));
+
+  return extents.reduce((widest, extent, axis) => (extent > extents[widest]! ? axis : widest), 0);
+}
+
+function pieceCost(matcher: Matcher, fromOrder: Int32Array, toOrder: Int32Array, start: number, size: number): Float64Array {
+  const cost = new Float64Array(size * size);
+
+  for (let row = 0; row < size; row++) {
+    for (let column = 0; column < size; column++) {
+      cost[row * size + column] = matcher.distance(fromOrder[start + row]!, toOrder[start + column]!);
     }
-    let axis = 0;
-    let widest = -1;
-    for (let k = 0; k < 3; k++) {
-      let min = Infinity;
-      let max = -Infinity;
-      for (let i = lo; i < hi; i++) {
-        const u = aAxes[k]![ia[i]!]!;
-        const v = bAxes[k]![ib[i]!]!;
-        if (u < min) min = u;
-        if (u > max) max = u;
-        if (v < min) min = v;
-        if (v > max) max = v;
-      }
-      if (max - min > widest) {
-        widest = max - min;
-        axis = k;
-      }
+  }
+
+  return cost;
+}
+
+function solvePiece(matcher: Matcher, fromOrder: Int32Array, toOrder: Int32Array, partnerOf: Int32Array, start: number, size: number) {
+  const cost = pieceCost(matcher, fromOrder, toOrder, start, size);
+
+  solve({ cost, rows: size, cols: size }).forEach((column, row) => {
+    partnerOf[fromOrder[start + row]!] = toOrder[start + column]!;
+  });
+}
+
+function halve(matcher: Matcher, fromOrder: Int32Array, toOrder: Int32Array, partnerOf: Int32Array, start: number, end: number): void {
+  const size = end - start;
+
+  if (size <= EXACT_PIECE) {
+    solvePiece(matcher, fromOrder, toOrder, partnerOf, start, size);
+    return;
+  }
+
+  const axis = widestAxis(matcher, fromOrder, toOrder, start, end);
+  const middle = start + (size >> 1);
+
+  select({ order: fromOrder, coordinates: matcher.from.axes[axis]!, start, end: end - 1, target: middle });
+  select({ order: toOrder, coordinates: matcher.to.axes[axis]!, start, end: end - 1, target: middle });
+  halve(matcher, fromOrder, toOrder, partnerOf, start, middle);
+  halve(matcher, fromOrder, toOrder, partnerOf, middle, end);
+}
+
+function pairByPlace(matcher: Matcher, fromIds: ArrayLike<number>, toIds: ArrayLike<number>, partnerOf: Int32Array): Int32Array {
+  halve(matcher, Int32Array.from(fromIds), Int32Array.from(toIds), partnerOf, 0, fromIds.length);
+
+  return partnerOf;
+}
+
+interface Edges {
+  distance: Float64Array;
+  from: Int32Array;
+  to: Int32Array;
+  count: number;
+}
+
+function collectEdges(matcher: Matcher, tree: KdTree, sources: Int32Array, want: number): Edges {
+  const found = new Int32Array(want);
+  const foundDistance = new Float64Array(want);
+  const edges: Edges = {
+    distance: new Float64Array(sources.length * want),
+    from: new Int32Array(sources.length * want),
+    to: new Int32Array(sources.length * want),
+    count: 0,
+  };
+
+  for (const source of sources) {
+    const count = nearestIn(tree, matcher.from, source, want, Infinity, found, foundDistance);
+
+    for (let index = 0; index < count; index++, edges.count++) {
+      edges.distance[edges.count] = foundDistance[index]!;
+      edges.from[edges.count] = source;
+      edges.to[edges.count] = found[index]!;
     }
-    const mid = lo + (size >> 1);
-    select({ order: ia, coordinates: aAxes[axis]!, start: lo, end: hi - 1, target: mid });
-    select({ order: ib, coordinates: bAxes[axis]!, start: lo, end: hi - 1, target: mid });
-    halve({ ia, ib, partnerOfA, lo, hi: mid });
-    halve({ ia, ib, partnerOfA, lo: mid, hi });
-  };
+  }
 
-  /** Guess by relative place. */
-  const byPlace = () => {
-    const partnerOfA = new Int32Array(n).fill(-1);
-    halve({ ia: Int32Array.from(keptA), ib: Int32Array.from(keptB), partnerOfA, lo: 0, hi: keptA.length });
-    return partnerOfA;
-  };
+  return edges;
+}
 
-  /**
-   * Guess nearest-first: a few rounds in which every unpaired point offers its nearest unpaired
-   * partners and the closest offers are accepted, widening the search each round. Whoever is
-   * still left after that is paired by place. The round limit, and giving up early when most
-   * offers clash, keep a crowd fighting over the same few partners from taking long.
-   */
-  const byNearest = () => {
-    const partnerOfA = new Int32Array(n).fill(-1);
-    const takenB = new Uint8Array(m);
-    let restA = keptA;
-    let restB = keptB;
-    for (let round = 0, k = NEIGHBOURS; round < NEAREST_ROUNDS && restA.length > 0; round++, k *= 2) {
-      const tree = restB.length === m ? treeB : kdTree({ x: bx, y: by, z: bz, ids: restB });
-      const want = Math.min(k, restB.length);
-      const found = new Int32Array(want);
-      const foundD = new Float64Array(want);
-      const edgeD = new Float64Array(restA.length * want);
-      const edgeA = new Int32Array(restA.length * want);
-      const edgeB = new Int32Array(restA.length * want);
-      let edges = 0;
-      for (const i of restA) {
-        const count = tree.nearest(ax[i]!, ay[i]!, az[i]!, want, Infinity, found, foundD);
-        for (let c = 0; c < count; c++, edges++) {
-          edgeD[edges] = foundD[c]!;
-          edgeA[edges] = i;
-          edgeB[edges] = found[c]!;
-        }
-      }
-      const order = Uint32Array.from({ length: edges }, (_, e) => e).sort(
-        (p, q) => edgeD[p]! - edgeD[q]! || edgeA[p]! - edgeA[q]! || edgeB[p]! - edgeB[q]!,
-      );
-      for (const e of order) {
-        const i = edgeA[e]!;
-        const j = edgeB[e]!;
-        if (partnerOfA[i] !== -1 || takenB[j]) continue;
-        partnerOfA[i] = j;
-        takenB[j] = 1;
-      }
-      const before = restA.length;
-      restA = restA.filter((i) => partnerOfA[i] === -1);
-      restB = restB.filter((j) => !takenB[j]);
-      // When most offers clash, everyone wants the same few partners: nearest-first isn't the
-      // right idea here, and wider searches would only get slower. Leave the rest to placing.
-      if (before - restA.length < before * NEAREST_GIVE_UP) break;
+const edgeOrder = (edges: Edges) =>
+  Uint32Array.from({ length: edges.count }, (_, edge) => edge).sort(
+    (p, q) => edges.distance[p]! - edges.distance[q]! || edges.from[p]! - edges.from[q]! || edges.to[p]! - edges.to[q]!,
+  );
+
+function acceptEdges(edges: Edges, partnerOf: Int32Array, takenTo: Uint8Array) {
+  for (const edge of edgeOrder(edges)) {
+    const source = edges.from[edge]!;
+    const target = edges.to[edge]!;
+
+    if (partnerOf[source] !== UNPAIRED || takenTo[target]) continue;
+
+    partnerOf[source] = target;
+    takenTo[target] = 1;
+  }
+}
+
+function treeOver(matcher: Matcher, targets: Int32Array): KdTree {
+  const { to } = matcher;
+
+  return targets.length === matcher.toCount ? to.tree : kdTree({ x: to.x, y: to.y, z: to.z, ids: targets });
+}
+
+function pairByNearest(matcher: Matcher, keptFrom: Int32Array, keptTo: Int32Array): Int32Array {
+  const partnerOf = new Int32Array(matcher.fromCount).fill(UNPAIRED);
+  const takenTo = new Uint8Array(matcher.toCount);
+  let restFrom = keptFrom;
+  let restTo = keptTo;
+
+  for (let round = 0, neighbours = NEIGHBOURS; round < NEAREST_ROUNDS && restFrom.length > 0; round++, neighbours *= 2) {
+    const edges = collectEdges(matcher, treeOver(matcher, restTo), restFrom, Math.min(neighbours, restTo.length));
+
+    acceptEdges(edges, partnerOf, takenTo);
+
+    const before = restFrom.length;
+
+    restFrom = restFrom.filter((source) => partnerOf[source] === UNPAIRED);
+    restTo = restTo.filter((target) => !takenTo[target]);
+
+    if (before - restFrom.length < before * NEAREST_GIVE_UP) break;
+  }
+
+  return pairByPlace(matcher, restFrom, restTo, partnerOf);
+}
+
+function partnersOfTo(partnerOf: Int32Array, toCount: number): Int32Array {
+  const partnerOfTo = new Int32Array(toCount).fill(UNPAIRED);
+
+  partnerOf.forEach((target, source) => {
+    if (target !== UNPAIRED) partnerOfTo[target] = source;
+  });
+
+  return partnerOfTo;
+}
+
+function takenTargets(partnerOf: Int32Array, toCount: number): Uint8Array {
+  const taken = new Uint8Array(toCount);
+
+  partnerOf.forEach((target) => {
+    if (target !== UNPAIRED) taken[target] = 1;
+  });
+
+  return taken;
+}
+
+function freeTargetTree(matcher: Matcher, taken: Uint8Array): KdTree | null {
+  const free = Array.from({ length: matcher.toCount }, (_, target) => target).filter((target) => !taken[target]);
+  const { to } = matcher;
+
+  return free.length > 0 ? kdTree({ x: to.x, y: to.y, z: to.z, ids: free }) : null;
+}
+
+interface WindowState {
+  partnerOf: Int32Array;
+  taken: Uint8Array;
+  freeTree: KdTree | null;
+  rows: Int32Array;
+  columns: Int32Array;
+  extra: Int32Array;
+  extraDistance: Float64Array;
+}
+
+interface Window {
+  rowCount: number;
+  columnCount: number;
+  paired: number;
+}
+
+function gatherWindow(matcher: Matcher, state: WindowState, seed: number, covered: Uint8Array): Window {
+  const { partnerOf, taken, freeTree, rows, columns, extra, extraDistance } = state;
+  const rowCount = nearestIn(matcher.from.tree, matcher.from, seed, WINDOW, Infinity, matcher.ids, matcher.distances);
+  let columnCount = 0;
+
+  for (let row = 0; row < rowCount; row++) {
+    const source = matcher.ids[row]!;
+
+    rows[row] = source;
+    covered[source] = 1;
+
+    if (partnerOf[source] !== UNPAIRED) columns[columnCount++] = partnerOf[source]!;
+  }
+
+  const paired = columnCount;
+
+  if (freeTree) {
+    const found = nearestIn(freeTree, matcher.from, seed, WINDOW, Infinity, extra, extraDistance);
+
+    for (let index = 0; index < found; index++) {
+      if (!taken[extra[index]!]) columns[columnCount++] = extra[index]!;
     }
-    halve({ ia: Int32Array.from(restA), ib: Int32Array.from(restB), partnerOfA, lo: 0, hi: restA.length });
-    return partnerOfA;
-  };
+  }
 
-  const partnersOfB = (partnerOfA: Int32Array) => {
-    const partnerOfB = new Int32Array(m).fill(-1);
-    for (let i = 0; i < n; i++) if (partnerOfA[i] !== -1) partnerOfB[partnerOfA[i]!] = i;
-    return partnerOfB;
-  };
+  return { rowCount, columnCount, paired };
+}
 
-  /** Re-pair overlapping windows of nearby pairs exactly. Each window can only lower the total. */
-  const windows = (partnerOfA: Int32Array) => {
-    const takenB = new Uint8Array(m);
-    for (let i = 0; i < n; i++) if (partnerOfA[i] !== -1) takenB[partnerOfA[i]!] = 1;
-    const freeB: number[] = [];
-    for (let j = 0; j < m; j++) if (!takenB[j]) freeB.push(j);
-    const treeFreeB = freeB.length > 0 ? kdTree({ x: bx, y: by, z: bz, ids: freeB }) : null;
-    const extra = new Int32Array(WINDOW);
-    const extraD = new Float64Array(WINDOW);
-    const rows = new Int32Array(WINDOW);
-    const cols = new Int32Array(WINDOW * 2);
+function windowCost(matcher: Matcher, state: WindowState, { rowCount, columnCount }: Window, flip: boolean, width: number): Float64Array {
+  const height = flip ? columnCount : rowCount;
+  const cost = new Float64Array(height * width);
 
-    for (let pass = 0; pass < WINDOW_PASSES; pass++) {
-      const covered = new Uint8Array(n);
-      for (let s = 0; s < n; s++) {
-        // Alternate the order seeds are taken in, so window edges fall in new places each pass.
-        const seed = pass % 2 === 0 ? s : n - 1 - s;
-        if (covered[seed] || partnerOfA[seed] === -1) continue;
-        // The window: the old points nearest the seed (paired or left out), their partners, and
-        // the free new points nearest the seed, so the exact solve can also choose who is left out.
-        const R = treeA.nearest(ax[seed]!, ay[seed]!, az[seed]!, WINDOW, Infinity, ids, ds);
-        let C = 0;
-        for (let r = 0; r < R; r++) {
-          rows[r] = ids[r]!;
-          covered[ids[r]!] = 1;
-          if (partnerOfA[ids[r]!] !== -1) cols[C++] = partnerOfA[ids[r]!]!;
-        }
-        const paired = C;
-        if (treeFreeB) {
-          const found = treeFreeB.nearest(ax[seed]!, ay[seed]!, az[seed]!, WINDOW, Infinity, extra, extraD);
-          for (let c = 0; c < found; c++) if (!takenB[extra[c]!]) cols[C++] = extra[c]!;
-        }
-        if (paired < 2 && C === paired) continue;
+  for (let row = 0; row < rowCount; row++) {
+    for (let column = 0; column < columnCount; column++) {
+      const cell = flip ? column * width + row : row * width + column;
 
-        // The solver needs no more rows than columns, so solve whichever way round fits.
-        const flip = R > C;
-        const [h, w] = flip ? [C, R] : [R, C];
-        const cost = new Float64Array(h * w);
-        for (let r = 0; r < R; r++) {
-          for (let c = 0; c < C; c++) cost[flip ? c * w + r : r * w + c] = d2(rows[r]!, cols[c]!);
-        }
-        // When everyone is paired, row r's partner is column r. If every row already has its
-        // cheapest column, no other pairing can beat it, so skip the solve.
-        if (R === paired && C === paired) {
-          let optimal = true;
-          for (let r = 0; r < R && optimal; r++) {
-            for (let c = 0; c < C; c++) if (cost[r * w + c]! < cost[r * w + r]!) optimal = false;
-          }
-          if (optimal) continue;
-        }
-        for (let r = 0; r < R; r++) partnerOfA[rows[r]!] = -1;
-        for (let c = 0; c < C; c++) takenB[cols[c]!] = 0;
-        solve({ cost, rows: h, cols: w }).forEach((to, from) => {
-          const [r, c] = flip ? [to, from] : [from, to];
-          partnerOfA[rows[r]!] = cols[c]!;
-          takenB[cols[c]!] = 1;
-        });
-      }
+      cost[cell] = matcher.distance(state.rows[row]!, state.columns[column]!);
     }
-    return partnerOfA;
-  };
+  }
 
-  /** Swap partners one pair at a time while that lowers the total. Also lets left-out points in. */
-  const swaps = (partnerOfA: Int32Array) => {
-    const partnerOfB = partnersOfB(partnerOfA);
-    // A worklist of old points to check, so after the first sweep only the neighbourhoods of
-    // recent swaps get looked at again. It starts with everyone.
-    const queue = Int32Array.from({ length: n }, (_, i) => i);
-    const queued = new Uint8Array(n).fill(1);
-    let head = 0;
-    let size = n;
-    const push = (i: number) => {
-      if (queued[i]) return;
-      queued[i] = 1;
-      queue[(head + size) % n] = i;
-      size++;
-    };
-    const near = new Int32Array(NEIGHBOURS);
-    const nearD = new Float64Array(NEIGHBOURS);
-    // When a new point changes partner, the old points around it may now have a better swap.
-    const wake = (j: number) => {
-      const count = treeA.nearest(bx[j]!, by[j]!, bz[j]!, NEIGHBOURS, Infinity, near, nearD);
-      for (let c = 0; c < count; c++) push(near[c]!);
-    };
+  return cost;
+}
 
-    // A ceiling on the work, in case rounding ever keeps it busy; it is never reached in practice.
-    for (let budget = n * SWAP_PASSES; size > 0 && budget > 0; budget--) {
-      const i = queue[head]!;
-      head = (head + 1) % n;
-      size--;
-      queued[i] = 0;
-      const j = partnerOfA[i]!;
-      // A left-out old point (more old than new) may take over a new point whose partner is
-      // further away; a paired one looks only at new points nearer than its own.
-      const current = j === -1 ? Infinity : d2(i, j);
-      const found = treeB.nearest(ax[i]!, ay[i]!, az[i]!, NEIGHBOURS, current, ids, ds);
-      for (let c = 0; c < found; c++) {
-        const other = ids[c]!;
-        if (other === j) break; // Everything after this is no nearer than our own partner.
-        const rival = partnerOfB[other]!;
-        const gain =
-          rival === -1
-            ? current - d2(i, other) // A left-out new point (more new than old): just move to it.
-            : j === -1
-            ? d2(rival, other) - d2(i, other)
-            : current + d2(rival, other) - d2(i, other) - d2(rival, j);
-        // Demand a real improvement, so rounding noise can't make points trade back and forth.
-        if (!(gain > 1e-9 * (Number.isFinite(current) ? current + 1 : 1))) continue;
-        partnerOfA[i] = other;
-        partnerOfB[other] = i;
-        if (j !== -1) partnerOfB[j] = rival;
-        if (rival !== -1) partnerOfA[rival] = j;
-        push(i);
-        if (rival !== -1) push(rival);
-        wake(other);
-        if (j !== -1) wake(j);
-        break;
-      }
+function isAlreadyOptimal(cost: Float64Array, size: number, width: number): boolean {
+  for (let row = 0; row < size; row++) {
+    for (let column = 0; column < size; column++) {
+      if (cost[row * width + column]! < cost[row * width + row]!) return false;
     }
-    return partnerOfA;
+  }
+
+  return true;
+}
+
+function resolveWindow(state: WindowState, window: Window, cost: Float64Array, flip: boolean) {
+  const { partnerOf, taken, rows, columns } = state;
+  const [height, width] = flip ? [window.columnCount, window.rowCount] : [window.rowCount, window.columnCount];
+
+  for (let row = 0; row < window.rowCount; row++) partnerOf[rows[row]!] = UNPAIRED;
+
+  for (let column = 0; column < window.columnCount; column++) taken[columns[column]!] = 0;
+
+  solve({ cost, rows: height, cols: width }).forEach((solvedColumn, solvedRow) => {
+    const [row, column] = flip ? [solvedColumn, solvedRow] : [solvedRow, solvedColumn];
+
+    partnerOf[rows[row]!] = columns[column]!;
+    taken[columns[column]!] = 1;
+  });
+}
+
+function repairWindow(matcher: Matcher, state: WindowState, seed: number, covered: Uint8Array) {
+  const window = gatherWindow(matcher, state, seed, covered);
+  const { rowCount, columnCount, paired } = window;
+
+  if (paired < 2 && columnCount === paired) return;
+
+  const flip = rowCount > columnCount;
+  const width = flip ? rowCount : columnCount;
+  const cost = windowCost(matcher, state, window, flip, width);
+  const unchanged = rowCount === paired && columnCount === paired && isAlreadyOptimal(cost, rowCount, width);
+
+  if (!unchanged) resolveWindow(state, window, cost, flip);
+}
+
+function repairWindows(matcher: Matcher, partnerOf: Int32Array): Int32Array {
+  const taken = takenTargets(partnerOf, matcher.toCount);
+  const state: WindowState = {
+    partnerOf,
+    taken,
+    freeTree: freeTargetTree(matcher, taken),
+    rows: new Int32Array(WINDOW),
+    columns: new Int32Array(WINDOW * 2),
+    extra: new Int32Array(WINDOW),
+    extraDistance: new Float64Array(WINDOW),
   };
 
-  const total = (partnerOfA: Int32Array) => {
-    let sum = 0;
-    for (let i = 0; i < n; i++) if (partnerOfA[i] !== -1) sum += d2(i, partnerOfA[i]!);
-    return sum;
-  };
-  const polish = (partnerOfA: Int32Array) => swaps(windows(swaps(partnerOfA)));
-  const place = polish(byPlace());
-  const nearest = polish(byNearest());
-  const best = total(nearest) < total(place) ? nearest : place;
+  for (let pass = 0; pass < WINDOW_PASSES; pass++) {
+    const covered = new Uint8Array(matcher.fromCount);
 
-  const pairs: [number, number][] = [];
-  for (let i = 0; i < n; i++) if (best[i] !== -1) pairs.push([i, best[i]!]);
-  return pairs;
+    for (let step = 0; step < matcher.fromCount; step++) {
+      const seed = pass % 2 === 0 ? step : matcher.fromCount - 1 - step;
+
+      if (!covered[seed] && partnerOf[seed] !== UNPAIRED) repairWindow(matcher, state, seed, covered);
+    }
+  }
+
+  return partnerOf;
+}
+
+function workQueue(size: number) {
+  const items = allIndexes(size);
+  const queued = new Uint8Array(size).fill(1);
+  let head = 0;
+  let length = size;
+
+  return {
+    get isEmpty() {
+      return length === 0;
+    },
+
+    push(item: number) {
+      if (queued[item]) return;
+
+      queued[item] = 1;
+      items[(head + length) % size] = item;
+      length++;
+    },
+
+    shift(): number {
+      const item = items[head]!;
+
+      head = (head + 1) % size;
+      length--;
+      queued[item] = 0;
+
+      return item;
+    },
+  };
+}
+
+function swapGain(matcher: Matcher, source: number, partner: number, current: number, target: number, rival: number): number {
+  const { distance } = matcher;
+
+  if (rival === UNPAIRED) return current - distance(source, target);
+
+  if (partner === UNPAIRED) return distance(rival, target) - distance(source, target);
+
+  return current + distance(rival, target) - distance(source, target) - distance(rival, partner);
+}
+
+interface Swap {
+  source: number;
+  partner: number;
+  target: number;
+  rival: number;
+}
+
+function applySwap(partnerOf: Int32Array, partnerOfTo: Int32Array, { source, partner, target, rival }: Swap) {
+  partnerOf[source] = target;
+  partnerOfTo[target] = source;
+
+  if (partner !== UNPAIRED) partnerOfTo[partner] = rival;
+
+  if (rival !== UNPAIRED) partnerOf[rival] = partner;
+}
+
+function findSwap(matcher: Matcher, partnerOf: Int32Array, partnerOfTo: Int32Array, source: number): Swap | null {
+  const partner = partnerOf[source]!;
+  const current = partner === UNPAIRED ? Infinity : matcher.distance(source, partner);
+  const found = nearestIn(matcher.to.tree, matcher.from, source, NEIGHBOURS, current, matcher.ids, matcher.distances);
+  const tolerance = SWAP_TOLERANCE * (Number.isFinite(current) ? current + 1 : 1);
+
+  for (let index = 0; index < found; index++) {
+    const target = matcher.ids[index]!;
+
+    if (target === partner) return null;
+
+    const rival = partnerOfTo[target]!;
+
+    if (swapGain(matcher, source, partner, current, target, rival) > tolerance) return { source, partner, target, rival };
+  }
+
+  return null;
+}
+
+function swapPartners(matcher: Matcher, partnerOf: Int32Array): Int32Array {
+  const partnerOfTo = partnersOfTo(partnerOf, matcher.toCount);
+  const queue = workQueue(matcher.fromCount);
+  const near = new Int32Array(NEIGHBOURS);
+  const nearDistance = new Float64Array(NEIGHBOURS);
+
+  const wake = (target: number) => {
+    const count = nearestIn(matcher.from.tree, matcher.to, target, NEIGHBOURS, Infinity, near, nearDistance);
+
+    for (let index = 0; index < count; index++) queue.push(near[index]!);
+  };
+
+  for (let budget = matcher.fromCount * SWAP_PASSES; !queue.isEmpty && budget > 0; budget--) {
+    const swap = findSwap(matcher, partnerOf, partnerOfTo, queue.shift());
+
+    if (!swap) continue;
+
+    applySwap(partnerOf, partnerOfTo, swap);
+    queue.push(swap.source);
+
+    if (swap.rival !== UNPAIRED) queue.push(swap.rival);
+
+    wake(swap.target);
+
+    if (swap.partner !== UNPAIRED) wake(swap.partner);
+  }
+
+  return partnerOf;
+}
+
+function totalDistance(matcher: Matcher, partnerOf: Int32Array): number {
+  return partnerOf.reduce((total, target, source) => (target === UNPAIRED ? total : total + matcher.distance(source, target)), 0);
+}
+
+const polish = (matcher: Matcher, partnerOf: Int32Array) =>
+  swapPartners(matcher, repairWindows(matcher, swapPartners(matcher, partnerOf)));
+
+const toPairs = (partnerOf: Int32Array) =>
+  Array.from(partnerOf).flatMap((target, source): Pair[] => (target === UNPAIRED ? [] : [[source, target]]));
+
+export function approximate(a: readonly Point3[], b: readonly Point3[], maxDistance = Infinity): Pair[] {
+  const from = toCloud(a);
+  const to = toCloud(b);
+  const matcher = createMatcher(from, to, maxDistance);
+
+  const keptFrom = a.length > b.length ? closestToOther(from, to.tree, b.length) : allIndexes(a.length);
+  const keptTo = b.length > a.length ? closestToOther(to, from.tree, a.length) : allIndexes(b.length);
+
+  const byPlace = polish(matcher, pairByPlace(matcher, keptFrom, keptTo, new Int32Array(a.length).fill(UNPAIRED)));
+  const byNearest = polish(matcher, pairByNearest(matcher, keptFrom, keptTo));
+
+  return toPairs(totalDistance(matcher, byNearest) < totalDistance(matcher, byPlace) ? byNearest : byPlace);
 }

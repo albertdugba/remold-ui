@@ -1,11 +1,6 @@
-/**
- * Accessibility helpers: telling screen-reader users what changed, and honouring reduced motion.
- */
 
-/** Whether to animate with movement. `"user"` follows the system setting. */
 export type ReducedMotion = "user" | "always" | "never";
 
-/** True when the user has asked the system for less motion. False outside the browser. */
 export function prefersReducedMotion(): boolean {
   return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -16,10 +11,6 @@ export function resolveReducedMotion(setting: ReducedMotion = "user"): boolean {
 
 const LIVE_REGION_ATTRIBUTE = "data-rm-announcer";
 
-/**
- * Say `message` to screen-reader users without moving focus, through a shared, visually hidden
- * polite live region. Repeating the same message is still announced.
- */
 export function announce(message: string): void {
   if (typeof document === "undefined" || !message) return;
 

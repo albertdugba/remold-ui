@@ -1,15 +1,3 @@
-/**
- * Keyless transitions: snapshot the page, let anything rewrite it, work out what became what,
- * then move every element from where it was to where it is with springs.
- *
- * - Interruptible: calling `transition` again mid-flight starts from what is on screen now and
- *   keeps each element's velocity.
- * - Nested boxes are corrected: a child's transform is computed relative to its nearest
- *   animated ancestor, so text inside a growing card doesn't stretch.
- * - Elements that leave are cloned into a temporary layer and fade out; elements that arrive
- *   fade in, riding along with any animated parent.
- * - Reduced motion keeps the fades (so changes are still visible) and drops the movement.
- */
 import {
   matchNodes,
   springs,
@@ -52,20 +40,14 @@ import type {
 } from "./types";
 import type { Choreography } from "./types";
 
-/* Animation records */
-
 interface Run {
   records: Map<HTMLElement, MotionRecord>;
-  /** Stop ticking but leave everything where it is (an interrupting transition takes over). */
   freeze(): void;
-  /** Restore every element's own styles. */
   clear(): void;
 }
 
 const running = new WeakMap<Element, Run>();
 const sharedLoop: FrameLoop = { add: frames };
-
-/* Helpers */
 
 const moved = (a: PixelBox, b: PixelBox) =>
   Math.abs(a.x - b.x) > 1 ||
@@ -73,7 +55,6 @@ const moved = (a: PixelBox, b: PixelBox) =>
   Math.abs(a.width - b.width) > 1 ||
   Math.abs(a.height - b.height) > 1;
 
-/** Count what changed between two snapshots. Splits and merges count once each. */
 export function summarize(
   before: PageSnapshot,
   after: PageSnapshot,
@@ -99,7 +80,6 @@ export function summarize(
   };
 }
 
-/** A short sentence for screen readers: "2 moved, 1 added". Empty when nothing changed. */
 export function describeChanges(summary: ChangeSummary): string {
   const parts = [
     [summary.moved, "moved"],
@@ -115,14 +95,8 @@ export function describeChanges(summary: ChangeSummary): string {
     .join(", ");
 }
 
-/* Choreography */
-
 const CHOREOGRAPHY: Required<Choreography> = { move: 0.06, enter: 0.1, stagger: 0.03, maxStagger: 0.24 };
 
-/**
- * Gives each record the delay its beat starts at: moves wait for what leaves, and arrivals wait
- * for the moves, then come in one after another in document order.
- */
 function choreograph({
   records,
   exiting,
@@ -147,46 +121,282 @@ function choreograph({
     });
 }
 
-/* The transition */
+interface Captured {
+  before: PageSnapshot;
+  opacities: number[];
+  clones: ReturnType<typeof snapshotClones>;
+  focused: Element | null;
+}
 
-/**
- * The two halves of `transition`, for frameworks that change the DOM themselves: call this just
- * before the DOM changes, then `play()` once it has.
- *
- * Preparing only reads the page: it changes nothing and stops nothing, so it is safe to call
- * from a render that may be thrown away. A transition already running here keeps going until
- * `play()` takes over from wherever it has got to.
- *
- * ```ts
- * const prepared = prepareTransition(root);
- * applyChanges();
- * prepared.play();
- * ```
- */
-export function prepareTransition(
-  root: HTMLElement,
-  options: TransitionOptions = {},
-): PreparedTransition {
-  // A small overshoot makes discrete layout changes feel responsive without
-  // turning long-running scenes or connector drawing into a bounce.
+type Exit = ReturnType<typeof buildExitRecords>["exits"][number];
+
+const FADE: SpringConfig = { duration: 0.35, bounce: 0 };
+
+function capture(root: HTMLElement): Captured {
+  const before = readNodes(root);
+
+  return {
+    before,
+    opacities: before.elements.map((element) => Number.parseFloat(getComputedStyle(element).opacity) || 1),
+    clones: snapshotClones(root),
+    focused: typeof document !== "undefined" ? document.activeElement : null,
+  };
+}
+
+function linkAnchors(ordered: readonly MotionRecord[], records: ReadonlyMap<HTMLElement, MotionRecord>, root: HTMLElement) {
+  for (const record of ordered) {
+    for (let parent = record.el.parentElement; parent && parent !== root; parent = parent.parentElement) {
+      const anchor = records.get(parent as HTMLElement);
+
+      if (anchor) {
+        record.anchor = anchor;
+        break;
+      }
+    }
+  }
+}
+
+function restoreFocus(focused: Element | null, before: PageSnapshot, after: PageSnapshot, matches: NodeMatches) {
+  if (!(focused instanceof HTMLElement) || focused.isConnected) return;
+
+  const index = before.elements.indexOf(focused);
+  const pair = matches.pairs.find((candidate) => candidate.from === index);
+
+  if (pair) after.elements[pair.to]!.focus({ preventScroll: true });
+}
+
+function announceChanges(option: TransitionOptions["announce"], summary: ChangeSummary) {
+  if (!option) return;
+
+  announce(typeof option === "function" ? option(summary) : describeChanges(summary));
+}
+
+function renderRecords(ordered: readonly MotionRecord[]) {
+  for (const record of ordered) computeVisual(record);
+
+  for (const record of ordered) applyRecord(record);
+}
+
+function renderExits(exits: readonly Exit[]) {
+  for (const exit of exits) {
+    exit.clone.style.opacity = Math.max(0, exit.opacity.current).toFixed(3);
+    exit.clone.style.scale = exit.scale.current.toFixed(4);
+  }
+}
+
+function stepRecords(ordered: readonly MotionRecord[], elapsed: number, dt: number): boolean {
+  let moving = false;
+
+  for (const record of ordered) {
+    if (elapsed < record.delay) {
+      moving = true;
+      continue;
+    }
+
+    for (const animated of allChannels(record.channels)) if (animated.step(dt)) moving = true;
+  }
+
+  return moving;
+}
+
+function stepExits(exits: readonly Exit[], dt: number): boolean {
+  let moving = false;
+
+  for (const exit of exits) {
+    if (exit.opacity.step(dt)) moving = true;
+
+    if (exit.scale.step(dt)) moving = true;
+  }
+
+  return moving;
+}
+
+function orderedRecords(records: ReadonlyMap<HTMLElement, MotionRecord>, root: HTMLElement): MotionRecord[] {
+  const ordered = [...records.values()].sort((p, q) => p.depth - q.depth);
+
+  linkAnchors(ordered, records, root);
+
+  return ordered;
+}
+
+const quiet = <T>() => {
+  const promise = deferred<T>();
+
+  promise.promise.catch(() => {});
+
+  return promise;
+};
+
+function abortError(): Error {
+  const reason = new Error("Transition cancelled");
+
+  reason.name = "AbortError";
+
+  return reason;
+}
+
+interface RunContext {
+  root: HTMLElement;
+  options: TransitionOptions;
+  captured: Captured;
+  reduced: boolean;
+  spring: SpringConfig;
+  loop: FrameLoop;
+  ready: ReturnType<typeof deferred<TransitionResult>>;
+  finished: ReturnType<typeof deferred<void>>;
+  skipped: () => boolean;
+}
+
+interface RunState {
+  done: boolean;
+  frozen: boolean;
+  exitsDone: boolean;
+}
+
+function playRecords(loop: FrameLoop, ordered: readonly MotionRecord[], state: RunState, cleanUp: () => void) {
+  let elapsed = 0;
+
+  loop.add((dt) => {
+    if (state.frozen || state.done) return false;
+
+    elapsed += dt;
+
+    const moving = stepRecords(ordered, elapsed, dt);
+
+    renderRecords(ordered);
+
+    if (!moving) cleanUp();
+
+    return moving;
+  });
+}
+
+function playExits(loop: FrameLoop, exits: readonly Exit[], state: RunState, finish: () => void) {
+  loop.add((dt) => {
+    if (state.exitsDone) return false;
+
+    const moving = stepExits(exits, dt);
+
+    renderExits(exits);
+
+    if (!moving) finish();
+
+    return moving;
+  });
+}
+
+function matchAndPlan(context: RunContext, previous: Run | undefined) {
+  const { root, options, captured, reduced, spring } = context;
+  const { before } = captured;
+  const after = readNodes(root);
+  const matches = matchNodes(before.nodes, after.nodes, options.match);
+  const zoom = containerScale(root);
+  const records = buildMotionRecords({ root, before, after, matches, previousRecords: previous?.records, zoom, reduced, spring, fade: FADE });
+  const { exits, layer } = buildExitRecords({ root, before, matches, clones: captured.clones, opacities: captured.opacities, zoom, reduced });
+  const summary = summarize(before, after, matches);
+
+  if (options.choreography && !reduced) {
+    choreograph({
+      records: [...records.values()],
+      exiting: exits.length > 0,
+      timing: options.choreography === true ? {} : options.choreography,
+    });
+  }
+
+  return { after, matches, records, exits, layer, summary };
+}
+
+function beginRun(context: RunContext): () => void {
+  const { root, options, captured, reduced, loop, ready, finished } = context;
+  const previous = running.get(root);
+
+  previous?.freeze();
+  previous?.clear();
+
+  const { after, matches, records, exits, layer, summary } = matchAndPlan(context, previous);
+  const ordered = orderedRecords(records, root);
+  const unlift = options.lift !== false && !reduced ? liftMovers(ordered, root) : () => {};
+  const state: RunState = { done: false, frozen: false, exitsDone: exits.length === 0 };
+
+  const settle = () => {
+    if (state.done && state.exitsDone) finished.resolve();
+  };
+
+  const finishExits = () => {
+    state.exitsDone = true;
+    layer?.remove();
+  };
+
+  const restoreAll = () => {
+    for (const record of ordered) restore(record);
+
+    unlift();
+  };
+
+  const cleanUp = () => {
+    if (state.done) return;
+
+    state.done = true;
+    restoreAll();
+
+    if (running.get(root) === run) running.delete(root);
+
+    settle();
+  };
+
+  const run: Run = {
+    records,
+
+    freeze() {
+      state.frozen = true;
+      state.done = true;
+      settle();
+    },
+
+    clear: restoreAll,
+  };
+
+  running.set(root, run);
+
+  const skip = () => {
+    for (const record of ordered) for (const animated of allChannels(record.channels)) animated.set(animated.target);
+
+    cleanUp();
+    finishExits();
+    settle();
+  };
+
+  restoreFocus(captured.focused, captured.before, after, matches);
+  announceChanges(options.announce, summary);
+  ready.resolve({ before: captured.before, after, matches, summary });
+
+  if (context.skipped()) {
+    skip();
+    return skip;
+  }
+
+  renderRecords(ordered);
+  renderExits(exits);
+  playRecords(loop, ordered, state, cleanUp);
+
+  if (!state.exitsDone) {
+    playExits(loop, exits, state, () => {
+      finishExits();
+      settle();
+    });
+  }
+
+  return skip;
+}
+
+export function prepareTransition(root: HTMLElement, options: TransitionOptions = {}): PreparedTransition {
   const spring = options.spring ?? springs.snappy;
-  const fade: SpringConfig = { duration: 0.35, bounce: 0 };
   const loop = options.loop ?? sharedLoop;
   const reduced = resolveReducedMotion(options.reducedMotion);
-
   const updated = deferred<void>();
-  const ready = deferred<TransitionResult>();
-  const finished = deferred<void>();
-  ready.promise.catch(() => {});
-  finished.promise.catch(() => {});
-
-  const before = readNodes(root);
-  const opacities = before.elements.map(
-    (el) => Number.parseFloat(getComputedStyle(el).opacity) || 1,
-  );
-  const clones = snapshotClones(root);
-  const focused =
-    typeof document !== "undefined" ? document.activeElement : null;
+  const ready = quiet<TransitionResult>();
+  const finished = quiet<void>();
+  const captured = capture(root);
 
   let skipped = false;
   let skip = () => {
@@ -194,165 +404,7 @@ export function prepareTransition(
   };
 
   const start = (): void => {
-    const previous = running.get(root);
-    previous?.freeze();
-    previous?.clear();
-    const after = readNodes(root);
-    const matches = matchNodes(before.nodes, after.nodes, options.match);
-    const zoom = containerScale(root);
-
-    const records = buildMotionRecords({
-      root,
-      before,
-      after,
-      matches,
-      previousRecords: previous?.records,
-      zoom,
-      reduced,
-      spring,
-      fade,
-    });
-
-    const { exits, layer } = buildExitRecords({
-      root,
-      before,
-      matches,
-      clones,
-      opacities,
-      zoom,
-      reduced,
-    });
-    const summary = summarize(before, after, matches);
-
-    if (options.choreography && !reduced)
-      choreograph({
-        records: [...records.values()],
-        exiting: exits.length > 0,
-        timing: options.choreography === true ? {} : options.choreography,
-      });
-
-    const ordered = [...records.values()].sort((p, q) => p.depth - q.depth);
-    for (const r of ordered) {
-      for (let p = r.el.parentElement; p && p !== root; p = p.parentElement) {
-        const anchor = records.get(p as HTMLElement);
-        if (anchor) {
-          r.anchor = anchor;
-          break;
-        }
-      }
-    }
-
-    const unlift =
-      options.lift !== false && !reduced ? liftMovers(ordered, root) : () => {};
-
-    const render = () => {
-      for (const r of ordered) computeVisual(r);
-      for (const r of ordered) applyRecord(r);
-    };
-
-    const renderExits = () => {
-      for (const e of exits) {
-        e.clone.style.opacity = Math.max(0, e.opacity.current).toFixed(3);
-        e.clone.style.scale = e.scale.current.toFixed(4);
-      }
-    };
-
-    let exitsDone = exits.length === 0;
-    const finishExits = () => {
-      exitsDone = true;
-      layer?.remove();
-    };
-    const settle = () => {
-      if (done && exitsDone) finished.resolve();
-    };
-
-    let frozen = false;
-    let done = false;
-    const cleanUp = () => {
-      if (done) return;
-      done = true;
-      for (const r of ordered) restore(r);
-      unlift();
-      if (running.get(root) === run) running.delete(root);
-      settle();
-    };
-
-    const run: Run = {
-      records,
-      freeze() {
-        frozen = true;
-        done = true;
-        settle();
-      },
-      clear() {
-        for (const r of ordered) restore(r);
-        unlift();
-      },
-    };
-    running.set(root, run);
-
-    skip = () => {
-      for (const r of ordered)
-        for (const c of allChannels(r.channels)) c.set(c.target);
-      cleanUp();
-      finishExits();
-      settle();
-    };
-
-    if (focused instanceof HTMLElement && !focused.isConnected) {
-      const index = before.elements.indexOf(focused);
-      const pair = matches.pairs.find((p) => p.from === index);
-      if (pair) after.elements[pair.to]!.focus({ preventScroll: true });
-    }
-
-    if (options.announce) {
-      const message =
-        typeof options.announce === "function"
-          ? options.announce(summary)
-          : describeChanges(summary);
-      announce(message);
-    }
-
-    ready.resolve({ before, after, matches, summary });
-    if (skipped) {
-      skip();
-      return;
-    }
-
-    render();
-    renderExits();
-    let elapsed = 0;
-    loop.add((dt) => {
-      if (frozen || done) return false;
-      elapsed += dt;
-      let moving = false;
-      for (const r of ordered) {
-        if (elapsed < r.delay) {
-          moving = true;
-          continue;
-        }
-        for (const c of allChannels(r.channels)) if (c.step(dt)) moving = true;
-      }
-      render();
-      if (!moving) cleanUp();
-      return moving;
-    });
-    if (!exitsDone) {
-      loop.add((dt) => {
-        if (exitsDone) return false;
-        let moving = false;
-        for (const e of exits) {
-          if (e.opacity.step(dt)) moving = true;
-          if (e.scale.step(dt)) moving = true;
-        }
-        renderExits();
-        if (!moving) {
-          finishExits();
-          settle();
-        }
-        return moving;
-      });
-    }
+    skip = beginRun({ root, options, captured, reduced, spring, loop, ready, finished, skipped: () => skipped });
   };
 
   const handle: Transition = {
@@ -361,53 +413,53 @@ export function prepareTransition(
     finished: finished.promise,
     skip: () => skip(),
   };
+
   let settled = false;
+
+  const rejectAll = (error: unknown) => {
+    updated.reject(error);
+    ready.reject(error);
+    finished.reject(error);
+  };
+
   return {
     transition: handle,
+
     play() {
-      if (!settled) {
-        settled = true;
-        updated.resolve();
-        try {
-          start();
-        } catch (error) {
-          ready.reject(error);
-          finished.reject(error);
-        }
-      }
-      return handle;
-    },
-    fail(error) {
-      if (!settled) {
-        settled = true;
-        updated.reject(error);
+      if (settled) return handle;
+
+      settled = true;
+      updated.resolve();
+
+      try {
+        start();
+      } catch (error) {
         ready.reject(error);
         finished.reject(error);
       }
+
       return handle;
     },
+
+    fail(error) {
+      if (settled) return handle;
+
+      settled = true;
+      rejectAll(error);
+
+      return handle;
+    },
+
     cancel() {
       if (settled) return;
+
       settled = true;
       updated.promise.catch(() => {});
-      const reason = new Error("Transition cancelled");
-      reason.name = "AbortError";
-      updated.reject(reason);
-      ready.reject(reason);
-      finished.reject(reason);
+      rejectAll(abortError());
     },
   };
 }
 
-/**
- * Animate whatever `update` does to the elements inside `root`.
- *
- * ```ts
- * transition(list, () => {
- *   list.innerHTML = renderSortedList(); // brand-new markup, no keys
- * });
- * ```
- */
 export function transition(
   root: HTMLElement,
   update: () => void | Promise<void>,
