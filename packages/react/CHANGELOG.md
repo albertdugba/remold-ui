@@ -1,5 +1,19 @@
 # @remold-ui/react
 
+## 0.3.0
+
+### Minor Changes
+
+- 69cb605: Add `Remold.Tour`: a headless product tour. `Tour.Root` holds the step (controlled or not) and the keyboard, `Tour.Target` marks what each step points at, `Tour.Spotlight` measures an unstyled box around the current target, and `Tour.Next`, `Tour.Previous` and `Tour.Close` move it. `useTour()` gives any popover the target element to anchor to.
+
+### Patch Changes
+
+- 69cb605: `Remold.Particles` now follows a changed `palette` and camera `angle` while it's showing. A new palette recolours the dots where they are, without moving them, so colours can be animated; a new `angle` turns the cloud to it, so a drag can steer it round.
+  - @remold-ui/core@0.3.0
+  - @remold-ui/dom@0.3.0
+  - @remold-ui/canvas@0.3.0
+  - @remold-ui/morph@0.3.0
+
 ## 0.2.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@remold-ui/core",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Headless core: shapes, morphing and matching. No browser APIs.",
   "license": "MIT",
   "author": "Albert Dugba",

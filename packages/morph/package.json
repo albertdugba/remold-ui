@@ -1,6 +1,6 @@
 {
   "name": "@remold-ui/morph",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Framework-neutral SVG path matching and interpolation for Motion, GSAP or a custom renderer.",
   "license": "MIT",
   "author": "Albert Dugba",
