@@ -28,7 +28,6 @@ import { Frame } from "./frame";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
 import { useMeasuredSize } from "./use-measured-size";
 import { typing, useScene } from "./use-scene";
-import "./invite-team.css";
 
 export interface Person {
   email: string;
@@ -36,7 +35,6 @@ export interface Person {
   firstName: string;
   initials: string;
   hue: number;
-  /** Someone who joins from an invite is an editor. */
   role?: string;
 }
 
@@ -104,6 +102,15 @@ const TEAM: readonly Person[] = [
 ];
 
 const EMPTY: InviteTeamValue = { draft: "", chips: [], pending: [], team: TEAM };
+
+const PALETTE = [
+  "[--iv-surface:#ffffff] [--iv-well:#f4f4f5] [--iv-token:#e8e8eb] [--iv-ink:#18181b] [--iv-muted:#71717a] [--iv-faint:#a1a1aa]",
+  "[--iv-line:rgb(24_24_27/0.08)] [--iv-border:rgb(24_24_27/0.12)] [--iv-good:#16a34a] [--iv-on-good:#ffffff] [--iv-bad:#e5484d]",
+  "dark:[--iv-surface:#1c1c1f] dark:[--iv-well:#26262b] dark:[--iv-token:#313137] dark:[--iv-ink:#fafafa] dark:[--iv-muted:#a1a1aa] dark:[--iv-faint:#63636b]",
+  "dark:[--iv-line:rgb(255_255_255/0.07)] dark:[--iv-border:rgb(255_255_255/0.14)] dark:[--iv-good:#4ade80] dark:[--iv-on-good:#0a0a0b] dark:[--iv-bad:#ff6369]",
+].join(" ");
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--iv-ink)";
 
 function useSentCount(pending: readonly Person[]) {
   const [sentCount, setSentCount] = useState(0);
@@ -180,7 +187,7 @@ function Avatar({
     <motion.span
       layoutId={`avatar:${person.email}`}
       transition={TRAVEL}
-      className={`iv-avatar ${className}`}
+      className={`relative grid flex-none place-items-center overflow-hidden rounded-full bg-[linear-gradient(180deg,oklch(0.74_0.09_var(--hue)),oklch(0.6_0.1_var(--hue)))] font-semibold tracking-[0.02em] text-white before:absolute before:inset-0 before:bg-[linear-gradient(180deg,#b4b4bc,#8e8e96)] before:transition-opacity before:duration-600 before:content-[''] data-member:before:opacity-0 motion-reduce:before:transition-none dark:before:bg-[linear-gradient(180deg,#6b6b73,#4f4f56)] [&>span]:relative ${className}`}
       data-member={member || undefined}
       style={{ "--hue": person.hue } as CSSProperties}
       aria-hidden="true"
@@ -204,15 +211,15 @@ function Chip({
       ref={ref}
       layout="position"
       transition={SPRING}
-      className="iv-chip"
+      className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full bg-(--iv-token) pr-1 pl-[3px]"
       title={person.email}
       {...CHIP_MOTION}
     >
-      <Avatar person={person} className="iv-chip-avatar" />
-      <span className="iv-chip-email">{person.email}</span>
+      <Avatar person={person} className="size-[22px] text-[8.5px]" />
+      <span className="truncate text-[13px] font-medium">{person.email}</span>
       <button
         type="button"
-        className="iv-chip-remove"
+        className={`grid size-5 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--iv-muted) hover:bg-[color-mix(in_oklab,var(--iv-ink)_8%,transparent)] hover:text-(--iv-ink) [&_svg]:size-[11px] ${FOCUS}`}
         aria-label={`Remove ${person.email}`}
         onClick={onRemove}
       >
@@ -243,29 +250,31 @@ function PersonRow({
       layout="position"
       transition={TRAVEL}
       exit={{ opacity: 0, scale: 0.9, filter: "blur(3px)", transition: { duration: 0.18 } }}
-      className="iv-person"
       data-invited={invited || undefined}
       data-joined={joined || undefined}
+      className="group/person relative flex min-h-14 items-center gap-3 rounded-[14px] pr-2.5 pl-2 transition-[background-color] duration-200 hover:bg-(--iv-well)"
     >
-      <span className="iv-person-face">
-        <Avatar person={person} className="iv-person-avatar" member={!invited} />
+      <span className="relative grid flex-none after:pointer-events-none after:absolute after:-inset-1 after:rounded-full after:border-[1.5px] after:border-dashed after:border-(--iv-faint) after:opacity-0 after:[transition:opacity_0.5s_ease,border-color_0.3s_ease] after:content-[''] group-data-invited/person:after:opacity-100 motion-safe:group-data-invited/person:after:animate-[spin_9s_linear_infinite] group-data-joined/person:after:border-solid group-data-joined/person:after:border-(--iv-good) group-data-joined/person:after:opacity-100">
+        <Avatar person={person} className="size-9 text-[12.5px]" member={!invited} />
       </span>
 
-      <span className="iv-person-copy">
-        <motion.span className="iv-person-name" {...(invited ? FRESH : {})}>
+      <span className="grid min-w-0 flex-1">
+        <motion.span className="truncate text-[14px] font-semibold" {...(invited ? FRESH : {})}>
           {person.name}
         </motion.span>
-        {person.name !== person.email && <span className="iv-person-email">{person.email}</span>}
+        {person.name !== person.email && (
+          <span className="truncate text-[12.5px] text-(--iv-muted)">{person.email}</span>
+        )}
       </span>
 
-      <span className="iv-person-role">
+      <span className="flex-none text-[13px] text-(--iv-muted) transition-colors duration-300 group-data-invited/person:text-(--iv-faint) group-data-joined/person:font-semibold group-data-joined/person:text-(--iv-good)">
         <Remold.Text>{role}</Remold.Text>
       </span>
 
       {invited && (
         <motion.button
           type="button"
-          className="iv-person-revoke"
+          className={`-ml-1 grid size-6 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--iv-faint) transition-[opacity,background-color,color] duration-150 group-hover/person:opacity-100! hover:bg-[color-mix(in_oklab,var(--iv-bad)_12%,transparent)] hover:text-(--iv-bad) focus-visible:opacity-100! [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [&_svg]:size-[11px] ${FOCUS}`}
           aria-label={`Revoke the invite to ${person.email}`}
           onClick={onRevoke}
           {...FRESH}
@@ -290,7 +299,6 @@ export interface InviteTeamProps {
   ref?: Ref<HTMLElement>;
 }
 
-/** A team's members panel: type emails into chips, send the invites, and revoke one before it's accepted. */
 export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: InviteTeamProps) {
   const [invites, setInvites] = useControllableState({ value, defaultValue, onValueChange });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -396,27 +404,31 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
   ];
 
   return (
-    <section ref={ref} className="iv" aria-label="Team members">
+    <section
+      ref={ref}
+      className={`grid min-h-[470px] w-[480px] max-w-full content-start font-sans tracking-[-0.01em] text-(--iv-ink) antialiased ${PALETTE}`}
+      aria-label="Team members"
+    >
       <LayoutGroup>
-        <motion.div className="iv-card" style={{ height }}>
-          <div ref={contentRef} className="iv-content">
-            <header className="iv-head">
-              <span className="iv-title">
-                <strong>Design team</strong>
-                <span className="iv-count">
+        <motion.div className="overflow-clip rounded-[22px] bg-(--iv-surface)" style={{ height }}>
+          <div ref={contentRef} className="grid gap-4 px-4 pt-[18px] pb-4">
+            <header className="flex items-center justify-between gap-3 px-0.5">
+              <span className="grid gap-px">
+                <strong className="text-[17px] font-[650] tracking-[-0.02em]">Design team</strong>
+                <span className="text-[12.5px] text-(--iv-muted)">
                   <Remold.Text>{count}</Remold.Text>
                 </span>
               </span>
             </header>
 
-            <form className="iv-invite" onSubmit={send} noValidate>
-              <div ref={shakeRef} className="iv-shaker">
+            <form className="grid" onSubmit={send} noValidate>
+              <div ref={shakeRef} className="grid">
                 <div
-                  className="iv-field"
                   data-invalid={error ? "" : undefined}
+                  className="flex min-h-12 min-w-0 cursor-text flex-wrap items-center gap-[5px] rounded-[14px] border-[1.8px] border-solid border-(--iv-border) bg-(--iv-surface) py-1.5 pr-1.5 pl-3 text-[14px] transition-[border-color] duration-[180ms] focus-within:border-(--iv-ink) data-invalid:border-(--iv-bad)!"
                   onPointerDown={(event) => event.target === event.currentTarget && inputRef.current?.focus()}
                 >
-                  <span className="iv-to" aria-hidden="true">
+                  <span className="mr-[3px] text-[13px] font-medium text-(--iv-faint)" aria-hidden="true">
                     To
                   </span>
 
@@ -426,10 +438,10 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
                     ))}
                   </AnimatePresence>
 
-                  <span className="iv-entry">
+                  <span className="flex min-w-0 flex-[1_1_180px] items-center gap-1.5">
                     <input
                       ref={inputRef}
-                      className="iv-input"
+                      className="h-8 min-w-0 flex-1 border-0 bg-transparent px-0.5 text-ellipsis text-inherit outline-0 placeholder:text-(--iv-faint)"
                       type="email"
                       value={invites.draft}
                       placeholder={invites.chips.length ? "" : "name@company.com"}
@@ -447,7 +459,7 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
                       layout="position"
                       transition={SPRING}
                       type="submit"
-                      className="iv-send"
+                      className={`grid h-[34px] flex-none cursor-pointer place-items-center rounded-[10px] border-0 bg-(--iv-ink) px-[15px] font-[inherit] text-[13.5px] font-semibold text-(--iv-surface) transition-colors duration-250 disabled:cursor-default disabled:bg-[color-mix(in_oklab,var(--iv-ink)_8%,transparent)] disabled:text-(--iv-faint) data-sent:bg-(--iv-good) data-sent:text-(--iv-on-good) motion-reduce:transition-none ${FOCUS}`}
                       data-sent={sentCount > 0 || undefined}
                       disabled={!sentCount && nothingToSend}
                       whileTap={{ scale: 0.96 }}
@@ -462,7 +474,7 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
                 {error && (
                   <motion.p
                     key="error"
-                    className="iv-error"
+                    className="overflow-clip text-[12.5px] font-medium text-(--iv-bad) [&>span]:block [&>span]:px-1 [&>span]:pt-2"
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
@@ -476,7 +488,7 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
               </AnimatePresence>
             </form>
 
-            <ul className="iv-people" aria-label="People">
+            <ul className="relative -mx-2 grid list-none p-0" aria-label="People">
               <AnimatePresence initial={false} mode="popLayout">
                 {rows.map(({ person, invited }) => (
                   <PersonRow
@@ -490,7 +502,9 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
               </AnimatePresence>
             </ul>
 
-            <p className="iv-status" data-tone={error ? undefined : invites.tone} aria-live="polite">
+            <p
+              className="min-h-4 overflow-hidden px-3 text-[12px] whitespace-nowrap text-(--iv-muted) transition-colors duration-300 data-[tone=good]:text-(--iv-good) motion-reduce:transition-none"
+              data-tone={error ? undefined : invites.tone} aria-live="polite">
               <Remold.Text>{(!error && invites.note) || "Invites expire after 7 days."}</Remold.Text>
             </p>
           </div>
@@ -499,8 +513,6 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const AKUA = personFromEmail("akua.asante@acme.co");
 const FIIFI = personFromEmail("fiifi.quansah@acme.co");

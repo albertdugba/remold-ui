@@ -6,7 +6,6 @@ import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useId, useRef, type KeyboardEvent, type Ref } from "react";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
 import { typing, useScene } from "./use-scene";
-import "./label-picker.css";
 import { usePortalContainer } from "./portal-container";
 
 interface Label {
@@ -48,6 +47,30 @@ const titleCase = (text: string) => text.trim().replace(/^\w/, (first) => first.
 
 const ROW_EXIT = { opacity: 0, transition: { duration: 0.1 } };
 
+const TOKENS = [
+  "[--lp-surface:#ffffff] [--lp-raised:#ffffff] [--lp-field:#f4f4f5] [--lp-line:rgb(24_24_27/0.08)] [--lp-ink:#18181b] [--lp-muted:#71717a] [--lp-quiet:#a1a1aa] [--lp-accent:#4f46e5]",
+  "[--lp-shadow:0_18px_40px_-12px_rgb(0_0_0/0.22),0_0_0_1px_rgb(24_24_27/0.06)]",
+  "dark:[--lp-surface:#1f1f23] dark:[--lp-raised:#2a2a2f] dark:[--lp-field:#2e2e33] dark:[--lp-line:rgb(255_255_255/0.08)] dark:[--lp-ink:#fafafa] dark:[--lp-muted:#a1a1aa] dark:[--lp-quiet:#71717a] dark:[--lp-accent:#818cf8]",
+  "dark:[--lp-shadow:0_18px_40px_-12px_rgb(0_0_0/0.6),0_0_0_1px_rgb(255_255_255/0.08)]",
+  "font-sans",
+].join(" ");
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--lp-accent)";
+const DOT = "size-2 flex-none rounded-full";
+const ROW = "relative flex h-8 cursor-pointer items-center gap-[9px] rounded-lg px-[9px] text-[13px] [&>*:not([data-hl])]:relative";
+const NAME = "min-w-0 flex-1 truncate";
+
+function Highlight() {
+  return (
+    <motion.span
+      layoutId="hl"
+      data-hl=""
+      className="absolute inset-0 rounded-[inherit] bg-(--lp-field)"
+      transition={SPRING}
+    />
+  );
+}
+
 function LabelChip({
   label,
   onRemove,
@@ -61,16 +84,21 @@ function LabelChip({
     <motion.li
       ref={ref}
       layout="position"
-      className="lp-chip"
+      className="inline-flex h-7 items-center gap-1.5 rounded-full bg-(--lp-field) pr-1 pl-2.5 text-[12.5px] font-medium"
       initial={{ opacity: 0, scale: 0.6 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.14 } }}
       transition={POP}
     >
-      <i style={{ background: label.color }} aria-hidden="true" />
+      <i className={DOT} style={{ background: label.color }} aria-hidden="true" />
       {label.name}
-      <button type="button" onClick={onRemove} aria-label={`Remove ${label.name}`}>
-        <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
+      <button
+        type="button"
+        className={`grid size-5 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--lp-quiet) hover:bg-(--lp-surface) hover:text-(--lp-ink) ${FOCUS}`}
+        onClick={onRemove}
+        aria-label={`Remove ${label.name}`}
+      >
+        <HugeiconsIcon icon={Cancel01Icon} className="size-3" aria-hidden="true" />
       </button>
     </motion.li>
   );
@@ -106,23 +134,24 @@ function LabelOption({
       animate={{ opacity: 1 }}
       exit={ROW_EXIT}
       transition={{ ...SPRING, delay }}
+      className={ROW}
       onPointerEnter={(event) => event.pointerType === "mouse" && !highlighted && onHighlight()}
       onClick={onToggle}
     >
-      {highlighted && <motion.span layoutId="hl" className="lp-hl" transition={SPRING} />}
-      <i style={{ background: label.color }} aria-hidden="true" />
-      <span className="lp-name">{label.name}</span>
+      {highlighted && <Highlight />}
+      <i className={DOT} style={{ background: label.color }} aria-hidden="true" />
+      <span className={NAME}>{label.name}</span>
 
       <AnimatePresence initial={false}>
         {applied && (
           <motion.span
-            className="lp-check"
+            className="grid text-(--lp-accent)"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={POP}
           >
-            <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
+            <HugeiconsIcon icon={CheckIcon} className="size-[15px]" aria-hidden="true" />
           </motion.span>
         )}
       </AnimatePresence>
@@ -156,7 +185,7 @@ function CreateOption({
       role="option"
       aria-selected={false}
       layout="position"
-      className="lp-create"
+      className={ROW}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={ROW_EXIT}
@@ -164,32 +193,30 @@ function CreateOption({
       onPointerEnter={(event) => event.pointerType === "mouse" && !highlighted && onHighlight()}
       onClick={onCreate}
     >
-      {highlighted && <motion.span layoutId="hl" className="lp-hl" transition={SPRING} />}
+      {highlighted && <Highlight />}
       <motion.i
+        className={DOT}
         style={{ background: color }}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ ...POP, delay: 0.08 }}
         aria-hidden="true"
       />
-      <span className="lp-name">
-        Create <b>“{name}”</b>
+      <span className={`${NAME} text-(--lp-muted)`}>
+        Create <b className="font-semibold text-(--lp-ink)">“{name}”</b>
       </span>
     </motion.li>
   );
 }
 
 export interface LabelPickerProps {
-  /** The labels there are, the ones applied, whether the menu is open, what's typed, and the highlighted row. */
   value?: LabelPickerValue;
   defaultValue?: LabelPickerValue;
   onValueChange?: (value: LabelPickerValue, details: ChangeDetails) => void;
-  /** Moves focus into the search when the menu opens, and back to the trigger when it closes. */
   focusOnOpen?: boolean;
   ref?: Ref<HTMLElement>;
 }
 
-/** A label picker: search, toggle labels on and off, or create a new one in the next colour. */
 export function LabelPicker({
   value,
   defaultValue = START,
@@ -257,17 +284,23 @@ export function LabelPicker({
   };
 
   return (
-    <section ref={ref} className="lp lp-layer not-prose" aria-label="Issue">
-      <span className="lp-key">ENG-218</span>
-      <h4 className="lp-title">Checkout total rounds tax twice on mobile</h4>
-      <p className="lp-desc">
+    <section
+      ref={ref}
+      className={`not-prose grid w-[min(100%,400px)] rounded-[22px] bg-(--lp-surface) p-[18px] text-(--lp-ink) ${TOKENS}`}
+      aria-label="Issue"
+    >
+      <span className="text-[12px] font-medium text-(--lp-muted)">ENG-218</span>
+      <h4 className="m-0 mt-1.5 text-[16px] leading-[1.35] font-[650] tracking-[-0.01em]">
+        Checkout total rounds tax twice on mobile
+      </h4>
+      <p className="m-0 mt-1.5 text-[13px] leading-normal text-(--lp-muted)">
         The tax line is rounded once per item and again on the subtotal, so totals drift by a cedi.
       </p>
 
-      <div className="lp-labels">
-        <span className="lp-caption">Labels</span>
+      <div className="mt-4 grid gap-2 border-t border-solid border-(--lp-line) pt-3.5">
+        <span className="text-[11.5px] font-semibold text-(--lp-quiet)">Labels</span>
 
-        <ul className="lp-chips">
+        <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0">
           <AnimatePresence initial={false} mode="popLayout">
             {chips.map((label) => (
               <LabelChip key={label.name} label={label} onRemove={() => toggle(label.name)} />
@@ -275,21 +308,24 @@ export function LabelPicker({
 
             <motion.li key="add" layout="position" transition={SPRING}>
               <Popover.Root open={picker.open} onOpenChange={onOpenChange} modal={false}>
-                <Popover.Trigger className="lp-add">
-                  <HugeiconsIcon icon={Add01Icon} aria-hidden="true" />
+                <Popover.Trigger
+                  className={`inline-flex h-7 cursor-pointer items-center gap-1 rounded-full border border-dashed border-[color-mix(in_oklab,var(--lp-ink)_22%,transparent)] bg-transparent pr-[11px] pl-2 text-[12.5px] font-medium text-(--lp-muted) hover:border-solid hover:text-(--lp-ink) data-popup-open:border-solid data-popup-open:text-(--lp-ink) ${FOCUS}`}
+                >
+                  <HugeiconsIcon icon={Add01Icon} className="size-3.5" aria-hidden="true" />
                   Label
                 </Popover.Trigger>
 
                 <Popover.Portal container={portal}>
-                  <Popover.Positioner className="lp-layer" side="bottom" align="start" sideOffset={8}>
+                  <Popover.Positioner className={TOKENS} side="bottom" align="start" sideOffset={8}>
                     <Popover.Popup
-                      className="lp-picker"
+                      className="w-[236px] origin-(--transform-origin) rounded-[14px] bg-(--lp-raised) p-[5px] text-(--lp-ink) shadow-(--lp-shadow) outline-none [transition:opacity_0.16s,transform_0.24s_cubic-bezier(0.2,0.9,0.3,1.2)] data-ending-style:opacity-0 data-ending-style:[transform:scale(0.94)_translateY(-4px)] data-starting-style:opacity-0 data-starting-style:[transform:scale(0.94)_translateY(-4px)]"
                       initialFocus={focusOnOpen ? inputRef : false}
                       finalFocus={focusOnOpen}
                     >
-                      <label className="lp-search">
-                        <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
+                      <label className="mb-1 flex h-[34px] items-center gap-[7px] border-b border-solid border-(--lp-line) px-[9px] text-(--lp-quiet)">
+                        <HugeiconsIcon icon={Search01Icon} className="size-3.5 flex-none" aria-hidden="true" />
                         <input
+                          className="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-(--lp-ink) outline-none placeholder:text-(--lp-quiet)"
                           ref={inputRef}
                           value={picker.query}
                           onChange={(event) =>
@@ -306,7 +342,7 @@ export function LabelPicker({
                       </label>
 
                       <LayoutGroup id={id}>
-                        <ul id={`${id}-list`} role="listbox" aria-label="Labels" className="lp-list">
+                        <ul id={`${id}-list`} role="listbox" aria-label="Labels" className="m-0 grid max-h-[230px] list-none overflow-auto p-0">
                           <AnimatePresence initial={false} mode="popLayout">
                             {found.map((label, index) => (
                               <LabelOption
@@ -347,8 +383,6 @@ export function LabelPicker({
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (LabelPickerValue & { ms: number })[] = [
   { ...START, ms: 1300 },

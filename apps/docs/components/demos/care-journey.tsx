@@ -5,7 +5,7 @@ import { Remold } from "@remold-ui/react/canvas";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { useEffect, type Ref } from "react";
-import { PAPER } from "./day-stage";
+import { DAY_CHIP, DAY_CHIP_COPY, DAY_FOOT, DAY_READOUT, DAY_SCENE, DAY_STAGE, PAPER } from "./day-stage";
 import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 
@@ -105,20 +105,18 @@ const BEATS: readonly { step: Step; ms: number }[] = [
 ];
 
 export interface CareJourneyProps {
-  /** The current step, 0 to 3. */
   value?: CareStep;
   defaultValue?: CareStep;
   onValueChange?: (step: CareStep) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A care journey from intake to follow-up, with the current step lifted and marked. */
 export function CareJourney({ value, defaultValue = 0, onValueChange, ref }: CareJourneyProps) {
   const [step, setStep] = useControllableState({ value, defaultValue, onValueChange });
   return (
-    <section ref={ref} className="day-stage cj not-prose" aria-label="Care journey">
+    <section ref={ref} className={`${DAY_STAGE} not-prose`} aria-label="Care journey">
       <Remold.Scene
-        className="day-scene"
+        className={DAY_SCENE}
         label="A calm care journey from intake to follow-up"
         objects={OBJECTS}
         layouts={LAYOUTS}
@@ -127,14 +125,14 @@ export function CareJourney({ value, defaultValue = 0, onValueChange, ref }: Car
         interact={{ drag: false }}
         spring={{ duration: 0.82, bounce: 0.2 }}
       />
-      <div className="day-chip cj-chip" role="status">
+      <div className={DAY_CHIP} role="status">
         <span className="bg-[#d8f3e7] text-[#23785a]">✚</span>
-        <span className="day-chip-copy">
+        <span className={DAY_CHIP_COPY}>
           <span>Care journey</span>
           <b>{MILESTONES[step]}</b>
         </span>
       </div>
-      <div className="day-foot">
+      <div className={DAY_FOOT}>
         <ToggleGroup
           className="flex min-w-0 gap-1 overflow-hidden"
           aria-label="Care step"
@@ -151,7 +149,7 @@ export function CareJourney({ value, defaultValue = 0, onValueChange, ref }: Car
             </Toggle>
           ))}
         </ToggleGroup>
-        <span className="day-readout">
+        <span className={DAY_READOUT}>
           <b>{step + 1}</b> of 4
         </span>
       </div>
@@ -159,9 +157,6 @@ export function CareJourney({ value, defaultValue = 0, onValueChange, ref }: Car
   );
 }
 
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
-
-/** Plays the journey through; once touched, it carries on from the chosen step on its own clock. */
 export function CareJourneyDemo({ playing }: { playing?: boolean } = {}) {
   const scene = useScene(BEATS, (index) => BEATS[index]!.step, playing);
   const { state: step, takeOver } = scene;

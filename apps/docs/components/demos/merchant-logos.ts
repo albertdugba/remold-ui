@@ -5,7 +5,6 @@
 
 export interface Brand {
   name: string;
-  /** The brand's own colour. */
   color: string;
   path: string;
 }

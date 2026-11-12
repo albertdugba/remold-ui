@@ -157,16 +157,13 @@ const KEY_HINT =
 const SEARCH_ICON = "size-4 flex-none text-zinc-500 dark:text-zinc-400";
 
 export interface CommandPaletteProps {
-  /** Whether it's open, what's typed, the scope it's in, and the last command's outcome. */
   value?: CommandPaletteValue;
   defaultValue?: CommandPaletteValue;
   onValueChange?: (value: CommandPaletteValue, details: ChangeDetails) => void;
-  /** Moves focus into the search as the palette opens, and back to the pill as it closes. */
   moveFocus?: boolean;
   ref?: Ref<HTMLDivElement>;
 }
 
-/** A command palette that grows out of a search pill: type to filter, step into a scope, run a command. */
 export function CommandPalette({
   value,
   defaultValue = CLOSED,
@@ -417,8 +414,6 @@ export function CommandPalette({
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (CommandPaletteValue & { ms: number })[] = [
   { ...CLOSED, ms: 1400 },

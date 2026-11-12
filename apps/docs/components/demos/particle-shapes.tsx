@@ -6,7 +6,6 @@ import { Remold } from "@remold-ui/react/canvas";
 import { motion } from "motion/react";
 import { useEffect, useId, useState } from "react";
 import { useScene } from "./use-scene";
-import "./particle-shapes.css";
 
 const PALETTE = {
   core: "#fff1d6",
@@ -60,7 +59,6 @@ const wing = (radii: [number, number], angle: number, root: number) =>
     .at([root, 0.26, 0])
     .tone("wing");
 
-/** A honeybee, nose to the right: striped abdomen, thorax, head, eyes, antennae, legs and wings. */
 const bee = shapes.compose([
   { share: 36, shape: shapes.ellipsoid({ radii: [0.55, 0.37, 0.37] }).at([-0.28, 0, 0]).stripes({ every: 0.15, tones: ["gold", "brown"] }) },
   { share: 3, shape: shapes.curve({ through: [[-0.8, 0, 0], [-0.9, -0.02, 0], [-1, -0.05, 0]] }).tone("brown") },
@@ -73,7 +71,6 @@ const bee = shapes.compose([
   { share: 10, shape: wing([0.34, 0.13], 125, 0.26) },
 ]);
 
-/** A butterfly wing reaching out to the right from the body, edged dark and glowing amber inside. */
 const butterflyWing = (radii: [number, number], angle: number, height: number) =>
   shapes
     .oval({ radii, edge: 0.3 })
@@ -84,7 +81,6 @@ const butterflyWing = (radii: [number, number], angle: number, height: number) =
     .at([0, height, 0])
     .tone(({ along }) => (along > 0.97 ? "wingEdge" : along > 0.55 ? "orange" : "amber"));
 
-/** A butterfly seen from above: four wings in a shallow V, a slender body, a head and two antennae. */
 const butterfly = shapes.compose([
   { share: 34, shape: butterflyWing([0.62, 0.36], 28, 0.1) },
   { share: 24, shape: butterflyWing([0.44, 0.32], -38, -0.06) },
@@ -99,10 +95,6 @@ const butterfly = shapes.compose([
   },
 ]);
 
-/**
- * The Grok mark, made solid: a ring broken at two corners, each half sweeping out into a needle tip
- * on one diagonal. Only the upper-right needle runs on past the ring, as a blade into the middle.
- */
 const GROK =
   "M32 77.8A33.4 33.4 0 0 0 83.3 39C85.5 32 82 20 95 7.3L39.8 62L72.7 40.6A24.8 24.8 0 0 1 41.9 73.7Z" +
   "M70.3 23.1A33.4 33.4 0 0 0 20.8 65.6C18.5 70 22 80 5.2 93L33.6 68A24.8 24.8 0 0 1 60.6 27.8Z";
@@ -124,7 +116,6 @@ const NAMES: Record<ParticleShape, string> = {
 
 const SLIDE = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
 
-/** A still field of faint stars behind the dots, the same every time. */
 function drawStars(context: CanvasRenderingContext2D, { width, height }: { width: number; height: number }) {
   const scatter = (seed: number) => {
     const value = Math.sin(seed * 12.9898) * 43758.5453;
@@ -139,17 +130,14 @@ function drawStars(context: CanvasRenderingContext2D, { width, height }: { width
 }
 
 export interface ParticleShapesProps {
-  /** The shape the dots form. */
   shape: ParticleShape;
-  /** Called when a shape is picked from the row of names. */
   onShapeChange?: (shape: ParticleShape) => void;
-  /** Stop the turning. It also holds still offscreen and with reduced motion. */
   paused?: boolean;
-  /** How many dots. Fewer are used on narrow screens. Default 2600. */
   count?: number;
 }
 
-/** Thousands of dots that turn in 3D and flow from one shape into the next. */
+const CANVAS = "col-start-1 row-start-1 block h-[clamp(340px,52vw,520px)] w-full in-[.hp-card.wide]:h-[clamp(480px,52vw,680px)]";
+
 export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2600 }: ParticleShapesProps) {
   const [dots, setDots] = useState(count);
   const id = useId();
@@ -158,8 +146,8 @@ export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2
   }, [count]);
 
   return (
-    <figure className="pts">
-      <Remold.Canvas draw={drawStars} className="pts-canvas" aria-hidden="true" />
+    <figure className="pts relative m-0 grid overflow-hidden rounded-[20px] bg-[radial-gradient(120%_90%_at_50%_40%,#15132a_0%,#07070b_70%)]">
+      <Remold.Canvas draw={drawStars} className={CANVAS} aria-hidden="true" />
       <Remold.Particles
         shape={SHAPES[shape]}
         count={dots}
@@ -167,7 +155,6 @@ export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2
         palette={PALETTE}
         pairing="flow"
         transition={{ type: "scatter", spread: 1.3, hold: 0.35, stagger: 0.5 }}
-        // A mark has a front, so it faces you and sways rather than turning to show its back.
         camera={
           shape === "grok"
             ? { spin: paused ? 0 : 0.035, tilt: 8, sway: 28, angle: 0 }
@@ -179,20 +166,23 @@ export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2
         padding={6}
         pointer={{ radius: 110, strength: 28 }}
         spring={{ duration: 1.8, bounce: 0.08 }}
-        className="pts-canvas"
+        className={CANVAS}
       />
-      <figcaption className="pts-caption">
+      <figcaption className="absolute inset-x-0 bottom-[18px] flex justify-center px-3">
         <ToggleGroup
-          className="pts-shapes"
+          className="inline-flex max-w-full overflow-x-auto rounded-full bg-[rgb(20_20_28/0.55)] p-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.07),inset_0_1px_0_rgb(255_255_255/0.08),0_10px_30px_-12px_rgb(0_0_0/0.6)] backdrop-blur-[14px] backdrop-saturate-[1.4] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label="Shape"
           value={[shape]}
           onValueChange={(values) => values[0] && onShapeChange?.(values[0] as ParticleShape)}
         >
           {PARTICLE_SHAPES.map((name) => (
-            <Toggle key={name} value={name} className="pts-shape">
-              {/* One highlight, shared by every name: it slides to the shape that's showing */}
-              {name === shape && <motion.span layoutId={`${id}-picked`} className="pts-picked" transition={SLIDE} />}
-              <span className="pts-name">{NAMES[name]}</span>
+            <Toggle
+              key={name}
+              value={name}
+              className="relative inline-flex h-[34px] flex-none cursor-pointer items-center rounded-full border-0 bg-transparent px-3.5 text-[13px] font-medium tracking-[-0.005em] whitespace-nowrap text-white/50 transition-colors duration-250 ease-out not-data-pressed:hover:text-white/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70 data-pressed:text-white motion-reduce:transition-none"
+            >
+              {name === shape && <motion.span layoutId={`${id}-picked`} className="absolute inset-0 rounded-[inherit] bg-white/11 shadow-[inset_0_1px_0_rgb(255_255_255/0.1)]" transition={SLIDE} />}
+              <span className="relative">{NAMES[name]}</span>
             </Toggle>
           ))}
         </ToggleGroup>
@@ -200,8 +190,6 @@ export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2
     </figure>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly { shape: ParticleShape; ms: number }[] = [
   { shape: "galaxy", ms: 6000 },
@@ -215,14 +203,13 @@ const BEATS: readonly { shape: ParticleShape; ms: number }[] = [
 const fromBeat = (step: number) => BEATS[step]!.shape;
 
 export interface ParticleShapesDemoProps {
-  /** On the home page, whether its card is playing. */
   playing?: boolean;
 }
 
 export function ParticleShapesDemo({ playing }: ParticleShapesDemoProps = {}) {
   const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing ?? true);
   return (
-    <div ref={ref} className="pts-stage not-prose">
+    <div ref={ref} className="not-prose grid w-full">
       <ParticleShapes shape={state} onShapeChange={takeOver} paused={playing === false} />
     </div>
   );

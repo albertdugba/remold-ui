@@ -29,7 +29,6 @@ const actions: readonly Action[] = [
 const MENU_WIDTH = 300;
 const MENU_HEIGHT = 76 + actions.length * 44;
 
-/** A Base UI popover menu whose visible shell expands from the trigger itself. */
 export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
   const [open, setOpen] = useState(false);
   const [hoveredAction, setHoveredAction] = useState<string | null>(null);

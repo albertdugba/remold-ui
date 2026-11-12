@@ -21,7 +21,6 @@ import {
 } from "react";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import "./send-money.css";
 
 const BALANCE = 12480;
 const CURRENCY = "£";
@@ -30,12 +29,9 @@ const TO = { name: "Kwame Owusu", handle: "Monzo · 07700 900182" };
 type Phase = "edit" | "sending" | "sent";
 
 export interface SendMoneyValue {
-  /** What's been typed, as typed: "1250", "0.5", "". */
   raw: string;
   phase: Phase;
-  /** Bumped each time a key is refused, to shake the amount. */
   refused: number;
-  /** Why the last key was refused, shown under the amount until the next key lands. */
   note?: "over" | "cents";
 }
 
@@ -88,16 +84,13 @@ function press(raw: string, key: Key): { raw: string } | { refused: "over" | "ce
 }
 
 export interface SendMoneyProps {
-  /** The amount as typed, where the send is, and the last refusal (its count shakes the amount). */
   value?: SendMoneyValue;
   defaultValue?: SendMoneyValue;
   onValueChange?: (value: SendMoneyValue, details: ChangeDetails) => void;
-  /** Shows the caret even when the field isn't focused, as when a script types the amount. */
   showCaret?: boolean;
   ref?: Ref<HTMLElement>;
 }
 
-/** A send-money keypad: the amount grows digit by digit, refuses what's over the balance, then sends. */
 const keepFocus = (event: PointerEvent) => {
   if (event.isPrimary && event.button === 0) event.preventDefault();
 };
@@ -116,19 +109,27 @@ function sendLabel(phase: SendMoneyValue["phase"], total: number) {
   return `Send ${CURRENCY}${money(total)}`;
 }
 
+const PALETTE = [
+  "[--sm-surface:#ffffff] [--sm-key:#f4f4f5] [--sm-key-press:#e4e4e7] [--sm-ink:#18181b] [--sm-on-ink:#fafafa] [--sm-muted:#71717a] [--sm-faint:#d4d4d8] [--sm-good:#059669] [--sm-bad:#dc2626]",
+  "dark:[--sm-surface:#232327] dark:[--sm-key:#2e2e33] dark:[--sm-key-press:#3a3a40] dark:[--sm-ink:#fafafa] dark:[--sm-on-ink:#18181b] dark:[--sm-muted:#a1a1aa] dark:[--sm-faint:#52525b] dark:[--sm-good:#34d399] dark:[--sm-bad:#f87171]",
+].join(" ");
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--sm-ink)";
+
 function Recipient() {
   return (
-    <header className="sm-to">
+    <header className="flex items-center gap-[11px] px-1 pt-1">
       <img
+        className="size-10 flex-none rounded-full bg-[#d1fae5]"
         src={`https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(TO.name)}&backgroundColor=d1fae5`}
         alt=""
         width={40}
         height={40}
         draggable={false}
       />
-      <span className="sm-to-copy">
-        <span className="sm-to-name">{TO.name}</span>
-        <span className="sm-to-handle">{TO.handle}</span>
+      <span className="grid min-w-0 gap-px">
+        <span className="text-[14.5px] font-semibold">{TO.name}</span>
+        <span className="truncate text-[12px] text-(--sm-muted)">{TO.handle}</span>
       </span>
     </header>
   );
@@ -138,7 +139,7 @@ function Hint({ transfer }: { transfer: SendMoneyValue }) {
   const hint = hintFor(transfer);
 
   return (
-    <div className="sm-hint">
+    <div className="mt-1 grid h-5 justify-items-center text-[13px] text-(--sm-muted) [&_[data-tone=bad]]:text-(--sm-bad) [&_[data-tone=good]]:font-medium [&_[data-tone=good]]:text-(--sm-good)">
       <AnimatePresence initial={false} mode="wait">
         <motion.span
           key={hint.key}
@@ -158,7 +159,7 @@ function Hint({ transfer }: { transfer: SendMoneyValue }) {
 function Keypad({ disabled, onKey }: { disabled: boolean; onKey: (key: Key) => void }) {
   return (
     <motion.div
-      className="sm-keys"
+      className="grid grid-cols-3 content-start gap-1.5"
       role="group"
       aria-label="Keypad"
       initial={{ opacity: 0 }}
@@ -169,7 +170,7 @@ function Keypad({ disabled, onKey }: { disabled: boolean; onKey: (key: Key) => v
         <button
           key={key}
           type="button"
-          className="sm-key"
+          className={`grid h-[50px] cursor-pointer touch-manipulation place-items-center rounded-2xl border-0 bg-transparent text-[23px] font-medium text-(--sm-ink) transition-[background-color] duration-150 [-webkit-tap-highlight-color:transparent] not-disabled:hover:bg-(--sm-key) not-disabled:active:bg-(--sm-key-press) disabled:cursor-default disabled:opacity-35 [&_svg]:size-[22px] [&_svg]:[stroke-width:1.75] ${FOCUS}`}
           disabled={disabled}
           onPointerDown={keepFocus}
           onClick={() => onKey(key)}
@@ -185,13 +186,13 @@ function Keypad({ disabled, onKey }: { disabled: boolean; onKey: (key: Key) => v
 function Sent() {
   return (
     <motion.div
-      className="sm-success"
+      className="grid place-items-center"
       initial={{ opacity: 0, scale: 0.72 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.92 }}
       transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
     >
-      <span className="sm-success-ring">
+      <span className="grid size-[84px] place-items-center rounded-full bg-[color-mix(in_oklab,var(--sm-good)_14%,transparent)] text-(--sm-good) [&_svg]:size-9">
         <HugeiconsIcon icon={CheckIcon} strokeWidth={2.25} aria-hidden="true" />
       </span>
     </motion.div>
@@ -212,13 +213,14 @@ function SendButton({
   return (
     <motion.button
       type="button"
-      className="sm-send"
+      data-phase={phase}
+      className={`relative mt-3.5 flex h-[52px] cursor-pointer touch-manipulation items-center justify-center gap-2.5 overflow-hidden rounded-full border-0 bg-(--sm-ink) text-[15px] font-semibold text-(--sm-on-ink) [transition:background-color_0.3s,opacity_0.2s] disabled:cursor-default data-[phase=edit]:disabled:opacity-30 data-[phase=sent]:bg-(--sm-good) data-[phase=sent]:text-white ${FOCUS}`}
       onPointerDown={keepFocus}
       onClick={onSend}
       disabled={phase === "sending" || (phase === "edit" && total === 0)}
       whileTap={{ scale: 0.97 }}
     >
-      <span className="sm-send-label">
+      <span className="inline-grid justify-items-center whitespace-nowrap tabular-nums [&>*]:[grid-area:1/1]">
         <AnimatePresence initial={false}>
           <motion.span
             key={phase}
@@ -231,7 +233,10 @@ function SendButton({
           </motion.span>
         </AnimatePresence>
       </span>
-      <span className="sm-send-icon" data-spinning={phase === "sending" || undefined}>
+      <span
+        data-spinning={phase === "sending" || undefined}
+        className="grid size-5 [&_svg]:size-5 [&_svg]:[stroke-width:2.25] data-spinning:[&_svg]:animate-spin motion-reduce:data-spinning:[&_svg]:[animation-duration:2.4s]"
+      >
         <Remold.Icon icon={<HugeiconsIcon icon={icon} />} strokeWidth={2} />
       </span>
     </motion.button>
@@ -296,12 +301,17 @@ export function SendMoney({
   };
 
   return (
-    <section ref={ref} className="sm not-prose" aria-label="Send money" data-phase={transfer.phase}>
+    <section
+      ref={ref}
+      data-phase={transfer.phase}
+      className={`group not-prose grid w-[min(100%,352px)] rounded-[30px] bg-(--sm-surface) p-[18px] font-sans text-(--sm-ink) ${PALETTE}`}
+      aria-label="Send money"
+    >
       <Recipient />
 
-      <div ref={fit} className="sm-fit">
+      <div ref={fit} className="relative mt-[26px] grid justify-items-center overflow-visible">
         <input
-          className="sm-type"
+          className="absolute inset-0 z-1 w-full cursor-text border-0 bg-transparent text-[16px] text-transparent caret-transparent outline-0 read-only:cursor-default"
           inputMode="decimal"
           aria-label={`Amount to send to ${TO.name}, in pounds`}
           value={transfer.raw}
@@ -312,20 +322,20 @@ export function SendMoney({
           onBlur={() => setTyping(false)}
         />
 
-        <div style={{ transform: `scale(${scale})` }} className="sm-scale">
+        <div style={{ transform: `scale(${scale})` }} className="origin-center">
           <div
             ref={amount}
-            className="sm-amount"
+            className="inline-flex h-[58px] items-baseline text-[48px] leading-[58px] font-[650] tracking-[-0.04em] whitespace-nowrap tabular-nums group-data-[phase=sent]:text-(--sm-good) group-data-[phase=sent]:transition-colors group-data-[phase=sent]:duration-300"
             aria-live="polite"
             aria-label={`${CURRENCY}${money(total)}`}
           >
-            <span className="sm-currency">{CURRENCY}</span>
+            <span className="mr-1 -translate-y-4 text-[22px] font-semibold tracking-[-0.01em] text-(--sm-muted)">{CURRENCY}</span>
             <AnimatePresence initial={false} mode="popLayout">
               {characters(transfer.raw).map(({ key, char, muted }) => (
                 <motion.span
                   key={key}
                   layout="position"
-                  className="sm-char"
+                  className="inline-block data-muted:text-(--sm-faint)"
                   data-muted={muted || undefined}
                   initial={{ opacity: 0, y: "38%", filter: "blur(2px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -336,14 +346,19 @@ export function SendMoney({
                 </motion.span>
               ))}
             </AnimatePresence>
-            {!busy && (typing || showCaret) && <span className="sm-caret" aria-hidden="true" />}
+            {!busy && (typing || showCaret) && (
+              <span
+                className="ml-1 inline-block h-[46px] w-[3px] animate-caret-blink self-center rounded-[2px] bg-(--sm-ink) motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+            )}
           </div>
         </div>
       </div>
 
       <Hint transfer={transfer} />
 
-      <div className="sm-stage">
+      <div className="mt-[18px] grid min-h-[218px] [&>*]:[grid-area:1/1]">
         <AnimatePresence initial={false}>
           {transfer.phase === "sent" ? (
             <Sent key="success" />
@@ -357,8 +372,6 @@ export function SendMoney({
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (SendMoneyValue & { ms: number })[] = [
   { raw: "", phase: "edit", refused: 0, ms: 1300 },

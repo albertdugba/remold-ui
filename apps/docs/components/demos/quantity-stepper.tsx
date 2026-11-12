@@ -5,17 +5,20 @@ import { Add01Icon, Delete02Icon, MinusSignIcon } from "@hugeicons/core-free-ico
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { Odometer } from "./odometer";
+import { FK_STAGE, FORM_KIT } from "./form-kit";
 import { useScene } from "./use-scene";
-import "./form-kit.css";
-import "./quantity-stepper.css";
-
-const STRETCH = { type: "spring" as const, duration: 0.45, bounce: 0.16 };
 
 export interface QuantityStepperProps {
   value: number;
   onValueChange: (value: number) => void;
   max?: number;
 }
+
+const STRETCH = { type: "spring" as const, duration: 0.45, bounce: 0.16 };
+
+const PILL = "h-9 flex-none rounded-full bg-(--fk-ink) text-(--fk-surface)";
+const STEP_BUTTON =
+  "grid size-[30px] cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-inherit transition-colors duration-150 not-data-disabled:hover:bg-[color-mix(in_oklab,var(--fk-surface)_14%,transparent)] data-disabled:cursor-default data-disabled:opacity-35 [&_svg]:size-4";
 
 export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepperProps) {
   return (
@@ -25,17 +28,17 @@ export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepp
           key="add"
           type="button"
           layoutId="stq-pill"
-          className="stq-add"
+          className={`${PILL} cursor-pointer border-0 pr-3.5 pl-[11px] text-[13.5px] font-semibold`}
           onClick={() => onValueChange(1)}
           transition={STRETCH}
         >
           <motion.span
-            className="stq-add-label"
+            className="inline-flex items-center gap-[5px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} />
+            <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} className="size-[15px]" />
             Add
           </motion.span>
         </motion.button>
@@ -46,11 +49,11 @@ export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepp
           min={0}
           max={max}
           onValueChange={(next) => onValueChange(next ?? 0)}
-          render={<motion.div layoutId="stq-pill" className="stq" transition={STRETCH} />}
+          render={<motion.div layoutId="stq-pill" className={PILL} transition={STRETCH} />}
         >
-          <NumberField.Group className="stq-group">
+          <NumberField.Group className="flex h-full items-center px-[3px]">
             <NumberField.Decrement
-              className="stq-btn"
+              className={STEP_BUTTON}
               aria-label={value === 1 ? "Remove from cart" : "Decrease quantity"}
               data-remove={value === 1 || undefined}
             >
@@ -59,11 +62,14 @@ export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepp
                 strokeWidth={2}
               />
             </NumberField.Decrement>
-            <span className="stq-count">
+            <span className="relative grid min-w-[22px] place-items-center text-[14.5px] font-[650]">
               <Odometer value={String(value)} />
-              <NumberField.Input className="stq-input" aria-label="Quantity" />
+              <NumberField.Input
+                className="absolute inset-0 w-full border-0 bg-transparent p-0 text-center text-transparent caret-transparent outline-none"
+                aria-label="Quantity"
+              />
             </span>
-            <NumberField.Increment className="stq-btn" aria-label="Increase quantity">
+            <NumberField.Increment className={STEP_BUTTON} aria-label="Increase quantity">
               <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} />
             </NumberField.Increment>
           </NumberField.Group>
@@ -75,7 +81,7 @@ export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepp
 
 function Phone() {
   return (
-    <svg viewBox="0 0 40 64" className="stq-phone">
+    <svg viewBox="0 0 40 64" className="h-[38px] w-6 drop-shadow-[0_2px_3px_rgb(0_0_0/0.18)]">
       <defs>
         <linearGradient id="stq-body" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#4a5d7a" />
@@ -115,21 +121,20 @@ const fromBeat = (step: number): State => {
   return state;
 };
 
-interface QuantityStepperDemoProps {
-  playing?: boolean;
-}
-
-export function QuantityStepperDemo({ playing }: QuantityStepperDemoProps = {}) {
+export function QuantityStepperDemo({ playing }: { playing?: boolean } = {}) {
   const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing);
   return (
-    <div ref={ref} className="fk-stage not-prose">
-      <div className="fk stq-product">
-        <span className="stq-thumb" aria-hidden="true">
+    <div ref={ref} className={FK_STAGE}>
+      <div className={`flex w-[min(100%,360px)] items-center gap-3 ${FORM_KIT}`}>
+        <span
+          className="grid size-[52px] flex-none place-items-center rounded-[13px] bg-[linear-gradient(160deg,#f4f5f7,#e6e8ec)] shadow-[inset_0_0_0_1px_rgb(0_0_0/0.04)] dark:bg-[linear-gradient(160deg,#2a2c31,#1f2024)]"
+          aria-hidden="true"
+        >
           <Phone />
         </span>
-        <span className="stq-copy">
-          <b>iPhone 17 Pro</b>
-          <span>256 GB · Deep Blue · £1,099</span>
+        <span className="grid min-w-0 flex-1 leading-[1.35]">
+          <b className="text-[14px] font-semibold">iPhone 17 Pro</b>
+          <span className="text-[13px] text-(--fk-muted)">256 GB · Deep Blue · £1,099</span>
         </span>
         <QuantityStepper value={state.quantity} onValueChange={(quantity) => takeOver({ quantity })} />
       </div>

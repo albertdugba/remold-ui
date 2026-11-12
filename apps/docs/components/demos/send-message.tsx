@@ -26,7 +26,6 @@ const REPLIES = ["Nice one 🙌", "On it, thanks!", "Perfect, merging now", "Hah
 export interface SendMessageValue {
   draft: string;
   messages: readonly ChatMessage[];
-  /** Your message they've read up to; their face sits under it. */
   read: string;
   typing: boolean;
 }
@@ -40,16 +39,13 @@ const face = (name: string) =>
   `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=fef3c7`;
 
 export interface SendMessageProps {
-  /** What's typed, the messages, the last one of yours they've read, and whether they're typing. */
   value?: SendMessageValue;
   defaultValue?: SendMessageValue;
   onValueChange?: (value: SendMessageValue, details: ChangeDetails) => void;
-  /** Called with each message you send, after it's added to the thread. */
   onSend?: (message: ChatMessage) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A chat thread with a composer: your message rises into place, and their read receipt and typing show under it. */
 export function SendMessage({ value, defaultValue = REST, onValueChange, onSend, ref }: SendMessageProps) {
   const [chat, setChat] = useControllableState({ value, defaultValue, onValueChange });
   const id = useId();
@@ -196,8 +192,6 @@ export function SendMessage({ value, defaultValue = REST, onValueChange, onSend,
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (SendMessageValue & { ms: number })[] = [
   { ...REST, ms: 1200 },

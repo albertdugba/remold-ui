@@ -29,7 +29,6 @@ import {
   type MentionsAction,
   type MentionsState,
 } from "./editor-mentions.model";
-import "./editor-mentions.css";
 
 const POP = { type: "spring" as const, duration: 0.4, bounce: 0.3 };
 const FLY = { type: "spring" as const, duration: 0.55, bounce: 0.2 };
@@ -45,6 +44,20 @@ const SWAP = {
 };
 
 const firstName = (personId: string) => personById(personId).name.split(" ")[0]!;
+
+const TOKENS = [
+  "[--em-surface:#ffffff] [--em-raised:#ffffff] [--em-field:#f6f6f7] [--em-line:rgb(24_24_27/0.08)] [--em-ink:#18181b] [--em-on-ink:#fafafa]",
+  "[--em-muted:#71717a] [--em-quiet:#a1a1aa] [--em-accent:#4f46e5] [--em-accent-soft:#eef2ff] [--em-chip:rgb(79_70_229/0.09)] [--em-chip-ink:#3f37c9]",
+  "[--em-query:rgb(79_70_229/0.08)] [--em-lift:0_1px_2px_rgb(24_24_27/0.04),0_8px_24px_-10px_rgb(24_24_27/0.18)] [--em-online:#22c55e]",
+  "dark:[--em-surface:#1f1f23] dark:[--em-raised:#1c1c1f] dark:[--em-field:#26262b] dark:[--em-line:rgb(255_255_255/0.08)] dark:[--em-ink:#fafafa] dark:[--em-on-ink:#18181b]",
+  "dark:[--em-muted:#a1a1aa] dark:[--em-quiet:#71717a] dark:[--em-accent:#818cf8] dark:[--em-accent-soft:rgb(129_140_248/0.16)] dark:[--em-chip:rgb(129_140_248/0.16)] dark:[--em-chip-ink:#c7d2fe]",
+  "dark:[--em-query:rgb(129_140_248/0.14)] dark:[--em-lift:0_1px_2px_rgb(0_0_0/0.3),0_10px_28px_-10px_rgb(0_0_0/0.6)]",
+  "font-sans",
+].join(" ");
+
+const NOTIFY_LINE = "inline-flex min-w-0 items-center gap-[7px] whitespace-nowrap";
+const KEY = "inline-grid place-items-center px-[3px] font-[inherit] text-[10.5px]";
+const TIP_KEY = `${KEY} h-4 min-w-4 rounded-[4px] bg-white/18`;
 
 function useTypedInput(editor: RefObject<HTMLDivElement | null>, dispatch: (action: MentionsAction) => void) {
   const latest = useRef(dispatch);
@@ -74,19 +87,20 @@ function useTypedInput(editor: RefObject<HTMLDivElement | null>, dispatch: (acti
 
 function Thread({ posts }: { posts: MentionPost[] }) {
   return (
-    <ol className="em-thread">
+    <ol className="m-0 flex h-[172px] list-none flex-col justify-end gap-3 overflow-hidden px-0.5 py-3.5 [mask-image:linear-gradient(to_bottom,transparent,#000_36px)]">
       <AnimatePresence initial={false} mode="popLayout">
         {posts.map((post) => (
           <motion.li
             key={post.id}
             layout="position"
-            className="em-post"
+            className="flex origin-bottom-left gap-2.5"
             initial={{ opacity: 0, y: 40, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
             transition={RISE}
           >
             <img
+              className="size-7 flex-none rounded-full"
               src={avatarUrl(post.who === "You" ? "Yaw Darko" : post.who)}
               alt=""
               width={28}
@@ -94,11 +108,11 @@ function Thread({ posts }: { posts: MentionPost[] }) {
               draggable={false}
             />
             <div>
-              <p className="em-post-meta">
+              <p className="m-0 flex items-baseline gap-2 text-[13px]">
                 <b>{post.who}</b>
-                <time>{post.when}</time>
+                <time className="text-[11.5px] text-(--em-quiet)">{post.when}</time>
               </p>
-              <p className="em-post-text">
+              <p className="m-0 mt-0.5 text-[13.5px] leading-[1.6] text-(--em-ink)">
                 <Segments segs={post.segs} />
               </p>
             </div>
@@ -111,15 +125,16 @@ function Thread({ posts }: { posts: MentionPost[] }) {
 
 function NotifyLine({ notified }: { notified: string[] }) {
   return (
-    <span className="em-notify">
+    <span className="inline-grid min-w-0 text-[12px] text-(--em-muted)">
       <AnimatePresence initial={false} mode="popLayout">
         {notified.length ? (
-          <motion.span key="who" className="em-notify-who" {...SWAP}>
-            <span className="em-notify-faces">
+          <motion.span key="who" className={NOTIFY_LINE} {...SWAP}>
+            <span className="inline-flex flex-none">
               <AnimatePresence initial={false}>
                 {notified.map((personId) => (
                   <motion.img
                     key={personId}
+                    className="-mr-[5px] size-[18px] flex-none rounded-full shadow-[0_0_0_2px_var(--em-surface)] last:mr-0"
                     src={avatarUrl(personById(personId).name)}
                     alt=""
                     width={18}
@@ -134,13 +149,13 @@ function NotifyLine({ notified }: { notified: string[] }) {
                 ))}
               </AnimatePresence>
             </span>
-            <span className="em-notify-names">
+            <span className="min-w-0 truncate">
               {notificationLabel(notified.map(firstName))} will be notified
             </span>
           </motion.span>
         ) : (
-          <motion.span key="hint" className="em-notify-hint" {...SWAP}>
-            <HugeiconsIcon icon={AtIcon} aria-hidden="true" />
+          <motion.span key="hint" className={NOTIFY_LINE} {...SWAP}>
+            <HugeiconsIcon icon={AtIcon} className="size-[13px]" aria-hidden="true" />
             Mention someone to notify them
           </motion.span>
         )}
@@ -153,19 +168,19 @@ function SendButton({ disabled, onSend }: { disabled: boolean; onSend: () => voi
   return (
     <Tooltip.Root>
       <Tooltip.Trigger
-        className="em-send"
+        className="grid size-[30px] flex-none cursor-pointer place-items-center rounded-full border-0 bg-(--em-ink) text-white transition-opacity duration-200 focus-visible:outline-none disabled:cursor-default disabled:opacity-20"
         onClick={onSend}
         disabled={disabled}
         aria-label="Send comment"
         render={<motion.button type="button" whileTap={{ scale: 0.9 }} />}
       >
-        <HugeiconsIcon icon={ArrowUp01Icon} aria-hidden="true" />
+        <HugeiconsIcon icon={ArrowUp01Icon} className="size-4" aria-hidden="true" />
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Positioner className="em-layer" sideOffset={8}>
-          <Tooltip.Popup className="em-tip">
-            Send <kbd>⌘</kbd>
-            <kbd>↵</kbd>
+        <Tooltip.Positioner className={TOKENS} sideOffset={8}>
+          <Tooltip.Popup className="inline-flex origin-(--transform-origin) items-center gap-1 rounded-[7px] bg-(--em-ink) px-2 py-[5px] text-[12px] font-medium text-(--em-on-ink) [transition:opacity_0.14s,transform_0.18s] data-ending-style:[transform:scale(0.9)] data-ending-style:opacity-0 data-starting-style:[transform:scale(0.9)] data-starting-style:opacity-0">
+            Send <kbd className={TIP_KEY}>⌘</kbd>
+            <kbd className={TIP_KEY}>↵</kbd>
           </Tooltip.Popup>
         </Tooltip.Positioner>
       </Tooltip.Portal>
@@ -202,17 +217,21 @@ function PeoplePicker({
     <Popover.Root open={open} onOpenChange={(next) => !next && open && onDismiss()} modal={false}>
       <Popover.Portal>
         <Popover.Positioner
-          className="em-layer"
+          className={TOKENS}
           anchor={anchor}
           side="bottom"
           align="start"
           sideOffset={8}
           collisionPadding={12}
         >
-          <Popover.Popup className="em-picker" initialFocus={false} finalFocus={false}>
-            <p className="em-picker-head">{query ? `People matching “${query}”` : "Mention someone"}</p>
+          <Popover.Popup
+            className="w-[248px] origin-(--transform-origin) rounded-2xl border border-solid border-black/6 bg-(--em-raised) p-1 text-(--em-ink) shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] outline-none [transition:opacity_0.16s,transform_0.24s_cubic-bezier(0.2,0.9,0.3,1.25)] data-ending-style:[transform:scale(0.9)_translateY(-6px)] data-ending-style:opacity-0 data-starting-style:[transform:scale(0.9)_translateY(-6px)] data-starting-style:opacity-0 dark:border-white/7 dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)]"
+            initialFocus={false}
+            finalFocus={false}
+          >
+            <p className="m-0 px-2.5 pt-[7px] pb-[5px] text-[11px] font-medium text-(--em-quiet)">{query ? `People matching “${query}”` : "Mention someone"}</p>
 
-            <ul id={listId} role="listbox" aria-label="People" className="em-people">
+            <ul id={listId} role="listbox" aria-label="People" className="m-0 grid list-none p-0">
               <AnimatePresence initial={false} mode="popLayout">
                 {people.map((person, index) => (
                   <motion.li
@@ -220,6 +239,7 @@ function PeoplePicker({
                     id={`${listId}-${person.id}`}
                     role="option"
                     aria-selected={index === active}
+                    className="relative flex h-11 cursor-pointer items-center gap-2.5 rounded-xl px-2 [&>*:not([data-hl])]:relative"
                     layout="position"
                     initial={{ opacity: 0, x: -6 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -234,13 +254,15 @@ function PeoplePicker({
                     {index === active && (
                       <motion.span
                         layoutId={`${layoutPrefix}-highlight`}
-                        className="em-highlight"
+                        data-hl=""
+                        className="absolute inset-0 rounded-[inherit] bg-[#f5f5f1] dark:bg-[#2a2a2f]"
                         transition={HIGHLIGHT}
                       />
                     )}
 
-                    <span className="em-face">
+                    <span className="grid flex-none">
                       <motion.img
+                        className="size-7 rounded-full"
                         layoutId={`${layoutPrefix}-${person.id}-${avatarLayoutKey}`}
                         src={avatarUrl(person.name)}
                         alt=""
@@ -249,22 +271,33 @@ function PeoplePicker({
                         draggable={false}
                         transition={FLY}
                       />
-                      {person.online && <i aria-label="Online" />}
+                      {person.online && (
+                        <i
+                          className="absolute -right-px -bottom-px size-2 rounded-full bg-(--em-online) shadow-[0_0_0_2px_var(--em-raised)]"
+                          aria-label="Online"
+                        />
+                      )}
                     </span>
 
-                    <span className="em-person">
-                      <span className="em-person-name">
+                    <span className="grid min-w-0 flex-1 leading-[1.25]">
+                      <span className="text-[13px] font-medium [&_mark]:bg-transparent [&_mark]:font-semibold [&_mark]:text-(--em-chip-ink)">
                         <Matched name={person.name} query={query} />
                       </span>
-                      <span className="em-person-role">{person.role}</span>
+                      <span className="text-[11.5px] text-(--em-muted)">{person.role}</span>
                     </span>
 
-                    {index === active && <kbd className="em-enter">↵</kbd>}
+                    {index === active && (
+                      <kbd
+                        className={`${KEY} h-[18px] min-w-[18px] rounded-[5px] bg-transparent text-(--em-quiet) shadow-[inset_0_0_0_1px_var(--em-line),0_1px_0_var(--em-line)]`}
+                      >
+                        ↵
+                      </kbd>
+                    )}
                   </motion.li>
                 ))}
               </AnimatePresence>
 
-              {!people.length && <li className="em-none">No one called “{query}”</li>}
+              {!people.length && <li className="cursor-default px-2 py-2.5 text-[12.5px] text-(--em-muted)">No one called “{query}”</li>}
             </ul>
           </Popover.Popup>
         </Popover.Positioner>
@@ -280,7 +313,6 @@ export interface EditorMentionsProps {
   onInteraction?: () => void;
 }
 
-/** A keyboard-accessible comment editor with @mentions. Controlled or self-contained. */
 export function EditorMentions({
   state: controlledState,
   defaultState = initialMentionsState,
@@ -352,23 +384,29 @@ export function EditorMentions({
   return (
     <Tooltip.Provider delay={400}>
       <LayoutGroup id={id}>
-        <section className="em em-layer not-prose" aria-label="Comments">
-          <header className="em-head">
-            <span className="em-doc">
-              <HugeiconsIcon icon={FileAttachmentIcon} aria-hidden="true" />
+        <section
+          className={`not-prose grid w-[min(100%,420px)] rounded-[22px] bg-(--em-surface) p-4 text-(--em-ink) ${TOKENS}`}
+          aria-label="Comments"
+        >
+          <header className="flex items-center gap-2.5 border-b border-solid border-(--em-line) pb-3">
+            <span className="grid size-8 place-items-center rounded-[9px] bg-(--em-accent-soft) text-(--em-accent)">
+              <HugeiconsIcon icon={FileAttachmentIcon} className="size-4" aria-hidden="true" />
             </span>
-            <span className="em-head-copy">
+            <span className="grid text-[14px] leading-[1.25]">
               <b>Pricing page v3</b>
-              <span>Comments</span>
+              <span className="text-[12px] text-(--em-muted)">Comments</span>
             </span>
           </header>
 
           <Thread posts={state.posts} />
 
-          <div className="em-composer" data-focused={focused || undefined}>
+          <div
+            data-focused={focused || undefined}
+            className="grid rounded-2xl bg-(--em-field) shadow-[inset_0_0_0_1px_transparent] transition-[box-shadow,background-color] duration-250 data-focused:bg-(--em-surface) data-focused:shadow-[inset_0_0_0_1px_var(--em-line),var(--em-lift)]"
+          >
             <div
               ref={editor}
-              className="em-editor"
+              className="relative min-h-[52px] cursor-text px-3.5 pt-3 pb-1 text-[14px] leading-[1.75] break-words whitespace-pre-wrap caret-transparent outline-none focus-visible:outline-none"
               role="combobox"
               contentEditable
               suppressContentEditableWarning
@@ -386,7 +424,7 @@ export function EditorMentions({
               onBlur={() => setFocused(false)}
             >
               {!state.segs.length && !pickerOpen && (
-                <span className="em-placeholder">Reply, or type @ to mention someone</span>
+                <span className="pointer-events-none absolute text-(--em-quiet)">Reply, or type @ to mention someone</span>
               )}
 
               <Segments segs={state.segs} id={id} interactive />
@@ -394,7 +432,7 @@ export function EditorMentions({
               {pickerOpen && (
                 <motion.span
                   ref={token}
-                  className="em-token"
+                  className="-mx-0.5 inline-block rounded-md bg-(--em-query) px-[3px] leading-normal font-medium text-(--em-chip-ink)"
                   initial={{ opacity: 0, y: 3 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.12 }}
@@ -403,10 +441,15 @@ export function EditorMentions({
                 </motion.span>
               )}
 
-              {focused && <span className="em-caret" aria-hidden="true" />}
+              {focused && (
+                <span
+                  className="ml-px inline-block h-[1.1em] w-[1.5px] animate-caret-blink rounded-[1px] bg-(--em-ink) align-[-0.18em] motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
+              )}
             </div>
 
-            <div className="em-foot">
+            <div className="flex items-center justify-between gap-2.5 pt-1 pr-2 pb-2 pl-3.5">
               <NotifyLine notified={notified} />
               <SendButton disabled={!state.segs.length} onSend={() => dispatch({ type: "send" })} />
             </div>
@@ -482,12 +525,13 @@ function Chip({ id, layoutId }: { id: string; layoutId?: string }) {
   const person = personById(id);
   return (
     <motion.span
-      className="em-chip"
+      className="mx-px inline-flex h-[22px] origin-[12px_50%] items-center gap-[5px] rounded-full bg-(--em-chip) pr-[7px] pl-0.5 align-[-5px] text-[13px] leading-none font-semibold text-(--em-chip-ink)"
       initial={layoutId ? { opacity: 0, scale: 0.7, filter: "blur(4px)" } : false}
       animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
       transition={POP}
     >
       <motion.img
+        className="size-[18px] rounded-full bg-(--em-surface)"
         layoutId={layoutId}
         src={avatarUrl(person.name)}
         alt=""

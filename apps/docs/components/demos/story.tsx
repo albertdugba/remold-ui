@@ -1,7 +1,7 @@
 "use client";
 import { Remold } from "@remold-ui/react/canvas";
 import { useState } from "react";
-import { Frame } from "./frame";
+import { Frame, DEMO_BUTTON } from "./frame";
 import { SCENE } from "./scene";
 
 const CHAPTERS: Remold.Story.Chapter[] = [
@@ -47,7 +47,7 @@ export function StoryDemo() {
         <div className="rm-scene-foot">
           <button
             type="button"
-            className="rm-button"
+            className={DEMO_BUTTON}
             disabled={chapterIndex === 0}
             onClick={() => setChapter(CHAPTERS[chapterIndex - 1]!.id)}
           >
@@ -58,7 +58,7 @@ export function StoryDemo() {
           </p>
           <button
             type="button"
-            className="rm-button"
+            className={DEMO_BUTTON}
             disabled={chapterIndex === CHAPTERS.length - 1}
             onClick={() => setChapter(CHAPTERS[chapterIndex + 1]!.id)}
           >

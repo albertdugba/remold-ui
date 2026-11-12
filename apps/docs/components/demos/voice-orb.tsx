@@ -6,7 +6,6 @@ import type { PainterFrame } from "@remold-ui/canvas";
 import { Remold, useAutoplay } from "@remold-ui/react/canvas";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
-import "./voice-orb.css";
 
 export type OrbState = "idle" | "listening" | "thinking" | "speaking";
 export type OrbTheme = "aurora" | "ember" | "mono";
@@ -337,12 +336,15 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
   };
 
   return (
-    <div ref={auto.ref} className="vo not-prose">
-      <div className="vo-languages">
-        <span>{source.name}</span>
+    <div
+      ref={auto.ref}
+      className="not-prose grid w-[min(100%,400px)] justify-items-center gap-[22px] py-2 font-sans text-(--vo-ink) [--vo-faint:#a1a1aa] [--vo-fill:rgb(24_24_27/0.05)] [--vo-ink:#18181b] [--vo-muted:#71717a] [--vo-ring:rgb(24_24_27/0.1)] dark:[--vo-faint:#71717a] dark:[--vo-fill:rgb(255_255_255/0.07)] dark:[--vo-ink:#fafafa] dark:[--vo-muted:#a1a1aa] dark:[--vo-ring:rgb(255_255_255/0.12)]"
+    >
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 text-[14px] font-medium">
+        <span className="text-right">{source.name}</span>
         <button
           type="button"
-          className="vo-swap"
+          className="grid size-[30px] cursor-pointer place-items-center rounded-full border-0 bg-(--vo-fill) text-inherit transition-[background-color] duration-150 hover:bg-(--vo-ring) [&_svg]:size-3.5"
           onClick={swap}
           aria-label={`Translate from ${target.name} to ${source.name} instead`}
         >
@@ -353,7 +355,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
 
       <button
         type="button"
-        className="vo-orb"
+        className="block cursor-pointer rounded-full border-0 bg-transparent p-0 transition-[scale] duration-200 ease-[cubic-bezier(0.2,0,0,1)] [-webkit-tap-highlight-color:transparent] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--vo-ring) active:scale-[0.97]"
         onClick={tap}
         aria-label={
           speech.listening
@@ -365,19 +367,21 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
       >
         <VoiceOrb state={ORB[line.phase]} level={line.phase === "listening" ? 0.04 : undefined} size={220} />
       </button>
-      <p className="vo-status" aria-live="polite">
+      <p className="m-0 -mt-3.5 text-[13px] text-(--vo-faint)" aria-live="polite">
         {STATUS[line.phase]}
       </p>
 
-      <div className="vo-captions">
-        <p className="vo-heard" lang={source.code}>
+      <div className="grid min-h-14 w-full gap-1.5 text-center">
+        <p className="m-0 text-[14px] text-(--vo-muted)" lang={source.code}>
           {line.heard || " "}
         </p>
-        <Remold.Text className="vo-said" lang={target.code}>
+        <Remold.Text className="text-[20px] font-medium tracking-[-0.01em]" lang={target.code}>
           {line.said || " "}
         </Remold.Text>
       </div>
-      {note && <p className="vo-note">{note}</p>}
+      {note && (
+        <p className="m-0 -mt-2 max-w-[300px] text-center text-[12px] leading-normal text-(--vo-faint)">{note}</p>
+      )}
     </div>
   );
 }

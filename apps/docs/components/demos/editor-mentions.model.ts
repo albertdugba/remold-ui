@@ -16,7 +16,6 @@ export interface MentionPost {
 
 export interface MentionsState {
   segs: MentionSegment[];
-  /** Text typed after `@`; null when the picker is closed. */
   query: string | null;
   active: number;
   posts: MentionPost[];
@@ -166,7 +165,6 @@ export function reduceMentions(state: MentionsState, action: MentionsAction): Me
   }
 }
 
-/** A concise caption for the people who will be notified. */
 export function notificationLabel(names: readonly string[]): string {
   if (names.length <= 3) return new Intl.ListFormat("en-GB", { type: "conjunction" }).format(names);
   return `${names.slice(0, 2).join(", ")} and ${names.length - 2} others`;

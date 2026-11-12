@@ -134,14 +134,12 @@ export interface PodcastPlayerProps {
   episodes?: Episode[];
   source?: string;
 
-  /** A line or badge under the mini player crediting where the episodes come from. */
   credit?: ReactNode;
 
   scene?: number;
 
   height?: number | string;
 
-  /** A tighter composition for small embedded previews, without changing the full player. */
   compact?: boolean;
 }
 

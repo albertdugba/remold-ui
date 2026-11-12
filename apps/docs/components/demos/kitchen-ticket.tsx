@@ -7,7 +7,6 @@ import { useRef, type Ref } from "react";
 import { Picker } from "./picker";
 import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import "./kitchen-ticket.css";
 
 const STATUSES = [
   { id: "received", label: "Received", fill: 0, color: "var(--kt-quiet)" },
@@ -22,12 +21,21 @@ const of = (id: Status) => STATUSES.find((status) => status.id === id)!;
 
 const SPRING = { type: "spring" as const, duration: 0.4, bounce: 0.15 };
 
+const TOKENS = [
+  "[--kt-fill:#f4f4f5] [--kt-line:rgb(24_24_27/0.08)] [--kt-ink:#18181b] [--kt-muted:#71717a] [--kt-quiet:#a1a1aa]",
+  "[--kt-preparing:#e07a2f] [--kt-ready:#10b981] [--kt-picked:#6366f1]",
+  "dark:[--kt-fill:#2e2e33] dark:[--kt-line:rgb(255_255_255/0.08)] dark:[--kt-ink:#fafafa] dark:[--kt-muted:#a1a1aa] dark:[--kt-quiet:#71717a]",
+  "dark:[--kt-preparing:#fb923c] dark:[--kt-ready:#34d399] dark:[--kt-picked:#818cf8]",
+].join(" ");
+const LAYER_TOKENS = `${TOKENS} [--kt-surface:#ffffff] dark:[--kt-surface:#2a2a2f]`;
+const CARD_TOKENS = `${TOKENS} [--kt-surface:#ffffff] dark:[--kt-surface:#232327]`;
+
 function StatusIcon({ status, size = 16 }: { status: Status; size?: number }) {
   const look = of(status);
   const closed = status === "picked" || status === "canceled";
   return (
     <svg
-      className="kt-glyph"
+      className="flex-none overflow-visible"
       viewBox="0 0 24 24"
       width={size}
       height={size}
@@ -58,7 +66,7 @@ function StatusIcon({ status, size = 16 }: { status: Status; size?: number }) {
         transition={SPRING}
       />
       <motion.g
-        className="kt-mark"
+        className="text-(--kt-surface)"
         initial={false}
         animate={{ opacity: closed ? 1 : 0, scale: closed ? 1 : 0.6 }}
         style={{ transformOrigin: "12px 12px" }}
@@ -83,9 +91,15 @@ type Service = (typeof SERVICE)[number]["value"];
 
 function ServiceIcon({ service }: { service: Service }) {
   return service === "here" ? (
-    <span className="kt-plate" aria-hidden="true" />
+    <span
+      className="relative box-border size-3.5 flex-none rounded-full border-[1.5px] border-solid border-current after:absolute after:inset-0.5 after:rounded-full after:border after:border-solid after:border-current after:opacity-70 after:content-['']"
+      aria-hidden="true"
+    />
   ) : (
-    <span className="kt-bag" aria-hidden="true" />
+    <span
+      className="relative mt-[3px] box-border h-2.5 w-3 flex-none rounded-[2px_2px_3px_3px] border-[1.5px] border-solid border-current before:absolute before:-top-[5px] before:left-0.5 before:h-1 before:w-[5px] before:rounded-t-[4px] before:border-[1.5px] before:border-b-0 before:border-solid before:border-current before:content-['']"
+      aria-hidden="true"
+    />
   );
 }
 
@@ -101,10 +115,8 @@ export interface TicketEntry {
 
 export interface KitchenTicketValue {
   status: Status;
-  /** Whether the status menu is open. */
   open: boolean;
   service: Service;
-  /** The latest updates on the line, oldest first. */
   log: readonly TicketEntry[];
 }
 
@@ -123,12 +135,10 @@ export interface KitchenTicketProps {
   value?: KitchenTicketValue;
   defaultValue?: KitchenTicketValue;
   onValueChange?: (value: KitchenTicketValue) => void;
-  /** An option to show highlighted in the open status menu, as a guided walkthrough does. */
   highlighted?: Status | null;
   ref?: Ref<HTMLElement>;
 }
 
-/** A kitchen ticket whose status and service you change from its menus, logging each move. */
 export function KitchenTicket({
   value,
   defaultValue = { status: "received", open: false, service: "here", log: START },
@@ -153,11 +163,15 @@ export function KitchenTicket({
     });
 
   return (
-    <section ref={ref} className="kt not-prose" aria-label="Kitchen ticket">
-      <header className="kt-head">
-        <span className="kt-key">#148</span>
+    <section
+      ref={ref}
+      className={`not-prose grid w-[min(100%,380px)] rounded-3xl bg-(--kt-surface) px-[18px] pt-[18px] pb-3.5 font-sans text-(--kt-ink) ${CARD_TOKENS}`}
+      aria-label="Kitchen ticket"
+    >
+      <header className="flex items-center justify-between">
+        <span className="text-[12px] font-medium text-(--kt-muted) tabular-nums">#148</span>
         <img
-          className="kt-guest"
+          className="size-6 rounded-full bg-[#ffedd5]"
           src="https://api.dicebear.com/9.x/notionists/svg?seed=Ama%20Mensah&backgroundColor=ffedd5"
           alt="Ordered by Ama Mensah"
           width={24}
@@ -165,9 +179,9 @@ export function KitchenTicket({
           draggable={false}
         />
       </header>
-      <h4 className="kt-title">Brisket sandwich, extra pickles and a cold lime soda</h4>
+      <h4 className="m-0 mt-2 text-[16px] leading-[1.35] font-semibold tracking-[-0.01em]">Brisket sandwich, extra pickles and a cold lime soda</h4>
 
-      <div className="kt-props">
+      <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
         <Picker
           label="Ticket"
           heading="Update the ticket…"
@@ -178,7 +192,7 @@ export function KitchenTicket({
           open={ticket.open}
           onOpenChange={(open) => setTicket((current) => ({ ...current, open }))}
           preview={ticket.open ? highlighted : null}
-          layerClassName="kt-tokens"
+          layerClassName={LAYER_TOKENS}
         />
         <Picker
           label="Service"
@@ -187,15 +201,18 @@ export function KitchenTicket({
           value={ticket.service}
           onValueChange={(service) => setTicket((current) => ({ ...current, service }))}
           icon={(service) => <ServiceIcon service={service} />}
-          layerClassName="kt-tokens"
+          layerClassName={LAYER_TOKENS}
         />
-        <span className="kt-chip">
-          <i className="kt-dot" aria-hidden="true" />
+        <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-solid border-(--kt-line) bg-(--kt-surface) pr-2.5 pl-2 text-[12.5px] font-medium text-(--kt-muted)">
+          <i className="size-2 rounded-full bg-(--kt-preparing)" aria-hidden="true" />
           Table 4
         </span>
       </div>
 
-      <ol className="kt-log" aria-label="The line">
+      <ol
+        className="m-0 mt-4 grid list-none border-t border-solid border-(--kt-line) px-0 pt-2.5 pb-0 [&>li]:overflow-hidden"
+        aria-label="The line"
+      >
         <AnimatePresence initial={false}>
           {ticket.log.map((entry) => (
             <motion.li
@@ -206,13 +223,13 @@ export function KitchenTicket({
               exit={{ opacity: 0, height: 0 }}
               transition={SPRING}
             >
-              <span className="kt-log-row">
+              <span className="flex items-center gap-2 py-[5px] text-[12.5px] text-(--kt-muted)">
                 <StatusIcon status={entry.to} size={14} />
-                <span>
-                  <b>{entry.author}</b>
+                <span className="min-w-0 flex-1">
+                  <b className="font-medium text-(--kt-ink)">{entry.author}</b>
                   {` · ${entry.line}`}
                 </span>
-                <time>{entry.ago}</time>
+                <time className="text-[11.5px] text-(--kt-quiet)">{entry.ago}</time>
               </span>
             </motion.li>
           ))}
@@ -221,8 +238,6 @@ export function KitchenTicket({
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (SceneState & { ms: number })[] = [
   { status: "received", open: false, hover: 0, log: START, service: "here", ms: 1300 },

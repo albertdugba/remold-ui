@@ -16,7 +16,6 @@ import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, ty
 import { useInPreview } from "./portal-container";
 import { useMeasuredSize } from "./use-measured-size";
 import { useScript } from "./use-script";
-import "./currency-converter.css";
 
 const RATES_URL = "https://open.er-api.com/v6/latest/USD";
 
@@ -83,10 +82,22 @@ const CARD_PADDING = 12;
 const SENDING_FOR = 1100;
 const SENT_FOR = 2400;
 
+const PALETTE = [
+  "[--fx-surface:#f3f3f5] [--fx-well:#ffffff] [--fx-line:rgb(24_24_27/0.08)] [--fx-ink:#18181b] [--fx-muted:#71717a] [--fx-quiet:#a1a1aa]",
+  "dark:[--fx-surface:#1c1c1f] dark:[--fx-well:#2c2c31] dark:[--fx-line:rgb(255_255_255/0.1)] dark:[--fx-ink:#fafafa] dark:[--fx-muted:#a1a1aa] dark:[--fx-quiet:#71717a]",
+].join(" ");
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--fx-ink)";
+const LABEL = "w-fit justify-self-start text-[14px] font-medium text-(--fx-muted)";
+const TRIGGER = `inline-flex h-11 min-w-11 cursor-pointer items-center gap-1.5 rounded-full border-0 bg-transparent px-1 text-[16px] font-[650] whitespace-nowrap text-(--fx-ink) disabled:cursor-default ${FOCUS}`;
+const CHEVRON = "size-[13px] text-(--fx-muted)";
+const AMOUNT =
+  "flex h-[46px] min-w-0 items-baseline border-0 bg-transparent text-[length:clamp(16px,min(13cqi_+_8px,100cqi_/_(var(--fx-chars)_*_0.56)),40px)] leading-[46px] font-semibold tracking-[-0.035em] whitespace-nowrap text-inherit tabular-nums outline-none transition-[font-size] duration-200 ease-out motion-reduce:transition-none";
+
 function Digits({ text }: { text: string }) {
   const characters = [...text];
   return (
-    <span className="fx-digits" aria-label={text}>
+    <span className="inline-flex [&>*]:inline-block" aria-label={text}>
       <AnimatePresence initial={false} mode="popLayout">
         {characters.map((character, index) => (
           <motion.span
@@ -105,15 +116,18 @@ function Digits({ text }: { text: string }) {
   );
 }
 
-function Flag({ code }: { code: string }) {
+function Flag({ code, large }: { code: string; large?: boolean }) {
   return (
-    <span className="fx-flag" aria-hidden="true">
+    <span
+      data-large={large || undefined}
+      className="grid size-5 flex-none place-items-center overflow-hidden rounded-full text-[22px] leading-none shadow-[inset_0_0_0_1px_rgb(24_24_27/0.12)] data-large:size-7 data-large:text-[30px]"
+      aria-hidden="true"
+    >
       {flagOf(code)}
     </span>
   );
 }
 
-/** The highlight slides between rows, as the popover menu's does. */
 const HOVER = { type: "spring" as const, stiffness: 460, damping: 34, mass: 0.55 };
 
 interface ListProps {
@@ -141,21 +155,21 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
 
   return (
     <div role="dialog" aria-label={`Choose the currency ${side === "send" ? "you send" : "they get"}`}>
-      <div className="fx-head">
-        <motion.span layoutId={`fx-label-${side}`} className="fx-label" {...TRAVEL}>
+      <div className="flex h-12 items-center justify-between pr-1.5 pl-4">
+        <motion.span layoutId={`fx-label-${side}`} className={LABEL} {...TRAVEL}>
           {LABELS[side]}
         </motion.span>
         <motion.button
           layoutId={`fx-pill-${side}`}
           type="button"
-          className="fx-trigger"
+          className={TRIGGER}
           onClick={onClose}
           aria-label={`Keep ${code}`}
           {...TRAVEL}
         >
           <Flag code={code} />
           {code}
-          <HugeiconsIcon icon={Cancel01Icon} className="fx-chevron" strokeWidth={2} aria-hidden="true" />
+          <HugeiconsIcon icon={Cancel01Icon} className={CHEVRON} strokeWidth={2} aria-hidden="true" />
         </motion.button>
       </div>
       <Autocomplete.Root
@@ -171,22 +185,27 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
           details.reason !== "item-press" && details.reason !== "list-navigation" && onQueryChange(next)
         }
       >
-        <motion.label className="fx-search" {...PART} transition={{ ...SPRING, delay: 0.04 }}>
-          <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
+        <motion.label
+          className="mb-1.5 flex h-11 items-center gap-2 rounded-full bg-(--fx-surface) px-3 text-(--fx-muted)"
+          {...PART}
+          transition={{ ...SPRING, delay: 0.04 }}
+        >
+          <HugeiconsIcon icon={Search01Icon} className="size-4" aria-hidden="true" />
           <Autocomplete.Input
+            className="min-w-0 flex-1 border-0 bg-transparent text-[16px] text-(--fx-ink) outline-none"
             autoFocus={focus}
             placeholder="Search currencies"
             aria-label="Search currencies"
             onKeyDown={handleKeyDown}
           />
         </motion.label>
-        <Autocomplete.Empty className="fx-empty">No currencies match</Autocomplete.Empty>
-        <Autocomplete.List className="fx-list" render={<motion.div layoutScroll />}>
+        <Autocomplete.Empty className="px-3 py-[18px] text-center text-[14px] text-(--fx-muted) empty:hidden">No currencies match</Autocomplete.Empty>
+        <Autocomplete.List className="max-h-[242px] overflow-auto outline-none [scrollbar-width:thin]" render={<motion.div layoutScroll />}>
           {(item: string, index: number) => (
             <Autocomplete.Item
               key={item}
               value={item}
-              className="fx-option"
+              className="relative grid h-11 cursor-pointer grid-cols-[28px_auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-[14px] px-2.5 [&>*:not([data-hover])]:relative"
               onClick={() => onPick(item)}
               render={
                 index < 7 ? (
@@ -204,15 +223,20 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
               }
             >
               {item === highlighted && (
-                <motion.span layoutId={`fx-hover-${side}`} className="fx-option-hover" transition={HOVER} />
+                <motion.span
+                  layoutId={`fx-hover-${side}`}
+                  data-hover=""
+                  className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[rgb(24_24_27/0.05)] dark:bg-white/6"
+                  transition={HOVER}
+                />
               )}
-              <Flag code={item} />
-              <span className="fx-option-code">{item}</span>
-              <span className="fx-option-name">{nameOf(item)}</span>
+              <Flag code={item} large />
+              <span className="text-[14.5px] font-[650]">{item}</span>
+              <span className="truncate text-[14px] text-(--fx-muted)">{nameOf(item)}</span>
               {item === code && (
                 <HugeiconsIcon
                   icon={Tick02Icon}
-                  className="fx-option-check"
+                  className="size-4"
                   strokeWidth={2.2}
                   aria-label="Current"
                 />
@@ -221,7 +245,7 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
           )}
         </Autocomplete.List>
         {shown.length > visible.length && (
-          <p className="fx-list-note">Type to search all {shown.length} currencies</p>
+          <p className="m-0 mt-1.5 text-center text-[12px] text-(--fx-muted)">Type to search all {shown.length} currencies</p>
         )}
       </Autocomplete.Root>
     </div>
@@ -255,7 +279,6 @@ function Well({
   failed: boolean;
   busy: boolean;
   canPick: boolean;
-  /** The longer of the two amounts, in characters: both shrink together to fit it. */
   chars: number;
   onAmountChange: (amount: string) => void;
   onPick: () => void;
@@ -264,14 +287,15 @@ function Well({
 
   return (
     <motion.div
-      className="fx-well"
+      data-well=""
       data-side={side}
+      className="@container relative grid gap-1.5 rounded-[20px] bg-(--fx-well) pt-[18px] pr-32 pb-5 pl-5 shadow-[0_1px_2px_rgb(24_24_27/0.04)]"
       style={{ "--fx-chars": chars } as CSSProperties}
       {...PART}
     >
       <motion.label
         layoutId={`fx-label-${side}`}
-        className="fx-label"
+        className={LABEL}
         htmlFor={sending ? "fx-amount" : undefined}
         {...TRAVEL}
       >
@@ -281,7 +305,7 @@ function Well({
       {sending ? (
         <input
           id="fx-amount"
-          className="fx-amount"
+          className={AMOUNT}
           data-own-size
           inputMode="decimal"
           autoComplete="off"
@@ -290,9 +314,9 @@ function Well({
           onChange={(event) => onAmountChange(cleanAmount(event.target.value, code))}
         />
       ) : (
-        <span className="fx-amount" aria-live="polite">
+        <span className={AMOUNT} aria-live="polite">
           {gets === null ? (
-            <span className="fx-quiet">{failed ? "—" : "…"}</span>
+            <span className="text-(--fx-quiet)">{failed ? "—" : "…"}</span>
           ) : (
             <Digits text={format(gets, code)} />
           )}
@@ -302,7 +326,8 @@ function Well({
       <motion.button
         layoutId={`fx-pill-${side}`}
         type="button"
-        className="fx-trigger"
+        data-trigger=""
+        className={`${TRIGGER} absolute right-4 bottom-[21px] z-2`}
         disabled={busy || !canPick}
         aria-label={`${code}: ${nameOf(code)}. Change currency`}
         aria-haspopup="dialog"
@@ -312,7 +337,7 @@ function Well({
       >
         <Flag code={code} />
         {code}
-        <HugeiconsIcon icon={ArrowDown01Icon} className="fx-chevron" strokeWidth={2} aria-hidden="true" />
+        <HugeiconsIcon icon={ArrowDown01Icon} className={CHEVRON} strokeWidth={2} aria-hidden="true" />
       </motion.button>
     </motion.div>
   );
@@ -337,7 +362,11 @@ function RateLine({
     content = (
       <>
         Couldn't load today's rates.{" "}
-        <button type="button" className="fx-retry" onClick={onRetry}>
+        <button
+          type="button"
+          className="cursor-pointer border-0 bg-transparent text-(--fx-ink) underline"
+          onClick={onRetry}
+        >
           Try again
         </button>
       </>
@@ -353,7 +382,10 @@ function RateLine({
   }
 
   return (
-    <motion.p className="fx-rate" {...PART}>
+    <motion.p
+      className="mt-4 mb-0.5 flex items-baseline justify-center gap-1 text-[13.5px] font-medium text-(--fx-muted) tabular-nums"
+      {...PART}
+    >
       {content}
     </motion.p>
   );
@@ -380,8 +412,8 @@ function SendButton({
   return (
     <motion.button
       type="button"
-      className="fx-send"
       data-status={status}
+      className={`mt-3.5 grid h-[52px] cursor-pointer rounded-full border-0 bg-(--fx-ink) text-[15px] font-semibold text-(--fx-surface) transition-[background-color] duration-250 disabled:cursor-default disabled:opacity-35 data-[status=sent]:bg-[#16a34a] data-[status=sent]:text-white ${FOCUS}`}
       disabled={disabled}
       aria-busy={status === "sending" || undefined}
       whileTap={{ scale: 1.03 }}
@@ -391,14 +423,14 @@ function SendButton({
       <AnimatePresence initial={false} mode="popLayout">
         <motion.span
           key={status}
-          className="fx-send-label"
+          className="inline-flex items-center justify-center gap-[7px] [grid-area:1/1] [&_svg]:size-[17px]"
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={FADE}
         >
           {status === "sending" && (
-            <HugeiconsIcon icon={Loading03Icon} className="fx-spin" strokeWidth={2} aria-hidden="true" />
+            <HugeiconsIcon icon={Loading03Icon} className="animate-spin motion-reduce:animate-none" strokeWidth={2} aria-hidden="true" />
           )}
           {status === "sent" && <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.4} aria-hidden="true" />}
           {label}
@@ -413,7 +445,10 @@ function Credit({ updated }: { updated: Date }) {
   const source = "Rates by ExchangeRate-API";
 
   return (
-    <motion.p className="fx-credit" {...PART}>
+    <motion.p
+      className="mt-2.5 mb-0.5 text-center text-[11.5px] text-(--fx-quiet) [&_a]:text-inherit"
+      {...PART}
+    >
       {inPreview ? (
         source
       ) : (
@@ -458,7 +493,7 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
     if (picking || !returnFocus.current) return;
 
     card.current
-      ?.querySelector<HTMLElement>(`.fx-well[data-side="${returnFocus.current}"] .fx-trigger`)
+      ?.querySelector<HTMLElement>(`[data-well][data-side="${returnFocus.current}"] [data-trigger]`)
       ?.focus({ preventScroll: true });
     returnFocus.current = null;
   }, [picking]);
@@ -532,16 +567,16 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
       <LayoutGroup>
         <motion.section
           ref={card}
-          className="fx not-prose"
+          className={`not-prose relative box-border block w-[min(100%,420px)] overflow-clip rounded-[28px] bg-(--fx-surface) p-3 font-sans text-(--fx-ink) transition-[background-color] duration-300 data-picking:bg-(--fx-well) ${PALETTE}`}
           aria-label="Currency converter"
           data-picking={picking ?? undefined}
           initial={false}
           animate={{ height: height === null ? "auto" : height + CARD_PADDING * 2 }}
         >
-          <div ref={content} className="fx-content">
+          <div ref={content} className="relative">
             <AnimatePresence mode="popLayout" initial={false}>
               {picking ? (
-                <motion.div key="list" className="fx-view">
+                <motion.div key="list" className="grid">
                   <CurrencyList
                     side={picking}
                     code={picking === "send" ? from : to}
@@ -554,14 +589,14 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
                   />
                 </motion.div>
               ) : (
-                <motion.div key="converter" className="fx-view">
-                  <div className="fx-wells">
+                <motion.div key="converter" className="grid">
+                  <div className="relative grid gap-2">
                     {well("send")}
                     {well("get")}
 
                     <motion.button
                       type="button"
-                      className="fx-swap"
+                      className={`absolute top-1/2 left-1/2 z-3 -mt-[22px] -ml-[22px] grid size-11 cursor-pointer place-items-center rounded-full border-0 bg-(--fx-surface) text-(--fx-ink) shadow-[0_0_0_4px_var(--fx-surface),0_0_0_5px_var(--fx-line)] [&_svg]:size-4 ${FOCUS}`}
                       disabled={busy || !rates}
                       aria-label={`Swap: send ${to}, receive ${from}`}
                       {...PART}

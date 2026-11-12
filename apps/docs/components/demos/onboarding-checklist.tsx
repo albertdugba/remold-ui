@@ -7,7 +7,6 @@ import { motion } from "motion/react";
 import { useEffect, useRef, type Ref } from "react";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import "./onboarding-checklist.css";
 
 interface Step {
   id: string;
@@ -57,34 +56,52 @@ export interface OnboardingChecklistValue {
 const SPRING = { duration: 0.65, bounce: 0.28 };
 const FILL = { type: "spring" as const, duration: 0.7, bounce: 0.1 };
 
-function Ring({ value }: { value: number }) {
+const PALETTE = [
+  "[--ob-surface:#ffffff] [--ob-panel:#f7f7f8] [--ob-line:rgb(24_24_27/0.08)] [--ob-ink:#18181b] [--ob-on-ink:#fafafa] [--ob-muted:#71717a] [--ob-quiet:#a1a1aa]",
+  "[--ob-accent:#4f46e5] [--ob-good:#059669] [--ob-track:#ececf0]",
+  "dark:[--ob-surface:#1f1f23] dark:[--ob-panel:#26262b] dark:[--ob-line:rgb(255_255_255/0.08)] dark:[--ob-ink:#fafafa] dark:[--ob-on-ink:#18181b] dark:[--ob-muted:#a1a1aa] dark:[--ob-quiet:#71717a]",
+  "dark:[--ob-accent:#818cf8] dark:[--ob-good:#34d399] dark:[--ob-track:#34343a]",
+].join(" ");
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ob-accent)";
+const COPY = "grid min-w-0 flex-1 gap-px";
+const ICON_BUTTON = `grid size-[30px] flex-none cursor-pointer place-items-center rounded-[9px] border-0 bg-transparent text-(--ob-quiet) hover:bg-(--ob-panel) hover:text-(--ob-ink) [&_svg]:size-4 ${FOCUS}`;
+
+function Ring({ value, small }: { value: number; small?: boolean }) {
   return (
-    <svg className="ob-ring" viewBox="0 0 36 36" aria-hidden="true">
-      <circle cx="18" cy="18" r="15" className="ob-ring-track" />
+    <svg
+      className={`flex-none overflow-visible ${small ? "size-[34px]" : "size-[38px]"}`}
+      viewBox="0 0 36 36"
+      aria-hidden="true"
+    >
+      <circle cx="18" cy="18" r="15" className="fill-none stroke-(--ob-track) [stroke-width:3.5]" />
       <motion.circle
         cx="18"
         cy="18"
         r="15"
-        className="ob-ring-fill"
+        className="fill-none stroke-(--ob-accent) [stroke-linecap:round] [stroke-width:3.5]"
         transform="rotate(-90 18 18)"
         initial={false}
         animate={{ pathLength: value }}
         transition={FILL}
       />
-      {value >= 1 && <path d="M12.5 18.5l3.5 3.5 7.5-8" className="ob-ring-check" />}
+      {value >= 1 && (
+        <path
+          d="M12.5 18.5l3.5 3.5 7.5-8"
+          className="animate-draw-check fill-none stroke-(--ob-good) [stroke-dasharray:20] [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2.6]"
+        />
+      )}
     </svg>
   );
 }
 
 export interface OnboardingChecklistProps {
-  /** The ids of the finished steps, and whether the card is folded into its pill. */
   value?: OnboardingChecklistValue;
   defaultValue?: OnboardingChecklistValue;
   onValueChange?: (value: OnboardingChecklistValue, details: ChangeDetails) => void;
   ref?: Ref<HTMLDivElement>;
 }
 
-/** A getting-started checklist that folds into a progress pill, and folds itself away once every step is done. */
 export function OnboardingChecklist({
   value,
   defaultValue = { done: [], collapsed: false },
@@ -115,18 +132,25 @@ export function OnboardingChecklist({
   }, [count, setChecklist]);
 
   return (
-    <div ref={ref} className="ob ob-layer not-prose">
-      <Remold.Morph trigger={[count, checklist.collapsed]} spring={SPRING} className="ob-stage">
+    <div ref={ref} className={`not-prose grid w-[min(100%,380px)] font-sans text-(--ob-ink) ${PALETTE}`}>
+      <Remold.Morph
+        trigger={[count, checklist.collapsed]}
+        spring={SPRING}
+        className="grid min-h-[470px] items-center justify-items-center"
+      >
         {checklist.collapsed ? (
-          <section className="ob-pill" aria-label="Setup">
-            <Ring value={count / STEPS.length} />
-            <span className="ob-pill-copy">
-              <b className="ob-title">{all ? "You're all set" : "Finish setting up"}</b>
-              <span className="ob-count">{`${count} of ${STEPS.length} done`}</span>
+          <section
+            className="flex w-[260px] items-center gap-[11px] rounded-full bg-(--ob-surface) py-2 pr-2 pl-[9px]"
+            aria-label="Setup"
+          >
+            <Ring value={count / STEPS.length} small />
+            <span className={COPY}>
+              <b className="text-[14px] font-[650]">{all ? "You're all set" : "Finish setting up"}</b>
+              <span className="text-[12px] text-(--ob-muted)">{`${count} of ${STEPS.length} done`}</span>
             </span>
             <button
               type="button"
-              className="ob-show"
+              className={ICON_BUTTON}
               aria-label="Show the checklist"
               onClick={() => setChecklist((current) => ({ ...current, collapsed: false }))}
             >
@@ -134,16 +158,19 @@ export function OnboardingChecklist({
             </button>
           </section>
         ) : (
-          <section className="ob-card" aria-label="Get started">
-            <header className="ob-head">
+          <section
+            className="grid w-full rounded-[22px] bg-(--ob-surface) px-4 pt-4 pb-3.5"
+            aria-label="Get started"
+          >
+            <header className="flex items-center gap-3">
               <Ring value={count / STEPS.length} />
-              <span className="ob-head-copy">
-                <b className="ob-title">{all ? "You're all set" : "Get started"}</b>
-                <span className="ob-count">{`${count} of ${STEPS.length} done`}</span>
+              <span className={COPY}>
+                <b className="text-[15px] font-[650]">{all ? "You're all set" : "Get started"}</b>
+                <span className="text-[12.5px] text-(--ob-muted)">{`${count} of ${STEPS.length} done`}</span>
               </span>
               <button
                 type="button"
-                className="ob-hide"
+                className={ICON_BUTTON}
                 aria-label="Hide the checklist"
                 onClick={() => setChecklist((current) => ({ ...current, collapsed: true }))}
               >
@@ -151,25 +178,28 @@ export function OnboardingChecklist({
               </button>
             </header>
 
-            <ol className="ob-steps">
+            <ol className="m-0 mt-3.5 grid list-none gap-0.5 p-0">
               {STEPS.map((step) => {
                 const done = checklist.done.includes(step.id);
                 const open = step === active;
                 return (
                   <li
                     key={step.id}
-                    className="ob-step"
+                    className="group/step flex items-start gap-[11px] rounded-[14px] px-2.5 py-[9px] data-open:bg-(--ob-panel)"
                     data-done={done || undefined}
                     data-open={open || undefined}
                   >
                     <Checkbox.Root
                       data-rm-ignore=""
-                      className="ob-check"
+                      className={`mt-px grid size-5 flex-none cursor-pointer place-items-center rounded-full border-[1.5px] border-solid border-[color-mix(in_oklab,var(--ob-ink)_25%,transparent)] bg-transparent p-0 transition-[background-color,border-color] duration-200 group-data-open/step:not-data-checked:border-(--ob-accent) data-checked:border-(--ob-good) data-checked:bg-(--ob-good) ${FOCUS}`}
                       checked={done}
                       onCheckedChange={(on) => toggle(step.id, on)}
                       aria-label={step.title}
                     >
-                      <Checkbox.Indicator className="ob-tick" keepMounted>
+                      <Checkbox.Indicator
+                        className="grid [&_svg]:size-[13px] [&_svg]:fill-none [&_svg]:stroke-white [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round] [&_svg]:[stroke-width:2.4]"
+                        keepMounted
+                      >
                         <svg viewBox="0 0 16 16" aria-hidden="true">
                           <motion.path
                             d="M4 8.5l2.5 2.5L12 5.5"
@@ -180,12 +210,18 @@ export function OnboardingChecklist({
                         </svg>
                       </Checkbox.Indicator>
                     </Checkbox.Root>
-                    <span className="ob-step-body">
-                      <span className="ob-step-title">{step.title}</span>
+                    <span className="grid min-w-0 gap-1">
+                      <span className="text-[13.5px] leading-[22px] font-medium group-data-done/step:text-(--ob-quiet) group-data-done/step:line-through group-data-done/step:decoration-[color-mix(in_oklab,var(--ob-quiet)_60%,transparent)] group-data-open/step:font-semibold">
+                        {step.title}
+                      </span>
                       {open && (
                         <>
-                          <span className="ob-step-detail">{step.detail}</span>
-                          <button type="button" className="ob-action" onClick={() => toggle(step.id, true)}>
+                          <span className="text-[12.5px] leading-[1.45] text-(--ob-muted)">{step.detail}</span>
+                          <button
+                            type="button"
+                            className={`mt-1.5 inline-flex h-[30px] cursor-pointer items-center gap-[5px] justify-self-start rounded-[9px] border-0 bg-(--ob-ink) px-[11px] text-[12.5px] font-semibold text-(--ob-on-ink) [&_svg]:size-3.5 ${FOCUS}`}
+                            onClick={() => toggle(step.id, true)}
+                          >
                             {step.action}
                             <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
                           </button>
@@ -200,7 +236,7 @@ export function OnboardingChecklist({
             {all && (
               <button
                 type="button"
-                className="ob-done"
+                className={`mt-2.5 h-9 cursor-pointer rounded-[11px] border-0 bg-(--ob-panel) text-[13px] font-semibold text-(--ob-ink) ${FOCUS}`}
                 onClick={() => setChecklist((current) => ({ ...current, collapsed: true }))}
               >
                 Done, tuck it away
@@ -212,8 +248,6 @@ export function OnboardingChecklist({
     </div>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (OnboardingChecklistValue & { ms: number })[] = [
   { done: ["project", "team"], collapsed: false, ms: 1900 },

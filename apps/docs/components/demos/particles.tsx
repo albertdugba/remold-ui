@@ -3,7 +3,6 @@ import type { Point } from "@remold-ui/core";
 import { Remold, type ParticleShape } from "@remold-ui/react/canvas";
 import { useEffect, useRef, useState } from "react";
 import { Frame, Segmented } from "./frame";
-import "./particles.css";
 
 const HEADSET =
   "M14 36H86C94 36 98 42 98 50V60C98 68 93 73 86 73H66C61 73 58 65 50 65S39 73 34 73H14C7 73 2 68 2 60V50C2 42 6 36 14 36Z" +
@@ -133,6 +132,11 @@ const BEAT = 900;
 
 const BOUNCE = 420;
 
+const CANVAS =
+  "block aspect-[2/1] w-full touch-pan-y text-[#2563eb] transition-[background-color] duration-240 ease-out motion-reduce:transition-none dark:text-[#60a5fa]";
+const CANVAS_DOTS = "in-[.dark-stage]:drop-shadow-[0_0_4px_rgb(255_255_255/0.2)]";
+const CANVAS_IMAGE = "rounded-xl bg-[#ded5c5]";
+
 export function ParticlesDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [choice, setChoice] = useState<Choice>("Text");
@@ -198,9 +202,9 @@ export function ParticlesDemo({ framed = true, index }: { framed?: boolean; inde
 
   const imageCount = Math.min(MAX_IMAGE_COUNT, Math.max(1200, Math.round(stageWidth ** 2 / 100)));
   const body = (
-    <div ref={containerRef} className="rm-particles">
+    <div ref={containerRef} className="grid w-full justify-items-center gap-3">
       <Remold.Particles
-        className={`rm-particles-canvas${frame.name === "Image" ? " rm-particles-canvas--image" : ""}`}
+        className={`${CANVAS} ${frame.name === "Image" ? CANVAS_IMAGE : CANVAS_DOTS}`}
         shape={frame.shape}
         label={FRAMES[frame.name]!.label}
         count={frame.name === "Image" ? imageCount : COUNT}
@@ -211,13 +215,13 @@ export function ParticlesDemo({ framed = true, index }: { framed?: boolean; inde
         transition={motion === "Scatter" && !frame.beat ? "scatter" : "direct"}
       />
       {frame.name === "Image" && index === undefined && (
-        <div className="rm-particles-image-source">
+        <div className="flex max-w-[min(100%,360px)] items-center gap-2.5 rounded-xl border border-solid border-fd-border bg-fd-card px-3 py-2 text-[12px] leading-[1.4] text-fd-muted-foreground in-[.dark-stage]:border-white/16 in-[.dark-stage]:bg-white/6 in-[.dark-stage]:text-white/72 [&_img]:size-12 [&_img]:flex-none [&_img]:rounded-lg [&_img]:object-cover">
           <img src={JACKET_IMAGE} alt="Olive field jacket source photograph" width={48} height={48} />
           <span>{imageCount.toLocaleString()} halftone dots sampled from the field jacket photograph</span>
         </div>
       )}
       {index === undefined && (
-        <div className="rm-particles-controls">
+        <div className="flex flex-wrap justify-center gap-2">
           <Segmented
             label="Shape"
             value={choice}
