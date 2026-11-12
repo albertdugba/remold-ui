@@ -1,31 +1,38 @@
 "use client";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
-import { IllustratedStory, type StoryStage } from "./illustrated-story";
+import { IllustratedStory, STORY_STAGE, type StoryStage } from "./illustrated-story";
 import { useScene } from "./use-scene";
-import "./payment-status.css";
 
-const BACK_CARD = "M44 36h76a8 8 0 0 1 8 8v4H36v-4a8 8 0 0 1 8 -8Z";
-const CARD = "M38 44h84a8 8 0 0 1 8 8v48a8 8 0 0 1 -8 8H38a8 8 0 0 1 -8 -8V52a8 8 0 0 1 8 -8Z";
-const CARD_SHEEN = "M88 44h18l-30 64H58Z";
-const CARD_NUMBER = "M42 86h14v3.5H42Z M60 86h14v3.5H60Z M78 86h14v3.5H78Z M96 86h14v3.5H96Z M42 96h30v2.5H42Z";
-const CHIP = "M44 58h16a3 3 0 0 1 3 3v10a3 3 0 0 1 -3 3H44a3 3 0 0 1 -3 -3V61a3 3 0 0 1 3 -3Z";
+const BACK_CARD = "M44 46h76a8 8 0 0 1 8 8v4H36v-4a8 8 0 0 1 8 -8Z";
+const CARD = "M38 54h84a8 8 0 0 1 8 8v38a8 8 0 0 1 -8 8H38a8 8 0 0 1 -8 -8V62a8 8 0 0 1 8 -8Z";
+const CARD_SHEEN = "M90 54h18l-25 54H65Z";
+const CARD_NUMBER = "M42 88h14v3.5H42Z M60 88h14v3.5H60Z M78 88h14v3.5H78Z M96 88h14v3.5H96Z M42 97h30v2.5H42Z";
+const CHIP = "M44 64h16a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3H44a3 3 0 0 1 -3 -3V67a3 3 0 0 1 3 -3Z";
 
 export const PAYMENT_STATUSES = ["card", "processing", "declined", "paid"] as const;
 export type PaymentStatusValue = (typeof PAYMENT_STATUSES)[number];
+
+const BRAND: Record<PaymentStatusValue, string> = {
+  card: "[--ils-brand:#4f46e5] dark:[--ils-brand:#818cf8]",
+  processing: "[--ils-brand:#4f46e5] dark:[--ils-brand:#818cf8]",
+  declined: "[--ils-brand:#dc2626] dark:[--ils-brand:#f87171]",
+  paid: "[--ils-brand:#16a34a] dark:[--ils-brand:#4ade80]",
+};
 
 function stagesFor(amount: string, card: string, email: string): readonly StoryStage[] {
   return [
     {
       id: "card",
       label: "Ready to pay",
+      motion: { body: "animate-card-float" },
       title: `Pay ${amount}`,
       line: card,
       art: {
         soft: BACK_CARD,
         ink: CARD,
         sheen: CARD_SHEEN,
-        brand: "M106 58a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
+        brand: "M106 67a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
         light: CARD_NUMBER,
         topSoft: CHIP,
       },
@@ -33,6 +40,7 @@ function stagesFor(amount: string, card: string, email: string): readonly StoryS
     {
       id: "processing",
       label: "Processing",
+      motion: { part: "animate-lock-click", soft: "animate-story-pulse" },
       title: "Confirming with your bank",
       line: "This takes a few seconds",
       art: {
@@ -46,20 +54,22 @@ function stagesFor(amount: string, card: string, email: string): readonly StoryS
     {
       id: "declined",
       label: "Declined",
+      motion: { body: "animate-card-shake" },
       title: "Card declined",
       line: "Your bank said no. Try another card.",
       art: {
         soft: BACK_CARD,
         ink: CARD,
         sheen: CARD_SHEEN,
-        brand: "M104 40a14 14 0 1 0 28 0a14 14 0 1 0 -28 0Z",
-        light: `${CARD_NUMBER} M116.5 32h3v10h-3Z M116.5 45h3v3h-3Z`,
+        brand: "M104 50a14 14 0 1 0 28 0a14 14 0 1 0 -28 0Z",
+        light: `${CARD_NUMBER} M116.5 42h3v10h-3Z M116.5 55h3v3h-3Z`,
         topSoft: CHIP,
       },
     },
     {
       id: "paid",
       label: "Paid",
+      motion: { body: "animate-story-land", soft: "animate-story-twinkle" },
       title: `${amount} paid`,
       line: `Receipt sent to ${email}`,
       art: {
@@ -78,15 +88,11 @@ function stagesFor(amount: string, card: string, email: string): readonly StoryS
 
 export interface PaymentStatusProps {
   status: PaymentStatusValue;
-  /** The amount as you'd show it, currency included. */
   amount?: string;
-  /** The card, as the person would recognise it. */
   card?: string;
-  /** Where the receipt goes. */
   email?: string;
 }
 
-/** A payment's status as one drawing: the card, a lock while the bank confirms, then a receipt or a refusal. */
 export function PaymentStatus({
   status,
   amount = "€48.00",
@@ -95,7 +101,7 @@ export function PaymentStatus({
 }: PaymentStatusProps) {
   return (
     <IllustratedStory
-      className="pst"
+      artClassName={BRAND[status]}
       label="Payment status"
       stages={stagesFor(amount, card, email)}
       stage={PAYMENT_STATUSES.indexOf(status)}
@@ -103,8 +109,6 @@ export function PaymentStatus({
     />
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly { status: PaymentStatusValue; ms: number }[] = [
   { status: "card", ms: 2400 },
@@ -124,7 +128,6 @@ const LABELS: Record<PaymentStatusValue, string> = {
 };
 
 export interface PaymentStatusDemoProps {
-  /** On the home page, whether its card is playing. */
   playing?: boolean;
 }
 
@@ -132,16 +135,20 @@ export function PaymentStatusDemo({ playing }: PaymentStatusDemoProps = {}) {
   const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing ?? true);
 
   return (
-    <div ref={ref} className="ils-stage not-prose">
+    <div ref={ref} className={STORY_STAGE}>
       <PaymentStatus status={state} />
       <ToggleGroup
-        className="pst-controls"
+        className="mt-[18px] inline-flex max-w-full overflow-x-auto rounded-[10px] border border-solid border-fd-border bg-fd-muted p-[3px]"
         aria-label="Payment status"
         value={[state]}
         onValueChange={(values) => values[0] && takeOver(values[0] as PaymentStatusValue)}
       >
         {PAYMENT_STATUSES.map((status) => (
-          <Toggle key={status} value={status} className="pst-control">
+          <Toggle
+            key={status}
+            value={status}
+            className="cursor-pointer rounded-[7px] border-0 bg-transparent px-2.5 py-1.5 text-[12.5px] whitespace-nowrap text-fd-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-fd-foreground data-pressed:bg-fd-background data-pressed:text-fd-foreground data-pressed:shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
+          >
             {LABELS[status]}
           </Toggle>
         ))}

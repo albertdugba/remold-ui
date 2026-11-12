@@ -23,10 +23,6 @@ const BADGE: CSSProperties = {
   textDecoration: "none",
 };
 
-/**
- * A "Listen on Apple Music" badge, for players that use Apple Music's previews: the Apple logo,
- * "Listen on" and "MUSIC", linking to the artist there.
- */
 export function AppleMusicBadge() {
   const badge = (
     <span style={BADGE}>

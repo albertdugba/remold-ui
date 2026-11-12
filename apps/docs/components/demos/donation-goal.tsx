@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState, type Ref } from "react";
 import { Odometer } from "./odometer";
 import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import "./donation-goal.css";
 
 const GOAL = 1000;
 const START = 640;
@@ -81,13 +80,15 @@ function useStream(target: number) {
   return shown;
 }
 
+const ACTIONS = "flex h-9 items-center gap-2";
+
 function Picture({ raised, from, reached }: { raised: number; from: number; reached: boolean }) {
   const shown = useStream(filledFor(raised));
   const points = useMemo(() => frame(shown, from), [shown, from]);
 
   return (
     <Remold.Particles
-      className="dg-canvas"
+      className="block size-full"
       shape={{ points: reached ? LOVE : points }}
       count={DOTS}
       palette={PALETTE}
@@ -104,14 +105,12 @@ function Picture({ raised, from, reached }: { raised: number; from: number; reac
 }
 
 export interface DonationGoalProps {
-  /** What's been raised, by how many backers, and where across the picture the last gift fell (0 to 1). */
   value?: DonationGoalValue;
   defaultValue?: DonationGoalValue;
   onValueChange?: (value: DonationGoalValue) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A fundraiser's progress: each gift drops into the picture and the totals roll up. */
 export function DonationGoal({
   value,
   defaultValue = { raised: START, backers: 41, from: 0.5 },
@@ -136,31 +135,33 @@ export function DonationGoal({
     <MotionConfig reducedMotion="user">
       <section
         ref={ref}
-        className="dg not-prose"
+        className="not-prose grid w-[min(100%,360px)] gap-[18px] rounded-[20px] bg-(--dg-surface) p-[22px] font-sans text-[13px] text-(--dg-ink) [--dg-accent:#2563eb] [--dg-ghost:#dbe5f8] [--dg-ink:#18181b] [--dg-muted:#71717a] [--dg-soft:#f4f4f5] [--dg-surface:#ffffff] [--dg-thumb:#ffffff] [--dg-on-accent:#ffffff] dark:[--dg-accent:#60a5fa] dark:[--dg-ghost:#263552] dark:[--dg-ink:#fafafa] dark:[--dg-muted:#a1a1aa] dark:[--dg-soft:#27272a] dark:[--dg-surface:#1c1c1f] dark:[--dg-thumb:#3f3f46] dark:[--dg-on-accent:#0b1220]"
         aria-label="Donation goal"
         data-reached={reached || undefined}
       >
-        <header className="dg-head">
-          <span role="heading" aria-level={3} className="dg-title">
+        <header className="flex items-baseline justify-between gap-3">
+          <span role="heading" aria-level={3} className="text-[15px] font-semibold tracking-[-0.01em]">
             A well for Asante village
           </span>
-          <span className="dg-sub">9 days left</span>
+          <span className="flex-none text-(--dg-muted)">9 days left</span>
         </header>
 
-        <div className="dg-stage">
+        <div className="h-[190px]">
           <Picture raised={goal.raised} from={goal.from} reached={reached} />
         </div>
 
-        <div className="dg-stats">
-          <span className="dg-figures">
-            <Odometer className="dg-raised" value={money(goal.raised)} />
+        <div className="grid gap-2">
+          <span className="flex items-baseline gap-[5px] text-(--dg-muted) tabular-nums">
+            <Odometer className="text-[18px] font-[650] tracking-[-0.02em] text-(--dg-ink)" value={money(goal.raised)} />
             <span>of {money(GOAL)}</span>
-            <span className="dg-backers">
+            <span className="ml-auto">
               <Odometer value={String(goal.backers)} /> backers
             </span>
           </span>
-          <span className="dg-bar" aria-hidden="true">
-            <motion.span initial={false} animate={{ width: `${percent}%` }} transition={BAR} />
+          <span className="block h-[3px] overflow-hidden rounded-full bg-(--dg-soft)" aria-hidden="true">
+            <motion.span
+              className="block h-full rounded-[inherit] bg-(--dg-accent)"
+              initial={false} animate={{ width: `${percent}%` }} transition={BAR} />
           </span>
         </div>
 
@@ -168,14 +169,19 @@ export function DonationGoal({
           {reached ? (
             <motion.div
               key="done"
-              className="dg-actions dg-done"
+              className={`${ACTIONS} justify-between text-(--dg-muted)`}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={POP}
             >
               <span>Funded by {goal.backers} backers. Thank you!</span>
-              <button type="button" className="dg-again" onClick={reset} aria-label="Start again">
+              <button
+                type="button"
+                className="grid size-8 cursor-pointer place-items-center rounded-lg border-0 bg-transparent text-(--dg-muted) hover:bg-(--dg-soft) hover:text-(--dg-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--dg-accent)"
+                onClick={reset}
+                aria-label="Start again"
+              >
                 <svg
                   viewBox="0 0 24 24"
                   width="16"
@@ -193,15 +199,19 @@ export function DonationGoal({
           ) : (
             <motion.div
               key="give"
-              className="dg-actions"
+              className={ACTIONS}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={POP}
             >
-              <div className="dg-amounts" role="radiogroup" aria-label="Amount">
+              <div
+                className="relative grid h-full flex-1 grid-cols-3 rounded-[10px] bg-(--dg-soft) p-[3px]"
+                role="radiogroup"
+                aria-label="Amount"
+              >
                 <motion.span
-                  className="dg-thumb"
+                  className="absolute inset-y-[3px] left-[3px] w-[calc((100%-6px)/3)] rounded-[7px] bg-(--dg-thumb) shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
                   aria-hidden="true"
                   initial={false}
                   animate={{ x: `${choice * 100}%` }}
@@ -213,14 +223,19 @@ export function DonationGoal({
                     type="button"
                     role="radio"
                     aria-checked={choice === index}
-                    className="dg-amount"
+                    className="relative cursor-pointer border-0 bg-transparent font-[550] text-(--dg-muted) tabular-nums transition-colors duration-200 aria-checked:text-(--dg-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--dg-accent)"
                     onClick={() => setChoice(index)}
                   >
                     {money(amount)}
                   </button>
                 ))}
               </div>
-              <motion.button type="button" className="dg-donate" onClick={donate} whileTap={{ scale: 0.96 }}>
+              <motion.button
+                type="button"
+                className="h-full flex-none cursor-pointer rounded-[10px] border-0 bg-(--dg-accent) px-5 font-semibold text-(--dg-on-accent) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--dg-accent)"
+                onClick={donate}
+                whileTap={{ scale: 0.96 }}
+              >
                 Donate
               </motion.button>
             </motion.div>
@@ -230,8 +245,6 @@ export function DonationGoal({
     </MotionConfig>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (DonationGoalValue & { ms: number })[] = [
   { raised: START, backers: 41, from: 0.5, ms: 1600 },

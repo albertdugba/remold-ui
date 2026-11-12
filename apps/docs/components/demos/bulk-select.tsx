@@ -5,14 +5,11 @@ import {
   Delete02Icon,
   FileAttachmentIcon,
   FileSpreadsheetIcon,
-  FolderInputIcon,
   Image01Icon,
   MinusSignIcon,
-  Share02Icon,
   CheckIcon,
 } from "@hugeicons/core-free-icons";
 import { Checkbox } from "@base-ui/react/checkbox";
-import { Tooltip } from "@base-ui/react/tooltip";
 import {
   createColumnHelper,
   flexRender,
@@ -23,11 +20,19 @@ import {
   type Updater,
 } from "@tanstack/react-table";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useRef, type CSSProperties, type MouseEvent, type Ref } from "react";
-import { useControllableState, type ChangeDetails } from "./use-controllable-state";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type MouseEvent,
+  type Ref,
+} from "react";
+import {
+  useControllableState,
+  type ChangeDetails,
+} from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import { usePortalContainer } from "./portal-container";
-import "./bulk-select.css";
 
 interface File {
   id: string;
@@ -71,7 +76,14 @@ const FILES: File[] = [
     icon: FileAttachmentIcon,
     color: "#ef4444",
   },
-  { id: "e", name: "Team photo.png", size: "5.6 MB", edited: "Oct 12", icon: Image01Icon, color: "#8b5cf6" },
+  {
+    id: "e",
+    name: "Team photo.png",
+    size: "5.6 MB",
+    edited: "Oct 12",
+    icon: Image01Icon,
+    color: "#8b5cf6",
+  },
   {
     id: "f",
     name: "Invoices 2026.xlsx",
@@ -85,56 +97,81 @@ const FILES: File[] = [
 export interface BulkSelectValue {
   gone: string[];
   selected: string[];
-  /** The last row ticked on its own, where a shift-click range starts. */
   anchor: string | null;
-  /** What the last delete took, while it can still be undone. */
   undo: string[] | null;
 }
 
-const REST: BulkSelectValue = { gone: [], selected: [], anchor: null, undo: null };
+const REST: BulkSelectValue = {
+  gone: [],
+  selected: [],
+  anchor: null,
+  undo: null,
+};
 
 const SPRING = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
+
+const PALETTE = [
+  "[--bk-surface:#ffffff] [--bk-ink:#18181b] [--bk-muted:#71717a] [--bk-quiet:#a1a1aa] [--bk-line:rgb(24_24_27/0.07)] [--bk-hover:rgb(24_24_27/0.035)]",
+  "[--bk-accent:#4f46e5] [--bk-band:rgb(79_70_229/0.07)] [--bk-box:rgb(24_24_27/0.22)]",
+  "[--bk-bar:#18181b] [--bk-bar-ink:#fafafa] [--bk-bar-muted:#a1a1aa] [--bk-bar-hover:rgb(255_255_255/0.09)] [--bk-danger:#f87171]",
+  "dark:[--bk-surface:#1f1f23] dark:[--bk-ink:#fafafa] dark:[--bk-muted:#a1a1aa] dark:[--bk-quiet:#71717a] dark:[--bk-line:rgb(255_255_255/0.07)] dark:[--bk-hover:rgb(255_255_255/0.04)]",
+  "dark:[--bk-accent:#818cf8] dark:[--bk-band:rgb(129_140_248/0.12)] dark:[--bk-box:rgb(255_255_255/0.25)]",
+  "dark:[--bk-bar:#fafafa] dark:[--bk-bar-ink:#18181b] dark:[--bk-bar-muted:#71717a] dark:[--bk-bar-hover:rgb(0_0_0/0.06)] dark:[--bk-danger:#dc2626]",
+].join(" ");
+
+const GRID = "grid grid-cols-[16px_minmax(0,1fr)_62px_52px] items-center gap-3 px-2.5";
+const CELL = "flex min-w-0 items-center";
+const FIGURE = "ml-auto text-right text-[12px] whitespace-nowrap text-(--bk-muted) tabular-nums";
+const CHECK =
+  "grid size-4 cursor-pointer place-items-center rounded-[5px] border-0 bg-transparent p-0 text-white shadow-[inset_0_0_0_1.5px_var(--bk-box)] transition-[background-color,box-shadow] duration-150 group-hover/inner:not-data-checked:not-data-indeterminate:shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,var(--bk-ink)_45%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--bk-accent) data-checked:bg-(--bk-accent) data-checked:shadow-none data-indeterminate:bg-(--bk-accent) data-indeterminate:shadow-none";
+const TICK =
+  "grid place-items-center [transition:scale_0.18s_cubic-bezier(0.3,1.5,0.5,1),opacity_0.12s] data-ending-style:scale-50 data-ending-style:opacity-0 data-starting-style:scale-50 data-starting-style:opacity-0 [&_svg]:size-[11px] [&_svg]:[stroke-width:3.2]";
+const BAR_BUTTON =
+  "inline-flex h-[34px] flex-none cursor-pointer items-center justify-center gap-1.5 rounded-[9px] border-0 bg-transparent text-[13px] font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--bk-accent) [&_svg]:size-4";
+const BAR_ROW_CLASS = "flex h-full items-center gap-0.5 px-1.5 [grid-area:1/1]";
+const COUNT = "inline-flex items-center gap-[5px] pr-1.5 pl-0.5 text-[13px] whitespace-nowrap text-(--bk-bar-muted)";
 
 const column = createColumnHelper<File>();
 
 const DATA_COLUMNS = [
   column.accessor("name", {
     header: ({ table }) => (
-      <span className="bk-title">
-        Files <span>{table.getRowCount()}</span>
+      <span className="text-[13px] font-semibold text-(--bk-ink)">
+        Files <span className="ml-1 font-medium text-(--bk-quiet) tabular-nums">{table.getRowCount()}</span>
       </span>
     ),
     cell: ({ row }) => {
       const Icon = row.original.icon;
       return (
-        <span className="bk-name">
-          <span className="bk-icon" style={{ "--tint": row.original.color } as CSSProperties}>
-            <HugeiconsIcon icon={Icon} aria-hidden="true" />
+        <span className="flex min-w-0 items-center gap-2.5 text-[13.5px]">
+          <span
+            className="grid size-[26px] flex-none place-items-center rounded-[7px] bg-[color-mix(in_oklab,var(--tint)_13%,transparent)] text-(--tint)"
+            style={{ "--tint": row.original.color } as CSSProperties}
+          >
+            <HugeiconsIcon icon={Icon} strokeWidth={2} className="size-3.5" aria-hidden="true" />
           </span>
-          <span className="bk-file">{row.original.name}</span>
+          <span className="truncate">{row.original.name}</span>
         </span>
       );
     },
   }),
   column.accessor("size", {
-    header: () => <span className="bk-col-size">Size</span>,
-    cell: (info) => <span className="bk-size">{info.getValue()}</span>,
+    header: () => <span className="ml-auto text-right">Size</span>,
+    cell: (info) => <span className={FIGURE}>{info.getValue()}</span>,
   }),
   column.accessor("edited", {
-    header: () => <span className="bk-col-date">Edited</span>,
-    cell: (info) => <span className="bk-date">{info.getValue()}</span>,
+    header: () => <span className="ml-auto text-right">Edited</span>,
+    cell: (info) => <span className={FIGURE}>{info.getValue()}</span>,
   }),
 ];
 
 export interface BulkSelectProps {
-  /** Which files are deleted and ticked, where a shift-click range starts, and what the last delete can undo. */
   value?: BulkSelectValue;
   defaultValue?: BulkSelectValue;
   onValueChange?: (value: BulkSelectValue, details: ChangeDetails) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A file table with bulk selection: tick rows or shift-click a range, delete them together, then undo. */
 const BAR_ROW = {
   initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0 },
@@ -142,25 +179,23 @@ const BAR_ROW = {
   transition: { duration: 0.18 },
 };
 
-const ACTIONS = [
-  { label: "Move", icon: FolderInputIcon },
-  { label: "Share", icon: Share02Icon },
-];
-
 function SelectAllCheckbox({ table }: { table: Table<File> }) {
   return (
     <Checkbox.Root
-      className="bk-check"
+      className={CHECK}
       checked={table.getIsAllRowsSelected()}
       indeterminate={table.getIsSomeRowsSelected()}
       onCheckedChange={(on) => table.toggleAllRowsSelected(on)}
       aria-label="Select all files"
     >
       <Checkbox.Indicator
-        className="bk-tick"
+        className={TICK}
         render={(props, state) => (
           <span {...props}>
-            <HugeiconsIcon icon={state.indeterminate ? MinusSignIcon : CheckIcon} aria-hidden="true" />
+            <HugeiconsIcon
+              icon={state.indeterminate ? MinusSignIcon : CheckIcon}
+              aria-hidden="true"
+            />
           </span>
         )}
       />
@@ -179,12 +214,12 @@ function RowCheckbox({
 }) {
   return (
     <Checkbox.Root
-      className="bk-check"
+      className={CHECK}
       checked={checked}
       onCheckedChange={onChange}
       aria-label={`Select ${name}`}
     >
-      <Checkbox.Indicator className="bk-tick">
+      <Checkbox.Indicator className={TICK}>
         <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
       </Checkbox.Indicator>
     </Checkbox.Root>
@@ -193,7 +228,7 @@ function RowCheckbox({
 
 function RollingCount({ count }: { count: number }) {
   return (
-    <span className="bk-roll">
+    <span className="relative grid h-[18px] overflow-hidden leading-[18px] font-semibold text-(--bk-bar-ink) tabular-nums [&>span]:[grid-area:1/1]">
       <AnimatePresence initial={false}>
         <motion.span
           key={count}
@@ -209,23 +244,6 @@ function RollingCount({ count }: { count: number }) {
   );
 }
 
-function ActionButton({ label, icon }: (typeof ACTIONS)[number]) {
-  const portal = usePortalContainer();
-
-  return (
-    <Tooltip.Root>
-      <Tooltip.Trigger className="bk-action" aria-label={label}>
-        <HugeiconsIcon icon={icon} aria-hidden="true" />
-      </Tooltip.Trigger>
-      <Tooltip.Portal container={portal}>
-        <Tooltip.Positioner className="bk-layer" sideOffset={8}>
-          <Tooltip.Popup className="bk-tip">{label}</Tooltip.Popup>
-        </Tooltip.Positioner>
-      </Tooltip.Portal>
-    </Tooltip.Root>
-  );
-}
-
 function SelectionBar({
   count,
   onClear,
@@ -238,19 +256,25 @@ function SelectionBar({
   ref?: Ref<HTMLDivElement>;
 }) {
   return (
-    <motion.div ref={ref} className="bk-bar-row" {...BAR_ROW}>
-      <button type="button" className="bk-clear" onClick={onClear} aria-label="Clear selection">
+    <motion.div ref={ref} className={BAR_ROW_CLASS} {...BAR_ROW}>
+      <button
+        type="button"
+        className={`${BAR_BUTTON} w-[34px] text-(--bk-bar-muted) hover:bg-(--bk-bar-hover) hover:text-(--bk-bar-ink)`}
+        onClick={onClear}
+        aria-label="Clear selection"
+      >
         <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
       </button>
-      <span className="bk-count">
+      <span className={COUNT}>
         <RollingCount count={count} />
         selected
       </span>
-      <span className="bk-bar-gap" />
-      {ACTIONS.map((action) => (
-        <ActionButton key={action.label} {...action} />
-      ))}
-      <button type="button" className="bk-delete" onClick={onDelete}>
+      <span className="flex-1" />
+      <button
+        type="button"
+        className={`${BAR_BUTTON} ml-1 pr-3 pl-2.5 text-(--bk-danger) hover:bg-[color-mix(in_oklab,var(--bk-danger)_16%,transparent)]`}
+        onClick={onDelete}
+      >
         <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
         Delete
       </button>
@@ -268,12 +292,16 @@ function UndoBar({
   ref?: Ref<HTMLDivElement>;
 }) {
   return (
-    <motion.div ref={ref} className="bk-bar-row" {...BAR_ROW}>
-      <span className="bk-count">
+    <motion.div ref={ref} className={BAR_ROW_CLASS} {...BAR_ROW}>
+      <span className={COUNT}>
         {deleted} {deleted === 1 ? "file" : "files"} deleted
       </span>
-      <span className="bk-bar-gap" />
-      <button type="button" className="bk-undo" onClick={onUndo}>
+      <span className="flex-1" />
+      <button
+        type="button"
+        className={`${BAR_BUTTON} px-3 font-semibold! text-(--bk-bar-ink) hover:bg-(--bk-bar-hover)`}
+        onClick={onUndo}
+      >
         Undo
       </button>
     </motion.div>
@@ -296,17 +324,19 @@ function Dock({
   const bar = count > 0 ? "select" : undo ? "undo" : null;
 
   return (
-    <div className="bk-dock" aria-live="polite">
+    <div className="relative mt-2 grid h-12 [&>*]:[grid-area:1/1]" aria-live="polite">
       <AnimatePresence initial={false}>
         {!bar && (
           <motion.p
             key="hint"
-            className="bk-hint"
+            className="m-0 flex items-center gap-1.5 px-2.5 text-[12px] text-(--bk-quiet)"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { delay: 0.15 } }}
             exit={{ opacity: 0, transition: { duration: 0.1 } }}
           >
-            <kbd>⇧</kbd> Shift-click to select a range
+            <kbd className="grid h-[18px] min-w-[18px] place-items-center rounded-[5px] px-1 font-[inherit] text-[11px] shadow-[inset_0_0_0_1px_var(--bk-line),0_1px_0_var(--bk-line)]">
+              ⇧
+            </kbd> Shift-click to select a range
           </motion.p>
         )}
       </AnimatePresence>
@@ -315,15 +345,25 @@ function Dock({
         {bar && (
           <motion.div
             key="bar"
-            className="bk-bar"
+            className="grid h-12 items-center overflow-hidden rounded-[14px] bg-(--bk-bar) text-(--bk-bar-ink) shadow-[0_10px_24px_-12px_rgb(0_0_0/0.45)]"
             initial={{ y: 14, opacity: 0, scale: 0.97 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 10, opacity: 0, scale: 0.98, transition: { duration: 0.16 } }}
+            exit={{
+              y: 10,
+              opacity: 0,
+              scale: 0.98,
+              transition: { duration: 0.16 },
+            }}
             transition={SPRING}
           >
             <AnimatePresence initial={false} mode="popLayout">
               {bar === "select" ? (
-                <SelectionBar key="select" count={count} onClear={onClear} onDelete={onDelete} />
+                <SelectionBar
+                  key="select"
+                  count={count}
+                  onClear={onClear}
+                  onDelete={onDelete}
+                />
               ) : (
                 <UndoBar key="undo" deleted={undo!.length} onUndo={onUndo} />
               )}
@@ -341,33 +381,59 @@ function selectionWithShift(
   on: boolean,
   shift: boolean,
 ): BulkSelectValue {
-  const visible = FILES.filter((file) => !current.gone.includes(file.id)).map((file) => file.id);
+  const visible = FILES.filter((file) => !current.gone.includes(file.id)).map(
+    (file) => file.id,
+  );
 
   if (shift && current.anchor && on) {
-    const [from, to] = [visible.indexOf(current.anchor), visible.indexOf(id)].sort((a, b) => a - b);
+    const [from, to] = [
+      visible.indexOf(current.anchor),
+      visible.indexOf(id),
+    ].sort((a, b) => a - b);
     const range = visible.slice(from, to + 1);
-    return { ...current, selected: [...new Set([...current.selected, ...range])], undo: null };
+    return {
+      ...current,
+      selected: [...new Set([...current.selected, ...range])],
+      undo: null,
+    };
   }
 
   return {
     ...current,
-    selected: on ? [...current.selected, id] : current.selected.filter((selected) => selected !== id),
+    selected: on
+      ? [...current.selected, id]
+      : current.selected.filter((selected) => selected !== id),
     anchor: id,
     undo: null,
   };
 }
 
-export function BulkSelect({ value, defaultValue = REST, onValueChange, ref }: BulkSelectProps) {
-  const [files, setFiles] = useControllableState({ value, defaultValue, onValueChange });
+export function BulkSelect({
+  value,
+  defaultValue = REST,
+  onValueChange,
+  ref,
+}: BulkSelectProps) {
+  const [files, setFiles] = useControllableState({
+    value,
+    defaultValue,
+    onValueChange,
+  });
   const shift = useRef(false);
 
   useEffect(() => {
     if (!files.undo) return;
-    const timer = setTimeout(() => setFiles((current) => ({ ...current, undo: null }), "timer"), 4500);
+    const timer = setTimeout(
+      () => setFiles((current) => ({ ...current, undo: null }), "timer"),
+      4500,
+    );
     return () => clearTimeout(timer);
   }, [files.undo, setFiles]);
 
-  const rows = useMemo(() => FILES.filter((file) => !files.gone.includes(file.id)), [files.gone]);
+  const rows = useMemo(
+    () => FILES.filter((file) => !files.gone.includes(file.id)),
+    [files.gone],
+  );
   const rowSelection = useMemo<RowSelectionState>(
     () => Object.fromEntries(files.selected.map((id) => [id, true])),
     [files.selected],
@@ -393,9 +459,16 @@ export function BulkSelect({ value, defaultValue = REST, onValueChange, ref }: B
 
   const onRowSelectionChange = (updater: Updater<RowSelectionState>) =>
     setFiles((current) => {
-      const previous = Object.fromEntries(current.selected.map((id) => [id, true]));
-      const selection = typeof updater === "function" ? updater(previous) : updater;
-      return { ...current, selected: Object.keys(selection).filter((id) => selection[id]), undo: null };
+      const previous = Object.fromEntries(
+        current.selected.map((id) => [id, true]),
+      );
+      const selection =
+        typeof updater === "function" ? updater(previous) : updater;
+      return {
+        ...current,
+        selected: Object.keys(selection).filter((id) => selection[id]),
+        undo: null,
+      };
     });
 
   const columns = [
@@ -425,78 +498,88 @@ export function BulkSelect({ value, defaultValue = REST, onValueChange, ref }: B
   const tableRows = table.getRowModel().rows;
 
   return (
-    <Tooltip.Provider delay={300}>
-      <section ref={ref} className="bk bk-layer not-prose" aria-label="Files">
-        <div role="table" aria-label="Files" aria-rowcount={tableRows.length}>
-          {table.getHeaderGroups().map((group) => (
-            <div key={group.id} role="row" className="bk-head">
-              {group.headers.map((header) => (
-                <span key={header.id} role="columnheader" className="bk-cell">
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </span>
-              ))}
-            </div>
-          ))}
+    <section
+      ref={ref}
+      className={`not-prose grid w-[min(100%,440px)] rounded-[20px] bg-(--bk-surface) px-2.5 pt-2.5 pb-3 font-sans text-(--bk-ink) ${PALETTE}`}
+      aria-label="Files"
+    >
+      <div role="table" aria-label="Files" aria-rowcount={tableRows.length}>
+        {table.getHeaderGroups().map((group) => (
+          <div key={group.id} role="row" className={`${GRID} mb-0.5 h-9 text-[11.5px] font-medium text-(--bk-quiet)`}>
+            {group.headers.map((header) => (
+              <span key={header.id} role="columnheader" className={CELL}>
+                {flexRender(
+                  header.column.columnDef.header,
+                  header.getContext(),
+                )}
+              </span>
+            ))}
+          </div>
+        ))}
 
-          <ul role="rowgroup" className="bk-rows">
-            <AnimatePresence initial={false}>
-              {tableRows.map((row, index) => {
-                const on = row.getIsSelected();
-                const order = files.undo?.indexOf(row.id) ?? -1;
+        <ul role="rowgroup" className="m-0 grid list-none p-0">
+          <AnimatePresence initial={false}>
+            {tableRows.map((row, index) => {
+              const on = row.getIsSelected();
+              const order = files.undo?.indexOf(row.id) ?? -1;
 
-                return (
-                  <motion.li
-                    key={row.id}
-                    role="row"
-                    aria-selected={on}
-                    layout="position"
-                    className="bk-row"
-                    data-selected={on || undefined}
-                    data-joins-up={(on && tableRows[index - 1]?.getIsSelected()) || undefined}
-                    data-joins-down={(on && tableRows[index + 1]?.getIsSelected()) || undefined}
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{
-                      opacity: 0,
-                      height: 0,
-                      transition: {
-                        duration: 0.28,
-                        delay: Math.max(0, order) * 0.06,
-                        ease: [0.4, 0, 0.2, 1],
-                      },
-                    }}
-                    transition={SPRING}
-                    onClickCapture={(event: MouseEvent) => {
-                      shift.current = event.shiftKey;
-                    }}
-                  >
-                    <label className="bk-row-inner">
-                      {row.getVisibleCells().map((cell) => (
-                        <span key={cell.id} role="cell" className="bk-cell">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </span>
-                      ))}
-                    </label>
-                  </motion.li>
-                );
-              })}
-            </AnimatePresence>
-          </ul>
-        </div>
+              return (
+                <motion.li
+                  key={row.id}
+                  role="row"
+                  aria-selected={on}
+                  layout="position"
+                  className="relative overflow-hidden rounded-[10px] transition-[background-color,border-radius] duration-[180ms] not-first:before:absolute not-first:before:top-0 not-first:before:right-2.5 not-first:before:left-[38px] not-first:before:h-px not-first:before:bg-(--bk-line) not-first:before:transition-opacity not-first:before:duration-[180ms] not-first:before:content-[''] hover:bg-(--bk-hover) data-joins-down:rounded-b-none data-joins-up:rounded-t-none data-selected:bg-(--bk-band)! data-selected:before:opacity-0 [[data-selected]+&]:before:opacity-0"
+                  data-selected={on || undefined}
+                  data-joins-up={
+                    (on && tableRows[index - 1]?.getIsSelected()) || undefined
+                  }
+                  data-joins-down={
+                    (on && tableRows[index + 1]?.getIsSelected()) || undefined
+                  }
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{
+                    opacity: 0,
+                    height: 0,
+                    transition: {
+                      duration: 0.28,
+                      delay: Math.max(0, order) * 0.06,
+                      ease: [0.4, 0, 0.2, 1],
+                    },
+                  }}
+                  transition={SPRING}
+                  onClickCapture={(event: MouseEvent) => {
+                    shift.current = event.shiftKey;
+                  }}
+                >
+                  <label className={`group/inner ${GRID} h-11 cursor-pointer`}>
+                    {row.getVisibleCells().map((cell) => (
+                      <span key={cell.id} role="cell" className={CELL}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </span>
+                    ))}
+                  </label>
+                </motion.li>
+              );
+            })}
+          </AnimatePresence>
+        </ul>
+      </div>
 
-        <Dock
-          count={files.selected.length}
-          undo={files.undo}
-          onClear={() => setFiles((current) => ({ ...current, selected: [] }))}
-          onDelete={remove}
-          onUndo={restore}
-        />
-      </section>
-    </Tooltip.Provider>
+      <Dock
+        count={files.selected.length}
+        undo={files.undo}
+        onClear={() => setFiles((current) => ({ ...current, selected: [] }))}
+        onDelete={remove}
+        onUndo={restore}
+      />
+    </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (BulkSelectValue & { ms: number })[] = [
   { ...REST, ms: 1300 },
@@ -518,5 +601,11 @@ interface BulkSelectDemoProps {
 
 export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
   const scene = useScene(BEATS, fromBeat, playing);
-  return <BulkSelect ref={scene.ref} value={scene.state} onValueChange={scene.onValueChange} />;
+  return (
+    <BulkSelect
+      ref={scene.ref}
+      value={scene.state}
+      onValueChange={scene.onValueChange}
+    />
+  );
 }

@@ -1,4 +1,6 @@
 "use client";
+import { DAY_STAGE } from "../demos/day-stage";
+import { NIGHT_STAGE } from "../demos/night-stage";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, ArrowDown01Icon, Delete02Icon, Download01Icon, Layers01Icon, PauseIcon, PlayIcon, Redo02Icon, CheckIcon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { Menu } from "@base-ui/react/menu";
@@ -189,7 +191,7 @@ export function Studio() {
         </aside>
 
         <section className="st-center">
-          <div className={doc.stage === "night" ? "night-stage st-stage" : "day-stage st-stage"} data-stage={doc.stage}>
+          <div className={`${doc.stage === "night" ? NIGHT_STAGE : DAY_STAGE} st-stage`} data-stage={doc.stage}>
             <Remold.Scene
               key={key}
               className="st-scene"

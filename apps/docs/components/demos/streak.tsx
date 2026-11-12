@@ -24,9 +24,7 @@ const SPARKS = Array.from({ length: 14 }, (_, index) => ({
 }));
 
 export interface StreakValue {
-  /** The streak, in days. */
   days: number;
-  /** Today's lesson is done and the flame is lit. */
   lit: boolean;
 }
 
@@ -60,7 +58,6 @@ export interface StreakProps {
   value?: StreakValue;
   defaultValue?: StreakValue;
   onValueChange?: (value: StreakValue) => void;
-  /** Today's place in the week, Monday first; the days before it count as done. */
   today?: number;
   ref?: Ref<HTMLElement>;
 }
@@ -213,8 +210,6 @@ export function Streak({
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (StreakValue & { ms: number })[] = [
   { lit: false, days: START, ms: 1600 },

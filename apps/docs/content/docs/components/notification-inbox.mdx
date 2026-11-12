@@ -1,0 +1,46 @@
+---
+title: "Notification inbox"
+description: "A bell that grows into your notifications, grouped by day, read one at a time or all at once."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="notification-inbox" code={<Source demo="notification-inbox" />} minHeight={720}>
+  <NotificationInboxDemo />
+</Stage>
+
+## Things to try
+
+- **Open the bell.** It grows into the inbox, the rows rising in one after another, and the bell turns into the close button.
+- **Move over the list.** One soft highlight slides from row to row.
+- **Open a notification** and its dot goes. The count on the bell rolls down to match.
+- **Answer the invite** in place. Accept or Decline gives way to what you chose.
+- **Mark all as read.** The dots clear top to bottom and the count ticks down with them. On Unread, the rows fold away until you're all caught up.
+
+## Install
+
+<AddCommand name="notification-inbox" />
+
+## Dependencies
+
+<Dependencies demo="notification-inbox" />
+
+## Usage
+
+```tsx
+const [inbox, setInbox] = useState({ open: false, tab: "all", notices });
+
+<NotificationInbox value={inbox} onValueChange={setInbox} />
+```
+
+## How it works
+
+- **One shell morphs,** like the [Popover menu](/docs/components/popover-menu)'s: a flat surface springs from the bell's circle to the inbox's size and back. Its height follows the content, measured, so it grows and shrinks as rows come and go.
+- **The panel is Base UI's [Popover](https://base-ui.com/react/components/popover),** portalled into that shell. It handles focus, Escape and clicking outside.
+- **The count is derived,** never stored: it's how many notices aren't read. The bell rings whenever it goes up, and the number rolls with an odometer whenever it changes.
+- **Rows slide, never jump.** Day names and rows sit in one list; a row leaving fades out of the flow and the rest slide up on a spring, while the shell follows them.
+- **Marking all as read** clears one notice every 70 ms, top to bottom, so the count ticks down instead of snapping to nothing.
+- **Each row is one button** that opens it, sitting under the row's content, so the invite's own buttons still work inside it.
+- **All or Unread** is a Base UI Toggle Group with a sliding highlight, like the hover.
+
+<Callout>The people, teams and projects are made up.</Callout>

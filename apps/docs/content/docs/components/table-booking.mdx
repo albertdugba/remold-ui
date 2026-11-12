@@ -28,7 +28,8 @@ The install command adds these for you. If you copy the code by hand, install th
 ## How it works
 
 - **One card, three faces.** The notice, the booking and the party-size picker are faces of one card. It springs its real height between them and clips what's inside, so nothing is scaled.
-- **The time carries over.** The time you pick is the same chip in the option and in the booking, so Motion's `layoutId` moves it without resizing it. Everything else scales in from just below its size, unblurring, a beat after the part before.
+- **The time carries over.** The time you pick is the same chip in the option and in the booking, so Motion's `layoutId` moves it without resizing it. The grey card behind it travels too: an empty shape that springs from the option row into the ticket and back, handed over whole so it never fades or stretches.
+- **Everything else arrives a beat later.** Words scale in from just below their size, unblurring. Filled boxes, like the warning, scale in without the blur, which would otherwise square off their corners.
 - **Built on Base UI.** `Button` for the options and every press, `ToggleGroup` and `Toggle` for the party size, whose highlight slides to your pick, and `Tooltip` on the confirmation code.
 
 <Callout>The restaurant and the booking are made up.</Callout>

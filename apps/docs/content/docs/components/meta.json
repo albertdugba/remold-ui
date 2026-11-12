@@ -38,6 +38,8 @@
     "two-factor",
     "usage-meter",
     "wallet-stack",
+    "peel-reward",
+    "notification-inbox",
     "---Form elements---",
     "amount-input",
     "phone-input",
@@ -51,12 +53,11 @@
     "order-tracker",
     "payment-status",
     "---Particles---",
-    "inbox-triage",
+    "storage-cleanup",
     "donation-goal",
     "focus-timer",
     "unit-chart",
     "particle-shapes",
-    "voice-assistant",
     "---Canvas---",
     "voice-orb"
   ]

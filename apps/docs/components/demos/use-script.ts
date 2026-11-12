@@ -2,14 +2,8 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 
-/** One step of a script: run it, then wait this many ms before the next. */
 export type ScriptStep = readonly [ms: number, run: () => void];
 
-/**
- * Plays a demo by calling its own handlers in a loop while `playing` is true, as the home page's
- * cards do, so it animates exactly as it would for a person. A real press or key inside `root`
- * hands it over to them until it's played again.
- */
 export function useScript(
   root: RefObject<HTMLElement | null>,
   playing: boolean | undefined,

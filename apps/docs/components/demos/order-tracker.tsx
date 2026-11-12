@@ -1,11 +1,11 @@
 "use client";
-import { IllustratedStory, StoryFrame, useStory, type StoryStage } from "./illustrated-story";
-import "./order-tracker.css";
+import { IllustratedStory, STORY_STAGE, StoryFrame, useStory, type StoryStage } from "./illustrated-story";
 
 const STAGES: readonly StoryStage[] = [
   {
     id: "preparing",
     label: "Preparing",
+    motion: { part: "origin-[76%_47%] animate-lid-rattle", soft: "animate-steam-puff" },
     title: "Preparing your order",
     line: "Mama’s Kitchen is cooking it · arrives 12:45",
     art: {
@@ -21,6 +21,7 @@ const STAGES: readonly StoryStage[] = [
   {
     id: "ready",
     label: "Ready",
+    motion: { body: "animate-bag-hop", part: "origin-[50%_40%] animate-handle-swing" },
     title: "Ready for pickup",
     line: "Kojo is collecting it · arrives 12:45",
     art: {
@@ -36,6 +37,7 @@ const STAGES: readonly StoryStage[] = [
   {
     id: "riding",
     label: "On the way",
+    motion: { body: "animate-scooter-bump", soft: "animate-speed-rush" },
     title: "On the way",
     line: "Kojo is 6 minutes away · arrives 12:44",
     art: {
@@ -51,6 +53,7 @@ const STAGES: readonly StoryStage[] = [
   {
     id: "delivered",
     label: "Delivered",
+    motion: { body: "animate-story-land", part: "origin-[45%_74%] animate-door-swing", soft: "animate-story-rise" },
     title: "Delivered",
     line: "Left at your door at 12:43. Enjoy!",
     art: {
@@ -65,42 +68,61 @@ const STAGES: readonly StoryStage[] = [
   },
 ];
 
+const COLORS =
+  "[--ils-ink:#191919] [--ils-brand:#ff3008] [--ils-soft:#ffd3c6] [--ils-track:#f3e7e2] dark:[--ils-ink:#f4efec] dark:[--ils-brand:#ff5a36] dark:[--ils-soft:#5c3328] dark:[--ils-track:#3d2e29]";
+const SPIN = "animate-[spin_0.45s_linear_infinite]";
+
 const MS = [4200, 3600, 3800, 4400];
 
 export interface OrderTrackerProps {
-  /** The stage shown, 0 to 3: preparing, ready, on the way, delivered. */
   stage: number;
-  /** Called when a step is tapped. */
   onStageChange?: (stage: number) => void;
 }
 
-/** The order's live illustration, the caption under it and the steps. */
 export function OrderTracker({ stage, onStageChange }: OrderTrackerProps) {
+  const id = STAGES[stage]!.id;
+  const riding = id === "riding";
+  const delivered = id === "delivered";
+
   return (
     <IllustratedStory
-      className="otr"
+      colors={COLORS}
       label="Order status"
       stages={STAGES}
       stage={stage}
       onStageChange={onStageChange}
       under={
-        <StoryFrame className="otr-road">
-          <line x1="0" y1="113" x2="160" y2="113" />
+        <StoryFrame shown={riding}>
+          <line
+            x1="0"
+            y1="113"
+            x2="160"
+            y2="113"
+            className={`stroke-(--ils-soft) [stroke-dasharray:10_8] [stroke-linecap:round] [stroke-width:1.6] ${riding ? "animate-road-dash" : ""}`}
+          />
         </StoryFrame>
       }
       extras={
-        <StoryFrame className="otr-spokes">
-          <g>
+        <StoryFrame
+          shown={riding}
+          className="[&_g]:origin-center [&_g]:[transform-box:fill-box] [&_path]:fill-none [&_path]:stroke-(--ils-light) [&_path]:opacity-55 [&_path]:[stroke-linecap:round] [&_path]:[stroke-width:1.4]"
+        >
+          <g className={riding ? SPIN : ""}>
             <path d="M50 89v18M41 98h18M43.6 91.6l12.8 12.8M56.4 91.6l-12.8 12.8" />
           </g>
-          <g>
+          <g className={riding ? SPIN : ""}>
             <path d="M112 89v18M103 98h18M105.6 91.6l12.8 12.8M118.4 91.6l-12.8 12.8" />
           </g>
         </StoryFrame>
       }
       over={
-        <StoryFrame className="otr-ping">
-          <circle cx="36" cy="24" r="14" />
+        <StoryFrame shown={delivered}>
+          <circle
+            cx="36"
+            cy="24"
+            r="14"
+            className={`origin-[36px_24px] fill-none stroke-(--ils-brand) [stroke-width:2] [transform-box:view-box] ${delivered ? "animate-story-ping" : ""}`}
+          />
         </StoryFrame>
       }
     />
@@ -108,14 +130,13 @@ export function OrderTracker({ stage, onStageChange }: OrderTrackerProps) {
 }
 
 export interface OrderTrackerDemoProps {
-  /** On the home page, whether its card is playing. */
   playing?: boolean;
 }
 
 export function OrderTrackerDemo({ playing }: OrderTrackerDemoProps = {}) {
   const { ref, state, takeOver } = useStory(MS, playing);
   return (
-    <div ref={ref} className="ils-stage not-prose">
+    <div ref={ref} className={STORY_STAGE}>
       <OrderTracker stage={state} onStageChange={takeOver} />
     </div>
   );

@@ -1,19 +1,18 @@
 ---
 title: "Particle shapes"
-description: "Thousands of dots turning in 3D that flow from a spiral galaxy into a double helix, then into the Lorenz attractor's two wings, a honeybee, a butterfly and the Remold mark."
+description: "Thousands of dots turning in 3D that flow from a spiral galaxy into a double helix, then into the Lorenz attractor's two wings, a honeybee, a butterfly and the Grok mark."
 status: "new"
-tags: ["Canvas", "Particles"]
+tags: ["Canvas", "Particles", "Customize"]
 ---
 
-<Stage name="particle-shapes" code={<Source demo="particle-shapes" />} minHeight={520}>
-  <ParticleShapesDemo />
-</Stage>
+<Customize name="particle-shapes" code={<Source demo="particle-shapes" />} wide />
 
 ## Things to try
 
-- **Watch it play.** The galaxy turns, then its arms unwind and stretch into two twisting strands. The strands loop into the Lorenz attractor's two wings, which fold into a honeybee, stripes, wings and all, then open out into a butterfly and stand up as the Remold mark before it gathers back into the galaxy.
+- **Watch it play.** The galaxy turns, then its arms unwind and stretch into two twisting strands. The strands loop into the Lorenz attractor's two wings, which fold into a honeybee, stripes, wings and all, then open out into a butterfly and close into the Grok mark before it gathers back into the galaxy.
 - **Move your cursor through it.** The dots part around the pointer and drift back as it leaves, as if you were moving through space.
 - **Pick a shape.** It stops playing and flows straight there, from wherever the dots are.
+- **Customize it.** Change how many dots there are and how they look, how the camera turns and leans, and how one shape becomes the next: a scatter or a direct spring, how far the cloud spreads and how long it holds, and how the dots pair up. The code below the controls updates to match.
 
 ## Install
 
@@ -32,3 +31,11 @@ The install command adds these for you. If you copy the code by hand, install th
 - **A scatter in between.** `transition="scatter"` dissolves each shape into a glittering cloud that spreads through the depth too, holds a moment, then gathers into the next.
 - **One flow, not a swarm.** `pairing="flow"` pairs dots by where they sit along each shape, so the galaxy's core becomes the top of the helix and the path's start becomes the bee's tail.
 - **Cheap when it can be.** It only draws while on screen, stops turning when paused (`camera={{ spin: 0 }}`), and uses fewer dots on narrow screens. Behind it, a `<Remold.Canvas>` paints a still field of faint stars once.
+
+## API reference
+
+### Props
+
+`ParticleShapesDemo` plays the shapes in a loop and takes every setting below. To drive the shape yourself, use `ParticleShapes` with `shape` and `onShapeChange`; it takes the same settings.
+
+<ControlsTable name="particle-shapes" />

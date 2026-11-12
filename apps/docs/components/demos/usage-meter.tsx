@@ -15,7 +15,6 @@ import { Odometer } from "./odometer";
 import type { Ref } from "react";
 import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import "./usage-meter.css";
 import { usePortalContainer } from "./portal-container";
 
 type Plan = "pro" | "scale";
@@ -79,14 +78,25 @@ const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.15 };
 const POP = { type: "spring" as const, duration: 0.4, bounce: 0.35 };
 
 export interface UsageMeterProps {
-  /** The day of the month and the plan. */
   value?: UsageMeterValue;
   defaultValue?: UsageMeterValue;
   onValueChange?: (value: UsageMeterValue) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A usage meter for the month so far: API calls and seats against the plan, with a projection and an upgrade. */
+const TOKENS = [
+  "[--um-surface:#ffffff] [--um-panel:#f7f7f8] [--um-track:#efeff1] [--um-line:rgb(24_24_27/0.08)] [--um-ink:#18181b] [--um-on-ink:#fafafa] [--um-muted:#71717a] [--um-quiet:#a1a1aa]",
+  "[--um-fill:#4f46e5] [--um-low:#d97706] [--um-over:#dc2626] [--um-good:#059669]",
+  "dark:[--um-surface:#1f1f23] dark:[--um-panel:#26262b] dark:[--um-track:#2e2e33] dark:[--um-line:rgb(255_255_255/0.08)] dark:[--um-ink:#fafafa] dark:[--um-on-ink:#18181b] dark:[--um-muted:#a1a1aa] dark:[--um-quiet:#71717a]",
+  "dark:[--um-fill:#818cf8] dark:[--um-low:#fbbf24] dark:[--um-over:#f87171] dark:[--um-good:#34d399]",
+  "font-sans",
+].join(" ");
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--um-fill)";
+const WRAP = "@max-[400px]:flex-wrap @max-[400px]:gap-y-0.5";
+const PUSH_RIGHT = "@max-[400px]:ml-auto @max-[400px]:text-[12px]";
+const BANNER = `mt-3.5 flex items-center gap-2.5 rounded-xl py-2.5 pr-2.5 pl-3 text-[12.5px] leading-[1.45] text-(--um-ink) ${WRAP} [&_b]:font-semibold [&_b]:text-(--um-ink) [&>span]:flex-1 [&>span]:text-(--um-muted)`;
+
 export function UsageMeter({
   value,
   defaultValue = { day: 16, plan: "pro" },
@@ -106,11 +116,18 @@ export function UsageMeter({
 
   return (
     <Tooltip.Provider delay={250}>
-      <section ref={ref} className="um um-layer not-prose" aria-label="Usage this month">
-        <header className="um-head">
-          <span className="um-title">
+      <section
+        ref={ref}
+        className={`not-prose @container grid w-[min(100%,420px)] rounded-[22px] bg-(--um-surface) p-[18px] text-(--um-ink) @max-[400px]:p-3.5 ${TOKENS}`}
+        aria-label="Usage this month"
+      >
+        <header className={`flex items-center justify-between gap-2.5 ${WRAP}`}>
+          <span className="flex items-center gap-2 text-[15px]">
             <b>Usage</b>
-            <span className="um-plan" data-plan={usage.plan}>
+            <span
+              data-plan={usage.plan}
+              className="inline-grid rounded-md bg-[color-mix(in_oklab,var(--um-fill)_14%,transparent)] px-2 py-0.5 text-[11.5px] font-bold text-(--um-fill) transition-colors duration-300 data-[plan=scale]:bg-[color-mix(in_oklab,var(--um-good)_15%,transparent)] data-[plan=scale]:text-(--um-good)"
+            >
               <AnimatePresence initial={false} mode="popLayout">
                 <motion.span
                   key={plan.name}
@@ -124,40 +141,47 @@ export function UsageMeter({
               </AnimatePresence>
             </span>
           </span>
-          <span className="um-cycle">
+          <span className={`inline-flex items-baseline gap-1 text-[12px] text-(--um-muted) ${PUSH_RIGHT}`}>
             Resets in <Odometer value={String(DAYS - usage.day)} /> days
           </span>
         </header>
-        <div className="um-month" aria-hidden="true">
-          <motion.span initial={false} animate={{ scaleX: usage.day / DAYS }} transition={SPRING} />
+        <div className="mt-2.5 h-[3px] overflow-hidden rounded-[2px] bg-(--um-track)" aria-hidden="true">
+          <motion.span
+            className="block h-full origin-left bg-(--um-quiet)"
+            initial={false} animate={{ scaleX: usage.day / DAYS }} transition={SPRING} />
         </div>
 
-        <ul className="um-rows">
+        <ul className="m-0 mt-4 grid list-none gap-3.5 p-0">
           {METRICS.map(({ id, label, unit, icon: Icon, tip }) => {
             const limit = plan.limits[id];
             const value = used[id];
             const ratio = value / limit;
             const status = tone(ratio);
             return (
-              <li key={id} className="um-row" data-tone={status}>
+              <li key={id} className="group/row" data-tone={status}>
                 <Meter.Root
                   value={Math.min(value, limit)}
                   max={limit}
-                  className="um-meter"
+                  className="grid gap-[7px]"
                   getAriaValueText={() => `${format(value)}${unit} of ${format(limit)}${unit}`}
                 >
-                  <div className="um-row-top">
-                    <Meter.Label className="um-label">
-                      <HugeiconsIcon icon={Icon} aria-hidden="true" />
+                  <div className={`flex min-h-5 items-center gap-1.5 ${WRAP}`}>
+                    <Meter.Label className="inline-flex items-center gap-[7px] text-[13px] font-medium whitespace-nowrap">
+                      <HugeiconsIcon icon={Icon} className="size-3.5 text-(--um-muted)" aria-hidden="true" />
                       {label}
                     </Meter.Label>
                     <Tooltip.Root>
-                      <Tooltip.Trigger className="um-info" aria-label={`About ${label}`}>
-                        <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
+                      <Tooltip.Trigger
+                        className={`grid size-[18px] cursor-help place-items-center rounded-full border-0 bg-transparent p-0 text-(--um-quiet) ${FOCUS}`}
+                        aria-label={`About ${label}`}
+                      >
+                        <HugeiconsIcon icon={InformationCircleIcon} className="size-[13px]" aria-hidden="true" />
                       </Tooltip.Trigger>
                       <Tooltip.Portal container={portal}>
-                        <Tooltip.Positioner className="um-layer" sideOffset={6}>
-                          <Tooltip.Popup className="um-tip">{tip}</Tooltip.Popup>
+                        <Tooltip.Positioner className={TOKENS} sideOffset={6}>
+                          <Tooltip.Popup className="max-w-[220px] origin-(--transform-origin) rounded-lg bg-(--um-ink) px-[9px] py-1.5 text-[12px] leading-[1.4] text-(--um-on-ink) [transition:opacity_0.14s,transform_0.18s] data-ending-style:[transform:scale(0.92)] data-ending-style:opacity-0 data-starting-style:[transform:scale(0.92)] data-starting-style:opacity-0">
+                            {tip}
+                          </Tooltip.Popup>
                         </Tooltip.Positioner>
                       </Tooltip.Portal>
                     </Tooltip.Root>
@@ -165,7 +189,7 @@ export function UsageMeter({
                       {status && (
                         <motion.span
                           key={status}
-                          className="um-flag"
+                          className="h-[18px] rounded-[5px] bg-[color-mix(in_oklab,var(--um-low)_15%,transparent)] px-1.5 text-[10.5px] leading-[18px] font-bold whitespace-nowrap text-(--um-low) group-data-[tone=over]/row:bg-[color-mix(in_oklab,var(--um-over)_14%,transparent)] group-data-[tone=over]/row:text-(--um-over)"
                           initial={{ opacity: 0, scale: 0.6 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.15 } }}
@@ -175,16 +199,16 @@ export function UsageMeter({
                         </motion.span>
                       )}
                     </AnimatePresence>
-                    <span className="um-value">
+                    <span className={`ml-auto inline-flex items-baseline text-[12.5px] font-semibold whitespace-nowrap ${PUSH_RIGHT}`}>
                       <Odometer value={format(value)} />
-                      <span className="um-of">
+                      <span className="font-medium text-(--um-quiet)">
                         {unit} / {format(limit)}
                         {unit}
                       </span>
                     </span>
                   </div>
-                  <Meter.Track className="um-track">
-                    <Meter.Indicator className="um-fill" />
+                  <Meter.Track className="relative h-1.5 overflow-hidden rounded-[3px] bg-(--um-track)">
+                    <Meter.Indicator className="h-full rounded-[inherit] bg-(--um-fill) [transition:width_0.7s_cubic-bezier(0.25,1.1,0.4,1),background-color_0.3s] group-data-[tone=low]/row:bg-(--um-low) group-data-[tone=over]/row:bg-[repeating-linear-gradient(-45deg,var(--um-over)_0_6px,color-mix(in_oklab,var(--um-over)_75%,#fff)_6px_12px)] group-data-[tone=over]/row:bg-size-[17px_17px] motion-safe:group-data-[tone=over]/row:animate-march" />
                   </Meter.Track>
                 </Meter.Root>
               </li>
@@ -196,7 +220,7 @@ export function UsageMeter({
           {(over || upgraded) && (
             <motion.div
               key="banner"
-              className="um-banner-wrap"
+              className="overflow-hidden"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
@@ -206,8 +230,7 @@ export function UsageMeter({
                 {upgraded ? (
                   <motion.div
                     key="done"
-                    className="um-banner"
-                    data-tone="good"
+                    className={`${BANNER} bg-[color-mix(in_oklab,var(--um-good)_11%,transparent)]`}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
@@ -218,7 +241,7 @@ export function UsageMeter({
                     </span>
                     <button
                       type="button"
-                      className="um-link"
+                      className={`flex-none cursor-pointer border-0 bg-transparent p-1 text-[12.5px] font-semibold text-(--um-ink) underline decoration-(--um-line) underline-offset-[3px] ${FOCUS}`}
                       onClick={() => setUsage((current) => ({ ...current, plan: "pro" }))}
                     >
                       Undo
@@ -227,7 +250,7 @@ export function UsageMeter({
                 ) : (
                   <motion.div
                     key="over"
-                    className="um-banner"
+                    className={`${BANNER} bg-[color-mix(in_oklab,var(--um-over)_9%,transparent)]`}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
@@ -238,7 +261,7 @@ export function UsageMeter({
                     </span>
                     <motion.button
                       type="button"
-                      className="um-upgrade"
+                      className={`inline-flex h-[30px] flex-none cursor-pointer items-center gap-1 rounded-[9px] border-0 bg-(--um-ink) px-[11px] text-[12.5px] font-semibold text-(--um-on-ink) [&_svg]:size-3.5 ${FOCUS}`}
                       onClick={() => setUsage((current) => ({ ...current, plan: "scale" }))}
                       whileTap={{ scale: 0.96 }}
                     >
@@ -252,12 +275,15 @@ export function UsageMeter({
           )}
         </AnimatePresence>
 
-        <footer className="um-bill">
-          <div className="um-bill-top">
+        <footer className="mt-3.5 rounded-[14px] bg-(--um-panel) px-3.5 py-3">
+          <div className="flex items-baseline justify-between text-[12.5px] font-medium text-(--um-muted)">
             <span>Projected bill</span>
-            <Odometer value={`$${Math.round(bill)}`} className="um-bill-total" />
+            <Odometer
+              value={`$${Math.round(bill)}`}
+              className="text-[24px] font-bold tracking-[-0.02em] text-(--um-ink)"
+            />
           </div>
-          <ul className="um-lines">
+          <ul className="m-0 mt-1.5 grid list-none p-0 [&>li]:flex [&>li]:justify-between [&>li]:overflow-hidden [&>li]:text-[12px] [&>li]:leading-[22px] [&>li]:text-(--um-muted) [&>li[data-tone=over]]:text-(--um-over) @max-[400px]:[&>li]:h-auto @max-[400px]:[&>li]:flex-wrap @max-[400px]:[&>li]:gap-y-0.5 @max-[400px]:[&>li]:overflow-visible @max-[400px]:[&>li]:py-0.5 @max-[400px]:[&>li]:leading-[1.4]">
             <li>
               <span>{plan.name} plan</span>
               <Odometer value={`$${plan.price}`} />
@@ -283,8 +309,6 @@ export function UsageMeter({
     </Tooltip.Provider>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (UsageMeterValue & { ms: number })[] = [
   { day: 16, plan: "pro", ms: 1500 },

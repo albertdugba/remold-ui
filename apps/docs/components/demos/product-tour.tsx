@@ -12,63 +12,74 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Remold } from "@remold-ui/react";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type Ref,
-  type RefObject,
-} from "react";
+import { Remold, useTour } from "@remold-ui/react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type Ref, type RefObject } from "react";
+import useMeasure, { type RectReadOnly } from "react-use-measure";
 
 import { Frame } from "./frame";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 
-type Target = "new" | "search" | "revenue" | "share";
+export type Target = "new" | "search" | "revenue" | "chart" | "reports" | "share";
 type Side = "top" | "right" | "bottom" | "left";
 type Box = { x: number; y: number; width: number; height: number };
 type Size = { width: number; height: number };
 
-interface Step {
-  target: Target;
+export interface Step {
+  name: string;
   title: string;
   body: string;
-  side: Side;
+  side?: Side;
 }
 
 const STEPS: Step[] = [
   {
-    target: "new",
+    name: "welcome",
+    title: "Welcome to Orbit",
+    body: "A quick look round, about a minute. Use the arrow keys, or close it any time.",
+  },
+  {
+    name: "new",
+    side: "bottom",
     title: "Start with a report",
     body: "Pick a template or start blank. Reports refresh on their own as new data comes in.",
-    side: "bottom",
   },
   {
-    target: "search",
+    name: "search",
+    side: "bottom",
     title: "Find anything",
     body: "Search reports, customers and settings from one place. Press / from anywhere.",
-    side: "bottom",
   },
   {
-    target: "revenue",
+    name: "revenue",
+    side: "bottom",
     title: "Your numbers at a glance",
-    body: "Each card compares with last month. Open one to see what moved it, day by day.",
-    side: "bottom",
+    body: "Each card compares with last month, so you see what moved before you dig in.",
   },
   {
-    target: "share",
+    name: "chart",
+    side: "top",
+    title: "Spot the trend",
+    body: "Twelve weeks of revenue, week by week. This one is your best yet.",
+  },
+  {
+    name: "reports",
+    side: "right",
+    title: "Everything you've saved",
+    body: "Reports you and your team save land here, with a badge until you open them.",
+  },
+  {
+    name: "share",
+    side: "left",
     title: "Bring your team",
     body: "Invite people to view or edit. Everyone sees the same numbers, live.",
-    side: "left",
+  },
+  {
+    name: "done",
+    title: "That's the tour",
+    body: "Find it again under Help whenever you need it. Now, that first report.",
   },
 ];
-
-const LAST = STEPS.length - 1;
 
 const TIP = { width: 260, height: 172 };
 const GAP = 30;
@@ -116,19 +127,19 @@ const FOCUS =
 
 const ROOT = [
   "w-[680px] max-w-full font-sans text-[13px] text-zinc-900 dark:text-zinc-50",
-  "[--pt-accent:#6d4aff] [--pt-dim:rgb(14_12_28/0.52)] dark:[--pt-accent:#a48bff] dark:[--pt-dim:rgb(0_0_0/0.6)]",
+  "[--pt-ring:rgb(255_255_255/0.9)] [--pt-line:rgb(255_255_255/0.75)]",
   "[--pt-spring:linear(0,0.18_6%,0.56_14%,0.86_22%,1.02_31%,1.06_38%,1.04_46%,1.005_58%,0.997_70%,1)]",
 ].join(" ");
 
 const STAGE = [
   "group/tour relative isolate h-[430px] overflow-hidden rounded-[18px] bg-white dark:bg-[#1c1c20]",
-  "[&_.rm-connector]:stroke-white/75 [&_.rm-connector]:[stroke-dasharray:2_4]",
-  "[&_.rm-connector]:[stroke-linecap:round] [&_.rm-connector]:[stroke-width:1.5] [&>svg]:z-3 [&>svg]:text-white",
+  "[&_.rm-connector]:stroke-(--pt-line) [&_.rm-connector]:[stroke-dasharray:var(--pt-dash)]",
+  "[&_.rm-connector]:[stroke-linecap:round] [&_.rm-connector]:[stroke-width:1.5] [&>svg]:z-3 [&>svg]:text-(--pt-line)",
 ].join(" ");
 
 const SPOTLIGHT = [
   "pointer-events-none absolute top-0 left-0 z-2 rounded-[14px] opacity-0 group-data-touring/tour:opacity-100",
-  "shadow-[0_0_0_1.5px_rgb(255_255_255/0.9),0_0_0_6px_rgb(109_74_255/0.28),0_0_0_200vmax_var(--pt-dim)]",
+  "shadow-[0_0_0_1.5px_var(--pt-ring),0_0_0_6px_color-mix(in_oklab,var(--pt-accent)_28%,transparent),0_0_0_200vmax_var(--pt-dim)]",
   "transition-[transform,width,height,opacity] duration-[620ms,620ms,620ms,300ms]",
   "ease-[var(--pt-spring),var(--pt-spring),var(--pt-spring),ease]",
   "motion-reduce:transition-opacity motion-reduce:duration-200 motion-reduce:ease-[ease]",
@@ -160,60 +171,7 @@ function placeTip(target: Box, side: Side, bounds: Size) {
   return { x: clamp(spot.x, bounds.width - TIP.width), y: clamp(spot.y, bounds.height - TIP.height) };
 }
 
-function spotlightAround(target: Box | null | undefined, bounds: Size | undefined): Box {
-  if (target) {
-    return {
-      x: target.x - PAD,
-      y: target.y - PAD,
-      width: target.width + PAD * 2,
-      height: target.height + PAD * 2,
-    };
-  }
-
-  return { x: -40, y: -40, width: (bounds?.width ?? 640) + 80, height: (bounds?.height ?? 420) + 80 };
-}
-
-function useTargetBoxes(root: RefObject<HTMLElement | null>) {
-  const [boxes, setBoxes] = useState<{ bounds: Size; of: Partial<Record<Target, Box>> } | null>(null);
-
-  const measure = useCallback(() => {
-    const frame = root.current;
-    if (!frame) return;
-
-    const origin = frame.getBoundingClientRect();
-    const of: Partial<Record<Target, Box>> = {};
-
-    for (const anchor of frame.querySelectorAll<HTMLElement>("[data-rm-anchor]")) {
-      const name = anchor.dataset.rmAnchor as Target | "tip";
-      if (name === "tip") continue;
-
-      const rect = anchor.getBoundingClientRect();
-      of[name] = {
-        x: rect.left - origin.left,
-        y: rect.top - origin.top,
-        width: rect.width,
-        height: rect.height,
-      };
-    }
-
-    setBoxes({ bounds: { width: origin.width, height: origin.height }, of });
-  }, [root]);
-
-  useLayoutEffect(() => {
-    measure();
-
-    const frame = root.current;
-    if (!frame || typeof ResizeObserver !== "function") return;
-
-    const observer = new ResizeObserver(measure);
-    observer.observe(frame);
-    return () => observer.disconnect();
-  }, [measure, root]);
-
-  return boxes;
-}
-
-function Sidebar() {
+function Sidebar({ measure }: { measure: MeasureRefs }) {
   return (
     <aside className="grid content-start gap-0.5 border-r border-zinc-200/70 px-2.5 py-4 max-sm:hidden dark:border-white/[0.07]">
       <span className="flex items-center gap-2 px-2 pb-3.5 text-[14px] font-[650] tracking-[-0.01em]">
@@ -226,21 +184,72 @@ function Sidebar() {
         Orbit
       </span>
 
-      {NAV.map((item) => (
-        <span
-          key={item.label}
-          className="flex h-8 items-center gap-[9px] rounded-lg px-2 text-zinc-500 data-on:bg-zinc-100 data-on:font-medium data-on:text-zinc-900 dark:text-zinc-400 dark:data-on:bg-white/[0.07] dark:data-on:text-zinc-50 [&_svg]:size-4"
-          data-on={item.on || undefined}
-        >
-          <HugeiconsIcon icon={item.icon} strokeWidth={1.7} aria-hidden="true" />
-          {item.label}
-        </span>
-      ))}
+      {NAV.map((item) => {
+        const content = (
+          <>
+            <HugeiconsIcon icon={item.icon} strokeWidth={1.7} aria-hidden="true" />
+            {item.label}
+          </>
+        );
+        return item.label === "Reports" ? (
+          <Remold.Tour.Target
+            key={item.label}
+            ref={measure.reports}
+            name="reports"
+            render={<Remold.Anchor name="reports" render={<span className={`${NAV_ITEM} group/nav`} />} />}
+          >
+            {content}
+            <span className="ml-auto flex-none scale-50 rounded-full whitespace-nowrap bg-(--pt-accent) px-1.5 text-[10px] leading-4 font-semibold text-white opacity-0 transition-[scale,opacity] delay-300 duration-[400ms,200ms] ease-(--pt-spring) group-data-rm-active/nav:scale-100 group-data-rm-active/nav:opacity-100 motion-reduce:transition-none">
+              3 new
+            </span>
+          </Remold.Tour.Target>
+        ) : (
+          <span key={item.label} className={NAV_ITEM} data-on={item.on || undefined}>
+            {content}
+          </span>
+        );
+      })}
     </aside>
   );
 }
 
-function DashboardHeader() {
+type MeasureRefs = Record<Target, (element: HTMLElement | null) => void>;
+
+const NAV_ITEM =
+  "flex h-8 items-center gap-[9px] rounded-lg px-2 text-zinc-500 data-on:bg-zinc-100 data-on:font-medium data-on:text-zinc-900 dark:text-zinc-400 dark:data-on:bg-white/[0.07] dark:data-on:text-zinc-50 [&_svg]:size-4";
+
+const QUERY = "churn by plan";
+
+function SearchText() {
+  const { step } = useTour();
+  const active = step === "search";
+  const [typed, setTyped] = useState(0);
+
+  useEffect(() => {
+    if (!active) {
+      setTyped(0);
+      return;
+    }
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const start = setTimeout(() => {
+      timer = setInterval(() => setTyped((count) => Math.min(QUERY.length, count + 1)), 70);
+    }, 550);
+    return () => {
+      clearTimeout(start);
+      clearInterval(timer);
+    };
+  }, [active]);
+
+  if (!typed) return <span className="flex-1 max-sm:hidden">Search…</span>;
+  return (
+    <span className="flex flex-1 items-center truncate text-zinc-900 max-sm:hidden dark:text-zinc-50">
+      {QUERY.slice(0, typed)}
+      <span className="ml-px h-3.5 w-px animate-pulse bg-(--pt-accent)" aria-hidden="true" />
+    </span>
+  );
+}
+
+function DashboardHeader({ measure }: { measure: MeasureRefs }) {
   return (
     <header className="flex items-center gap-2">
       <span className="grid flex-1 leading-tight">
@@ -248,49 +257,83 @@ function DashboardHeader() {
         <span className="text-[11.5px] text-zinc-500 dark:text-zinc-400">Last 30 days</span>
       </span>
 
-      <Remold.Anchor
+      <Remold.Tour.Target
+        ref={measure.search}
         name="search"
         render={
-          <label className="flex h-8 w-[150px] items-center gap-[7px] rounded-[9px] bg-zinc-100 pr-1.5 pl-2.5 text-zinc-400 max-sm:w-8 max-sm:justify-center max-sm:px-0 dark:bg-[#2c2c31] dark:text-zinc-500 [&_svg]:size-[15px]" />
-        }
-      >
-        <HugeiconsIcon icon={Search01Icon} strokeWidth={1.8} aria-hidden="true" />
-        <span className="flex-1 max-sm:hidden">Search…</span>
-        <kbd className="rounded-[5px] bg-white px-1.5 py-px font-mono text-[11px] leading-[1.4] text-zinc-500 max-sm:hidden dark:bg-[#1c1c20]">
-          /
-        </kbd>
-      </Remold.Anchor>
-
-      <Remold.Anchor
-        name="share"
-        render={
-          <button
-            type="button"
-            className={`inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-zinc-100 px-3 font-medium whitespace-nowrap max-sm:px-2.5 dark:bg-[#2c2c31] [&_svg]:size-[15px] ${FOCUS}`}
+          <Remold.Anchor
+            name="search"
+            render={
+              <label
+                className="flex h-8 w-[150px] items-center gap-[7px] rounded-[9px] bg-zinc-100 pr-1.5 pl-2.5 text-zinc-400 max-sm:w-8 max-sm:justify-center max-sm:px-0 dark:bg-[#2c2c31] dark:text-zinc-500 [&_svg]:size-[15px]"
+              />
+            }
           />
         }
       >
+        <HugeiconsIcon icon={Search01Icon} strokeWidth={1.8} aria-hidden="true" />
+        <SearchText />
+        <kbd className="rounded-[5px] bg-white px-1.5 py-px font-mono text-[11px] leading-[1.4] text-zinc-500 max-sm:hidden dark:bg-[#1c1c20]">
+          /
+        </kbd>
+      </Remold.Tour.Target>
+
+      <Remold.Tour.Target
+        ref={measure.share}
+        name="share"
+        render={
+          <Remold.Anchor
+            name="share"
+            render={
+              <button
+                type="button"
+                className={`group/share inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-zinc-100 px-3 font-medium whitespace-nowrap max-sm:px-2.5 dark:bg-[#2c2c31] [&_svg]:size-[15px] ${FOCUS}`}
+              />
+            }
+          />
+        }
+      >
+        <span
+          className="-mr-1.5 flex w-0 overflow-hidden transition-[width,margin] delay-300 duration-500 ease-(--pt-spring) group-data-rm-active/share:mr-0 group-data-rm-active/share:w-[30px] motion-reduce:transition-none"
+          aria-hidden="true"
+        >
+          {["#f59e0b", "#10b981"].map((color, index) => (
+            <span
+              key={color}
+              className="grid size-[18px] flex-none place-items-center rounded-full text-[8.5px] font-bold text-white shadow-[0_0_0_1.5px_white] not-first:-ml-1.5 dark:shadow-[0_0_0_1.5px_#2c2c31]"
+              style={{ background: color }}
+            >
+              {index ? "KO" : "AM"}
+            </span>
+          ))}
+        </span>
         <HugeiconsIcon icon={Share08Icon} strokeWidth={1.8} aria-hidden="true" />
         <span className="max-sm:sr-only">Share</span>
-      </Remold.Anchor>
+      </Remold.Tour.Target>
 
-      <Remold.Anchor
+      <Remold.Tour.Target
+        ref={measure.new}
         name="new"
         render={
-          <button
-            type="button"
-            className={`inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-zinc-900 px-3 font-medium whitespace-nowrap text-white dark:bg-zinc-50 dark:text-[#1c1c20] [&_svg]:size-[15px] ${FOCUS}`}
+          <Remold.Anchor
+            name="new"
+            render={
+              <button
+                type="button"
+                className={`inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-zinc-900 px-3 font-medium whitespace-nowrap text-white dark:bg-zinc-50 dark:text-[#1c1c20] [&_svg]:size-[15px] ${FOCUS}`}
+              />
+            }
           />
         }
       >
         <HugeiconsIcon icon={Add01Icon} strokeWidth={2} aria-hidden="true" />
         New<span className="max-sm:hidden"> report</span>
-      </Remold.Anchor>
+      </Remold.Tour.Target>
     </header>
   );
 }
 
-function Kpis() {
+function Kpis({ measure }: { measure: MeasureRefs }) {
   return (
     <div className="-mx-3 grid grid-cols-3">
       {KPIS.map((kpi, index) => {
@@ -301,7 +344,13 @@ function Kpis() {
               <span className="text-[20px] font-[650] tracking-[-0.025em] tabular-nums max-sm:text-[17px]">
                 {kpi.value}
               </span>
-              <span className="text-[11.5px] font-medium tabular-nums text-green-700 dark:text-green-400">
+              <span
+                className={`rounded-full text-[11.5px] font-medium tabular-nums text-green-700 dark:text-green-400 ${
+                  index === 0
+                    ? "transition-[background-color,padding] delay-300 duration-500 ease-(--pt-spring) group-data-rm-active/kpi:bg-green-100 group-data-rm-active/kpi:px-1.5 motion-reduce:transition-none dark:group-data-rm-active/kpi:bg-green-400/15"
+                    : ""
+                }`}
+              >
                 {kpi.delta}
               </span>
             </span>
@@ -309,9 +358,14 @@ function Kpis() {
         );
 
         return index === 0 ? (
-          <Remold.Anchor key={kpi.label} name="revenue" render={<div className={KPI} />}>
+          <Remold.Tour.Target
+            key={kpi.label}
+            ref={measure.revenue}
+            name="revenue"
+            render={<Remold.Anchor name="revenue" render={<div className={`${KPI} group/kpi`} />} />}
+          >
             {content}
-          </Remold.Anchor>
+          </Remold.Tour.Target>
         ) : (
           <div key={kpi.label} className={KPI}>
             {content}
@@ -322,9 +376,20 @@ function Kpis() {
   );
 }
 
-function RevenueChart() {
+function RevenueChart({ measure }: { measure: MeasureRefs }) {
   return (
-    <figure className="m-0 grid min-h-0 grid-rows-[auto_1fr_auto] gap-2 border-t border-zinc-200/70 pt-3.5 dark:border-white/[0.07]">
+    <Remold.Tour.Target
+      ref={measure.chart}
+      name="chart"
+      render={
+        <Remold.Anchor
+          name="chart"
+          render={
+            <figure className="group/chart m-0 grid min-h-0 grid-rows-[auto_1fr_auto] gap-2 border-t border-zinc-200/70 pt-3.5 dark:border-white/[0.07]" />
+          }
+        />
+      }
+    >
       <figcaption className="flex items-baseline justify-between text-[12px] text-zinc-500 dark:text-zinc-400">
         <span>Weekly revenue</span>
         <span>
@@ -361,9 +426,15 @@ function RevenueChart() {
         </svg>
 
         <span
-          className="absolute size-2 -translate-1/2 rounded-full bg-zinc-900 shadow-[0_0_0_3px_white] dark:bg-zinc-50 dark:shadow-[0_0_0_3px_#1c1c20]"
+          className="absolute size-2 -translate-1/2 rounded-full bg-zinc-900 shadow-[0_0_0_3px_white] transition-[background-color,box-shadow] delay-300 duration-300 group-data-rm-active/chart:bg-(--pt-accent) group-data-rm-active/chart:shadow-[0_0_0_3px_white,0_0_0_7px_color-mix(in_oklab,var(--pt-accent)_25%,transparent)] dark:bg-zinc-50 dark:shadow-[0_0_0_3px_#1c1c20]"
           style={{ left: "calc(100% - 36px)", top: `${heightOf(WEEKS.at(-1)!)}%` }}
         />
+        <span
+          className="absolute origin-top-right -translate-x-[calc(100%+6px)] translate-y-2.5 scale-90 rounded-lg bg-zinc-900 px-2 py-1 text-[11px] whitespace-nowrap text-white opacity-0 transition-[scale,opacity] delay-500 duration-[450ms,200ms] ease-(--pt-spring) group-data-rm-active/chart:scale-100 group-data-rm-active/chart:opacity-100 motion-reduce:transition-none dark:bg-zinc-50 dark:text-[#1c1c20]"
+          style={{ left: "calc(100% - 36px)", top: `${heightOf(WEEKS.at(-1)!)}%` }}
+        >
+          <b className="font-semibold tabular-nums">$48.2k</b> · best week yet
+        </span>
       </span>
 
       <span className="relative h-3.5 text-[10.5px] text-zinc-400 dark:text-zinc-500" aria-hidden="true">
@@ -377,53 +448,57 @@ function RevenueChart() {
           </span>
         ))}
       </span>
-    </figure>
+    </Remold.Tour.Target>
   );
 }
 
-function Dashboard({ inert }: { inert: boolean }) {
+function Dashboard({ inert, measure }: { inert: boolean; measure: MeasureRefs }) {
   return (
     <div className="grid h-full grid-cols-[150px_1fr] max-sm:grid-cols-1" inert={inert || undefined}>
-      <Sidebar />
+      <Sidebar measure={measure} />
 
       <main className="grid min-w-0 grid-rows-[auto_auto_1fr] gap-3.5 px-[18px] pt-4 pb-[18px] max-sm:px-3.5">
-        <DashboardHeader />
-        <Kpis />
-        <RevenueChart />
+        <DashboardHeader measure={measure} />
+        <Kpis measure={measure} />
+        <RevenueChart measure={measure} />
       </main>
     </div>
   );
 }
 
+const DASH = { dotted: "2 4", dashed: "6 5", solid: "none" } as const;
+
+const relativeTo = (stage: RectReadOnly, element: RectReadOnly): Box | null =>
+  stage.width && element.width
+    ? { x: element.left - stage.left, y: element.top - stage.top, width: element.width, height: element.height }
+    : null;
+
 function TipContent({
-  step,
+  steps,
   titleId,
   bodyId,
   nextRef,
-  onGo,
 }: {
-  step: number;
+  steps: readonly Step[];
   titleId: string;
   bodyId: string;
   nextRef: RefObject<HTMLButtonElement | null>;
-  onGo: (step: number) => void;
 }) {
-  const current = STEPS[step]!;
+  const tour = useTour();
+  const current = steps[tour.index]!;
 
   return (
     <>
       <div className="flex items-center justify-between">
         <Remold.Text className="text-[11.5px] font-semibold tracking-[0.02em] text-(--pt-accent)">
-          {`${step + 1} of ${STEPS.length}`}
+          {`${tour.index + 1} of ${tour.count}`}
         </Remold.Text>
-        <button
-          type="button"
+        <Remold.Tour.Close
           className={`-mt-1 -mr-1 grid size-6 place-items-center rounded-[7px] text-zinc-400 dark:text-zinc-500 [&_svg]:size-3.5 ${QUIET_BUTTON} ${FOCUS}`}
           aria-label="End tour"
-          onClick={() => onGo(-1)}
         >
           <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} aria-hidden="true" />
-        </button>
+        </Remold.Tour.Close>
       </div>
 
       <Remold.Text id={titleId} className="text-[15px] font-[650] tracking-[-0.015em]">
@@ -435,70 +510,120 @@ function TipContent({
 
       <div className="mt-1.5 flex items-center gap-1.5">
         <span className="flex flex-1 gap-1" aria-hidden="true">
-          {STEPS.map((entry, index) => (
+          {steps.map((entry, index) => (
             <span
-              key={entry.target}
+              key={entry.name}
               className="h-1.5 w-1.5 rounded-[3px] bg-zinc-200 transition-[width,background-color] duration-[400ms,250ms] ease-(--pt-spring) data-done:bg-(--pt-accent)/45 data-on:w-[18px] data-on:bg-(--pt-accent) motion-reduce:transition-none dark:bg-[#2c2c31]"
-              data-on={index === step || undefined}
-              data-done={index < step || undefined}
+              data-on={index === tour.index || undefined}
+              data-done={index < tour.index || undefined}
             />
           ))}
         </span>
 
-        {step > 0 && (
-          <button
-            type="button"
-            className={`h-[30px] rounded-[9px] px-3 font-medium text-zinc-500 dark:text-zinc-400 ${QUIET_BUTTON} ${FOCUS}`}
-            onClick={() => onGo(step - 1)}
-          >
-            Back
-          </button>
-        )}
-
-        <button
-          ref={nextRef}
-          type="button"
-          className={`h-[30px] rounded-[9px] bg-(--pt-accent) px-3 font-medium text-white ${FOCUS}`}
-          onClick={() => onGo(step + 1)}
+        <Remold.Tour.Previous
+          className={`h-[30px] rounded-[9px] px-3 font-medium text-zinc-500 data-rm-disabled:hidden dark:text-zinc-400 ${QUIET_BUTTON} ${FOCUS}`}
         >
-          <Remold.Text>{step === LAST ? "Finish" : "Next"}</Remold.Text>
-        </button>
+          Back
+        </Remold.Tour.Previous>
+
+        <Remold.Tour.Next
+          ref={nextRef}
+          className={`h-[30px] rounded-[9px] bg-(--pt-accent) px-3 font-medium text-white ${FOCUS}`}
+        >
+          <Remold.Text>{tour.last ? "Finish" : "Next"}</Remold.Text>
+        </Remold.Tour.Next>
       </div>
     </>
   );
 }
 
+function HelpButton({ helpRef }: { helpRef: RefObject<HTMLButtonElement | null> }) {
+  const tour = useTour();
+  return (
+    <button
+      ref={helpRef}
+      type="button"
+      className={`inline-flex h-9 items-center gap-[7px] rounded-full bg-zinc-900 pr-3.5 pl-[11px] font-medium text-white dark:bg-zinc-50 dark:text-[#1c1c20] [&_svg]:size-[17px] ${FOCUS}`}
+      onClick={() => tour.start()}
+    >
+      <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={1.8} aria-hidden="true" />
+      <span>Take the tour</span>
+    </button>
+  );
+}
+
 export interface ProductTourProps {
-  /** The step on screen, or -1 when the tour is folded away into the help button. */
   value?: number;
   defaultValue?: number;
   onValueChange?: (step: number, details: ChangeDetails) => void;
-  /** Moves focus onto Next as the tour opens, and back to the help button as it folds away. */
+  steps?: readonly Step[];
+  accent?: string;
+  dim?: number;
+  connector?: boolean;
+  connectorColor?: string;
+  connectorStyle?: keyof typeof DASH;
+  connectorShape?: "curve" | "elbow" | "straight";
+  pulse?: boolean;
   moveFocus?: boolean;
   ref?: Ref<HTMLDivElement>;
 }
 
-/** A product tour over a dashboard: a spotlight and a tip spring from one control to the next. */
 export function ProductTour({
   value,
   defaultValue = -1,
   onValueChange,
+  steps = STEPS,
+  accent = "#7c5cff",
+  dim = 0.55,
+  connector = true,
+  connectorColor,
+  connectorStyle = "dotted",
+  connectorShape = "curve",
+  pulse = true,
   moveFocus = true,
   ref,
 }: ProductTourProps) {
   const [step, setStep] = useControllableState({ value, defaultValue, onValueChange });
   const id = useId();
-  const root = useRef<HTMLDivElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
   const helpRef = useRef<HTMLButtonElement>(null);
-  const boxes = useTargetBoxes(root);
 
+  const [stageRef, stage] = useMeasure();
+  const [newRef, newBox] = useMeasure();
+  const [searchRef, searchBox] = useMeasure();
+  const [revenueRef, revenueBox] = useMeasure();
+  const [chartRef, chartBox] = useMeasure();
+  const [reportsRef, reportsBox] = useMeasure();
+  const [shareRef, shareBox] = useMeasure();
+  const measure: MeasureRefs = {
+    new: newRef,
+    search: searchRef,
+    revenue: revenueRef,
+    chart: chartRef,
+    reports: reportsRef,
+    share: shareRef,
+  };
+  const measured: Record<string, RectReadOnly> = {
+    new: newBox,
+    search: searchBox,
+    revenue: revenueBox,
+    chart: chartBox,
+    reports: reportsBox,
+    share: shareBox,
+  };
+
+  const stepNames = steps.map((entry) => entry.name);
   const touring = step >= 0;
-  const current = touring ? STEPS[step]! : null;
-  const target = current && boxes?.of[current.target];
-  const spot = spotlightAround(target, boxes?.bounds);
-  const tip = current && target && boxes ? placeTip(target, current.side, boxes.bounds) : null;
-  const facing = current ? FACING[current.side] : null;
+  const current = touring ? steps[step]! : null;
+  const side = current?.side ?? "bottom";
+  const box = current && measured[current.name];
+  const target = box ? relativeTo(stage, box) : null;
+  const tip = !current
+    ? null
+    : target
+      ? placeTip(target, side, stage)
+      : { x: (stage.width - TIP.width) / 2, y: (stage.height - TIP.height) / 2 };
+  const facing = target ? FACING[side] : null;
 
   const wasTouring = useRef(touring);
   useEffect(() => {
@@ -507,103 +632,95 @@ export function ProductTour({
     (touring ? nextRef.current : helpRef.current)?.focus({ preventScroll: true });
   }, [touring, moveFocus]);
 
-  const go = (to: number) => setStep(to > LAST ? -1 : Math.max(-1, to));
-
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!touring) return;
-
-    if (event.key === "ArrowRight") go(step + 1);
-    else if (event.key === "ArrowLeft" && step > 0) go(step - 1);
-    else if (event.key === "Escape") go(-1);
-    else return;
-
-    event.preventDefault();
-  };
+  const bright = dim < 0.25;
+  const look = {
+    "--pt-accent": accent,
+    "--pt-dim": `rgb(10 10 20 / ${dim})`,
+    ...(bright && { "--pt-ring": "var(--pt-accent)" }),
+    "--pt-line": connectorColor ?? (bright ? "var(--pt-accent)" : undefined),
+    "--pt-dash": DASH[connectorStyle],
+  } as CSSProperties;
 
   return (
-    <section ref={ref} className={ROOT} aria-label="Product tour demo">
-      <Remold.Connectors
-        ref={root}
-        shape="curve"
-        gap={6}
-        className={STAGE}
-        onKeyDown={onKeyDown}
-        data-touring={touring || undefined}
+    <section ref={ref} className={ROOT} style={look} aria-label="Product tour demo">
+      <Remold.Tour.Root
+        steps={stepNames}
+        step={touring ? stepNames[step]! : null}
+        onStepChange={(name) => setStep(name === null ? -1 : stepNames.indexOf(name))}
+        keyboard={moveFocus}
+        scrollIntoView={false}
       >
-        <Dashboard inert={touring} />
-
-        <div
-          className={SPOTLIGHT}
-          aria-hidden="true"
-          style={{ transform: `translate(${spot.x}px, ${spot.y}px)`, width: spot.width, height: spot.height }}
-        />
-
-        <Remold.Morph
-          trigger={[step, Math.round(tip?.x ?? 0), Math.round(tip?.y ?? 0)]}
-          spring={SPRING}
-          className="pointer-events-none absolute inset-0 z-4"
+        <Remold.Connectors
+          ref={stageRef}
+          shape={connectorShape}
+          gap={6}
+          className={STAGE}
+          data-touring={touring || undefined}
         >
-          <Remold.Anchor
-            name="tip"
-            linkTo={current?.target ?? null}
-            fromSide={facing?.from}
-            toSide={facing?.to}
-            pulse={step}
-            render={
-              <div
-                className={TIP_SURFACE}
-                data-open={touring || undefined}
-                role={touring ? "dialog" : undefined}
-                aria-labelledby={touring ? `${id}-title` : undefined}
-                aria-describedby={touring ? `${id}-body` : undefined}
-                style={tip ? { left: tip.x, top: tip.y, width: TIP.width } : undefined}
-              />
-            }
+          <Dashboard inert={touring} measure={measure} />
+
+          <Remold.Tour.Spotlight className={SPOTLIGHT} padding={PAD} />
+
+          <Remold.Morph
+            trigger={[step, Math.round(tip?.x ?? 0), Math.round(tip?.y ?? 0)]}
+            spring={SPRING}
+            className="pointer-events-none absolute inset-0 z-4"
           >
-            {touring ? (
-              <TipContent
-                step={step}
-                titleId={`${id}-title`}
-                bodyId={`${id}-body`}
-                nextRef={nextRef}
-                onGo={go}
-              />
-            ) : (
-              <button
-                ref={helpRef}
-                type="button"
-                className={`inline-flex h-9 items-center gap-[7px] rounded-full bg-zinc-900 pr-3.5 pl-[11px] font-medium text-white dark:bg-zinc-50 dark:text-[#1c1c20] [&_svg]:size-[17px] ${FOCUS}`}
-                onClick={() => go(0)}
-              >
-                <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={1.8} aria-hidden="true" />
-                <span>Take the tour</span>
-              </button>
-            )}
-          </Remold.Anchor>
-        </Remold.Morph>
-      </Remold.Connectors>
+            <Remold.Anchor
+              name="tip"
+              linkTo={connector && target ? current!.name : null}
+              fromSide={facing?.from}
+              toSide={facing?.to}
+              pulse={connector && pulse && target ? step : undefined}
+              render={
+                <div
+                  className={TIP_SURFACE}
+                  data-open={touring || undefined}
+                  role={touring ? "dialog" : undefined}
+                  aria-labelledby={touring ? `${id}-title` : undefined}
+                  aria-describedby={touring ? `${id}-body` : undefined}
+                  style={tip ? { left: tip.x, top: tip.y, width: TIP.width } : undefined}
+                />
+              }
+            >
+              {touring ? (
+                <TipContent steps={steps} titleId={`${id}-title`} bodyId={`${id}-body`} nextRef={nextRef} />
+              ) : (
+                <HelpButton helpRef={helpRef} />
+              )}
+            </Remold.Anchor>
+          </Remold.Morph>
+        </Remold.Connectors>
+      </Remold.Tour.Root>
     </section>
   );
 }
 
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
-
 const BEATS = [
   { step: -1, ms: 1500 },
-  { step: 0, ms: 2600 },
+  { step: 0, ms: 2400 },
   { step: 1, ms: 2400 },
-  { step: 2, ms: 2400 },
-  { step: 3, ms: 2600 },
+  { step: 2, ms: 2800 },
+  { step: 3, ms: 2400 },
+  { step: 4, ms: 2600 },
+  { step: 5, ms: 2400 },
+  { step: 6, ms: 2600 },
+  { step: 7, ms: 2400 },
 ] as const;
 
 const fromBeat = (index: number): number => BEATS[index]!.step;
 
-interface ProductTourDemoProps {
+export type ProductTourLook = Pick<
+  ProductTourProps,
+  "accent" | "dim" | "connector" | "connectorColor" | "connectorStyle" | "connectorShape" | "pulse"
+>;
+
+interface ProductTourDemoProps extends ProductTourLook {
   framed?: boolean;
   playing?: boolean;
 }
 
-export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps) {
+export function ProductTourDemo({ framed = true, playing, ...look }: ProductTourDemoProps) {
   const scene = useScene(BEATS, fromBeat, playing);
 
   const element = (
@@ -612,6 +729,7 @@ export function ProductTourDemo({ framed = true, playing }: ProductTourDemoProps
       value={scene.state}
       onValueChange={scene.onValueChange}
       moveFocus={!scene.live}
+      {...look}
     />
   );
 

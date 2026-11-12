@@ -4,27 +4,27 @@ import { Remold } from "@remold-ui/react";
 import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { typing, useScene } from "./use-scene";
-import "./amount-input.css";
 
 const DIGIT = { type: "spring" as const, duration: 0.36, bounce: 0.18 };
 const SHAKE = { duration: 0.36, ease: "easeOut" as const };
 
 export interface AmountInputProps {
-  /** The amount as typed: digits and at most one point, e.g. "2400.5". */
   value: string;
   onValueChange: (value: string) => void;
-  /** What's available. Above it, the field turns red and says by how much. */
   balance?: number;
-  /** Shown before the number. Default "$". */
   symbol?: string;
-  /** The currency's code, shown at the end of the field. Default "USD". */
   currency?: string;
-  /** Places after the point. Default 2. */
   decimals?: number;
-  /** Most digits before the point. Default 7. */
   maxDigits?: number;
   label?: string;
 }
+
+const PALETTE = [
+  "[--amt-surface:#ffffff] [--amt-ink:#0a0a0b] [--amt-muted:#71717a] [--amt-faint:#c4c4cc]",
+  "[--amt-line:rgb(10_10_11/0.1)] [--amt-focus:#0a0a0b] [--amt-bad:#e5484d]",
+  "dark:[--amt-surface:#18181b] dark:[--amt-ink:#fafafa] dark:[--amt-muted:#a1a1aa] dark:[--amt-faint:#52525b]",
+  "dark:[--amt-line:rgb(255_255_255/0.1)] dark:[--amt-focus:#fafafa] dark:[--amt-bad:#ff6369]",
+].join(" ");
 
 function accept(next: string, decimals: number, maxDigits: number): string | null {
   const clean = next.replace(/[^\d.]/g, "");
@@ -112,21 +112,22 @@ export function AmountInput({
         ? `${money(amount - balance, symbol, decimals)} more than your balance`
         : `Balance ${money(balance, symbol, decimals)}`;
 
+  const tone = over ? "bad" : focused ? "focus" : undefined;
+
   return (
     <div
-      className="amt"
       data-over={over || undefined}
-      data-focused={focused || undefined}
       data-selected={(focused && selected) || undefined}
+      className={`group grid w-[min(100%,340px)] gap-2 text-start font-sans text-(--amt-ink) tabular-nums antialiased ${PALETTE}`}
     >
-      <span className="amt-top">
-        <label htmlFor={id} className="amt-label">
+      <span className="flex min-h-[22px] items-center justify-between px-0.5">
+        <label htmlFor={id} className="cursor-text text-[12.5px] font-[550] text-(--amt-muted)">
           {label}
         </label>
         {balance !== undefined && (
           <button
             type="button"
-            className="amt-max"
+            className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-semibold text-(--amt-muted) transition-colors duration-150 hover:text-(--amt-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--amt-focus)"
             onClick={() => onValueChange(balance.toFixed(decimals).replace(/\.?0+$/, ""))}
           >
             Max
@@ -134,7 +135,8 @@ export function AmountInput({
         )}
       </span>
       <div
-        className="amt-field"
+        data-tone={tone}
+        className="flex h-[52px] cursor-text items-center gap-3 rounded-[14px] border-[1.8px] border-solid border-(--amt-line) bg-(--amt-surface) pr-3.5 pl-4 transition-[border-color] duration-[180ms] data-[tone=bad]:border-(--amt-bad) data-[tone=focus]:border-(--amt-ink)"
         onPointerDown={(event) => {
           if (event.target !== input.current) {
             event.preventDefault();
@@ -142,18 +144,25 @@ export function AmountInput({
           }
         }}
       >
-        <span className="amt-row">
-          <span className="amt-symbol" data-muted={!value || undefined}>
+        <span className="relative flex h-12 min-w-0 flex-1 items-baseline gap-[5px] overflow-hidden leading-[48px]">
+          <span
+            data-muted={!value || undefined}
+            className="text-[18px] font-medium text-(--amt-muted) transition-colors duration-200 data-muted:text-(--amt-faint)"
+          >
             {symbol}
           </span>
-          <span ref={number} className="amt-number" aria-hidden="true">
+          <span
+            ref={number}
+            className="inline-flex items-baseline text-[18px] font-semibold tracking-[-0.015em] whitespace-pre group-data-over:text-(--amt-bad) group-data-selected:rounded group-data-selected:bg-[color-mix(in_oklab,#3b82f6_22%,transparent)]"
+            aria-hidden="true"
+          >
             <AnimatePresence initial={false} mode="popLayout">
               {characters(value).map(({ key, char, muted }) => (
                 <motion.span
                   key={key}
                   layout="position"
-                  className="amt-char"
                   data-muted={muted || undefined}
+                  className="inline-block data-muted:text-(--amt-faint)"
                   initial={{ y: "45%", opacity: 0, filter: "blur(3px)" }}
                   animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
                   exit={{ y: "45%", opacity: 0, filter: "blur(3px)", transition: { duration: 0.14 } }}
@@ -164,13 +173,17 @@ export function AmountInput({
               ))}
             </AnimatePresence>
             {focused && !selected && (
-              <motion.span layout="position" className="amt-caret" transition={DIGIT} />
+              <motion.span
+                layout="position"
+                className="ml-0.5 h-5 w-[1.5px] animate-caret-blink self-center rounded-[1px] bg-(--amt-ink) group-data-over:bg-(--amt-bad) motion-reduce:animate-none"
+                transition={DIGIT}
+              />
             )}
           </span>
           <Input
             ref={input}
             id={id}
-            className="amt-input"
+            className="absolute inset-0 w-full border-0 bg-transparent p-0 text-[16px] text-transparent caret-transparent opacity-0 outline-none"
             inputMode="decimal"
             autoComplete="off"
             spellCheck={false}
@@ -191,15 +204,19 @@ export function AmountInput({
             }}
           />
         </span>
-        <span className="amt-code">
-          <span className="amt-flag" aria-hidden="true">
+        <span className="flex h-[22px] flex-none items-center gap-[7px] border-l border-solid border-(--amt-line) pl-3 text-[13.5px] font-semibold tracking-[0.01em] text-(--amt-ink)">
+          <span className="grid size-[18px] place-items-center overflow-hidden rounded-full text-[24px] leading-none" aria-hidden="true">
             {flagOf(currency)}
           </span>
           {currency}
         </span>
       </div>
       {helper && (
-        <Remold.Text id={`${id}-help`} className="amt-help" aria-live="polite">
+        <Remold.Text
+          id={`${id}-help`}
+          className="px-0.5 text-[12.5px] text-(--amt-muted) transition-colors duration-200 group-data-over:font-[550] group-data-over:text-(--amt-bad)"
+          aria-live="polite"
+        >
           {helper}
         </Remold.Text>
       )}
@@ -235,7 +252,7 @@ export function AmountInputDemo({ playing, preview }: AmountInputDemoProps = {})
   const { ref, takeOver } = scene;
   const state = preview && !playing ? STILL : scene.state;
   return (
-    <div ref={ref} className="amt-demo not-prose">
+    <div ref={ref} className="not-prose grid w-full place-items-center">
       <AmountInput
         value={state.value}
         onValueChange={(value) => takeOver({ value })}

@@ -178,9 +178,9 @@ const PREVIEWS: Record<string, Preview> = {
     width: 440,
     surface: true,
   },
-  "inbox-triage": {
-    Component: load(() => import("./demos/inbox-triage").then((m) => m.InboxTriageDemo)),
-    width: 460,
+  "storage-cleanup": {
+    Component: load(() => import("./demos/storage-cleanup").then((m) => m.StorageCleanupDemo)),
+    width: 420,
     surface: true,
   },
 
