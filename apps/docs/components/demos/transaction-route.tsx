@@ -4,7 +4,7 @@ import { extrude } from "@remold-ui/canvas";
 import { Remold } from "@remold-ui/react/canvas";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, type Ref } from "react";
-import { NIGHT, PLATFORM_INK, VIOLET } from "./night-stage";
+import { NIGHT, NIGHT_CHIP, NIGHT_CTA, NIGHT_FOOT, NIGHT_READOUT, NIGHT_SCENE, NIGHT_STAGE, PLATFORM_INK, VIOLET } from "./night-stage";
 import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 
@@ -110,14 +110,12 @@ const BEATS: readonly { phase: Phase; ms: number }[] = [
 ];
 
 export interface TransactionRouteProps {
-  /** Where the swap is: quoted, waiting on a signature, routing, or settled. */
   value?: SwapPhase;
   defaultValue?: SwapPhase;
   onValueChange?: (phase: SwapPhase) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A token swap travelling from a wallet through a liquidity pool into a balance. */
 export function TransactionRoute({
   value,
   defaultValue = "quote",
@@ -134,9 +132,9 @@ export function TransactionRoute({
   };
 
   return (
-    <section ref={ref} className="night-stage tr not-prose" aria-label="Transaction route">
+    <section ref={ref} className={`${NIGHT_STAGE} not-prose`} aria-label="Transaction route">
       <Remold.Scene
-        className="night-scene"
+        className={NIGHT_SCENE}
         label="A token moving from a wallet through a liquidity route into a USDC balance"
         objects={OBJECTS}
         links={LINKS}
@@ -146,7 +144,7 @@ export function TransactionRoute({
         interact={{ drag: false }}
         spring={{ duration: 0.86, bounce: 0.18 }}
       />
-      <div className="night-chip gap-[9px]" role="status">
+      <div className={NIGHT_CHIP} role="status">
         <span className="grid size-7 place-items-center rounded-[9px] bg-[rgb(124_92_255_/_0.24)] text-[13px] text-[#b9a9ff]">
           ◆
         </span>
@@ -155,11 +153,11 @@ export function TransactionRoute({
           <b className="text-[12.5px] font-semibold text-[#f3f1ff]">{details[phase].value}</b>
         </span>
       </div>
-      <div className="night-foot">
+      <div className={NIGHT_FOOT}>
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
             key={phase}
-            className="night-readout"
+            className={NIGHT_READOUT}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -167,7 +165,7 @@ export function TransactionRoute({
             Network fee <b>$2.14</b>
           </motion.span>
         </AnimatePresence>
-        <button type="button" className="night-cta" onClick={() => setPhase("quote")}>
+        <button type="button" className={NIGHT_CTA} onClick={() => setPhase("quote")}>
           {phase === "settled" ? "Swap again" : "View route"}
         </button>
       </div>
@@ -175,9 +173,6 @@ export function TransactionRoute({
   );
 }
 
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
-
-/** Plays a swap through; once touched, it carries on from there on its own clock. */
 export function TransactionRouteDemo({ playing }: { playing?: boolean } = {}) {
   const scene = useScene(BEATS, (step) => BEATS[step]!.phase, playing);
   const { state: phase, takeOver } = scene;

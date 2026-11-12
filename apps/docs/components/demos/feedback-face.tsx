@@ -3,9 +3,8 @@
 import { Remold } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Frame } from "./frame";
-import "./feedback-face.css";
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -70,40 +69,47 @@ const RATINGS = [
   },
 ] as const;
 
+const FACE_COLOR = ["#ff7a5c", "#ffae4f", "#ffcf4a", "#ffd23f", "#ffc93d"];
+const EXTRA_COLOR = ["transparent", "#60a5fa", "transparent", "#ff8a8a", "#ff7096"];
+
 export function FeedbackFaceDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
   const [chosenRating, setChosenRating] = useState(4);
   const rating =
     index === undefined ? chosenRating : ((index % RATINGS.length) + RATINGS.length) % RATINGS.length;
   const shown = RATINGS[rating]!;
   const body = (
-    <div className="ff" data-rating={rating + 1}>
+    <div
+      data-rating={rating + 1}
+      className="group grid justify-items-center gap-3.5 py-2 text-center font-sans [--ff-ink:#2a1a0c]"
+      style={{ "--ff-face": FACE_COLOR[rating], "--ff-extra": EXTRA_COLOR[rating] } as CSSProperties}
+    >
       <Remold.PathGroup
-        className="ff-art"
+        className="size-[168px] [&>svg]:[transition:fill_0.45s_ease,stroke_0.45s_ease]"
         viewBox="0 0 200 200"
         role="img"
         aria-label={`A face that looks ${shown.label.toLowerCase().replace("!", "")}`}
         spring={{ duration: 0.55, bounce: 0.25 }}
         paths={[
-          { id: "face", path: FACE, className: "ff-face" },
-          { id: "extra", path: shown.extra, className: "ff-extra" },
+          { id: "face", path: FACE, className: "fill-(--ff-face)" },
+          { id: "extra", path: shown.extra, className: "fill-(--ff-extra)" },
           {
             id: "brows",
             path: shown.brows,
-            className: "ff-brows",
+            className: "stroke-(--ff-ink)",
             fill: "none",
             strokeWidth: 7,
             strokeLinecap: "round",
           },
-          { id: "eyes", path: shown.eyes, className: "ff-eyes" },
-          { id: "mouth", path: shown.mouth, className: "ff-mouth" },
+          { id: "eyes", path: shown.eyes, className: "fill-(--ff-ink) group-data-[rating=5]:fill-[#f43f5e]" },
+          { id: "mouth", path: shown.mouth, className: "fill-(--ff-ink) group-data-[rating=5]:fill-[#7a1f2b]" },
         ]}
       />
-      <div className="ff-copy">
-        <p className="ff-question">How was your delivery?</p>
-        <span className="ff-label">{shown.label}</span>
+      <div className="grid gap-0.5">
+        <p className="m-0 text-[14px] text-fd-muted-foreground">How was your delivery?</p>
+        <span className="text-[26px] font-bold tracking-[-0.02em] text-fd-foreground">{shown.label}</span>
       </div>
       <ToggleGroup
-        className="ff-scale"
+        className="flex gap-1.5 rounded-full bg-fd-muted p-1"
         aria-label="Rating"
         value={[String(rating)]}
         onValueChange={(values) => {
@@ -117,12 +123,13 @@ export function FeedbackFaceDemo({ framed = true, index }: { framed?: boolean; i
             value={String(position)}
             aria-label={item.label}
             disabled={index !== undefined}
+            className="size-10 cursor-pointer rounded-full border-0 bg-transparent text-[14px] font-semibold text-fd-muted-foreground transition-colors duration-200 hover:text-fd-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-ring data-pressed:bg-fd-background data-pressed:text-fd-foreground data-pressed:shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
           >
             {position + 1}
           </Toggle>
         ))}
       </ToggleGroup>
-      <span className="ff-ask">{shown.ask}</span>
+      <span className="text-[14px] text-fd-muted-foreground">{shown.ask}</span>
     </div>
   );
   return framed ? <Frame>{body}</Frame> : body;

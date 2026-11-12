@@ -1,0 +1,37 @@
+---
+title: "Free up space"
+description: "A phone's storage clean-up: the photos and videos you delete break into dust that pours into the free space, and the storage bar rolls down, with an undo toast."
+status: "new"
+kind: particles
+tags: ["Particles", "Base UI", "Motion"]
+---
+
+<Stage name="storage-cleanup" code={<Source demo="storage-cleanup" />} minHeight={640}>
+  <StorageCleanupDemo />
+</Stage>
+
+## Things to try
+
+- **Pick a few.** Tap the photos and videos you don't need. The count and the space they take add up as you go.
+- **Delete them.** Each one breaks into dust, in its own colours, that pours into the free end of the storage bar. Once it lands, the bar gives the space back and the gigabytes roll down.
+- **Undo.** The toast counts down for five seconds, and pauses while you hover it. Undo pours the dust back out of the free space into the photos.
+- **Clear the lot.** With nothing left to review, a tick draws itself in dots.
+
+## Install
+
+<AddCommand name="storage-cleanup" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="storage-cleanup" />
+
+## How it works
+
+- **`useDust` does the pouring.** `trail.away(tiles, freeSpace)` samples the tiles as they look, photos included, pours the dots into the free end of the bar, and resolves once they land. Undo is `trail.back(tiles, freeSpace)`.
+- **State is what's been deleted.** Deleting just adds ids to a list. An effect compares that with what's drawn: tiles that left pour out, tiles that came back pour in, and the grid closes up and the storage changes once the dust lands.
+- **The bar is real sizes.** Each segment springs its share of the total, so the free space grows by exactly what you deleted.
+- **Base UI for the parts.** Checkbox for each tile, Button for Delete, and Toast for undo. The finished state is particles on their own.
+
+<Callout>The storage figures are made up, and the photos come from Lorem Picsum. If a photo can't be read by the canvas, the dust is made without it.</Callout>

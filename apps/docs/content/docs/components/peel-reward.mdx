@@ -1,0 +1,41 @@
+---
+title: "Peel-off reward"
+description: "A reward under a sticker: peel it back by the corner, and past halfway it springs off and the code is yours to copy."
+status: "new"
+tags: ["Motion", "Icon", "Text"]
+---
+
+<Stage name="peel-reward" code={<Source demo="peel-reward" />} minHeight={460}>
+  <PeelRewardDemo />
+</Stage>
+
+## Things to try
+
+- **Grab the sticker** anywhere and drag up and to the left. Its corner follows you, folding back along a crease, with the sticker's pale paper back showing.
+- **Let go early** and it springs back to rest, with just its corner lifted.
+- **Peel past halfway** and let go: the whole sticker comes away, and the code sharpens.
+- **Copy the code.** The button turns green and its icon becomes a tick.
+- **Use the keyboard,** or skip the fun: Peel it for me plays the whole peel.
+
+## Install
+
+<AddCommand name="peel-reward" />
+
+## Dependencies
+
+<Dependencies demo="peel-reward" />
+
+## Usage
+
+```tsx
+<PeelReward code="SPRING-25" prize="A free drink of your choice" onReveal={() => track("reward_revealed")} />
+```
+
+## How it works
+
+- **A peel is a fold.** Pulling the corner to a point folds the paper along the line halfway between where the corner was and where it is now, just like real paper.
+- **Two layers, one shape.** The part still stuck down is the sticker, clipped to its side of the crease. The part that's lifted is clipped to the other side, then mirrored across the crease so it lies folded back over the sticker, painted as the paper back with shading that runs from the crease out to its tip and a soft shadow underneath.
+- **It's all springs.** The corner's position is two Motion values. Dragging sets them directly; letting go springs them back to rest, or, past halfway, on past the far corner until nothing is stuck down.
+- **The code is real text** under the sticker, so it's selectable and copyable once revealed. The Copy button's icon morphs into a tick with [Icon](/docs/primitives/icon), and its words change with [Text](/docs/primitives/text).
+
+<Callout>The café and the code are made up.</Callout>

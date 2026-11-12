@@ -8,7 +8,6 @@ import { Frame } from "./frame";
 import { SCRIPT } from "./signature-glyphs";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import "./signature.css";
 
 const W = 420;
 const H = 150;
@@ -278,16 +277,15 @@ const NAME = "Akua Asante";
 const SPRING = { duration: 0.9, bounce: 0 };
 
 export interface SignatureProps {
-  /** Whether it's drawn or typed, the drawn strokes, and the typed name. */
   value?: SignatureValue;
   defaultValue?: SignatureValue;
   onValueChange?: (value: SignatureValue, details: ChangeDetails) => void;
-  /** Starting a stroke clears what's on the pad first, as when it shows a sample signature. */
   replaceOnDraw?: boolean;
   ref?: Ref<HTMLElement>;
 }
 
-/** A signature pad you can draw on or type into, then adopt: the ink settles into place as it's adopted. */
+const FOCUS = "focus-visible:rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--sg-ink)";
+
 export function Signature({
   value,
   defaultValue = { mode: "draw", strokes: [], name: "" },
@@ -340,16 +338,21 @@ export function Signature({
   };
 
   return (
-    <section ref={ref} className="sg" aria-label="Adopt your signature">
-      <div className="sg-card">
-        <header className="sg-head">
-          <strong>Adopt your signature</strong>
-          <span>Used wherever you sign in this document.</span>
+    <section
+      ref={ref}
+      className="grid w-[min(100%,460px)] font-sans text-[13px] text-(--sg-ink) [--sg-faint:#b4b4b4] [--sg-fill:#f6f6f6] [--sg-ink:#111111] [--sg-line:rgb(0_0_0/0.08)] [--sg-muted:#737373] [--sg-surface:#ffffff] dark:[--sg-faint:#5c5c5c] dark:[--sg-fill:#212121] dark:[--sg-ink:#f5f5f5] dark:[--sg-line:rgb(255_255_255/0.1)] dark:[--sg-muted:#a3a3a3] dark:[--sg-surface:#171717]"
+      aria-label="Adopt your signature"
+    >
+      <div className="grid gap-4 rounded-[18px] bg-(--sg-surface) p-[22px] in-[.rm-stage]:shadow-[inset_0_0_0_1px_var(--sg-line)]">
+        <header className="grid gap-[3px]">
+          <strong className="text-[15px] font-semibold">Adopt your signature</strong>
+          <span className="text-(--sg-muted)">Used wherever you sign in this document.</span>
         </header>
 
-        <label className="sg-name">
-          <span>Full name</span>
+        <label className="grid gap-1.5">
+          <span className="text-[12px] font-medium text-(--sg-muted)">Full name</span>
           <input
+            className="h-[38px] rounded-[10px] border-0 bg-(--sg-fill) px-3 text-[14px] text-inherit outline-none focus:bg-(--sg-surface) focus:shadow-[inset_0_0_0_1px_var(--sg-ink)]"
             value={signature.name}
             spellCheck={false}
             autoComplete="name"
@@ -361,7 +364,7 @@ export function Signature({
         </label>
 
         <ToggleGroup
-          className="sg-modes"
+          className="relative grid grid-cols-2 rounded-[10px] bg-(--sg-fill) p-[3px] before:absolute before:top-[3px] before:bottom-[3px] before:left-[3px] before:w-[calc(50%-3px)] before:rounded-lg before:bg-(--sg-surface) before:shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_1px_var(--sg-line)] before:transition-[translate] before:duration-350 before:ease-[cubic-bezier(0.32,0.72,0,1)] before:content-[''] data-[mode=type]:before:translate-x-full"
           aria-label="Signature style"
           data-mode={signature.mode}
           value={[signature.mode]}
@@ -373,16 +376,23 @@ export function Signature({
           }}
         >
           {(["draw", "type"] as const).map((mode) => (
-            <Toggle key={mode} value={mode}>
+            <Toggle
+              key={mode}
+              value={mode}
+              className={`relative h-[30px] cursor-pointer border-0 bg-transparent font-medium text-(--sg-muted) transition-colors duration-200 data-pressed:text-(--sg-ink) ${FOCUS}`}
+            >
               {mode === "draw" ? "Draw" : "Type"}
             </Toggle>
           ))}
         </ToggleGroup>
 
-        <div className="sg-pad" data-mode={signature.mode}>
+        <div
+          data-mode={signature.mode}
+          className="group/pad relative aspect-[420/150] rounded-xl shadow-[inset_0_0_0_1px_var(--sg-line)]"
+        >
           <svg
             ref={pad}
-            className="sg-surface"
+            className="absolute inset-0 size-full group-data-[mode=draw]/pad:cursor-crosshair group-data-[mode=draw]/pad:touch-none"
             viewBox={`0 0 ${W} ${H}`}
             role="img"
             aria-label={signature.mode === "type" ? `Signature: ${signature.name}` : "Your drawn signature"}
@@ -391,14 +401,14 @@ export function Signature({
             onPointerUp={up}
             onPointerCancel={up}
           >
-            <line className="sg-line" x1={28} x2={W - 28} y1={BASELINE + 22} y2={BASELINE + 22} />
-            <text className="sg-mark" x={28} y={BASELINE + 16}>
+            <line className="stroke-(--sg-line) [stroke-width:1]" x1={28} x2={W - 28} y1={BASELINE + 22} y2={BASELINE + 22} />
+            <text className="fill-(--sg-faint) text-[15px]" x={28} y={BASELINE + 16}>
               ×
             </text>
           </svg>
           <Remold.Icon
             key={inkKey}
-            className="sg-ink"
+            className="pointer-events-none absolute inset-0 size-full text-(--sg-ink)"
             path={ink || "M0 0"}
             viewBox={`0 0 ${W} ${H}`}
             fill="currentColor"
@@ -407,21 +417,21 @@ export function Signature({
             aria-hidden="true"
           />
           {drawing && (
-            <svg className="sg-ink" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+            <svg className="pointer-events-none absolute inset-0 size-full text-(--sg-ink)" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
               <path d={inkOutline(drawing)} fill="currentColor" />
             </svg>
           )}
           {empty && !drawing && (
-            <span className="sg-hint">
+            <span className="pointer-events-none absolute inset-0 grid place-items-center text-(--sg-faint)">
               {signature.mode === "draw" ? "Sign here" : "Type your name above"}
             </span>
           )}
         </div>
 
-        <footer className="sg-foot">
+        <footer className="flex items-center justify-between">
           <button
             type="button"
-            className="sg-clear"
+            className={`cursor-pointer border-0 bg-transparent p-0 text-(--sg-muted) hover:text-(--sg-ink) disabled:cursor-default disabled:opacity-35 ${FOCUS}`}
             disabled={empty}
             onClick={() => {
               setAdopted(false);
@@ -433,7 +443,12 @@ export function Signature({
           >
             Clear
           </button>
-          <button type="button" className="sg-adopt" disabled={empty} onClick={() => setAdopted(true)}>
+          <button
+            type="button"
+            className={`h-9 cursor-pointer rounded-[10px] border-0 bg-(--sg-ink) px-4 font-semibold text-(--sg-surface) disabled:cursor-default disabled:opacity-35 ${FOCUS}`}
+            disabled={empty}
+            onClick={() => setAdopted(true)}
+          >
             {adopted ? "Adopted" : "Adopt and sign"}
           </button>
         </footer>
@@ -441,8 +456,6 @@ export function Signature({
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly { mode: Mode; ms: number }[] = [
   { mode: "draw", ms: 2400 },

@@ -28,7 +28,7 @@ const LANDING_ZOOM: Record<string, number> = {
 };
 
 /** Landing cards drawn on their own dark stage, which should fill the card's picture edge to edge. */
-const LANDING_COVER = new Set(["voice-assistant", "particle-shapes"]);
+const LANDING_COVER = new Set(["particle-shapes"]);
 
 /** Landing cards whose part fills whatever box it's in, so the preview gives it a height to fill. */
 const LANDING_HEIGHT: Record<string, number> = {
@@ -37,7 +37,7 @@ const LANDING_HEIGHT: Record<string, number> = {
 
 const LANDING_COPY: Record<string, string> = {
   mentions: "Type @ and a person leaves the picker to become part of the message.",
-  "button-to-dialog": "The New trip button grows into the dialog, and the dialog shrinks into the trip it planned.",
+  "button-to-dialog": "The New habit button grows into the dialog, and the dialog shrinks into the habit it added.",
   "post-and-comments": "A reply grows from the composer into the conversation it belongs to.",
   "code-to-verified": "Six code cells fold into one verifying state, then resolve as a check.",
   "voice-states": "One orb changes its texture and pace as a voice interaction moves forward.",
@@ -47,8 +47,7 @@ const LANDING_COPY: Record<string, string> = {
   "send-a-message": "The composer becomes the sent message, then makes room for the reply.",
   "kitchen-ticket": "A ticket's ring fills as the order cooks, then closes with a check or a cross.",
   "order-tracker": "The pot becomes the bag, the scooter, then your front door as the order moves along.",
-  "voice-assistant": "An orb of dots that ripples as it listens, swirls into a ring as it thinks, and pulses as it speaks.",
-  "particle-shapes": "A galaxy unwinds into a double helix, traces the Lorenz attractor, then becomes a honeybee, a butterfly and the Remold mark, all in turning 3D dots.",
+  "particle-shapes": "A galaxy unwinds into a double helix, traces the Lorenz attractor, then becomes a honeybee, a butterfly and the Grok mark, all in turning 3D dots.",
   "payment-status": "The card becomes a lock while the bank confirms, then a receipt or a warning.",
   "send-money": "Digits, commas and the Send state all move with the amount you enter.",
   "currency-converter": "What they receive rolls with the amount you type, and the two currencies trade places when you swap.",

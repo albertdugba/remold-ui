@@ -18,9 +18,8 @@ import {
 } from "react";
 
 import { usePortalContainer } from "./portal-container";
+import { FK_DESCRIPTION, FK_STAGE, FORM_KIT } from "./form-kit";
 import { useScene } from "./use-scene";
-import "./form-kit.css";
-import "./phone-input.css";
 
 const COUNTRIES = {
   GH: { name: "Ghana", flag: "🇬🇭", dial: "+233", format: "## ### ####", example: "24 412 3456" },
@@ -46,6 +45,19 @@ const DIGIT = { type: "spring" as const, duration: 0.32, bounce: 0.1 };
 const SLIDE = { type: "spring" as const, duration: 0.4, bounce: 0 };
 const POP = { type: "spring" as const, duration: 0.35, bounce: 0.3 };
 const LABEL_SCALE = 0.75;
+
+const FLAG = "grid w-[22px] flex-none place-items-center text-[20px] leading-none";
+const POPUP = [
+  "[--fk-surface:#ffffff] [--fk-well:#f4f4f5] [--fk-ink:#0a0a0b] [--fk-muted:#71717a] [--fk-faint:#b4b4bd] [--fk-line:rgb(10_10_11/0.08)]",
+  "dark:[--fk-surface:#1c1c1f] dark:[--fk-well:#2a2a2f] dark:[--fk-ink:#fafafa] dark:[--fk-muted:#a1a1aa] dark:[--fk-faint:#5b5b64] dark:[--fk-line:rgb(255_255_255/0.08)]",
+  "flex max-h-[min(340px,var(--available-height,70dvh))] w-(--anchor-width) flex-col overflow-hidden rounded-[18px] border border-solid border-(--fk-line) bg-(--fk-surface) font-sans text-[14px] text-(--fk-ink) antialiased outline-none",
+  "shadow-[0_0_0_0.5px_rgb(0_0_0/0.02),0_2px_4px_rgb(0_0_0/0.04),0_12px_24px_-6px_rgb(0_0_0/0.08),0_32px_64px_-16px_rgb(0_0_0/0.14)] dark:shadow-[0_24px_48px_-20px_rgb(0_0_0/0.7)]",
+  "[clip-path:inset(-80px_-80px_-100px_-80px_round_18px)] [transition:clip-path_0.42s_cubic-bezier(0.32,0.72,0,1),transform_0.42s_cubic-bezier(0.32,0.72,0,1),opacity_0.2s_ease-out]",
+  "data-starting-style:[clip-path:inset(-80px_-80px_100%_-80px_round_18px)] data-starting-style:[transform:translateY(-6px)] data-starting-style:opacity-40",
+  "data-ending-style:[clip-path:inset(-80px_-80px_100%_-80px_round_18px)] data-ending-style:[transform:translateY(-6px)] data-ending-style:opacity-0",
+  "data-ending-style:[transition:clip-path_0.2s_cubic-bezier(0.4,0,1,1),transform_0.2s_cubic-bezier(0.4,0,1,1),opacity_0.2s_ease-in]",
+  "motion-reduce:transition-none",
+].join(" ");
 const BLUR_IN = { opacity: 0, filter: "blur(4px)" };
 const SHARP = { opacity: 1, filter: "blur(0px)" };
 const FADE = { opacity: 0 };
@@ -138,10 +150,11 @@ function CountryTrigger({
   return (
     <Combobox.Trigger
       ref={ref}
-      className="phn-country"
+      data-country=""
+      className="my-[1.8px] ml-[1.8px] inline-flex flex-none cursor-pointer touch-manipulation items-center gap-2 rounded-l-[14px] border-0 border-r border-solid border-(--fk-line) bg-transparent pr-3 pl-4 text-[15px] font-semibold text-(--fk-ink) outline-none transition-colors duration-150 [--tint:color-mix(in_oklab,var(--fk-ink)_3.5%,transparent)] hover:bg-(--tint) focus-visible:bg-(--tint) focus-visible:outline-none! data-popup-open:bg-(--tint)"
       aria-label={`Country, ${current.name}, ${current.dial}`}
     >
-      <span className="phn-flag" aria-hidden="true">
+      <span className={`${FLAG} [&>span]:[grid-area:1/1]`} aria-hidden="true">
         <AnimatePresence initial={false} mode="popLayout">
           <motion.span
             key={country}
@@ -155,7 +168,11 @@ function CountryTrigger({
         </AnimatePresence>
       </span>
 
-      <motion.span layout="position" transition={SLIDE} className="phn-dial">
+      <motion.span
+        layout="position"
+        transition={SLIDE}
+        className="inline-grid overflow-hidden tabular-nums [&>span]:[grid-area:1/1]"
+      >
         <AnimatePresence initial={false} mode="popLayout">
           <motion.span
             key={current.dial}
@@ -170,12 +187,12 @@ function CountryTrigger({
       </motion.span>
 
       <motion.span
-        className="phn-chevron"
+        className="grid text-(--fk-muted)"
         layout="position"
         animate={{ rotate: open ? 180 : 0 }}
         transition={SETTLE}
       >
-        <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
+        <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-[13px]" />
       </motion.span>
     </Combobox.Trigger>
   );
@@ -184,22 +201,22 @@ function CountryTrigger({
 function CountrySearch({ query, reduced }: { query: string; reduced: boolean }) {
   return (
     <motion.div
-      className="phn-search"
+      className="relative flex h-[50px] flex-none items-center gap-2.5 border-b border-solid border-(--fk-line) pr-3 pl-4"
       initial={reduced ? false : { opacity: 0, filter: "blur(4px)" }}
       animate={{ opacity: 1, filter: "blur(0px)" }}
       transition={{ duration: 0.22, delay: 0.06 }}
     >
-      <HugeiconsIcon icon={Search01Icon} strokeWidth={2} className="phn-search-icon" />
+      <HugeiconsIcon icon={Search01Icon} strokeWidth={2} className="size-4 flex-none text-(--fk-muted)" />
       <Combobox.Input
         aria-label="Search countries"
         placeholder="Search country or code"
-        className="phn-search-input"
+        className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-[16px] text-(--fk-ink) outline-none placeholder:text-(--fk-muted)"
       />
 
       <AnimatePresence initial={false}>
         {query && (
           <Combobox.Clear
-            className="phn-search-clear"
+            className="grid size-[22px] flex-none cursor-pointer place-items-center rounded-full border-0 bg-(--fk-well) p-0 text-(--fk-muted) [&_svg]:size-[11px]"
             aria-label="Clear search"
             render={
               <motion.button
@@ -236,25 +253,31 @@ function CountryOption({
   return (
     <Combobox.Item
       value={code}
-      className="phn-choice"
+      className="group/choice relative block cursor-pointer touch-manipulation rounded-xl outline-none"
       render={<motion.div layout="position" transition={SETTLE} />}
     >
-      {highlighted && <motion.span layoutId={highlightId} className="phn-highlight" transition={SETTLE} />}
+      {highlighted && <motion.span
+          layoutId={highlightId}
+          className="absolute inset-0 rounded-[inherit] bg-(--fk-well)"
+          transition={SETTLE}
+        />}
 
       <motion.span
-        className="phn-choice-body"
+        className="relative flex h-11 items-center gap-3 px-3"
         initial={reduced ? false : { opacity: 0, y: 8, filter: "blur(3px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         transition={{ ...SETTLE, delay: reduced ? 0 : 0.05 + Math.min(index, 8) * 0.02 }}
       >
-        <span className="phn-choice-flag" aria-hidden="true">
+        <span className={FLAG} aria-hidden="true">
           {country.flag}
         </span>
-        <span className="phn-choice-name">{country.name}</span>
-        <span className="phn-choice-dial">{country.dial}</span>
-        <span className="phn-check-slot">
+        <span className="min-w-0 flex-1 truncate text-[14.5px] font-medium group-data-selected/choice:font-semibold">
+          {country.name}
+        </span>
+        <span className="min-w-10 text-right text-[13.5px] text-(--fk-muted) tabular-nums">{country.dial}</span>
+        <span className="grid w-4 flex-none place-items-center">
           <Combobox.ItemIndicator
-            className="phn-check"
+            className="grid size-4 place-items-center rounded-full bg-(--fk-ink) text-(--fk-surface) [&_svg]:size-2.5"
             render={
               <motion.span
                 initial={reduced ? false : { scale: 0.4, opacity: 0 }}
@@ -292,11 +315,11 @@ function CountryPopup({
 
   return (
     <Combobox.Portal container={portal}>
-      <Combobox.Positioner anchor={anchor} sideOffset={8} align="start" className="phn-positioner">
-        <Combobox.Popup className="phn-popup">
+      <Combobox.Positioner anchor={anchor} sideOffset={8} align="start" className="z-50 outline-none">
+        <Combobox.Popup className={POPUP}>
           <CountrySearch query={query} reduced={reduced} />
 
-          <Combobox.Empty className="phn-empty">
+          <Combobox.Empty className="text-[13.5px] text-(--fk-muted) not-empty:grid not-empty:place-items-center not-empty:px-4 not-empty:pt-7 not-empty:pb-[30px]">
             <motion.span
               initial={{ opacity: 0, y: 4, filter: "blur(4px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -306,7 +329,11 @@ function CountryPopup({
             </motion.span>
           </Combobox.Empty>
 
-          <Combobox.List ref={list} className="phn-list" render={<motion.div layoutScroll />}>
+          <Combobox.List
+            ref={list}
+            className="min-h-0 overflow-y-auto overscroll-contain p-1.5 [mask-image:linear-gradient(to_bottom,transparent,#000_10px,#000_calc(100%-14px),transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            render={<motion.div layoutScroll />}
+          >
             {(code: Country, index: number) => (
               <CountryOption
                 key={code}
@@ -336,12 +363,15 @@ function DrawnNumber({
   reduced: boolean;
 }) {
   return (
-    <span className="phn-drawn" aria-hidden="true">
+    <span
+      className="relative inline-flex items-center text-[17px] font-semibold tracking-[0.01em] whitespace-pre"
+      aria-hidden="true"
+    >
       <AnimatePresence initial={false}>
         {placeholder && (
           <motion.span
             key={placeholder}
-            className="phn-placeholder"
+            className="pointer-events-none absolute left-0 font-[450] text-(--fk-muted)"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.1 } }}
@@ -360,8 +390,8 @@ function DrawnNumber({
             <motion.span
               key={key}
               layout="position"
-              className="phn-char"
               data-separator={!digit || undefined}
+              className="inline-block data-separator:min-w-[0.32em] data-separator:text-center data-separator:text-(--fk-muted)"
               initial={reduced ? FADE : hidden}
               animate={{ ...SHARP, y: 0, scale: 1 }}
               exit={reduced ? FADE : { ...hidden, transition: { duration: 0.12 } }}
@@ -373,7 +403,13 @@ function DrawnNumber({
         })}
       </AnimatePresence>
 
-      {caret && <motion.span layout="position" className="phn-caret" transition={SLIDE} />}
+      {caret && (
+        <motion.span
+          layout="position"
+          className="ml-px h-[19px] w-[1.5px] animate-caret-blink rounded-[1px] bg-(--fk-ink) motion-reduce:animate-none"
+          transition={SLIDE}
+        />
+      )}
     </span>
   );
 }
@@ -387,7 +423,6 @@ function helpFor(current: CountryInfo, chars: Character[], complete: boolean, to
 export interface PhoneInputProps {
   country: Country;
   onCountryChange: (country: Country) => void;
-  /** The national number, digits only. */
   digits: string;
   onDigitsChange: (digits: string) => void;
 }
@@ -410,6 +445,9 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
   const tooLong = digits.length > capacity(current.format);
   const raised = focused || digits.length > 0;
   const help = helpFor(current, chars, complete, tooLong);
+  const outlineTone = tooLong ? "bad" : focused || open ? "ink" : undefined;
+  const labelTone = raised ? (tooLong ? "bad" : "ink") : undefined;
+  const helpTone = tooLong ? "bad" : complete ? "ink" : undefined;
 
   const onOpenChange = (next: boolean) => {
     setOpen(next);
@@ -424,18 +462,20 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
   };
 
   return (
-    <Field.Root className="fk phn" invalid={tooLong}>
+    <Field.Root className={`grid w-[min(100%,400px)] gap-2 ${FORM_KIT}`} invalid={tooLong}>
       <div
         ref={box}
-        className="phn-box"
-        data-focused={focused || undefined}
-        data-open={open || undefined}
-        data-complete={complete || undefined}
-        style={{ "--phn-notch-at": `${notch.at}px` } as CSSProperties}
+        className="group/box relative flex h-[54px] items-stretch rounded-2xl bg-(--fk-surface)"
+        style={{ "--notch-at": `${notch.at}px` } as CSSProperties}
       >
-        <fieldset className="phn-outline" aria-hidden="true" data-notched={raised || undefined}>
-          <legend>
-            <span>Phone number</span>
+        <fieldset
+          data-tone={outlineTone}
+          data-notched={raised || undefined}
+          className="group/outline pointer-events-none absolute inset-0 m-0 min-w-0 rounded-[inherit] border-[1.8px] border-solid border-(--fk-line) py-0 pr-0 pl-[calc(var(--notch-at,0px)+11px)] transition-[border-color] duration-[180ms] group-has-[[data-country]:focus-visible]/box:border-(--fk-ink) data-[tone=ink]:border-(--fk-ink) data-[tone=bad]:border-(--fk-bad)!"
+          aria-hidden="true"
+        >
+          <legend className="invisible block h-0 w-auto max-w-[0.01px] p-0 text-[12px] leading-0 font-medium whitespace-nowrap transition-[max-width] duration-50 ease-out group-data-notched/outline:max-w-full group-data-notched/outline:delay-40 group-data-notched/outline:duration-120">
+            <span className="inline-block px-[5px]">Phone number</span>
           </legend>
         </fieldset>
 
@@ -458,10 +498,10 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
           <CountryPopup open={open} anchor={box} query={query} highlighted={highlighted} reduced={reduced} />
         </Combobox.Root>
 
-        <span className="phn-main">
+        <span className="relative flex min-w-0 flex-1 items-center pr-3.5 pl-4">
           <Field.Label
-            className="phn-label"
-            data-raised={raised || undefined}
+            data-tone={labelTone}
+            className="absolute top-1/2 left-4 -mt-2.5 h-5 origin-left cursor-text text-[16px] leading-5 font-[450] whitespace-nowrap text-(--fk-muted) transition-colors duration-[180ms] data-[tone=bad]:font-medium data-[tone=bad]:text-(--fk-bad) data-[tone=ink]:font-medium data-[tone=ink]:text-(--fk-ink)"
             render={
               <motion.label
                 initial={false}
@@ -473,7 +513,7 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
             Phone number
           </Field.Label>
 
-          <span className="phn-number" onPointerDown={focusInput}>
+          <span className="relative flex h-6 min-w-0 flex-1 cursor-text items-center overflow-hidden" onPointerDown={focusInput}>
             <DrawnNumber
               chars={chars}
               placeholder={raised && digits.length === 0 ? current.example : null}
@@ -483,7 +523,7 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
 
             <Field.Control
               ref={input}
-              className="phn-input"
+              className="absolute inset-0 w-full border-0 bg-transparent p-0 text-[16px] text-transparent caret-transparent opacity-0 outline-none"
               type="tel"
               inputMode="tel"
               autoComplete="tel-national"
@@ -498,12 +538,11 @@ export function PhoneInput({ country, onCountryChange, digits, onDigitsChange }:
       </div>
 
       <Field.Description
-        className="fk-description phn-help"
-        data-complete={complete || undefined}
-        data-invalid={tooLong || undefined}
+        data-tone={helpTone}
+        className={`px-0.5 transition-colors duration-200 data-[tone=bad]:font-[550] data-[tone=bad]:text-(--fk-bad) data-[tone=ink]:font-medium data-[tone=ink]:text-(--fk-ink) ${FK_DESCRIPTION}`}
       >
         <Remold.Text aria-hidden="true">{help}</Remold.Text>
-        <span className="fk-sr">
+        <span className="sr-only">
           {complete || tooLong ? help : `${help}. For example, ${current.example}.`}
         </span>
       </Field.Description>
@@ -537,19 +576,14 @@ const fromBeat = (step: number): State => {
   return state;
 };
 
-interface PhoneInputDemoProps {
-  playing?: boolean;
-  preview?: boolean;
-}
-
 const STILL: State = { country: "GB", digits: "7700900123" };
 
-export function PhoneInputDemo({ playing, preview }: PhoneInputDemoProps = {}) {
+export function PhoneInputDemo({ playing, preview }: { playing?: boolean; preview?: boolean } = {}) {
   const scene = useScene(BEATS, fromBeat, playing);
   const { ref, takeOver } = scene;
   const state = preview && !playing ? STILL : scene.state;
   return (
-    <div ref={ref} className="fk-stage not-prose">
+    <div ref={ref} className={FK_STAGE}>
       <PhoneInput
         country={state.country}
         onCountryChange={(country) => takeOver((current) => ({ ...current, country }))}

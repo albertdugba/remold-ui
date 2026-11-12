@@ -16,11 +16,8 @@ const LENGTH = CODE.length;
 export type TwoFactorPhase = "off" | "setup" | "on";
 
 export interface TwoFactorValue {
-  /** Off, setting up (scanning and typing the code), or on. */
   phase: TwoFactorPhase;
-  /** The digits typed so far. */
   code: string;
-  /** Whether sign-in alerts are on. */
   alerts: boolean;
 }
 
@@ -90,16 +87,13 @@ function Switch({ on, label, onToggle }: { on: boolean; label: string; onToggle:
 }
 
 export interface TwoFactorProps {
-  /** Where setup is, the digits typed, and whether sign-in alerts are on. */
   value?: TwoFactorValue;
   defaultValue?: TwoFactorValue;
   onValueChange?: (value: TwoFactorValue, details: ChangeDetails) => void;
-  /** Moves focus to the code field when setup starts. */
   autoFocus?: boolean;
   ref?: Ref<HTMLElement>;
 }
 
-/** Two-factor setup: turn it on, scan the code, type the six digits, and it settles into its on state. */
 export function TwoFactor({
   value,
   defaultValue = { phase: "off", code: "", alerts: true },
@@ -273,8 +267,6 @@ export function TwoFactor({
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly { phase: TwoFactorPhase; ms: number; digits?: number }[] = [
   { phase: "off", ms: 1800 },

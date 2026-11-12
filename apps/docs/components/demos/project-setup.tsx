@@ -152,14 +152,12 @@ export interface ProjectSetupValue {
 }
 
 export interface ProjectSetupProps {
-  /** The ids of the steps that are done. */
   value?: ProjectSetupValue;
   defaultValue?: ProjectSetupValue;
   onValueChange?: (value: ProjectSetupValue) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A project's setup checklist: each finished step lights its line on the way to launch. */
 export function ProjectSetup({ value, defaultValue = { done: [] }, onValueChange, ref }: ProjectSetupProps) {
   const [setup, setSetup] = useControllableState({ value, defaultValue, onValueChange });
   const done = new Set(setup.done);
@@ -246,8 +244,6 @@ export function ProjectSetup({ value, defaultValue = { done: [] }, onValueChange
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (ProjectSetupValue & { ms: number })[] = [
   { done: [], ms: 1600 },

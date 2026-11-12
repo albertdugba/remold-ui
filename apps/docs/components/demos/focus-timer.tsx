@@ -8,7 +8,6 @@ import { MotionConfig, motion } from "motion/react";
 import { useEffect, useMemo, useReducer, useImperativeHandle, useRef, type Ref } from "react";
 import { Odometer } from "./odometer";
 import { useScene } from "./use-scene";
-import "./focus-timer.css";
 
 const FOCUS = 25 * 60;
 const BREAK = 5 * 60;
@@ -188,13 +187,13 @@ function Hourglass({ timer }: { timer: Timer }) {
 
   return (
     <motion.div
-      className="ft-glass"
+      className="h-[250px] w-[210px]"
       initial={false}
       animate={{ rotate: timer.flips * 180 }}
       transition={FLIP}
     >
       <Remold.Particles
-        className="ft-canvas"
+        className="block size-full"
         shape={{ points }}
         palette={PALETTE}
         radius={1.5}
@@ -209,18 +208,15 @@ function Hourglass({ timer }: { timer: Timer }) {
 }
 
 export interface FocusTimerHandle {
-  /** Starts, pauses, skips or resets the timer from outside, as a guided walkthrough does. */
   dispatch: (action: FocusTimerAction) => void;
 }
 
 export interface FocusTimerProps {
   actionsRef?: Ref<FocusTimerHandle>;
-  /** Called when the person presses one of the controls. */
   onAction?: (action: FocusTimerAction) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A pomodoro timer drawn as an hourglass of particles that flips between focus and break. */
 export function FocusTimer({ actionsRef, onAction, ref }: FocusTimerProps) {
   const [timer, dispatch] = useReducer(reduce, INITIAL);
   const active = timer.running || timer.rush || timer.wait > 0;
@@ -242,25 +238,30 @@ export function FocusTimer({ actionsRef, onAction, ref }: FocusTimerProps) {
 
   return (
     <MotionConfig reducedMotion="user">
-      <section ref={ref} className="ft not-prose" aria-label="Focus timer" data-phase={timer.phase}>
-        <div className="ft-stage">
+      <section
+        ref={ref}
+        data-phase={timer.phase}
+        className="group not-prose grid w-[min(100%,340px)] justify-items-center gap-[22px] rounded-3xl bg-(--ft-surface) px-7 pt-8 pb-7 font-sans text-(--ft-ink) [--ft-glass:#e4e4e7] [--ft-ink:#18181b] [--ft-muted:#a1a1aa] [--ft-rest:#0f9d7a] [--ft-sand:#d98a1c] [--ft-soft:#f4f4f5] [--ft-surface:#ffffff] dark:[--ft-glass:#34343a] dark:[--ft-ink:#fafafa] dark:[--ft-muted:#71717a] dark:[--ft-rest:#34d3a6] dark:[--ft-sand:#f0b04a] dark:[--ft-soft:#27272a] dark:[--ft-surface:#1c1c1f]"
+        aria-label="Focus timer"
+      >
+        <div className="grid h-[250px] place-items-center">
           <Hourglass timer={timer} />
         </div>
 
-        <div className="ft-readout">
-          <Odometer className="ft-time" value={clock(shown(timer))} />
-          <span className="ft-note">
-            <span className="ft-phase">{focus ? "Focus" : "Break"}</span> · {timer.round} of {ROUNDS}
+        <div className="grid justify-items-center gap-1">
+          <Odometer className="text-[42px] font-medium tracking-[-0.03em] tabular-nums" value={clock(shown(timer))} />
+          <span className="text-[13px] text-(--ft-muted) tabular-nums">
+            <span className="font-semibold text-(--ft-sand) transition-colors duration-400 group-data-[phase=break]:text-(--ft-rest)">{focus ? "Focus" : "Break"}</span> · {timer.round} of {ROUNDS}
           </span>
         </div>
 
-        <div className="ft-actions">
-          <button type="button" className="ft-icon" aria-label="Reset" onClick={() => act({ type: "reset" })}>
+        <div className="flex items-center gap-5">
+          <button type="button" className="grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--ft-muted) transition-colors duration-200 hover:bg-(--ft-soft) hover:text-(--ft-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ft-sand)" aria-label="Reset" onClick={() => act({ type: "reset" })}>
             <HugeiconsIcon icon={RotateLeft01Icon} size={17} strokeWidth={2} aria-hidden="true" />
           </button>
           <motion.button
             type="button"
-            className="ft-primary"
+            className="grid size-14 cursor-pointer place-items-center rounded-full border-0 bg-(--ft-ink) p-0 text-(--ft-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ft-sand)"
             aria-label={timer.running ? "Pause" : "Start"}
             aria-pressed={timer.running}
             onClick={() => act({ type: "toggle" })}
@@ -269,13 +270,13 @@ export function FocusTimer({ actionsRef, onAction, ref }: FocusTimerProps) {
             <Remold.Icon
               icon={<HugeiconsIcon icon={timer.running ? PauseIcon : PlayIcon} />}
               fill="currentColor"
-              className="ft-play"
+              className="size-7"
               aria-hidden="true"
             />
           </motion.button>
           <button
             type="button"
-            className="ft-icon"
+            className="grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--ft-muted) transition-colors duration-200 hover:bg-(--ft-soft) hover:text-(--ft-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ft-sand)"
             aria-label={focus ? "Skip to break" : "Skip break"}
             onClick={() => act({ type: "skip" })}
           >
@@ -286,8 +287,6 @@ export function FocusTimer({ actionsRef, onAction, ref }: FocusTimerProps) {
     </MotionConfig>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly { action: FocusTimerAction; ms: number }[] = [
   { action: { type: "set", phase: "focus", round: 2, remaining: 3 * 60 }, ms: 1400 },

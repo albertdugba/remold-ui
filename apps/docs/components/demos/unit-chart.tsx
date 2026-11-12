@@ -8,7 +8,6 @@ import { useMemo, type Ref } from "react";
 import { Odometer } from "./odometer";
 import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import "./unit-chart.css";
 
 const PER_DOT = 25;
 const GAP = 2.4;
@@ -56,7 +55,6 @@ function layout(view: View) {
 }
 
 export interface UnitChartProps {
-  /** How the customers are grouped. */
   value?: UnitChartView;
   defaultValue?: UnitChartView;
   onValueChange?: (view: UnitChartView) => void;
@@ -70,37 +68,45 @@ export function UnitChart({ value, defaultValue = "plan", onValueChange, ref }: 
 
   return (
     <MotionConfig reducedMotion="user">
-      <section ref={ref} className="uc not-prose" aria-label="Customers">
-        <header className="uc-head">
+      <section
+        ref={ref}
+        className="not-prose grid w-[min(100%,440px)] gap-5 rounded-3xl bg-(--uc-surface) p-7 font-sans text-(--uc-ink) [--uc-free:#a5b4fc] [--uc-ink:#18181b] [--uc-muted:#71717a] [--uc-pro:#4f46e5] [--uc-soft:#f4f4f5] [--uc-surface:#ffffff] [--uc-team:#db2777] dark:[--uc-free:#4c4f8f] dark:[--uc-ink:#fafafa] dark:[--uc-muted:#a1a1aa] dark:[--uc-pro:#818cf8] dark:[--uc-soft:#27272a] dark:[--uc-surface:#1c1c1f] dark:[--uc-team:#f472b6]"
+        aria-label="Customers"
+      >
+        <header className="flex items-start justify-between gap-4">
           <div>
-            <span role="heading" aria-level={3} className="uc-title">
+            <span role="heading" aria-level={3} className="block text-[16px] font-semibold tracking-[-0.015em]">
               Customers
             </span>
-            <span className="uc-sub">6,000 in total · 1 dot = {PER_DOT}</span>
+            <span className="text-[13px] whitespace-nowrap text-(--uc-muted)">6,000 in total · 1 dot = {PER_DOT}</span>
           </div>
           <ToggleGroup
-            className="uc-views"
+            className="relative grid grid-cols-3 rounded-xl bg-(--uc-soft) p-[3px]"
             aria-label="Group by"
             value={[view]}
             onValueChange={(values) => values[0] && setView(values[0] as View)}
           >
             <motion.span
-              className="uc-thumb"
+              className="absolute inset-y-[3px] left-[3px] w-[calc((100%-6px)/3)] rounded-[9px] bg-(--uc-surface) shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
               initial={false}
               animate={{ x: `${Object.keys(VIEWS).indexOf(view) * 100}%` }}
               transition={POP}
             />
             {(Object.keys(VIEWS) as View[]).map((option) => (
-              <Toggle key={option} value={option} className="uc-view">
+              <Toggle
+                key={option}
+                value={option}
+                className="relative h-[30px] cursor-pointer border-0 bg-transparent px-2.5 text-[13px] font-[550] text-(--uc-muted) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--uc-pro) data-pressed:text-(--uc-ink)"
+              >
                 {option[0]!.toUpperCase() + option.slice(1)}
               </Toggle>
             ))}
           </ToggleGroup>
         </header>
 
-        <div className="uc-stage">
+        <div className="aspect-[100/42]">
           <Remold.Particles
-            className="uc-canvas"
+            className="block size-full"
             shape={{ points }}
             palette={COLORS}
             radius={2.6}
@@ -112,7 +118,9 @@ export function UnitChart({ value, defaultValue = "plan", onValueChange, ref }: 
           />
         </div>
 
-        <ol className="uc-groups" style={{ gridTemplateColumns: `repeat(${groups.length}, 1fr)` }}>
+        <ol
+          className="m-0 -mt-2 grid list-none p-0 [&>li]:grid [&>li]:justify-items-center [&>li]:gap-0.5 [&>li]:text-[15px] [&>li]:font-semibold [&>li]:tabular-nums [&>li>span:first-child]:text-[12px] [&>li>span:first-child]:font-normal [&>li>span:first-child]:text-(--uc-muted)"
+          style={{ gridTemplateColumns: `repeat(${groups.length}, 1fr)` }}>
           {groups.map((name, group) => (
             <li key={`${view}-${name}`}>
               <span>{name}</span>
@@ -125,9 +133,13 @@ export function UnitChart({ value, defaultValue = "plan", onValueChange, ref }: 
           ))}
         </ol>
 
-        <div className="uc-legend">
+        <div className="flex gap-4 border-t border-solid border-(--uc-soft) pt-4 text-[13px]">
           {PLANS.map((plan, index) => (
-            <span key={plan} data-plan={index}>
+            <span
+              key={plan}
+              data-plan={index}
+              className="before:mr-1.5 before:inline-block before:size-2 before:rounded-full before:bg-(--uc-free) before:content-[''] data-[plan=1]:before:bg-(--uc-pro) data-[plan=2]:before:bg-(--uc-team)"
+            >
               {plan}
             </span>
           ))}
@@ -136,8 +148,6 @@ export function UnitChart({ value, defaultValue = "plan", onValueChange, ref }: 
     </MotionConfig>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS = [
   { view: "plan" as View, ms: 2200 },

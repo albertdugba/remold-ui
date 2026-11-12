@@ -3,9 +3,9 @@ import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { shapes } from "@remold-ui/core";
 import { Remold } from "@remold-ui/react/canvas";
-import { useEffect, useState } from "react";
+import { motion } from "motion/react";
+import { useEffect, useId, useState } from "react";
 import { useScene } from "./use-scene";
-import "./particle-shapes.css";
 
 const PALETTE = {
   core: "#fff1d6",
@@ -24,8 +24,8 @@ const PALETTE = {
   amber: "#fbbf24",
   orange: "#f97316",
   wingEdge: "#9a3412",
-  markFace: "#f5f3ff",
-  markEdge: "#7c3aed",
+  grokFace: "#f4f4f5",
+  grokEdge: "#71717a",
 };
 
 const galaxy = shapes
@@ -59,7 +59,6 @@ const wing = (radii: [number, number], angle: number, root: number) =>
     .at([root, 0.26, 0])
     .tone("wing");
 
-/** A honeybee, nose to the right: striped abdomen, thorax, head, eyes, antennae, legs and wings. */
 const bee = shapes.compose([
   { share: 36, shape: shapes.ellipsoid({ radii: [0.55, 0.37, 0.37] }).at([-0.28, 0, 0]).stripes({ every: 0.15, tones: ["gold", "brown"] }) },
   { share: 3, shape: shapes.curve({ through: [[-0.8, 0, 0], [-0.9, -0.02, 0], [-1, -0.05, 0]] }).tone("brown") },
@@ -72,7 +71,6 @@ const bee = shapes.compose([
   { share: 10, shape: wing([0.34, 0.13], 125, 0.26) },
 ]);
 
-/** A butterfly wing reaching out to the right from the body, edged dark and glowing amber inside. */
 const butterflyWing = (radii: [number, number], angle: number, height: number) =>
   shapes
     .oval({ radii, edge: 0.3 })
@@ -83,7 +81,6 @@ const butterflyWing = (radii: [number, number], angle: number, height: number) =
     .at([0, height, 0])
     .tone(({ along }) => (along > 0.97 ? "wingEdge" : along > 0.55 ? "orange" : "amber"));
 
-/** A butterfly seen from above: four wings in a shallow V, a slender body, a head and two antennae. */
 const butterfly = shapes.compose([
   { share: 34, shape: butterflyWing([0.62, 0.36], 28, 0.1) },
   { share: 24, shape: butterflyWing([0.44, 0.32], -38, -0.06) },
@@ -98,13 +95,14 @@ const butterfly = shapes.compose([
   },
 ]);
 
-/** The Remold mark's path, made solid: a pale face front and back, with violet edges. */
-const MARK = "M7 23.5V8.5A1.5 1.5 0 0 1 8.5 7H14A11 11 0 0 1 25 18H18A4 4 0 0 0 14 14V23.5A1.5 1.5 0 0 1 12.5 25H8.5A1.5 1.5 0 0 1 7 23.5Z";
-const logo = shapes.fromPath(MARK, { depth: 0.45 }).tone(({ z }) => (Math.abs(z) > 0.22 ? "markFace" : "markEdge"));
+const GROK =
+  "M32 77.8A33.4 33.4 0 0 0 83.3 39C85.5 32 82 20 95 7.3L39.8 62L72.7 40.6A24.8 24.8 0 0 1 41.9 73.7Z" +
+  "M70.3 23.1A33.4 33.4 0 0 0 20.8 65.6C18.5 70 22 80 5.2 93L33.6 68A24.8 24.8 0 0 1 60.6 27.8Z";
+const grok = shapes.fromPath(GROK, { depth: 0.32 }).tone(({ z }) => (Math.abs(z) > 0.15 ? "grokFace" : "grokEdge"));
 
-const SHAPES = { galaxy, helix, lorenz, bee, butterfly, logo };
+const SHAPES = { galaxy, helix, lorenz, bee, butterfly, grok };
 
-export const PARTICLE_SHAPES = ["galaxy", "helix", "lorenz", "bee", "butterfly", "logo"] as const;
+export const PARTICLE_SHAPES = ["galaxy", "helix", "lorenz", "bee", "butterfly", "grok"] as const;
 export type ParticleShape = (typeof PARTICLE_SHAPES)[number];
 
 const NAMES: Record<ParticleShape, string> = {
@@ -113,10 +111,11 @@ const NAMES: Record<ParticleShape, string> = {
   lorenz: "Lorenz attractor",
   bee: "Honeybee",
   butterfly: "Butterfly",
-  logo: "Remold mark",
+  grok: "Grok",
 };
 
-/** A still field of faint stars behind the dots, the same every time. */
+const SLIDE = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
+
 function drawStars(context: CanvasRenderingContext2D, { width, height }: { width: number; height: number }) {
   const scatter = (seed: number) => {
     const value = Math.sin(seed * 12.9898) * 43758.5453;
@@ -131,52 +130,97 @@ function drawStars(context: CanvasRenderingContext2D, { width, height }: { width
 }
 
 export interface ParticleShapesProps {
-  /** The shape the dots form. */
   shape: ParticleShape;
-  /** Called when a shape is picked from the row of names. */
   onShapeChange?: (shape: ParticleShape) => void;
-  /** Stop the turning. It also holds still offscreen and with reduced motion. */
   paused?: boolean;
-  /** How many dots. Fewer are used on narrow screens. Default 2600. */
   count?: number;
+  radius?: number;
+  dot?: "square" | "circle";
+  glow?: boolean;
+  stars?: boolean;
+  spin?: number;
+  tilt?: number;
+  distance?: number;
+  transition?: "scatter" | "direct";
+  spread?: number;
+  hold?: number;
+  stagger?: number;
+  pairing?: "flow" | "match" | "index";
+  duration?: number;
+  bounce?: number;
+  pointer?: boolean;
 }
 
-/** Thousands of dots that turn in 3D and flow from one shape into the next. */
-export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2600 }: ParticleShapesProps) {
+const CANVAS = "col-start-1 row-start-1 block h-[clamp(340px,52vw,520px)] w-full in-[.hp-card.wide]:h-[clamp(480px,52vw,680px)]";
+
+export function ParticleShapes({
+  shape,
+  onShapeChange,
+  paused = false,
+  count = 2600,
+  radius = 0.9,
+  dot = "square",
+  glow = true,
+  stars = true,
+  spin = 0.035,
+  tilt = 24,
+  distance = 4,
+  transition = "scatter",
+  spread = 1.3,
+  hold = 0.25,
+  stagger = 0.35,
+  pairing = "flow",
+  duration = 1.3,
+  bounce = 0.08,
+  pointer = true,
+}: ParticleShapesProps) {
   const [dots, setDots] = useState(count);
+  const id = useId();
   useEffect(() => {
     setDots(window.matchMedia("(max-width: 520px)").matches ? Math.round(count * 0.6) : count);
   }, [count]);
 
+  const turning = paused ? 0 : spin;
+  const camera =
+    shape === "grok"
+      ? { spin: turning, tilt: tilt / 3, sway: 28, angle: 0, distance }
+      : { spin: turning, tilt, sway: 0, distance };
+
   return (
-    <figure className="pts">
-      <Remold.Canvas draw={drawStars} className="pts-canvas" aria-hidden="true" />
+    <figure className="pts relative m-0 grid overflow-hidden rounded-[20px] bg-[radial-gradient(120%_90%_at_50%_40%,#15132a_0%,#07070b_70%)]">
+      {stars && <Remold.Canvas draw={drawStars} className={CANVAS} aria-hidden="true" />}
       <Remold.Particles
+        key={[radius, dot, glow, duration, bounce, pointer].join()}
         shape={SHAPES[shape]}
         count={dots}
         label={`Particles forming a ${NAMES[shape].toLowerCase()}`}
         palette={PALETTE}
-        pairing="flow"
-        transition={{ type: "scatter", spread: 1.3, hold: 0.35, stagger: 0.5 }}
-        camera={{ spin: paused ? 0 : 0.035, tilt: 24 }}
-        blend="add"
-        dot="square"
-        radius={0.9}
+        pairing={pairing}
+        transition={transition === "scatter" ? { type: "scatter", spread, hold, stagger } : "direct"}
+        camera={camera}
+        blend={glow ? "add" : "normal"}
+        dot={dot}
+        radius={radius}
         padding={6}
-        pointer={{ radius: 110, strength: 28 }}
-        spring={{ duration: 1.8, bounce: 0.08 }}
-        className="pts-canvas"
+        pointer={pointer ? { radius: 110, strength: 28 } : false}
+        spring={{ duration, bounce }}
+        className={CANVAS}
       />
-      <figcaption className="pts-caption">
+      <figcaption className="absolute inset-x-0 bottom-[18px] flex justify-center px-3">
         <ToggleGroup
-          className="pts-shapes"
+          className="inline-flex max-w-full overflow-x-auto rounded-full bg-[rgb(20_20_28/0.55)] p-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.07),inset_0_1px_0_rgb(255_255_255/0.08),0_10px_30px_-12px_rgb(0_0_0/0.6)] backdrop-blur-[14px] backdrop-saturate-[1.4] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label="Shape"
           value={[shape]}
           onValueChange={(values) => values[0] && onShapeChange?.(values[0] as ParticleShape)}
         >
           {PARTICLE_SHAPES.map((name) => (
-            <Toggle key={name} value={name} className="pts-shape">
-              {NAMES[name]}
+            <Toggle
+              key={name}
+              value={name}
+              className="relative inline-flex h-[34px] flex-none cursor-pointer items-center rounded-full border-0 bg-transparent px-3.5 text-[13px] font-medium tracking-[-0.005em] whitespace-nowrap text-white/50 transition-colors duration-250 ease-out not-data-pressed:hover:text-white/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70 data-pressed:text-white motion-reduce:transition-none"
+            >
+              {name === shape && <motion.span layoutId={`${id}-picked`} className="absolute inset-0 rounded-[inherit] bg-white/11 shadow-[inset_0_1px_0_rgb(255_255_255/0.1)]" transition={SLIDE} />}
+              <span className="relative">{NAMES[name]}</span>
             </Toggle>
           ))}
         </ToggleGroup>
@@ -185,29 +229,26 @@ export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2
   );
 }
 
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
-
 const BEATS: readonly { shape: ParticleShape; ms: number }[] = [
   { shape: "galaxy", ms: 6000 },
   { shape: "helix", ms: 6000 },
   { shape: "lorenz", ms: 7000 },
   { shape: "bee", ms: 7000 },
   { shape: "butterfly", ms: 7000 },
-  { shape: "logo", ms: 7000 },
+  { shape: "grok", ms: 7000 },
 ];
 
 const fromBeat = (step: number) => BEATS[step]!.shape;
 
-export interface ParticleShapesDemoProps {
-  /** On the home page, whether its card is playing. */
+export interface ParticleShapesDemoProps extends Omit<ParticleShapesProps, "shape" | "onShapeChange" | "paused"> {
   playing?: boolean;
 }
 
-export function ParticleShapesDemo({ playing }: ParticleShapesDemoProps = {}) {
+export function ParticleShapesDemo({ playing, ...settings }: ParticleShapesDemoProps = {}) {
   const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing ?? true);
   return (
-    <div ref={ref} className="pts-stage not-prose">
-      <ParticleShapes shape={state} onShapeChange={takeOver} paused={playing === false} />
+    <div ref={ref} className="not-prose grid w-full">
+      <ParticleShapes {...settings} shape={state} onShapeChange={takeOver} paused={playing === false} />
     </div>
   );
 }

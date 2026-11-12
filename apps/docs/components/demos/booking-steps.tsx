@@ -17,7 +17,6 @@ import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/r
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { useMeasuredSize } from "./use-measured-size";
 import { useScene } from "./use-scene";
-import "./booking-steps.css";
 
 const SETTLE = { type: "spring" as const, duration: 0.38, bounce: 0 };
 const FLY = { type: "spring" as const, duration: 0.55, bounce: 0.16 };
@@ -90,32 +89,44 @@ function PickSurface({
   return (
     <motion.span
       layoutId={layoutId}
-      className="bks-pick"
+      className="pointer-events-none absolute inset-0 bg-(--bks-ink)"
       style={{ borderRadius: radius }}
       transition={transition}
     />
   );
 }
 
+const PALETTE = [
+  "[--bks-surface:#ffffff] [--bks-ink:#0a0a0b] [--bks-soft:#3f3f46] [--bks-muted:#71717a] [--bks-well:#f4f4f5]",
+  "[--bks-line:rgb(10_10_11/0.07)] [--bks-edge:rgb(0_0_0/0.06)] [--bks-dash:rgb(10_10_11/0.16)] [--bks-good:#16a34a]",
+  "dark:[--bks-surface:#18181b] dark:[--bks-ink:#fafafa] dark:[--bks-soft:#d4d4d8] dark:[--bks-muted:#a1a1aa] dark:[--bks-well:#27272a]",
+  "dark:[--bks-line:rgb(255_255_255/0.08)] dark:[--bks-edge:rgb(255_255_255/0.07)] dark:[--bks-dash:rgb(255_255_255/0.2)] dark:[--bks-good:#4ade80]",
+].join(" ");
+
+const RING = "focus-visible:shadow-[0_0_0_2px_var(--bks-surface),0_0_0_4px_var(--bks-ink)]";
+const OPTION = `group/opt relative cursor-pointer border-0 bg-(--bks-well) p-0 text-(--bks-ink) outline-none transition-[background-color,color,scale] duration-200 active:scale-[0.97] not-data-checked:not-data-disabled:hover:bg-[color-mix(in_oklab,var(--bks-well)_86%,var(--bks-ink))] data-checked:text-(--bks-surface) data-disabled:cursor-default data-disabled:bg-transparent data-disabled:shadow-[inset_0_0_0_1px_var(--bks-line)] ${RING}`;
+const PILL = "relative grid h-9 place-items-center rounded-full px-2 text-[13px] whitespace-nowrap";
+
 function Host() {
   return (
     <>
-      <header className="bks-host">
+      <header className="flex items-center gap-3.5">
         <img
+          className="flex-none rounded-full"
           src={`https://api.dicebear.com/9.x/notionists/svg?seed=${DOCTOR.seed}&backgroundColor=${DOCTOR.tint}`}
           alt=""
           width={52}
           height={52}
           draggable={false}
         />
-        <span className="bks-host-copy">
-          <span className="bks-host-kicker">Book an appointment with</span>
-          <span className="bks-host-name">{DOCTOR.name}</span>
-          <span className="bks-host-role">{DOCTOR.role}</span>
+        <span className="grid">
+          <span className="text-[12.5px] text-(--bks-muted)">Book an appointment with</span>
+          <span className="text-[20px] leading-[1.2] font-[650] tracking-[-0.025em]">{DOCTOR.name}</span>
+          <span className="text-[13px] text-(--bks-muted)">{DOCTOR.role}</span>
         </span>
       </header>
 
-      <div className="bks-meta">
+      <div className="-mt-1 flex flex-wrap gap-1.5 [&>span]:inline-flex [&>span]:h-7 [&>span]:items-center [&>span]:gap-1.5 [&>span]:rounded-full [&>span]:bg-(--bks-well) [&>span]:pr-[11px] [&>span]:pl-[9px] [&>span]:text-[12.5px] [&>span]:font-medium [&>span]:text-(--bks-soft) [&_svg]:size-3.5">
         <span>
           <HugeiconsIcon icon={Hospital01Icon} strokeWidth={1.8} />
           {PLACE}
@@ -141,20 +152,23 @@ function Booked({
   reduced: boolean;
 }) {
   return (
-    <div className="bks-done" role="status">
+    <div className="grid justify-items-center gap-1.5 px-2 pt-4 pb-1.5 text-center" role="status">
       <motion.span
-        className="bks-done-badge"
+        className="mb-2 grid size-14 place-items-center rounded-full bg-(--bks-good) text-white [&_svg]:size-[26px]"
         initial={reduced ? false : { scale: 0.4, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", duration: 0.5, bounce: 0.35, delay: 0.12 }}
       >
         <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.6} />
       </motion.span>
-      <span className="bks-done-title">You&rsquo;re booked</span>
-      <span className="bks-done-detail">
+      <span className="text-[20px] font-[650] tracking-[-0.02em]">You&rsquo;re booked</span>
+      <span className="max-w-[270px] text-[13.5px] leading-[1.45] text-(--bks-muted)">
         {day}, {time} – {until}. We&rsquo;ll text you a reminder the day before.
       </span>
-      <button type="button" className="bks-ghost">
+      <button
+        type="button"
+        className="mt-2.5 inline-flex h-10 cursor-pointer items-center gap-[7px] rounded-full border-0 bg-(--bks-well) px-4 text-[13.5px] font-semibold text-(--bks-ink) outline-none focus-visible:shadow-[0_0_0_2px_var(--bks-ink)] [&_svg]:size-4"
+      >
         <HugeiconsIcon icon={CalendarAdd01Icon} strokeWidth={1.8} />
         Add to calendar
       </button>
@@ -180,8 +194,8 @@ function Review({
   onBook: () => void;
 }) {
   return (
-    <div className="bks-review">
-      <ul className="bks-lines">
+    <div className="grid gap-3.5">
+      <ul className="m-0 grid list-none gap-0.5 rounded-[20px] bg-(--bks-well) px-3.5 py-1.5 [&_svg]:size-[18px] [&_svg]:flex-none [&_svg]:text-(--bks-muted) [&>li]:flex [&>li]:min-h-[42px] [&>li]:items-center [&>li]:gap-3 [&>li]:font-medium [&>li]:text-(--bks-soft) [&>li+li]:border-t [&>li+li]:border-solid [&>li+li]:border-(--bks-line)">
         <li>
           <HugeiconsIcon icon={Calendar03Icon} strokeWidth={1.8} />
           {day}
@@ -197,7 +211,7 @@ function Review({
       </ul>
 
       <Button
-        className="bks-book"
+        className={`grid h-[52px] cursor-pointer place-items-center rounded-full border-0 bg-(--bks-ink) text-[15px] font-[650] text-(--bks-surface) outline-none transition-[scale] duration-150 active:scale-[0.98] aria-busy:cursor-progress ${RING}`}
         onClick={() => phase === "choosing" && onBook()}
         aria-busy={phase === "booking" || undefined}
         aria-disabled={phase === "booking" || undefined}
@@ -206,14 +220,14 @@ function Review({
           {phase === "booking" ? (
             <motion.span
               key="spinner"
-              className="bks-spinner"
+              className="grid place-items-center [&_svg]:size-[19px] [&_svg]:animate-spin motion-reduce:[&_svg]:[animation-duration:2.4s]"
               initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.6, filter: "blur(3px)" }}
               animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
               exit={{ opacity: 0 }}
               transition={SETTLE}
             >
               <HugeiconsIcon icon={Loading03Icon} strokeWidth={2.2} />
-              <span className="bks-sr">Booking</span>
+              <span className="sr-only">Booking</span>
             </motion.span>
           ) : (
             <motion.span key="label" exit={{ opacity: 0, filter: "blur(3px)" }} transition={SETTLE}>
@@ -275,12 +289,13 @@ export function BookingSteps({
     value: string,
     radius: number,
     className: string,
+    bodyClassName: string,
     body: ReactNode,
     disabled = false,
   ) => (
-    <Radio.Root key={value} value={value} disabled={disabled} className={className}>
+    <Radio.Root key={value} value={value} disabled={disabled} className={`${OPTION} ${className}`}>
       {values[slot] === value && surface(slot, radius)}
-      <span className="bks-option-body">{body}</span>
+      <span className={`relative grid h-full ${bodyClassName}`}>{body}</span>
     </Radio.Root>
   );
 
@@ -289,18 +304,18 @@ export function BookingSteps({
     const filled = value !== undefined && step !== index;
 
     return (
-      <span key={key} role="listitem" className="bks-slot">
+      <span key={key} role="listitem" className="grid">
         {filled ? (
           <button
             type="button"
-            className="bks-chip"
+            className={`${PILL} cursor-pointer border-0 bg-transparent font-semibold text-(--bks-surface) outline-none focus-visible:shadow-[0_0_0_2px_var(--bks-well),0_0_0_4px_var(--bks-ink)] disabled:cursor-default`}
             disabled={phase !== "choosing"}
             aria-label={`${label}: ${value}. Change`}
             onClick={() => onStepChange(index)}
           >
             {surface(key, 999)}
             <motion.span
-              className="bks-chip-text"
+              className="relative"
               initial={reduced ? false : { opacity: 0, filter: "blur(3px)" }}
               animate={{ opacity: 1, filter: "blur(0px)" }}
               transition={{ ...SETTLE, delay: 0.22 }}
@@ -310,8 +325,8 @@ export function BookingSteps({
           </button>
         ) : (
           <span
-            className="bks-placeholder"
             data-active={(step === index && phase === "choosing") || undefined}
+            className={`${PILL} font-medium text-(--bks-muted) transition-[background-color,color,box-shadow] duration-200 data-active:bg-(--bks-surface) data-active:text-(--bks-ink) data-active:shadow-[0_0_0_1px_var(--bks-line),0_1px_2px_rgb(0_0_0/0.06)]`}
           >
             {label}
           </span>
@@ -324,7 +339,7 @@ export function BookingSteps({
     <>
       {step === 0 && (
         <RadioGroup
-          className="bks-visits"
+          className="grid gap-2"
           aria-label="Visit"
           value={visit ?? null}
           onValueChange={(value) => onChoose("visit", value as string)}
@@ -334,10 +349,13 @@ export function BookingSteps({
               "visit",
               item.value,
               18,
-              "bks-visit",
+              "h-[62px] rounded-[18px]",
+              "content-center justify-items-start gap-0.5 px-4 text-left",
               <>
-                <span className="bks-visit-name">{item.value}</span>
-                <span className="bks-visit-note">{item.note}</span>
+                <span className="text-[15px] font-[650] tracking-[-0.015em]">{item.value}</span>
+                <span className="text-[12.5px] text-(--bks-muted) transition-colors duration-200 group-data-checked/opt:text-white/65">
+                  {item.note}
+                </span>
               </>,
             ),
           )}
@@ -346,7 +364,7 @@ export function BookingSteps({
 
       {step === 1 && (
         <RadioGroup
-          className="bks-days"
+          className="grid grid-cols-5 gap-1.5"
           aria-label="Day"
           value={day ?? null}
           onValueChange={(value) => onChoose("day", value as string)}
@@ -356,11 +374,18 @@ export function BookingSteps({
               "day",
               item.value,
               18,
-              "bks-day",
+              "h-[86px] rounded-[18px]",
+              "content-center justify-items-center gap-0.5",
               <>
-                <span className="bks-day-weekday">{item.weekday}</span>
-                <span className="bks-day-date">{item.date}</span>
-                <span className="bks-day-free">{item.free ? `${item.free} free` : "Full"}</span>
+                <span className="text-[12px] font-semibold text-(--bks-muted) transition-colors duration-200 group-data-checked/opt:text-white/70">
+                  {item.weekday}
+                </span>
+                <span className="text-[22px] font-[650] tracking-[-0.03em] group-data-disabled/opt:text-(--bks-muted)">
+                  {item.date}
+                </span>
+                <span className="text-[11px] font-semibold text-(--bks-good) transition-colors duration-200 group-data-checked/opt:text-white/70 group-data-disabled/opt:text-(--bks-muted)">
+                  {item.free ? `${item.free} free` : "Full"}
+                </span>
               </>,
               item.free === 0,
             ),
@@ -370,7 +395,7 @@ export function BookingSteps({
 
       {step === 2 && (
         <RadioGroup
-          className="bks-times"
+          className="grid grid-cols-3 gap-2"
           aria-label={`Time on ${day}`}
           value={time ?? null}
           onValueChange={(value) => onChoose("time", value as string)}
@@ -380,8 +405,9 @@ export function BookingSteps({
               "time",
               item.value,
               14,
-              "bks-time",
-              <span className="bks-time-text">{item.value}</span>,
+              "h-12 rounded-[14px] data-disabled:text-(--bks-muted) data-disabled:line-through data-disabled:decoration-(--bks-dash)",
+              "place-items-center",
+              <span className="text-[14px] font-semibold tabular-nums">{item.value}</span>,
               !item.free,
             ),
           )}
@@ -403,25 +429,28 @@ export function BookingSteps({
   );
 
   return (
-    <section className="bks" aria-label={`Book an appointment with ${DOCTOR.name}`}>
+    <section
+      className={`grid w-[min(100%,380px)] gap-[18px] rounded-[36px] border border-solid border-(--bks-edge) bg-(--bks-surface) px-[18px] pt-[22px] pb-[18px] text-[14px] tracking-[-0.006em] text-(--bks-ink) shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)] ${PALETTE}`}
+      aria-label={`Book an appointment with ${DOCTOR.name}`}
+    >
       <LayoutGroup id={id}>
         <Host />
 
-        <div className="bks-slots" role="list" aria-label="Your booking">
+        <div className="grid grid-cols-3 gap-1.5 rounded-full bg-(--bks-well) p-1.5" role="list" aria-label="Your booking">
           {slotChips}
         </div>
 
         <motion.div
-          className="bks-panel"
+          className="-mx-1 overflow-hidden px-1"
           initial={false}
           animate={size ? { height: size.height } : undefined}
           transition={reduced ? { duration: 0 } : SIZE}
         >
-          <div ref={content} className="bks-panel-content">
+          <div ref={content} className="relative pb-0.5">
             <AnimatePresence initial={false} mode="popLayout">
               <motion.div
                 key={phase === "booked" ? "booked" : step}
-                className="bks-step"
+                className="grid gap-3.5"
                 {...enter}
                 transition={SETTLE}
               >
@@ -429,11 +458,11 @@ export function BookingSteps({
                   <Booked day={day} time={time} until={until} reduced={reduced} />
                 ) : (
                   <>
-                    <span className="bks-step-head">
-                      <span className="bks-step-count">
+                    <span className="grid gap-0.5">
+                      <span className="text-[12.5px] font-medium text-(--bks-muted)">
                         {step < 3 ? `Step ${step + 1} of 3` : "Almost done"}
                       </span>
-                      <span className="bks-step-title">{TITLES[step]}</span>
+                      <span className="text-[17px] font-[650] tracking-[-0.02em]">{TITLES[step]}</span>
                     </span>
                     {choices}
                   </>
@@ -497,7 +526,7 @@ export function BookingStepsDemo({ playing, preview }: BookingStepsDemoProps = {
   }, [state.phase, live, preview, takeOver]);
 
   return (
-    <div ref={ref} className="bks-demo not-prose">
+    <div ref={ref} className="not-prose grid w-full place-items-center font-sans antialiased">
       <BookingSteps
         step={state.step}
         onStepChange={(step) => takeOver((current) => ({ ...current, step }))}

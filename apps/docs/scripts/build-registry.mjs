@@ -116,9 +116,19 @@ const ITEMS = [
     "A \"Was this helpful?\" pill that grows into a small card with quick reasons and a comment, then draws back into a thank-you. Built on Base UI's Button, Toggle Group and Field.",
   ],
   [
+    "peel-reward",
+    "Peel-off reward",
+    "A reward under a sticker: drag to peel it back by the corner, the paper folding along a real crease with its pale back showing, and past halfway it springs off and the code is yours to copy. Built on Motion and Base UI's Button.",
+  ],
+  [
+    "notification-inbox",
+    "Notification inbox",
+    "A bell that morphs into your notifications, grouped by day: the bell rings and the count rolls when one arrives, invites are answered in place, and marking all read clears them top to bottom until you're caught up. Built on Motion and Base UI's Popover, Toggle Group and Button.",
+  ],
+  [
     "product-tour",
     "Product tour",
-    "A product tour where the spotlight springs from one control to the next, a line ties each tip to its target, and the tip grows out of the help button.",
+    "A product tour where the spotlight springs from one control to the next, a line ties each tip to its target, and the tip grows out of the help button. Built on Remold.Tour.",
   ],
   [
     "command-palette",
@@ -196,11 +206,6 @@ const ITEMS = [
     "A food order told like a short film: each stage plays live, then its illustration reshapes into the next, from the pot to the bag, the scooter and your front door.",
   ],
   [
-    "voice-assistant",
-    "Voice assistant",
-    "A voice assistant's orb of 3D dots that breathes while idle, ripples with your voice as it listens, swirls into a ring as it thinks, and pulses as it speaks.",
-  ],
-  [
     "particle-shapes",
     "Particle shapes",
     "Thousands of dots turning in 3D that flow from a spiral galaxy into a double helix, then the Lorenz attractor's two wings, a honeybee, a butterfly and the Remold mark, drawn with Remold's particles camera.",
@@ -236,9 +241,9 @@ const ITEMS = [
     "A chart where every dot is 25 customers: regroup by plan, region or channel and the same dots walk to their new column.",
   ],
   [
-    "inbox-triage",
-    "Inbox triage",
-    "An inbox where archived and deleted mail breaks into dust and pours into its tab, with multi-select, swipe, hover actions and an undo toast.",
+    "storage-cleanup",
+    "Free up space",
+    "A phone's storage clean-up: the photos and videos you delete break into dust that pours into the free space, and the storage bar rolls down, with an undo toast.",
   ],
   [
     "api-keys",

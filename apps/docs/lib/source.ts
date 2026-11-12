@@ -1,5 +1,6 @@
 import { llms, loader } from "fumadocs-core/source";
 import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons";
+import { forAgents } from "./agent-markdown";
 import { docsRoute } from "./shared";
 import { defineDocs } from "fumadocs-mdx/macro";
 import { metaSchema, pageSchema } from "fumadocs-core/source/schema";
@@ -35,8 +36,18 @@ export const source = loader({
   ],
 });
 
+/** For llms.txt and llms-full.txt: every page, with commands and packages but not each component's code. */
 export const docsLlms = llms(source, {
   renderPage: async (page) => `# ${page.data.title} (${page.url})
 
-${await page.data.getText("processed")}`,
+${forAgents(await page.data.getText("processed"), { withCode: false })}`,
+});
+
+/** For one page's Markdown, the "Copy Markdown" and "Open in…" actions: everything, the code included. */
+export const pageLlms = llms(source, {
+  renderPage: async (page) => `# ${page.data.title} (${page.url})
+
+> ${page.data.description ?? ""}
+
+${forAgents(await page.data.getText("processed"), { withCode: true })}`,
 });

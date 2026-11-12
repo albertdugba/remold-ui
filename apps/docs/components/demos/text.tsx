@@ -1,7 +1,7 @@
 "use client";
 import { Remold } from "@remold-ui/react";
 import { useState } from "react";
-import { Frame, Segmented } from "./frame";
+import { Frame, Segmented, DEMO_BUTTON } from "./frame";
 
 const STATUSES = ["Uploading 3 files", "Uploading 2 files", "Processing", "Upload complete"];
 
@@ -14,7 +14,7 @@ export function StatusDemo() {
         <Remold.Text className="text-[22px] font-semibold tracking-[-0.02em]">{STATUSES[index]!}</Remold.Text>
         <button
           type="button"
-          className="rm-button"
+          className={DEMO_BUTTON}
           onClick={() => setIndex((current) => (current + 1) % STATUSES.length)}
         >
           Next status

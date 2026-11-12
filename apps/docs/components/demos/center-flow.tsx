@@ -5,7 +5,6 @@ import { Remold } from "@remold-ui/react/canvas";
 import { useState } from "react";
 import { PAPER } from "./day-stage";
 import { CREDIT_CARD_GLYPH } from "./demo-glyphs";
-import "./center-flow.css";
 
 type SceneProps = Remold.Scene.Props;
 type Phase = "ready" | "flowing";
@@ -104,9 +103,12 @@ const LINKS: SceneProps["links"] = Object.keys(POSITIONS).flatMap((id) => [
 export function CenterFlow() {
   const [phase, setPhase] = useState<Phase>("flowing");
   return (
-    <section className="center-flow not-prose" aria-label="Subscription wallet">
+    <section
+      className="not-prose relative col-span-full min-h-[500px] overflow-hidden rounded-3xl bg-[#f4efe6] bg-[radial-gradient(62%_58%_at_50%_52%,#effcf6,transparent_72%)] text-[#2b2620] max-[700px]:min-h-[430px] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(rgb(90_80_65/0.12)_1px,transparent_1.4px)] before:bg-size-[22px_22px] before:[mask-image:radial-gradient(70%_60%_at_50%_50%,#000,transparent)] before:content-['']"
+      aria-label="Subscription wallet"
+    >
       <Remold.Scene
-        className="cf-remold-scene"
+        className="relative block h-[460px] w-full max-[700px]:h-[390px]"
         label="A subscription wallet connected to Netflix, Spotify, YouTube Premium, Prime Video, and Disney Plus"
         objects={OBJECTS}
         links={LINKS}
@@ -116,10 +118,11 @@ export function CenterFlow() {
         interact={{ drag: false }}
         spring={{ duration: 0.86, bounce: 0.16 }}
       />
-      <div className="cf-footer">
+      <div className="absolute right-[18px] bottom-4 left-[18px] flex items-center justify-between text-[12px] text-[#8a7f70]">
         <span>Subscription wallet</span>
         <button
           type="button"
+          className="h-8 cursor-pointer rounded-[9px] border-0 bg-[#2b2620] px-3.5 text-[12px] font-semibold text-[#fffaf1]"
           onClick={() => setPhase((current) => (current === "flowing" ? "ready" : "flowing"))}
         >
           {phase === "flowing" ? "Pause flow" : "Replay"}

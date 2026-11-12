@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { NIGHT } from "./night-stage";
 import { PAPER } from "./day-stage";
 import { useScene } from "./use-scene";
-import "./product-systems.css";
 
 type SceneProps = Remold.Scene.Props;
 type Kind = "domain" | "privacy" | "upgrade" | "uptime" | "collaboration" | "workspace";
@@ -206,6 +205,15 @@ const BEATS = [
   { phase: 2, ms: 2800 },
 ] as const;
 
+const KIND_BACKDROP: Record<Kind, string> = {
+  domain: "bg-[#f4efe6] bg-[radial-gradient(65%_60%_at_50%_44%,#f2fbf5,transparent_70%)]",
+  privacy: "bg-[#f2ede3] bg-[radial-gradient(54%_58%_at_50%_48%,#f9f4ea,transparent_72%)]",
+  upgrade: "bg-[#f5efe4] bg-[radial-gradient(65%_60%_at_50%_55%,#fff6df,transparent_70%)]",
+  uptime: "bg-[#f2ede3] bg-[radial-gradient(62%_58%_at_54%_50%,#edf9f3,transparent_70%)]",
+  collaboration: "bg-[#f5f0e7] bg-[radial-gradient(60%_55%_at_50%_52%,#f2f8f5,transparent_70%)]",
+  workspace: "bg-[#f3eee5] bg-[radial-gradient(66%_62%_at_48%_48%,#f5fbf7,transparent_70%)]",
+};
+
 export function ProductSystemIllustration({ kind, playing }: { kind: Kind; playing?: boolean }) {
   const dark = useDarkMode();
   const system = SYSTEMS[kind];
@@ -226,12 +234,12 @@ export function ProductSystemIllustration({ kind, playing }: { kind: Kind; playi
   return (
     <section
       ref={scene.ref}
-      className={`psi psi-${kind} not-prose`}
+      className={`not-prose relative grid min-h-[520px] w-full overflow-hidden font-sans text-[#2b2620] data-dark:bg-[#101015] data-dark:bg-[radial-gradient(60%_50%_at_50%_55%,rgb(124_92_255/0.14),transparent_70%)] data-dark:text-[#ecebf5] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(rgb(90_80_65/0.12)_1px,transparent_1.4px)] before:bg-size-[22px_22px] before:[mask-image:radial-gradient(70%_60%_at_50%_50%,#000,transparent)] before:content-[''] data-dark:before:bg-[linear-gradient(rgb(255_255_255/0.035)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.035)_1px,transparent_1px)] data-dark:before:bg-size-[32px_32px] ${KIND_BACKDROP[kind]}`}
       data-dark={dark || undefined}
       aria-label={system.title}
     >
       <Remold.Scene
-        className="psi-scene"
+        className="relative block h-[460px] w-full"
         label={system.title}
         objects={objects}
         links={links}
@@ -241,13 +249,16 @@ export function ProductSystemIllustration({ kind, playing }: { kind: Kind; playi
         interact={{ drag: false }}
         spring={{ duration: 0.82, bounce: 0.2 }}
       />
-      <div className="psi-status">
-        <span className="psi-dot" />
+      <div className="absolute top-5 left-1/2 inline-flex max-w-[calc(100%-32px)] -translate-x-1/2 items-center gap-2 rounded-xl bg-white/86 px-3 py-[9px] text-[12.5px] shadow-[0_8px_20px_-12px_rgb(50_35_15/0.35)] in-data-dark:bg-[rgb(26_24_36/0.86)] in-data-dark:text-[#ecebf5] in-data-dark:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]">
+        <span className="size-[7px] rounded-full bg-[#39a97d] shadow-[0_0_0_3px_rgb(57_169_125/0.16)]" />
         <span>{system.phases[state.phase]}</span>
       </div>
-      <div className="psi-foot">
+      <div className="absolute right-[18px] bottom-4 left-[18px] flex items-center justify-between gap-3 text-[12px] text-[#8a7f70] in-data-dark:text-[#8f8ca3]">
         <span>{system.title}</span>
-        <button type="button" onClick={() => takeOver({ phase: 0 })}>
+        <button
+          type="button"
+          className="h-8 cursor-pointer rounded-[9px] border-0 bg-[#2b2620] px-3.5 text-[12px] font-semibold text-[#fffaf1] in-data-dark:bg-[rgb(124_92_255/0.16)] in-data-dark:text-[#e6e0ff] in-data-dark:shadow-[inset_0_0_0_1px_rgb(124_92_255/0.5)]"
+          onClick={() => takeOver({ phase: 0 })}>
           {state.phase === 2 ? "Replay" : system.action}
         </button>
       </div>

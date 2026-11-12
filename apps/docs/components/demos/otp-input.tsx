@@ -13,7 +13,6 @@ import { Remold, useAutoplay } from "@remold-ui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { CodeField } from "./code-field";
-import "./otp-input.css";
 
 const LENGTH = 6;
 const CODE = "482915";
@@ -25,6 +24,8 @@ const SETTLE = 280;
 const CHECKING = 1400;
 
 type Phase = "entry" | "verifying" | "verified" | "error";
+
+const ICON = "size-[18px] flex-none motion-safe:group-data-[phase=verifying]:animate-spin";
 
 const SPRING = { type: "spring" as const, duration: 0.32, bounce: 0.16 };
 
@@ -100,8 +101,17 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
   const pill = phase === "verifying" || verified;
 
   return (
-    <section ref={autoplay.ref} className="otp not-prose" data-phase={phase} aria-label="Verify your email">
-      <span className="otp-badge" aria-hidden="true">
+    <section
+      ref={autoplay.ref}
+      data-phase={phase}
+      data-pill={pill || undefined}
+      className="otp group not-prose @container relative grid w-[min(100%,360px)] justify-items-center rounded-[28px] border-0 bg-(--otp-surface) px-6 pt-[34px] pb-[22px] text-center font-sans text-(--otp-ink) [--otp-accent:#7c3aed] [--otp-bad:#dc2626] [--otp-good:#16a34a] [--otp-ink:#18181b] [--otp-muted:#71717a] [--otp-on-ink:#fafafa] [--otp-surface:#ffffff] @max-[360px]:px-4 dark:[--otp-accent:#a78bfa] dark:[--otp-bad:#f87171] dark:[--otp-good:#22c55e] dark:[--otp-ink:#fafafa] dark:[--otp-muted:#a1a1aa] dark:[--otp-on-ink:#18181b] dark:[--otp-surface:#232327]"
+      aria-label="Verify your email"
+    >
+      <span
+        className="grid place-items-center text-(--otp-accent) transition-colors duration-350 group-data-[phase=error]:text-(--otp-bad) group-data-[phase=verified]:text-(--otp-good) [&_svg]:size-10 [&_svg]:[stroke-width:1.75]"
+        aria-hidden="true"
+      >
         <Remold.Icon
           icon={
             <HugeiconsIcon
@@ -115,21 +125,25 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
         />
       </span>
 
-      <p className="otp-copy" id="otp-copy">
+      <p className="mt-[18px] mb-6 grid gap-1 text-[15px] leading-[1.4] text-(--otp-muted)" id="otp-copy">
         Enter the code we sent to
-        <strong>{EMAIL}</strong>
+        <strong className="text-[16px] font-semibold wrap-anywhere text-(--otp-ink)">{EMAIL}</strong>
       </p>
 
-      <motion.div layout transition={SPRING} className="otp-stage">
+      <motion.div
+        layout
+        transition={SPRING}
+        className="flex h-[58px] items-center justify-center motion-safe:group-data-[phase=error]:animate-shake"
+      >
         <motion.div
           layout
-          className="otp-field"
+          className="relative flex items-center justify-center bg-(--otp-surface) whitespace-nowrap transition-colors duration-350 group-data-pill:h-[52px] group-data-pill:bg-(--otp-ink) group-data-pill:pr-[26px] group-data-pill:pl-[22px] group-data-pill:text-(--otp-on-ink) group-data-[phase=verified]:bg-(--otp-good)! group-data-[phase=verified]:text-white!"
           initial={false}
           animate={{ borderRadius: pill ? 26 : 14 }}
           transition={SPRING}
         >
           <CodeField
-            className="otp-cells"
+            className="bg-(--otp-surface) transition-opacity duration-200 group-data-pill:w-0 group-data-pill:overflow-hidden group-data-pill:opacity-0 @max-[360px]:[&_.cf-cell]:h-[50px] @max-[360px]:[&_.cf-cell]:w-10 @max-[360px]:[&_.cf-cell]:flex-none @max-[360px]:[&_.cf-cell]:text-[20px] @max-[360px]:[&_.cf-cell:first-of-type]:w-11 @max-[360px]:[&_.cf-cell:first-of-type]:rounded-[25px_16px_16px_25px] @max-[360px]:[&_.cf-cell:last-of-type]:w-11 @max-[360px]:[&_.cf-cell:last-of-type]:rounded-[16px_25px_25px_16px]"
             value={code}
             onChange={(next) => {
               setCode(next);
@@ -141,19 +155,25 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
             describedBy="otp-copy"
             onFocus={(event) => failed && event.currentTarget.select()}
           />
-          <motion.span layout className="otp-result" role="status" aria-live="polite" transition={SPRING}>
+          <motion.span
+            layout
+            className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-1/2 items-center gap-2 whitespace-nowrap opacity-0 group-data-pill:static group-data-pill:translate-none group-data-pill:opacity-100 group-data-pill:[transition:opacity_0.25s_0.1s]"
+            role="status"
+            aria-live="polite"
+            transition={SPRING}
+          >
             {verified ? (
-              <HugeiconsIcon icon={CheckIcon} className="otp-icon" aria-hidden="true" />
+              <HugeiconsIcon icon={CheckIcon} className={ICON} aria-hidden="true" />
             ) : failed ? (
-              <HugeiconsIcon icon={CancelCircleIcon} className="otp-icon" aria-hidden="true" />
+              <HugeiconsIcon icon={CancelCircleIcon} className={ICON} aria-hidden="true" />
             ) : (
-              <HugeiconsIcon icon={Loading03Icon} className="otp-icon" aria-hidden="true" />
+              <HugeiconsIcon icon={Loading03Icon} className={ICON} aria-hidden="true" />
             )}
             <AnimatePresence mode="popLayout" initial={false}>
               {!entering && (
                 <motion.span
                   key={phase}
-                  className="otp-word"
+                  className="text-[15px] font-semibold"
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
@@ -167,7 +187,12 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
         </motion.div>
       </motion.div>
 
-      <button type="button" className="otp-foot" disabled={phase === "verifying"} onClick={startOver}>
+      <button
+        type="button"
+        className="mt-[22px] cursor-pointer rounded-lg border-0 bg-transparent px-2 py-1 text-[13px] text-(--otp-muted) transition-opacity duration-200 enabled:hover:text-(--otp-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--otp-ink) disabled:cursor-default disabled:opacity-40"
+        disabled={phase === "verifying"}
+        onClick={startOver}
+      >
         <span>{verified ? "Use another code" : failed ? "Try another code" : "Resend code"}</span>
       </button>
     </section>

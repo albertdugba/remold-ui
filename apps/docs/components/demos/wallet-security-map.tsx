@@ -3,7 +3,7 @@
 import { extrude } from "@remold-ui/canvas";
 import { Remold } from "@remold-ui/react/canvas";
 import { useEffect, type CSSProperties, type Ref } from "react";
-import { NIGHT, PLATFORM_INK, VIOLET } from "./night-stage";
+import { NIGHT, NIGHT_CHIP, NIGHT_CTA, NIGHT_FOOT, NIGHT_SCENE, NIGHT_STAGE, PLATFORM_INK, VIOLET } from "./night-stage";
 import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
 
@@ -105,21 +105,19 @@ const BEATS: readonly { level: Level; ms: number }[] = [
 ];
 
 export interface WalletSecurityMapProps {
-  /** How many recovery methods are on, 0 to 3. */
   value?: SecurityLevel;
   defaultValue?: SecurityLevel;
   onValueChange?: (level: SecurityLevel) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A wallet that gathers recovery methods around it, one link at a time. */
 export function WalletSecurityMap({ value, defaultValue = 0, onValueChange, ref }: WalletSecurityMapProps) {
   const [level, setLevel] = useControllableState({ value, defaultValue, onValueChange });
 
   return (
-    <section ref={ref} className="night-stage wsm not-prose" aria-label="Wallet security map">
+    <section ref={ref} className={`${NIGHT_STAGE} not-prose`} aria-label="Wallet security map">
       <Remold.Scene
-        className="night-scene"
+        className={NIGHT_SCENE}
         label="A wallet becoming protected by recovery methods"
         objects={OBJECTS}
         links={LINKS}
@@ -129,7 +127,7 @@ export function WalletSecurityMap({ value, defaultValue = 0, onValueChange, ref 
         interact={{ drag: false }}
         spring={{ duration: 0.85, bounce: 0.2 }}
       />
-      <div className="night-chip wsm-chip" role="status">
+      <div className={NIGHT_CHIP} role="status">
         <span
           className="size-7 shrink-0 rotate-[calc(var(--strength)*1turn)] rounded-full border-[3px] border-[rgb(124_92_255_/_0.2)] border-t-[#a895ff]"
           style={{ "--strength": `${level / 3}` } as CSSProperties}
@@ -141,7 +139,7 @@ export function WalletSecurityMap({ value, defaultValue = 0, onValueChange, ref 
           </b>
         </span>
       </div>
-      <div className="night-foot">
+      <div className={NIGHT_FOOT}>
         <div className="flex gap-1" aria-label="Recovery methods">
           {METHODS.map((method, index) => (
             <button
@@ -155,7 +153,7 @@ export function WalletSecurityMap({ value, defaultValue = 0, onValueChange, ref 
             </button>
           ))}
         </div>
-        <button type="button" className="night-cta" onClick={() => setLevel(0)}>
+        <button type="button" className={NIGHT_CTA} onClick={() => setLevel(0)}>
           Review
         </button>
       </div>
@@ -163,9 +161,6 @@ export function WalletSecurityMap({ value, defaultValue = 0, onValueChange, ref 
   );
 }
 
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
-
-/** Turns the methods on one by one; once touched, it carries on from there on its own clock. */
 export function WalletSecurityMapDemo({ playing }: { playing?: boolean } = {}) {
   const scene = useScene(BEATS, (step) => BEATS[step]!.level, playing);
   const { state: level, takeOver } = scene;
