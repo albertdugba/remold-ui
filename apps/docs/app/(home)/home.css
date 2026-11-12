@@ -327,11 +327,6 @@
   gap: clamp(32px, 5vw, 64px);
 }
 
-.hm-split.faq {
-  align-items: start;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-}
-
 .hm-split.code {
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
 }
@@ -785,7 +780,6 @@
   }
 
   .hm-split,
-  .hm-split.faq,
   .hm-split.code {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1086,61 +1080,6 @@
     padding: 10px 16px 22px 4px;
     font-size: 12.5px;
   }
-}
-
-/* FAQ */
-.qx-item {
-  border-bottom: 1px solid var(--color-fd-border);
-}
-
-.qx-item summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 0;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  list-style: none;
-}
-
-.qx-item summary::-webkit-details-marker {
-  display: none;
-}
-
-.qx-icon {
-  position: relative;
-  flex: none;
-  width: 12px;
-  height: 12px;
-}
-
-.qx-icon::before,
-.qx-icon::after {
-  content: "";
-  position: absolute;
-  top: 5.5px;
-  left: 0;
-  width: 12px;
-  height: 1.5px;
-  background: var(--color-fd-muted-foreground);
-  transition: transform 0.25s;
-}
-
-.qx-icon::after {
-  transform: rotate(90deg);
-}
-
-.qx-item[open] .qx-icon::after {
-  transform: rotate(0deg);
-}
-
-.qx-item p {
-  margin: 0 0 20px;
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--color-fd-muted-foreground);
 }
 
 /* ───────────── Landing v3: centred hero, live showcase, galleries, dark band ───────────── */
@@ -1553,38 +1492,6 @@
 .hm-hero-band {
   position: relative;
   isolation: isolate;
-}
-
-/* "New: …", a small pill above the headline */
-.hm-new {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 3px 12px 3px 3px;
-  border: 1px solid var(--hm-line);
-  border-radius: 999px;
-  background: var(--color-fd-card);
-  font-size: 13px;
-  color: var(--hm-muted);
-  transition:
-    border-color 0.2s,
-    color 0.2s;
-}
-
-.hm-new span:first-child {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--hm-ink);
-  color: var(--color-fd-background);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .hm-new:hover {
-    border-color: color-mix(in oklab, var(--hm-ink) 30%, transparent);
-    color: var(--hm-ink);
-  }
 }
 
 /* The stage: one big, quiet panel cradling the live review thread. */

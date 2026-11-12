@@ -2,8 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { RemoldMark } from "@/components/brand/remold-mark";
 import { X_HANDLE, X_URL } from "@/lib/layout.shared";
+import { FavouriteIcon, StarIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { InstallCommand } from "@/components/home/install-command";
-import { Faq } from "@/components/home/faq";
 import { Flavors } from "@/components/home/flavors";
 import { Parts } from "@/components/home/parts";
 import { Points } from "@/components/home/points";
@@ -40,6 +41,10 @@ async function highlightFlavors(): Promise<Record<Flavor, ReactNode>> {
   return Object.fromEntries(entries) as Record<Flavor, ReactNode>;
 }
 
+const REPO_URL = "https://github.com/albertdugba/remold-ui";
+const CREDIT_LINK =
+  "font-medium text-fd-foreground underline decoration-fd-border underline-offset-4 transition-colors hover:decoration-fd-foreground";
+
 export default async function HomePage() {
   const highlighted = await highlightFlavors();
   return (
@@ -48,9 +53,6 @@ export default async function HomePage() {
         <div className="hm-frame">
           <section className="hm-hero split">
             <div className="hm-hero-title">
-              <Link href="/docs/components/otp-input" className="hm-new">
-                <span>New</span> Watch a code verify itself <span aria-hidden="true">→</span>
-              </Link>
               <h1 aria-label="Interfaces that remold themselves.">
                 <span aria-hidden="true">Interfaces that</span>
                 <br />
@@ -105,19 +107,6 @@ export default async function HomePage() {
           </header>
           <Points />
         </Section>
-
-        <Section kicker="Questions">
-          <div className="hm-split faq">
-            <header className="hm-head">
-              <h2>Good questions.</h2>
-              <p>
-                Anything else? The <Link href="/docs">docs</Link> go deeper, and every page is also available as{" "}
-                <a href="/llms.txt">plain text for assistants</a>.
-              </p>
-            </header>
-            <Faq />
-          </div>
-        </Section>
       </div>
 
       <footer className="hm-end">
@@ -148,7 +137,7 @@ export default async function HomePage() {
             <a href={X_URL} target="_blank" rel="noreferrer">
               @{X_HANDLE} on X
             </a>
-            <a href="https://github.com/albertdugba/remold-ui" target="_blank" rel="noreferrer">
+            <a href={REPO_URL} target="_blank" rel="noreferrer">
               GitHub
             </a>
           </nav>
@@ -158,7 +147,28 @@ export default async function HomePage() {
             <a href="/llms-full.txt">llms-full.txt</a>
           </nav>
         </div>
-        <p className="hm-footer-legal">Products, companies and people in the examples are made up.</p>
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-fd-border pt-6 text-[13px] text-fd-muted-foreground">
+          <p className="m-0 max-w-[60ch] leading-relaxed">
+            Made with{" "}
+            <HugeiconsIcon
+              icon={FavouriteIcon}
+              size={14}
+              className="inline align-[-2px] text-rose-500"
+              aria-label="love"
+            />{" "}
+            by{" "}
+            <a className={CREDIT_LINK} href={X_URL} target="_blank" rel="noreferrer">
+              @{X_HANDLE}
+            </a>
+            . If Remold is useful to you, a{" "}
+            <a className={CREDIT_LINK} href={REPO_URL} target="_blank" rel="noreferrer">
+              <HugeiconsIcon icon={StarIcon} size={13} className="mr-1 inline align-[-2px]" aria-hidden="true" />
+              star on GitHub
+            </a>{" "}
+            would mean a lot.
+          </p>
+          <p className="m-0 text-[12px]">Products, companies and people in the examples are made up.</p>
+        </div>
       </footer>
     </main>
   );

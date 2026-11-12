@@ -134,38 +134,76 @@ export interface ParticleShapesProps {
   onShapeChange?: (shape: ParticleShape) => void;
   paused?: boolean;
   count?: number;
+  radius?: number;
+  dot?: "square" | "circle";
+  glow?: boolean;
+  stars?: boolean;
+  spin?: number;
+  tilt?: number;
+  distance?: number;
+  transition?: "scatter" | "direct";
+  spread?: number;
+  hold?: number;
+  stagger?: number;
+  pairing?: "flow" | "match" | "index";
+  duration?: number;
+  bounce?: number;
+  pointer?: boolean;
 }
 
 const CANVAS = "col-start-1 row-start-1 block h-[clamp(340px,52vw,520px)] w-full in-[.hp-card.wide]:h-[clamp(480px,52vw,680px)]";
 
-export function ParticleShapes({ shape, onShapeChange, paused = false, count = 2600 }: ParticleShapesProps) {
+export function ParticleShapes({
+  shape,
+  onShapeChange,
+  paused = false,
+  count = 2600,
+  radius = 0.9,
+  dot = "square",
+  glow = true,
+  stars = true,
+  spin = 0.035,
+  tilt = 24,
+  distance = 4,
+  transition = "scatter",
+  spread = 1.3,
+  hold = 0.25,
+  stagger = 0.35,
+  pairing = "flow",
+  duration = 1.3,
+  bounce = 0.08,
+  pointer = true,
+}: ParticleShapesProps) {
   const [dots, setDots] = useState(count);
   const id = useId();
   useEffect(() => {
     setDots(window.matchMedia("(max-width: 520px)").matches ? Math.round(count * 0.6) : count);
   }, [count]);
 
+  const turning = paused ? 0 : spin;
+  const camera =
+    shape === "grok"
+      ? { spin: turning, tilt: tilt / 3, sway: 28, angle: 0, distance }
+      : { spin: turning, tilt, sway: 0, distance };
+
   return (
     <figure className="pts relative m-0 grid overflow-hidden rounded-[20px] bg-[radial-gradient(120%_90%_at_50%_40%,#15132a_0%,#07070b_70%)]">
-      <Remold.Canvas draw={drawStars} className={CANVAS} aria-hidden="true" />
+      {stars && <Remold.Canvas draw={drawStars} className={CANVAS} aria-hidden="true" />}
       <Remold.Particles
+        key={[radius, dot, glow, duration, bounce, pointer].join()}
         shape={SHAPES[shape]}
         count={dots}
         label={`Particles forming a ${NAMES[shape].toLowerCase()}`}
         palette={PALETTE}
-        pairing="flow"
-        transition={{ type: "scatter", spread: 1.3, hold: 0.35, stagger: 0.5 }}
-        camera={
-          shape === "grok"
-            ? { spin: paused ? 0 : 0.035, tilt: 8, sway: 28, angle: 0 }
-            : { spin: paused ? 0 : 0.035, tilt: 24, sway: 0 }
-        }
-        blend="add"
-        dot="square"
-        radius={0.9}
+        pairing={pairing}
+        transition={transition === "scatter" ? { type: "scatter", spread, hold, stagger } : "direct"}
+        camera={camera}
+        blend={glow ? "add" : "normal"}
+        dot={dot}
+        radius={radius}
         padding={6}
-        pointer={{ radius: 110, strength: 28 }}
-        spring={{ duration: 1.8, bounce: 0.08 }}
+        pointer={pointer ? { radius: 110, strength: 28 } : false}
+        spring={{ duration, bounce }}
         className={CANVAS}
       />
       <figcaption className="absolute inset-x-0 bottom-[18px] flex justify-center px-3">
@@ -202,15 +240,15 @@ const BEATS: readonly { shape: ParticleShape; ms: number }[] = [
 
 const fromBeat = (step: number) => BEATS[step]!.shape;
 
-export interface ParticleShapesDemoProps {
+export interface ParticleShapesDemoProps extends Omit<ParticleShapesProps, "shape" | "onShapeChange" | "paused"> {
   playing?: boolean;
 }
 
-export function ParticleShapesDemo({ playing }: ParticleShapesDemoProps = {}) {
+export function ParticleShapesDemo({ playing, ...settings }: ParticleShapesDemoProps = {}) {
   const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing ?? true);
   return (
     <div ref={ref} className="not-prose grid w-full">
-      <ParticleShapes shape={state} onShapeChange={takeOver} paused={playing === false} />
+      <ParticleShapes {...settings} shape={state} onShapeChange={takeOver} paused={playing === false} />
     </div>
   );
 }
