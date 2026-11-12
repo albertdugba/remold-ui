@@ -3,6 +3,7 @@ import { useRenderElement } from "../utils/use-render-element.js";
 import { useTourContext } from "./tour-context.js";
 import type { TourTargetProps, TourTargetState } from "./types.js";
 
+/** Marks the element a step points at. */
 export const TourTarget = forwardRef(function TourTarget(
   componentProps: TourTarget.Props,
   forwardedRef: ForwardedRef<HTMLElement>,

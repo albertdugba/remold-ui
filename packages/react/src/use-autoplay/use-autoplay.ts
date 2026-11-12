@@ -46,6 +46,7 @@ function useStopOnInteraction(element: HTMLElement | null, enabled: boolean, sto
   }, [element, enabled, stop]);
 }
 
+/** Steps through a sequence by itself while it's on screen, and stops when someone takes over. */
 export function useAutoplay(count: number, options: AutoplayOptions = {}): Autoplay {
   const { every = 2400, initial = 0, stopOnInteraction = true, autoStart = true } = options;
 

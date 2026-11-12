@@ -2,12 +2,14 @@ import type { SubpathLayout } from "../morph/morph";
 
 const VALUES_PER_SEGMENT = 6;
 
+/** Anything with the canvas path methods. */
 export interface PathSink {
   moveTo(x: number, y: number): void;
   bezierCurveTo(c1x: number, c1y: number, c2x: number, c2y: number, x: number, y: number): void;
   closePath(): void;
 }
 
+/** Replay a packed buffer into `sink`. */
 export function drawPath(buffer: ArrayLike<number>, layout: readonly SubpathLayout[], sink: PathSink): void {
   for (const { offset, segments, closed } of layout) {
     sink.moveTo(buffer[offset]!, buffer[offset + 1]!);

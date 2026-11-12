@@ -42,6 +42,7 @@ function quickMatches(
   return null;
 }
 
+/** Thousands of dots that rebuild themselves into each new shape. */
 export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions = {}): Particles {
   const configuration = createConfiguration(options);
   const waiting: (() => void)[] = [];

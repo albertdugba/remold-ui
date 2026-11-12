@@ -4,6 +4,7 @@ import { useIsoLayoutEffect } from "../utils/hooks.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldDotGridProps, RemoldDotGridState } from "./types.js";
 
+/** The dotted background behind a landing page that wakes up under the cursor. */
 export const RemoldDotGrid = forwardRef(function RemoldDotGrid(
   componentProps: RemoldDotGridProps,
   forwardedRef: ForwardedRef<HTMLCanvasElement>,

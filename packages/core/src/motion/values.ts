@@ -1,25 +1,42 @@
 import { isSettled, springCoefficients, springs, substep, type SpringCoefficients, type SpringConfig } from "./spring";
 
 export interface ValuesOptions {
+  /** The spring every entry uses. */
   spring?: SpringConfig;
+  /** How close counts as arrived, in the values' own units. */
   precision?: number;
+  /** How many entries make up one item, for `remap`. */
   stride?: number;
 }
 
 export interface AnimatedValues {
+  /** How many entries there are (items × stride). */
   readonly length: number;
+  /** How many entries make up one item. */
   readonly stride: number;
+  /** Where every entry is now. */
   readonly current: Float64Array;
+  /** How fast every entry is moving, in units per second. */
   readonly velocity: Float64Array;
+  /** Where every entry is heading. */
   readonly target: Float64Array;
+  /** True when every entry is at rest on its target. */
   readonly settled: boolean;
+  /** Whether one entry is at rest on its target. */
   isSettled(index: number): boolean;
+  /** Spring one entry towards `target`, keeping its position and velocity unless `velocity` is given. */
   to(index: number, target: number, options?: { velocity?: number }): void;
+  /** Spring every entry towards its matching target. */
   toAll(targets: ArrayLike<number>): void;
+  /** Jump one entry to `value` and stop it. */
   set(index: number, value: number): void;
+  /** Jump every entry to its matching value and stop. */
   setAll(values: ArrayLike<number>): void;
+  /** Use a different spring from now on. */
   setSpring(spring: SpringConfig): void;
+  /** Rebuild with a new set of items, carrying motion across. */
   remap(sources: ArrayLike<number>, fill?: number | ArrayLike<number>): void;
+  /** Advance every moving entry by `dt` seconds. */
   step(dt: number): boolean;
 }
 
@@ -156,6 +173,7 @@ function advanceEntry({ current, velocity, target, moving }: Buffers, index: num
 
 const countMoving = (moving: Uint8Array) => moving.reduce((total, flag) => total + flag, 0);
 
+/** Create a batch of animated values, starting at rest at `initial`. */
 export function values(initial: ArrayLike<number>, options: ValuesOptions = {}): AnimatedValues {
   const precision = options.precision ?? DEFAULT_PRECISION;
   const stride = options.stride ?? 1;

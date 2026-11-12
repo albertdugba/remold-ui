@@ -1,8 +1,10 @@
+/** How quickly a flick slows down, per millisecond. */
 export const deceleration = {
   normal: 0.998,
   fast: 0.99,
 } as const;
 
+/** Where a flick at `velocity` (units per second) would come to rest, as a distance from where it was let go. */
 export function project(velocity: number, rate: number = deceleration.normal): number {
   if (!(rate > 0 && rate < 1)) {
     throw new RangeError(`project: rate must be between 0 and 1, got ${rate}`);
@@ -11,6 +13,7 @@ export function project(velocity: number, rate: number = deceleration.normal): n
   return ((velocity / 1000) * rate) / (1 - rate);
 }
 
+/** Resistance past an edge. */
 export function rubberband(overshoot: number, dimension: number, constant = 0.55): number {
   if (dimension <= 0) return 0;
 
@@ -18,8 +21,11 @@ export function rubberband(overshoot: number, dimension: number, constant = 0.55
 }
 
 export interface VelocityTracker {
+  /** Record a position at a time in milliseconds (such as `PointerEvent.timeStamp`). */
   add(time: number, position: number): void;
+  /** Velocity in units per second over the recent samples. */
   velocity(now?: number): number;
+  /** Forget all samples. */
   reset(): void;
 }
 
@@ -30,6 +36,7 @@ interface Sample {
 
 const MIN_SAMPLES = 2;
 
+/** Track a finger's speed along one axis. */
 export function velocityTracker({ window = 100, idle = 50 }: { window?: number; idle?: number } = {}): VelocityTracker {
   let samples: Sample[] = [];
 

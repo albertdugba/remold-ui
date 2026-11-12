@@ -3,6 +3,7 @@ import { parseColor } from "./snapshot/color";
 
 export { parseColor } from "./snapshot/color";
 
+/** A box in viewport pixels, as `getBoundingClientRect` reports it. */
 export interface PixelBox {
   x: number;
   y: number;
@@ -11,13 +12,18 @@ export interface PixelBox {
 }
 
 export interface PageSnapshot {
+  /** One entry per kept element, parents before children. */
   nodes: MatchNode[];
+  /** The element behind each node, by index. */
   elements: HTMLElement[];
+  /** Each element's box in viewport pixels at the time of reading, by index. */
   boxes: PixelBox[];
 }
 
+/** Elements with this attribute (and everything inside) are ignored. */
 export const IGNORE_ATTRIBUTE = "data-rm-ignore";
 
+/** An element's media identity, in place of one read from its content. */
 export const MEDIA_ATTRIBUTE = "data-rm-media";
 
 export const morphedText = new WeakMap<Element, HTMLElement>();
@@ -45,6 +51,7 @@ const CONTROL = new Set(["BUTTON", "A", "INPUT", "SELECT", "TEXTAREA", "SUMMARY"
 const CONTROL_ROLES = new Set(["button", "switch", "tab", "link", "checkbox", "radio", "menuitem", "option"]);
 const MEDIA = new Set(["IMG", "SVG", "CANVAS", "VIDEO", "PICTURE", "IFRAME"]);
 
+/** A short, stable fingerprint of a string (FNV-1a), used as a media identity. */
 export function fingerprint(value: string): string {
   let h = 2166136261;
 
@@ -184,6 +191,7 @@ function readElement(element: Element, style: CSSStyleDeclaration): Reading {
   return { isMedia, coversChildren, keep, rect, node };
 }
 
+/** Read the perceivable elements inside `root`. */
 export function readNodes(root: Element): PageSnapshot {
   const nodes: MatchNode[] = [];
   const elements: HTMLElement[] = [];

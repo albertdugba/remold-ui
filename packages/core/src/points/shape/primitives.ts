@@ -35,12 +35,14 @@ function ellipsoidPoint(radii: Vec3, solid: boolean, random: () => number): Samp
   };
 }
 
+/** Points on an ellipsoid's surface (or through it, with `solid`), with these radii along x, y and z. */
 export function ellipsoid({ radii, solid = false }: { radii: Vec3; solid?: boolean }): Shape {
   for (const [axis, radius] of radii.entries()) checkPositive(radius, `ellipsoid.radii[${axis}]`);
 
   return shape(thomsenSurface(radii), (count, random) => Array.from({ length: count }, () => ellipsoidPoint(radii, solid, random)));
 }
 
+/** Points on a sphere's surface, or through its volume with `solid`. */
 export function sphere({ radius = 1, solid = false }: { radius?: number; solid?: boolean } = {}): Shape {
   checkPositive(radius, "sphere.radius");
 
@@ -54,6 +56,7 @@ function ovalPoint(radii: readonly [number, number], edge: number, random: () =>
   return { at: [Math.cos(angle) * radii[0] * reach, Math.sin(angle) * radii[1] * reach, 0], along: reach, group: 0 };
 }
 
+/** A flat oval facing you, in the x–y plane, with these radii. */
 export function oval({ radii, edge = 0.6 }: { radii: readonly [number, number]; edge?: number }): Shape {
   for (const [axis, radius] of radii.entries()) checkPositive(radius, `oval.radii[${axis}]`);
   checkUnit(edge, "oval.edge");
@@ -69,6 +72,7 @@ function torusPoint(radius: number, tube: number, random: () => number): Sample 
   return { at: [Math.cos(around) * reach, tube * Math.sin(across), Math.sin(around) * reach], along: around / TURN, group: 0 };
 }
 
+/** A ring-shaped tube lying flat in the x–z plane. */
 export function torus({ radius = 0.7, tube = 0.22 }: { radius?: number; tube?: number } = {}): Shape {
   checkPositive(radius, "torus.radius");
   checkPositive(tube, "torus.tube");
@@ -110,6 +114,7 @@ function curveLength(pointAt: (t: number) => Vec3): number {
   return length;
 }
 
+/** Points along a smooth curve through every point in `through` (a Catmull–Rom spline). */
 export function curve({ through }: { through: readonly Vec3[] }): Shape {
   if (through.length < 2) throw new RangeError(`shapes: curve needs at least 2 points to pass through, got ${through.length}`);
 
@@ -147,6 +152,7 @@ function armPoint(arm: number, arms: number, twist: number, random: () => number
   };
 }
 
+/** A spiral galaxy lying flat in the x–z plane, radius 1. */
 export function spiral({ arms = 3, twist = 3.4, core = 0.18 }: { arms?: number; twist?: number; core?: number } = {}): Shape {
   checkWhole(arms, "spiral.arms", 1);
   checkFinite(twist, "spiral.twist");
@@ -205,6 +211,7 @@ function checkHelix({ strands, rungs, turns, radius, height, rungShare }: Requir
   checkUnit(rungShare, "helix.rungShare");
 }
 
+/** Strands twisting round the y axis, `height` tall, joined by `rungs` cross-pieces. */
 export function helix({ strands = 2, turns = 3, radius = 0.34, height = 1.75, rungs = 26, rungShare = 0.22 }: HelixOptions = {}): Shape {
   checkHelix({ strands, turns, radius, height, rungs, rungShare });
 
@@ -236,6 +243,7 @@ function lorenzTrace(count: number): Sample[] {
   });
 }
 
+/** A strange attractor, traced as one long path and scaled to about radius 1. */
 export function attractor(name: "lorenz"): Shape {
   if (name !== "lorenz") throw new RangeError(`shapes: attractor knows "lorenz", got ${String(name)}`);
 

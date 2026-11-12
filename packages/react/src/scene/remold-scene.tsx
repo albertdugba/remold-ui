@@ -85,6 +85,7 @@ function useSceneActions(
   );
 }
 
+/** A canvas scene of objects that springs between named layouts. */
 export const RemoldScene = forwardRef(function RemoldScene(
   componentProps: RemoldScene.Props,
   forwardedRef: ForwardedRef<HTMLCanvasElement>,

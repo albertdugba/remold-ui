@@ -37,6 +37,7 @@ function alongLongestSide(samples: Sample[]): Sample[] {
   }));
 }
 
+/** One shape made of others, each keeping its own tones. */
 export function compose(parts: readonly ComposePart[]): Shape {
   if (parts.length === 0) throw new RangeError("shapes: compose needs at least one part");
 
@@ -110,6 +111,7 @@ function revolvedPoint(steps: readonly ShapePoint[], running: readonly number[],
   };
 }
 
+/** A surface of revolution: the side view `profile`. */
 export function revolve({ profile }: { profile: readonly (readonly [number, number])[] }): Shape {
   checkProfile(profile);
 

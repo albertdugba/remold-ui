@@ -6,6 +6,7 @@ import { CONNECTOR_UPDATE_EVENT } from "../connectors/remold-connectors.js";
 
 const REFRESH_WINDOW = 700;
 
+/** Motion callbacks for anchors inside a `Remold.Connectors` root. */
 export function useConnectorMotion(root: RefObject<HTMLElement | null>) {
   const refreshUntil = useRef(0);
 

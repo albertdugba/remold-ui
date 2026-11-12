@@ -3,6 +3,7 @@ import { IGNORE_ATTRIBUTE } from "@remold-ui/dom";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldIgnoreProps, RemoldIgnoreState } from "./types.js";
 
+/** Leaves everything inside out of transitions: videos, live charts, anything that animates by itself. */
 export const RemoldIgnore = forwardRef(function RemoldIgnore(
   componentProps: RemoldIgnore.Props,
   forwardedRef: ForwardedRef<HTMLSpanElement>,

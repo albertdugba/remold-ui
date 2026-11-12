@@ -26,6 +26,7 @@ function readScaled(image: HTMLImageElement | ImageBitmap, width: number, height
   return { width: canvas.width, height: canvas.height, data };
 }
 
+/** An image's pixels, ready for `shapes.fromPixels`. */
 export async function loadPixels(source: Source, { size = SIZE }: { size?: number } = {}): Promise<Pixels> {
   if (!(size > 0) || !Number.isFinite(size)) throw new RangeError(`loadPixels: size must be a positive number, got ${size}`);
 

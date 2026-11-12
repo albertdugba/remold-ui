@@ -6,6 +6,7 @@ import { describeChanges, summarize, transition, type Transition, type Transitio
 const MAX_NAMED = 400;
 let sequence = 0;
 
+/** Whether the browser supports the View Transitions API. */
 export function supportsViewTransitions(): boolean {
   return typeof document !== "undefined" && typeof document.startViewTransition === "function";
 }
@@ -19,6 +20,7 @@ function timingRule(prefix: string, spring: SpringConfig): string {
   );
 }
 
+/** Animate whatever `update` does to `root` using the View Transitions API. */
 export function viewTransition(root: HTMLElement, update: () => void | Promise<void>, options: TransitionOptions = {}): Transition {
   const reduced = resolveReducedMotion(options.reducedMotion);
   const before = readNodes(root);

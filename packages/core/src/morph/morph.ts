@@ -3,17 +3,24 @@ import { toCubics, type Subpath } from "../path/normalize";
 import { toPathData } from "../render/svg";
 import { matchShapes, type MatchOptions } from "./match";
 
+/** Where one subpath lives in a packed buffer. */
 export interface SubpathLayout {
+  /** Index of the subpath's first number: its start point's x. */
   offset: number;
+  /** Number of cubic segments. */
   segments: number;
   closed: boolean;
 }
 
 export interface Morph {
+  /** Shape A, packed. */
   readonly from: Float32Array;
+  /** Shape B, packed with the same layout as `from`. */
   readonly to: Float32Array;
   readonly layout: readonly SubpathLayout[];
+  /** The packed shape `t` of the way from A to B. */
   at(t: number, out?: Float32Array): Float32Array;
+  /** SVG path data for `at(t)`. */
   d(t: number, precision?: number): string;
 }
 
@@ -48,6 +55,7 @@ function pack(subpaths: readonly Subpath[], layout: readonly SubpathLayout[], bu
   });
 }
 
+/** Writes the buffer `progress` of the way from `from` to `to` into `output`. */
 export function lerpBuffers({
   from,
   to,
@@ -67,6 +75,7 @@ export function lerpBuffers({
 const toSubpaths = (shape: string | readonly Subpath[]): readonly Subpath[] =>
   typeof shape === "string" ? toCubics(parsePath(shape)) : shape;
 
+/** Prepare a morph between two shapes, given as SVG path data or as subpaths. */
 export function createMorph(
   fromShape: string | readonly Subpath[],
   toShape: string | readonly Subpath[],

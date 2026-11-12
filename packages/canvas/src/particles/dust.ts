@@ -5,11 +5,17 @@ import { particles } from "./index";
 import type { ParticleTransition } from "./types";
 
 export interface DustOptions {
+  /** Colours to sort dots into: any CSS colours, `var(--name)` included, read from `container`. */
   palette?: readonly string[];
+  /** Dots per element. Default 600. */
   count?: number;
+  /** Dot radius, in CSS pixels. */
   radius?: number;
+  /** How far a heap reaches from the target's middle, in CSS pixels. */
   heap?: number;
+  /** Whether each element's own background becomes dots too. */
   background?: boolean;
+  /** How the dots travel. */
   transition?: ParticleTransition;
   spring?: SpringConfig;
   reducedMotion?: ReducedMotion;
@@ -17,8 +23,11 @@ export interface DustOptions {
 }
 
 export interface Dust {
+  /** Breaks `elements` into dots that pour into `target`. */
   away(elements: Element | readonly Element[], target: Element): Promise<void>;
+  /** The reverse: dots pour out of `source` and settle into `elements`. */
   back(elements: Element | readonly Element[], source: Element): Promise<void>;
+  /** Stops every pour in flight and removes its canvas. */
   destroy(): void;
 }
 
@@ -64,6 +73,7 @@ function heapAt(shape: CloudPoint[], spot: Element, container: HTMLElement, opti
   return clusterPoints(shape, { x: box.x + box.width / 2, y: box.y + box.height / 2, radius: options.heap ?? DEFAULT_HEAP });
 }
 
+/** Turns elements into dust that pours into another element, and back. */
 export function dust(container: HTMLElement, options: DustOptions = {}): Dust {
   const pours = new Set<() => void>();
 

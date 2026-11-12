@@ -2,16 +2,27 @@ import type { DrawContext, DrawState } from "../object-looks";
 import { scaled } from "./strokes";
 
 export interface ExtrudeDecal {
+  /** Text on the top face. */
   text?: string;
+  /** SVG path data for an icon on the top face, drawn in a box `iconViewBox` wide. */
   icon?: string;
+  /** Default 24, for icons drawn on a 24 × 24 grid. */
   iconViewBox?: number;
+  /** "stroke" (default) for outline icons, "fill" for solid ones. */
   iconStyle?: "stroke" | "fill";
+  /** Where along the top the text sits. */
   align?: "center" | "start" | "end";
+  /** Turn the text and icon on the top face, in degrees. */
   rotate?: number;
+  /** Where the decal sits, from the middle of the top face, as fractions of its width and depth (-0.5 to 0.5). */
   at?: readonly [number, number];
+  /** Text height (or icon size) in floor units. */
   size?: number;
+  /** Default: the palette's text colour. */
   color?: string;
+  /** `"contain"` (default) draws the icon square. */
   fit?: "contain" | "stretch";
+  /** Line width for outline icons, in floor units. */
   weight?: number;
 }
 

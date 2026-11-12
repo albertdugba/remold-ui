@@ -55,6 +55,7 @@ const moved = (a: PixelBox, b: PixelBox) =>
   Math.abs(a.width - b.width) > 1 ||
   Math.abs(a.height - b.height) > 1;
 
+/** Count what changed between two snapshots. */
 export function summarize(
   before: PageSnapshot,
   after: PageSnapshot,
@@ -80,6 +81,7 @@ export function summarize(
   };
 }
 
+/** A short sentence for screen readers: "2 moved, 1 added". */
 export function describeChanges(summary: ChangeSummary): string {
   const parts = [
     [summary.moved, "moved"],
@@ -389,6 +391,7 @@ function beginRun(context: RunContext): () => void {
   return skip;
 }
 
+/** The two halves of `transition`, for frameworks that change the DOM themselves. */
 export function prepareTransition(root: HTMLElement, options: TransitionOptions = {}): PreparedTransition {
   const spring = options.spring ?? springs.snappy;
   const loop = options.loop ?? sharedLoop;
@@ -460,6 +463,7 @@ export function prepareTransition(root: HTMLElement, options: TransitionOptions 
   };
 }
 
+/** Animate whatever `update` does to the elements inside `root`. */
 export function transition(
   root: HTMLElement,
   update: () => void | Promise<void>,

@@ -13,6 +13,7 @@ export function useTourContext(part: string): TourInternalContextValue {
   return context;
 }
 
+/** The tour around this component: the step showing, its target element and the actions that move between steps. */
 export function useTour(): TourContextValue {
   const { register: _, ...tour } = useTourContext("useTour()");
   return tour;

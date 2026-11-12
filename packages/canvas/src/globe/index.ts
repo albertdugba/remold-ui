@@ -4,62 +4,94 @@ import { painter } from "../painter";
 import { LAND } from "./land";
 
 export interface GlobePoint {
+  /** Degrees north. */
   lat: number;
+  /** Degrees east. */
   lon: number;
 }
 
 export interface GlobeFocus extends GlobePoint {
+  /** A tag drawn above the point. */
   label?: string;
 }
 
 export interface GlobeMarker extends GlobePoint {
+  /** Default: the accent colour. */
   color?: string;
+  /** Radius in CSS pixels. */
   size?: number;
 }
 
 export interface GlobePulseOptions extends GlobePoint {
+  /** Default: the accent colour. */
   color?: string;
 }
 
 export interface GlobeArc {
   from: GlobePoint;
   to: GlobePoint;
+  /** Default: the next arc colour. */
   color?: string;
+  /** Pulse where it lands. */
   pulse?: boolean;
 }
 
 export interface GlobeColors {
+  /** The land dots. Default: CSS `color`. */
   land?: string;
+  /** The ocean, drawn as a solid ball behind the land. */
   sphere?: string;
+  /** A halo around the edge. */
   glow?: string;
+  /** Pulses, markers and the focus tag. */
   accent?: string;
+  /** Arcs. Pass several to take turns. */
   arc?: string | readonly string[];
 }
 
+/** Everything that can change after the globe is made. */
 export interface GlobeLook {
+  /** Colours for each part. */
   colors?: GlobeColors;
+  /** Places that stay lit. */
   markers?: readonly GlobeMarker[];
+  /** Degrees per second it turns on its own. */
   spin?: number;
+  /** Degrees it leans towards you while turning. */
   tilt?: number;
+  /** Scales every land dot. */
   dotSize?: number;
+  /** How much of the canvas the globe fills, from 0 to 1. */
   scale?: number;
 }
 
 export interface GlobeOptions extends GlobeLook {
+  /** The longitude facing you at the start. */
   start?: number;
+  /** Let a drag spin it, with a fling. */
   draggable?: boolean;
+  /** Dots spread over the whole sphere; the land keeps about a third. */
   dots?: number;
+  /** The canvas's accessible name. */
   label?: string;
+  /** "user" (default) follows the system setting; "always" and "never" override it. */
   reducedMotion?: ReducedMotion;
+  /** Stored pixels per CSS pixel are capped at this. */
   maxPixelRatio?: number;
 }
 
 export interface Globe {
+  /** A ring that spreads from a point, which stays lit for a few seconds. */
   pulse(at: GlobePulseOptions): void;
+  /** An arc that flies from one place to another, then fades. */
   arc(arc: GlobeArc): void;
+  /** Turn to face a point and hold there, or `null` to let it spin again. */
   focus(at: GlobeFocus | null): void;
+  /** Change colours, markers, spin, tilt, dot size or scale. */
   set(look: GlobeLook): void;
+  /** Draw again now, after a CSS change. */
   redraw(): void;
+  /** Stop drawing and let go of the canvas. */
   destroy(): void;
 }
 
@@ -413,6 +445,7 @@ function drawFocus(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   if (target.label) drawTag(context, canvas, target.label, x, y, focused[2], width, colors.text);
 }
 
+/** A dotted globe that turns, flies arcs between places and pulses where things happen. */
 export function globe(canvas: HTMLCanvasElement, options: GlobeOptions = {}): Globe {
   const dots = landDots(options.dots ?? DEFAULT_DOTS);
   const look: GlobeLook = { ...options };

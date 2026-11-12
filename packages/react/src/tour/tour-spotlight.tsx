@@ -100,6 +100,7 @@ function useSpotlightBox(element: HTMLDivElement | null, open: boolean, target: 
   return box;
 }
 
+/** Covers the current step's target, plus `padding`, wherever it is. */
 export const TourSpotlight = forwardRef(function TourSpotlight(
   componentProps: TourSpotlight.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,

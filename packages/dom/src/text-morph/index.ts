@@ -5,14 +5,17 @@ import { frames, type FrameLoop } from "../frames";
 import { containerScale } from "../transition";
 
 export interface MorphTextOptions {
+  /** Default `springs.snappy`. */
   spring?: SpringConfig;
   reducedMotion?: ReducedMotion;
+  /** The largest text change to animate character by character. */
   maxGraphemes?: number;
   loop?: FrameLoop;
 }
 
 const DEFAULT_MAX_GRAPHEMES = 120;
 
+/** Split text into user-perceived characters, keeping emoji and accents intact. */
 export function graphemes(text: string): string[] {
   if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
     return [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text)].map((s) => s.segment);
@@ -20,6 +23,7 @@ export function graphemes(text: string): string[] {
   return Array.from(text);
 }
 
+/** Which letters of `a` and `b` are the same letter. */
 export function sharedLetters(previousText: readonly string[], nextText: readonly string[]): [number, number][] {
   const previousLength = previousText.length;
   const nextLength = nextText.length;
@@ -208,6 +212,7 @@ function stepMotions(motions: ReadonlyMap<HTMLSpanElement, LetterMotion>, deltaT
   return isMoving;
 }
 
+/** Change `element`'s text, animating the letters. */
 export function morphText(element: HTMLElement, text: string, options: MorphTextOptions = {}): Promise<void> {
   const maxGraphemes = Math.max(0, options.maxGraphemes ?? DEFAULT_MAX_GRAPHEMES);
   const state = states.get(element) ?? createTextMorphState(element, maxGraphemes);

@@ -106,6 +106,7 @@ function usePainterActions(actionsRef: Ref<RemoldCanvasActions> | undefined, ins
   );
 }
 
+/** A canvas you paint with `draw`, and nothing else to wire up. */
 export const RemoldCanvas = forwardRef(function RemoldCanvas(
   componentProps: RemoldCanvasProps,
   forwardedRef: ForwardedRef<HTMLCanvasElement>,

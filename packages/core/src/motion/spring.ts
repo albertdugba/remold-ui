@@ -1,19 +1,25 @@
+/** A spring described by how long it takes to feel finished and how much it overshoots. */
 export interface SpringConfig {
+  /** Perceived duration in seconds. */
   duration: number;
+  /** Overshoot, from just above -1 to just below 1. */
   bounce: number;
 }
 
+/** Presets. All last half a second; they differ only in how much they bounce. */
 export const springs = {
   smooth: { duration: 0.5, bounce: 0 },
   snappy: { duration: 0.5, bounce: 0.15 },
   bouncy: { duration: 0.5, bounce: 0.3 },
 } as const satisfies Record<string, SpringConfig>;
 
+/** The physical constants behind a `SpringConfig`. */
 export interface SpringCoefficients {
   stiffness: number;
   damping: number;
 }
 
+/** The moving part of a spring: where it is and how fast it is going (units per second). */
 export interface SpringState {
   value: number;
   velocity: number;
@@ -36,6 +42,7 @@ export function substep({ stiffness, damping }: SpringCoefficients): number {
   return Math.min(MAX_STEP, stable);
 }
 
+/** Turn `{ duration, bounce }` into stiffness and damping. */
 export function springCoefficients({ duration, bounce }: SpringConfig): SpringCoefficients {
   if (!isPositiveDuration(duration)) {
     throw new RangeError(`spring: duration must be a positive number of seconds, got ${duration}`);
@@ -51,6 +58,7 @@ export function springCoefficients({ duration, bounce }: SpringConfig): SpringCo
   };
 }
 
+/** Advance `state` towards `target` by `dt` seconds, in place. */
 export function stepSpring({
   state,
   target,
@@ -74,6 +82,7 @@ export function stepSpring({
   }
 }
 
+/** Whether a spring is close enough to rest to stop. */
 export function isSettled(state: SpringState, target: number, precision: number): boolean {
   const near = Math.abs(state.value - target) < precision;
   const slow = Math.abs(state.velocity) < precision * FRAMES_PER_SECOND;

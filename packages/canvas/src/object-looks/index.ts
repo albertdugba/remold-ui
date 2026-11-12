@@ -4,13 +4,19 @@ import { halo } from "../glow";
 import { ellipse, extent, projectOutline, roundedRect, silhouette, type Box3, type Outline, type ScreenPoint } from "../geometry";
 
 export interface Palette {
+  /** The top face. */
   top: string;
+  /** Side shading, from the shadowed edge to the lit edge. */
   sides: readonly [string, string, string];
+  /** Outlines and links, as "r, g, b". */
   line: string;
+  /** Glow when hovered or focused, as "r, g, b". */
   glow: string;
+  /** Label text. */
   text: string;
 }
 
+/** Built-in colour palettes for scene objects. */
 export const palettes = {
   violet: { top: "#17151f", sides: ["#3a1fb2", "#7a5bff", "#c5b3ff"], line: "170, 150, 255", glow: "124, 92, 255", text: "#ffffff" },
   teal: { top: "#121a1a", sides: ["#0b4e4a", "#1fa899", "#a6f2e6"], line: "120, 230, 215", glow: "40, 190, 170", text: "#ffffff" },
@@ -33,20 +39,31 @@ export interface DrawState {
   box: Box3;
   label: string;
   palette: Palette;
+  /** 0 to 1: how lit up (hovered or focused) the object is. */
   glow: number;
+  /** The outline right now, as path data, when the layouts give the object a `shape`. */
   shape?: string;
+  /** 0 to 1: how full the object is, from the layout's `fill`. */
   fill?: number;
+  /** 0 to 1: how see-through the object is, from the layout's `ghost`. */
   ghost?: number;
+  /** The colour of what the object holds, from the layout's `color`, as `rgb()`. */
   color?: string;
 }
 
 export interface Look {
+  /** Footprint on the floor, for drawing and hit testing. */
   outline(box: Box3): Outline;
+  /** Thickness used when a layout doesn't give one. */
   defaultHeight: number;
+  /** Draw before links and nodes; suited to maps, grids, and other scenery. */
   background?: boolean;
+  /** Not hovered, focused or reachable by keyboard unless the object asks to be: captions, decoration. */
   passive?: boolean;
+  /** The look's own outline as path data, which a layout's `shape` morphs from. */
   path?: string;
   draw(context: DrawContext, state: DrawState): void;
+  /** For containers (a tray, a box): draw only the parts that face the viewer. */
   drawFront?(context: DrawContext, state: DrawState): void;
 }
 
@@ -162,30 +179,35 @@ function prism(context: DrawContext, state: DrawState, outline: Outline, size: n
   label(context, state, size, 0.6 + 0.4 * glow);
 }
 
+/** A solid slab with rounded corners: the main building block. */
 export const plate: Look = {
   defaultHeight: 14,
   outline: rounded(0.12),
   draw: (context, state) => prism(context, state, plate.outline(state.box), labelSize(state.box, 26, 0.18)),
 };
 
+/** A small, thin, rounder slab: integrations, users, buttons. */
 export const chip: Look = {
   defaultHeight: 9,
   outline: rounded(0.22),
   draw: (context, state) => prism(context, state, chip.outline(state.box), labelSize(state.box, 16, 0.3)),
 };
 
+/** A standing cylinder: databases, queues, storage. */
 export const cylinder: Look = {
   defaultHeight: 60,
   outline: oval,
   draw: (context, state) => prism(context, state, cylinder.outline(state.box), labelSize(state.box, 18, 0.2)),
 };
 
+/** A square-cornered column: bar charts, regions, buildings. */
 export const tower: Look = {
   defaultHeight: 80,
   outline: rounded(0),
   draw: (context, state) => prism(context, state, tower.outline(state.box), labelSize(state.box, 14, 0.25)),
 };
 
+/** A translucent pane with a glowing edge: a layer you can see through. */
 export const glass: Look = {
   defaultHeight: 0,
   outline: rounded(0.12),
@@ -208,6 +230,7 @@ export const glass: Look = {
   },
 };
 
+/** Just an outline: something that's there but not yours (the app, a boundary). */
 export const wire: Look = {
   defaultHeight: 0,
   outline: rounded(0.12),
@@ -262,6 +285,7 @@ function portraitName(ctx: CanvasRenderingContext2D, centre: ScreenPoint, radius
   ctx.fillText(state.label, centre.x, centre.y + radius * 1.22, radius * 3.6);
 }
 
+/** An upright, vector portrait token for people and other named actors. */
 export const portrait: Look = {
   defaultHeight: 0,
   outline: oval,
@@ -303,6 +327,7 @@ function continentPath(ctx: CanvasRenderingContext2D, box: Box3, continent: read
   ctx.closePath();
 }
 
+/** A floor plate with simple continents, drawn under other objects. */
 export const atlas: Look = {
   defaultHeight: 0,
   background: true,
@@ -342,6 +367,7 @@ function gridLines(ctx: CanvasRenderingContext2D, box: Box3) {
   }
 }
 
+/** A floor with grid lines, for maps and charts. */
 export const grid: Look = {
   defaultHeight: 0,
   background: true,
@@ -357,5 +383,6 @@ export const grid: Look = {
   },
 };
 
+/** The built-in looks, by name. */
 export const looks = { plate, chip, cylinder, tower, glass, wire, portrait, atlas, grid, caption } as const;
 export type LookName = keyof typeof looks;

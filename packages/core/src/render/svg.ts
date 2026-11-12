@@ -2,6 +2,7 @@ import type { SubpathLayout } from "../morph/morph";
 
 const VALUES_PER_SEGMENT = 6;
 
+/** Write a packed buffer as SVG path data: `M`, then one `C` per segment, then `Z` if closed. */
 export function toPathData(buffer: ArrayLike<number>, layout: readonly SubpathLayout[], precision = 2): string {
   const scale = 10 ** precision;
   const format = (index: number) => String(Math.round(buffer[index]! * scale) / scale);

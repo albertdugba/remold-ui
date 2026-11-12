@@ -5,6 +5,7 @@ import { useEffectEvent, useIsoLayoutEffect } from "../utils/hooks.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldIconProps, RemoldIconState } from "./types.js";
 
+/** An icon that reshapes into the next one. */
 export const RemoldIcon = forwardRef(function RemoldIcon(
   componentProps: RemoldIcon.Props,
   forwardedRef: ForwardedRef<SVGSVGElement>,

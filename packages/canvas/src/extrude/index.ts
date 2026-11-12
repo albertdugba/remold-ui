@@ -15,20 +15,34 @@ export { inkLines, walls, type Wall } from "./walls";
 export type { ExtrudeDecal } from "./decal";
 
 export interface ExtrudeOptions {
+  /** The footprint. Default "rect". */
   shape?: ExtrudeShape;
+  /** Corner radius for "rect", as a fraction of the shorter side. */
   radius?: number;
+  /** Thickness when a layout doesn't give one. */
   height?: number;
+  /** How the sides are painted. */
   sides?: "gradient" | "sheen" | "flat";
+  /** A glowing rim round the top. */
   edge?: boolean;
+  /** Hollow the top out into a tray: `inset` from the rim and `depth` down, both 0 to 1 of the size. */
   well?: { inset?: number; depth?: number };
   decal?: ExtrudeDecal;
+  /** Overrides the palette's top colour. */
   top?: string;
+  /** Draw before links and other objects, as scenery. */
   background?: boolean;
+  /** Not hovered, focused or reachable by keyboard unless the object says otherwise. */
   passive?: boolean;
+  /** Line art, like a technical drawing. */
   ink?: boolean | string;
+  /** Ink width in CSS pixels. */
   inkWidth?: number;
+  /** A see-through container: its back edges show faintly through the front. */
   glass?: boolean;
+  /** The colour of what the object holds, up to the layout's `fill` level. */
   fillColor?: string;
+  /** A soft shadow on the floor under the object. */
   shadow?: boolean;
 }
 
@@ -401,6 +415,7 @@ function paintLabel(context: DrawContext, state: DrawState, paint: Paint) {
   ctx.restore();
 }
 
+/** Make a look from any flat shape, extruded. */
 export function extrude(options: ExtrudeOptions = {}): Look {
   const shape = options.shape ?? "rect";
   const radius = options.radius ?? DEFAULT_RADIUS;
