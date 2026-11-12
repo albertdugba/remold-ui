@@ -38,7 +38,6 @@ const states = script.reduce<MentionsState[]>((all, step) => {
   return [...all, step.action ? reduceMentions(previous, step.action) : previous];
 }, []);
 
-/** Showcase-only wrapper. The installable EditorMentions component has no autoplay dependency. */
 export function EditorMentionsDemo({ playing }: { playing?: boolean } = {}) {
   const autoplay = useAutoplay(script.length, {
     every: (index) => script[index]!.duration,

@@ -3,13 +3,11 @@ import type { FocusEvent, Ref } from "react";
 
 export interface CodeFieldProps {
   value: string;
-  /** Called with digits only, at most `length` of them. */
   onChange: (value: string) => void;
   length?: number;
   disabled?: boolean;
   invalid?: boolean;
   inputRef?: Ref<HTMLInputElement>;
-  /** The id of the text that says where the code comes from. */
   describedBy?: string;
   label?: string;
   className?: string;

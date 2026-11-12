@@ -61,16 +61,13 @@ const journey = (id: number): GlobeArcEvent => ({
 });
 
 export interface GlobeCardProps {
-  /** The colour scheme. */
   value?: GlobeLook;
   defaultValue?: GlobeLook;
   onValueChange?: (look: GlobeLook) => void;
-  /** Journeys flying between cities; add one to the end to launch it. */
   arcs?: GlobeArcEvent[];
   ref?: Ref<HTMLDivElement>;
 }
 
-/** A globe with its own look switcher. */
 export function GlobeCard({ value, defaultValue = "night", onValueChange, arcs = [], ref }: GlobeCardProps) {
   const [look, setLook] = useControllableState({ value, defaultValue, onValueChange });
 
@@ -109,11 +106,8 @@ export function GlobeCard({ value, defaultValue = "night", onValueChange, arcs =
   );
 }
 
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
-
 const TICKS = Array.from({ length: 24 }, () => ({ ms: 900 }));
 
-/** Launches a journey on every tick while it plays. The look is the person's own throughout. */
 export function GlobeDemo({ playing }: { playing?: boolean }) {
   const scene = useScene(TICKS, (step) => step, playing);
   const [arcs, setArcs] = useState<GlobeArcEvent[]>([]);

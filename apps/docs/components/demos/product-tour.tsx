@@ -25,12 +25,10 @@ type Side = "top" | "right" | "bottom" | "left";
 type Box = { x: number; y: number; width: number; height: number };
 type Size = { width: number; height: number };
 
-/** A stop on the tour. It points at the `Remold.Tour.Target` with its `name`; a step with no target sits in the middle. */
 export interface Step {
   name: string;
   title: string;
   body: string;
-  /** Which side of its target the tip opens on. */
   side?: Side;
 }
 
@@ -222,7 +220,6 @@ const NAV_ITEM =
 
 const QUERY = "churn by plan";
 
-/** While its step shows, the search field types a query, so you see what it's for. */
 function SearchText() {
   const { step } = useTour();
   const active = step === "search";
@@ -471,7 +468,6 @@ function Dashboard({ inert, measure }: { inert: boolean; measure: MeasureRefs })
 
 const DASH = { dotted: "2 4", dashed: "6 5", solid: "none" } as const;
 
-/** A box relative to the stage, once both have been measured. */
 const relativeTo = (stage: RectReadOnly, element: RectReadOnly): Box | null =>
   stage.width && element.width
     ? { x: element.left - stage.left, y: element.top - stage.top, width: element.width, height: element.height }
@@ -557,30 +553,21 @@ function HelpButton({ helpRef }: { helpRef: RefObject<HTMLButtonElement | null> 
 }
 
 export interface ProductTourProps {
-  /** The step on screen, or -1 when the tour is folded away into the help button. */
   value?: number;
   defaultValue?: number;
   onValueChange?: (step: number, details: ChangeDetails) => void;
-  /** What each step points at and says. Defaults to four steps over the dashboard. */
   steps?: readonly Step[];
-  /** The colour of the step count, the dots, Next and the glow round the spotlight. Defaults to `#7c5cff`. */
   accent?: string;
-  /** How dark the app gets around the spotlight, from 0 (not at all: just a ring) to 1. Defaults to `0.55`. */
   dim?: number;
-  /** Draw the line from the tip to the control it explains. Defaults to `true`. */
   connector?: boolean;
-  /** The line's colour. Defaults to white over a dim app, and the accent over a bright one. */
   connectorColor?: string;
   connectorStyle?: keyof typeof DASH;
   connectorShape?: "curve" | "elbow" | "straight";
-  /** Send a light along the line each step. Defaults to `true`. */
   pulse?: boolean;
-  /** Moves focus onto Next as the tour opens and back to the help button as it folds away, and lets the keyboard drive it. */
   moveFocus?: boolean;
   ref?: Ref<HTMLDivElement>;
 }
 
-/** A product tour over a dashboard: a spotlight and a tip spring from one control to the next. */
 export function ProductTour({
   value,
   defaultValue = -1,
@@ -709,8 +696,6 @@ export function ProductTour({
   );
 }
 
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
-
 const BEATS = [
   { step: -1, ms: 1500 },
   { step: 0, ms: 2400 },
@@ -725,7 +710,6 @@ const BEATS = [
 
 const fromBeat = (index: number): number => BEATS[index]!.step;
 
-/** The look, from `ProductTourProps`: the docs' configurator passes these through. */
 export type ProductTourLook = Pick<
   ProductTourProps,
   "accent" | "dim" | "connector" | "connectorColor" | "connectorStyle" | "connectorShape" | "pulse"

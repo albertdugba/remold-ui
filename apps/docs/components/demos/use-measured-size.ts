@@ -2,10 +2,6 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 
-/**
- * The size of an element, kept up to date as its content changes. A container animates its own
- * width and height to this, so it grows and shrinks around whatever is inside without scaling it.
- */
 export function useMeasuredSize<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
@@ -23,7 +19,6 @@ export function useMeasuredSize<T extends HTMLElement>() {
     };
     measure();
     const observer = new ResizeObserver(measure);
-    // The border box, so a change in padding alone (a stylesheet arriving late) is caught too.
     observer.observe(element, { box: "border-box" });
     return () => observer.disconnect();
   }, []);

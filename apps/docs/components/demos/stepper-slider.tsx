@@ -14,7 +14,6 @@ import {
 import { useId, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 import { Odometer } from "./odometer";
 import { useScript } from "./use-script";
-import "./stepper-slider.css";
 
 type Mode = "stepper" | "range";
 
@@ -24,6 +23,18 @@ const DRAG_FROM = 6;
 const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.25 };
 const QUICK = { duration: 0.12 };
 const FOLLOW = { type: "spring" as const, stiffness: 900, damping: 60 };
+
+const PALETTE = [
+  "[--ssl-surface:#ffffff] [--ssl-well:#f4f4f5] [--ssl-line:rgb(10_10_11/0.1)] [--ssl-edge:rgb(0_0_0/0.06)]",
+  "[--ssl-ink:#0a0a0b] [--ssl-soft:#3f3f46] [--ssl-muted:#71717a]",
+  "dark:[--ssl-surface:#18181b] dark:[--ssl-well:#27272a] dark:[--ssl-line:rgb(255_255_255/0.12)] dark:[--ssl-edge:rgb(255_255_255/0.07)]",
+  "dark:[--ssl-ink:#fafafa] dark:[--ssl-soft:#d4d4d8] dark:[--ssl-muted:#a1a1aa]",
+].join(" ");
+
+const STEP_BUTTON =
+  "grid size-10 flex-none cursor-pointer place-items-center rounded-full border-0 bg-(--ssl-well) p-0 text-(--ssl-ink) transition-[scale,opacity] duration-150 not-data-disabled:active:scale-[0.92] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ssl-ink) data-disabled:cursor-default data-disabled:opacity-35 max-[480px]:size-11 [&_svg]:size-4";
+const END = "w-[34px] flex-none text-center text-[12px] font-semibold text-(--ssl-muted) tabular-nums";
+const FACE = "flex size-full items-center [&>*]:flex-1";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, scale: 0.6, filter: "blur(4px)" },
@@ -37,12 +48,9 @@ export interface StepperSliderProps {
   min: number;
   max: number;
   step: number;
-  /** What the number counts, shown beside it: "months". */
   unit?: string;
   label: string;
-  /** The stepper's width; the slider stretches to the width it's given. Default 200. */
   stepperWidth?: number;
-  /** Show it as the slider regardless of dragging, for a demo that plays on its own. */
   stretched?: boolean;
 }
 
@@ -92,7 +100,7 @@ export function StepperSlider({
   }, [mode, value, x, reduceMotion, trackWidth, min, max, stepperWidth]);
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (mode !== "stepper" || event.button !== 0 || !(event.target as HTMLElement).closest(".ssl-number"))
+    if (mode !== "stepper" || event.button !== 0 || !(event.target as HTMLElement).closest("[data-number]"))
       return;
     event.preventDefault();
     const from = { x: event.clientX, value };
@@ -114,7 +122,7 @@ export function StepperSlider({
       element.removeEventListener("lostpointercapture", end);
       window.removeEventListener("blur", end);
       if (moved) setMode("stepper");
-      else control.current?.querySelector<HTMLInputElement>(".ssl-input")?.focus();
+      else control.current?.querySelector<HTMLInputElement>("[data-number] input")?.focus();
     };
     element.addEventListener("pointermove", move);
     element.addEventListener("lostpointercapture", end);
@@ -123,22 +131,24 @@ export function StepperSlider({
 
   return (
     <MotionConfig transition={SPRING} reducedMotion="user">
-      <div className="ssl">
-        <label className="ssl-label" htmlFor={id}>
+      <div
+        className={`grid w-[min(100%,360px)] justify-items-center gap-3 font-sans tracking-[-0.006em] text-(--ssl-ink) antialiased ${PALETTE}`}
+      >
+        <label className="text-[13px] font-semibold text-(--ssl-soft)" htmlFor={id}>
           {label}
         </label>
-        <div ref={row} className="ssl-row">
+        <div ref={row} className="flex w-full justify-center">
           <motion.div
             ref={control}
-            className="ssl-control"
             data-mode={mode}
+            className="group/control relative h-[52px] touch-pan-y overflow-clip rounded-full bg-(--ssl-surface) shadow-[0_0_0_1px_var(--ssl-edge),0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] select-none has-[[data-number]_input:focus-visible]:shadow-[inset_0_0_0_1.8px_var(--ssl-ink)]"
             initial={false}
             animate={{ width: mode === "range" ? rangeWidth : stepperWidth }}
             onPointerDown={handlePointerDown}
           >
             <AnimatePresence mode="popLayout" initial={false}>
               {mode === "stepper" ? (
-                <motion.div key="stepper" className="ssl-face">
+                <motion.div key="stepper" className={FACE}>
                   <NumberField.Root
                     id={id}
                     value={value}
@@ -147,22 +157,22 @@ export function StepperSlider({
                     step={step}
                     onValueChange={(next) => next !== null && onValueChange(clamp(next))}
                   >
-                    <NumberField.Group className="ssl-group">
+                    <NumberField.Group className="flex h-[52px] items-center px-1.5">
                       <NumberField.Decrement
-                        className="ssl-step"
+                        className={STEP_BUTTON}
                         aria-label={`Less ${label.toLowerCase()}`}
                         render={<motion.button {...fade(0.06)} />}
                       >
                         <HugeiconsIcon icon={MinusSignIcon} strokeWidth={2.2} aria-hidden="true" />
                       </NumberField.Decrement>
-                      <span className="ssl-number">
+                      <span data-number="" className="relative grid h-full flex-1 cursor-ew-resize place-items-center">
                         <NumberField.Input
-                          className="ssl-input"
+                          className="absolute inset-0 w-full cursor-ew-resize border-0 bg-transparent text-center text-[18px] font-[650] text-transparent tabular-nums caret-(--ssl-ink) outline-none focus:cursor-text focus:text-(--ssl-ink) focus-visible:outline-none"
                           aria-label={unit ? `${label}, in ${unit}` : label}
                         />
                       </span>
                       <NumberField.Increment
-                        className="ssl-step"
+                        className={STEP_BUTTON}
                         aria-label={`More ${label.toLowerCase()}`}
                         render={<motion.button {...fade(0.06)} />}
                       >
@@ -172,9 +182,9 @@ export function StepperSlider({
                   </NumberField.Root>
                 </motion.div>
               ) : (
-                <motion.div key="range" className="ssl-face">
+                <motion.div key="range" className={FACE}>
                   <Slider.Root
-                    className="ssl-slider"
+                    className="flex h-[52px] items-center gap-2.5 px-3.5"
                     value={value}
                     min={min}
                     max={max}
@@ -182,25 +192,35 @@ export function StepperSlider({
                     onValueChange={(next) => onValueChange(clamp(next))}
                     aria-label={label}
                   >
-                    <motion.span className="ssl-end" {...fade(0.08)}>
+                    <motion.span className={END} {...fade(0.08)}>
                       {min}
                     </motion.span>
-                    <Slider.Control className="ssl-slider-control">
-                      <Slider.Track className="ssl-track">
-                        <Slider.Indicator className="ssl-fill" />
-                        <Slider.Thumb className="ssl-thumb" />
+                    <Slider.Control className="flex h-[52px] flex-1 items-center">
+                      <Slider.Track className="relative h-1 w-full rounded-[2px] bg-(--ssl-line)">
+                        <Slider.Indicator className="rounded-[2px] bg-(--ssl-ink)" />
+                        <Slider.Thumb data-thumb="" className="h-[34px] w-16 rounded-full outline-none max-[480px]:h-11" />
                       </Slider.Track>
                     </Slider.Control>
-                    <motion.span className="ssl-end" {...fade(0.08)}>
+                    <motion.span className={END} {...fade(0.08)}>
                       {max}
                     </motion.span>
                   </Slider.Root>
                 </motion.div>
               )}
             </AnimatePresence>
-            <motion.span ref={pill} className="ssl-value" data-mode={mode} style={{ x }} aria-hidden="true">
+            <motion.span
+              ref={pill}
+              data-mode={mode}
+              className="pointer-events-none absolute top-[9px] left-0 z-1 inline-flex h-[34px] items-center gap-0.5 rounded-full bg-transparent px-3 text-[18px] font-[650] whitespace-nowrap text-(--ssl-ink) tabular-nums transition-colors duration-250 group-has-[[data-number]_input:focus]/control:invisible group-has-[[data-thumb]_input:focus-visible]/control:outline-2 group-has-[[data-thumb]_input:focus-visible]/control:outline-offset-2 group-has-[[data-thumb]_input:focus-visible]/control:outline-(--ssl-ink) data-[mode=range]:bg-(--ssl-ink) data-[mode=range]:text-(--ssl-surface)"
+              style={{ x }}
+              aria-hidden="true"
+            >
               <Odometer value={String(value)} />
-              {unit && <span className="ssl-unit">{unit}</span>}
+              {unit && (
+                <span className="ml-[3px] text-[12.5px] font-semibold text-[color-mix(in_oklab,currentColor_55%,transparent)]">
+                  {unit}
+                </span>
+              )}
             </motion.span>
           </motion.div>
         </div>
@@ -239,7 +259,7 @@ export function StepperSliderDemo({ playing }: { playing?: boolean } = {}) {
   ]);
 
   return (
-    <div ref={stage} className="ssl-stage not-prose">
+    <div ref={stage} className="not-prose grid min-h-[260px] w-full content-center justify-items-center gap-4">
       <StepperSlider
         value={value}
         onValueChange={setValue}
@@ -250,7 +270,7 @@ export function StepperSliderDemo({ playing }: { playing?: boolean } = {}) {
         label="Months"
         stretched={stretched}
       />
-      <p className="ssl-hint">Drag the number sideways for a slider</p>
+      <p className="m-0 font-sans text-[12px] text-zinc-500 dark:text-zinc-400">Drag the number sideways for a slider</p>
     </div>
   );
 }

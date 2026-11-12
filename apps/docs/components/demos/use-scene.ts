@@ -49,7 +49,6 @@ export function useScene<S>(
   return { ref: autoplay.ref, step: autoplay.step, state, takeOver, onValueChange, live };
 }
 
-/** Beats that type `text` one character at a time after `from`, at an even pace, holding on the last. */
 export function typing<S>(
   text: string,
   state: (typed: string) => S,

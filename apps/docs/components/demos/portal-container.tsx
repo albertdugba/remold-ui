@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 const PortalContext = createContext<HTMLElement | null>(null);
 const PreviewContext = createContext(false);
 
-/** Marks everything inside as drawn in a preview card, with its popups going to `layer`. */
 export function PreviewScope({ layer, children }: { layer: HTMLElement | null; children: ReactNode }) {
   return (
     <PreviewContext.Provider value={true}>
@@ -13,7 +12,6 @@ export function PreviewScope({ layer, children }: { layer: HTMLElement | null; c
   );
 }
 
-/** The element to portal into: the preview's layer if there is one, else <body> once mounted. */
 export function usePortalContainer(): HTMLElement | null {
   const inside = useContext(PortalContext);
   const [body, setBody] = useState<HTMLElement | null>(null);
@@ -21,7 +19,6 @@ export function usePortalContainer(): HTMLElement | null {
   return inside ?? body;
 }
 
-/** Whether this is drawn inside a preview card, which is a link itself: nested links aren't allowed. */
 export function useInPreview(): boolean {
   return useContext(PreviewContext);
 }

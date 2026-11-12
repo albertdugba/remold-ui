@@ -139,14 +139,12 @@ function Row({
 }
 
 export interface TaskListProps {
-  /** The finished issue ids, and whether the Done group is open. */
   value?: TaskListValue;
   defaultValue?: TaskListValue;
   onValueChange?: (value: TaskListValue) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A project's issues, grouped by status: ticking one moves it to Done, and the Done group folds away. */
 export function TaskList({
   value,
   defaultValue = { done: START, open: false },
@@ -275,8 +273,6 @@ export function TaskList({
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (TaskListValue & { ms: number })[] = [
   { done: START, open: false, ms: 1700 },

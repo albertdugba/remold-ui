@@ -1,9 +1,15 @@
 "use client";
 import { Slider } from "@base-ui/react/slider";
 import { LayoutGroup, motion } from "motion/react";
+import { FK_DESCRIPTION, FK_LABEL, FK_STAGE, FORM_KIT } from "./form-kit";
 import { useScene } from "./use-scene";
-import "./form-kit.css";
-import "./range-slider.css";
+
+export interface RangeSliderProps {
+  value: [number, number];
+  onValueChange: (value: [number, number]) => void;
+  active: number | null;
+  onActiveChange: (active: number | null) => void;
+}
 
 const MIN = 0;
 const MAX = 400;
@@ -12,34 +18,35 @@ const SPREAD = [2, 5, 9, 16, 24, 31, 35, 33, 28, 24, 19, 15, 12, 9, 7, 5, 4, 3, 
 
 const FLY = { type: "spring" as const, duration: 0.42, bounce: 0.16 };
 
+const PRICE = "inline-block";
+const BUBBLE =
+  "pointer-events-none absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 rounded-lg bg-(--fk-ink) px-2 py-1 text-[13px] font-[650] whitespace-nowrap text-(--fk-surface)";
+
 function Price({ index, value, bubble }: { index: number; value: number; bubble?: boolean }) {
   return (
-    <motion.span layoutId={`rng-${index}`} className={bubble ? "rng-bubble" : "rng-price"} transition={FLY}>
+    <motion.span layoutId={`rng-${index}`} className={bubble ? BUBBLE : PRICE} transition={FLY}>
       ${value}
       {!bubble && index === 1 && value === MAX ? "+" : ""}
     </motion.span>
   );
 }
 
-export interface RangeSliderProps {
-  value: [number, number];
-  onValueChange: (value: [number, number]) => void;
-  /** The handle being dragged, if any. */
-  active: number | null;
-  onActiveChange: (active: number | null) => void;
+function Ghost({ value }: { value: number }) {
+  return <span className={`${PRICE} text-(--fk-faint)`}>${value}</span>;
 }
 
 export function RangeSlider({ value, onValueChange, active, onActiveChange }: RangeSliderProps) {
   const [lo, hi] = value;
-  const count = SPREAD.reduce((sum, n, index) => {
+  const inRange = (index: number) => {
     const from = (index / SPREAD.length) * MAX;
-    return from >= lo && from < hi ? sum + n : sum;
-  }, 0);
+    return from >= lo && from < hi;
+  };
+  const count = SPREAD.reduce((sum, stays, index) => (inRange(index) ? sum + stays : sum), 0);
 
   return (
     <LayoutGroup>
       <Slider.Root
-        className="fk rng"
+        className={`grid w-[min(100%,360px)] ${FORM_KIT}`}
         value={value}
         min={MIN}
         max={MAX}
@@ -51,48 +58,34 @@ export function RangeSlider({ value, onValueChange, active, onActiveChange }: Ra
         }}
         onValueCommitted={() => onActiveChange(null)}
       >
-        <span className="rng-head">
-          <Slider.Label className="fk-label">Price per night</Slider.Label>
-          <span className="rng-values" aria-hidden="true">
-            {active === 0 ? (
-              <span className="rng-price" data-ghost="">
-                ${lo}
-              </span>
-            ) : (
-              <Price index={0} value={lo} />
-            )}
-            <span className="rng-dash">–</span>
-            {active === 1 ? (
-              <span className="rng-price" data-ghost="">
-                ${hi}
-              </span>
-            ) : (
-              <Price index={1} value={hi} />
-            )}
+        <span className="mb-[18px] flex items-baseline justify-between">
+          <Slider.Label className={FK_LABEL}>Price per night</Slider.Label>
+          <span className="inline-flex items-baseline gap-[5px] text-[15px] font-[650]" aria-hidden="true">
+            {active === 0 ? <Ghost value={lo} /> : <Price index={0} value={lo} />}
+            <span className="text-(--fk-faint)">–</span>
+            {active === 1 ? <Ghost value={hi} /> : <Price index={1} value={hi} />}
           </span>
         </span>
 
-        <span className="rng-bars" aria-hidden="true">
-          {SPREAD.map((stays, index) => {
-            const from = (index / SPREAD.length) * MAX;
-            return (
-              <i
-                key={index}
-                style={{ height: `${(stays / 35) * 100}%` }}
-                data-in={(from >= lo && from < hi) || undefined}
-              />
-            );
-          })}
+        <span className="flex h-12 items-end gap-0.5 px-2.5" aria-hidden="true">
+          {SPREAD.map((stays, index) => (
+            <i
+              key={index}
+              data-in={inRange(index) || undefined}
+              className="min-h-0.5 flex-1 rounded-t-[2px] bg-(--fk-well-strong) transition-colors duration-200 data-in:bg-(--fk-ink)"
+              style={{ height: `${(stays / 35) * 100}%` }}
+            />
+          ))}
         </span>
 
-        <Slider.Control className="rng-control">
-          <Slider.Track className="rng-track">
-            <Slider.Indicator className="rng-indicator" />
+        <Slider.Control className="flex h-7 cursor-pointer touch-none items-center px-2.5">
+          <Slider.Track className="relative h-[3px] w-full rounded-full bg-(--fk-well-strong)">
+            <Slider.Indicator className="h-full rounded-[inherit] bg-(--fk-ink)" />
             {[0, 1].map((index) => (
               <Slider.Thumb
                 key={index}
                 index={index}
-                className="rng-thumb"
+                className="size-[22px] cursor-grab rounded-full bg-white shadow-[0_1px_3px_rgb(0_0_0/0.2),0_0_0_1px_rgb(0_0_0/0.08)] transition-shadow duration-150 has-focus-visible:shadow-[0_1px_3px_rgb(0_0_0/0.2),0_0_0_4px_color-mix(in_oklab,var(--fk-focus)_18%,transparent)] data-dragging:cursor-grabbing"
                 aria-label={index === 0 ? "Lowest price" : "Highest price"}
               >
                 {active === index && <Price index={index} value={value[index]!} bubble />}
@@ -101,7 +94,7 @@ export function RangeSlider({ value, onValueChange, active, onActiveChange }: Ra
           </Slider.Track>
         </Slider.Control>
 
-        <span className="fk-description">{count} stays in this range</span>
+        <span className={`mt-2.5 ${FK_DESCRIPTION}`}>{count} stays in this range</span>
       </Slider.Root>
     </LayoutGroup>
   );
@@ -129,14 +122,10 @@ const fromBeat = (step: number): State => {
   return state;
 };
 
-interface RangeSliderDemoProps {
-  playing?: boolean;
-}
-
-export function RangeSliderDemo({ playing }: RangeSliderDemoProps = {}) {
+export function RangeSliderDemo({ playing }: { playing?: boolean } = {}) {
   const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing);
   return (
-    <div ref={ref} className="fk-stage not-prose">
+    <div ref={ref} className={FK_STAGE}>
       <RangeSlider
         value={state.value}
         onValueChange={(value) => takeOver((current) => ({ ...current, value }))}

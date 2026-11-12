@@ -10,7 +10,6 @@ import { useMorphPath } from "./use-morph-path";
 import { Odometer } from "./odometer";
 import { useControllableState } from "./use-controllable-state";
 import { useScene } from "./use-scene";
-import "./revenue-card.css";
 
 type Range = "7d" | "30d" | "90d";
 
@@ -98,7 +97,6 @@ const money = (amount: number) => `$${Math.round(amount).toLocaleString("en-US")
 
 export interface RevenueCardValue {
   range: Range;
-  /** The point being scrubbed, or null when the headline shows today. */
   hover: number | null;
 }
 
@@ -106,14 +104,22 @@ const RESHAPE = { type: "spring" as const, duration: 0.8, bounce: 0.12 };
 const FOLLOW = { type: "spring" as const, duration: 0.3, bounce: 0.1 };
 
 export interface RevenueCardProps {
-  /** The range shown, and the point being scrubbed. */
   value?: RevenueCardValue;
   defaultValue?: RevenueCardValue;
   onValueChange?: (value: RevenueCardValue) => void;
   ref?: Ref<HTMLElement>;
 }
 
-/** A revenue card with a range switch and a chart you can scrub, by pointer or arrow keys. */
+const PALETTE = [
+  "[--rv-surface:#ffffff] [--rv-field:#f4f4f5] [--rv-line:rgb(24_24_27/0.08)] [--rv-ink:#18181b] [--rv-muted:#71717a] [--rv-quiet:#a1a1aa]",
+  "[--rv-up:#059669] [--rv-down:#dc2626] [--rv-chart:#4f46e5]",
+  "dark:[--rv-surface:#1f1f23] dark:[--rv-field:#2a2a2f] dark:[--rv-line:rgb(255_255_255/0.08)] dark:[--rv-ink:#fafafa] dark:[--rv-muted:#a1a1aa] dark:[--rv-quiet:#71717a]",
+  "dark:[--rv-up:#34d399] dark:[--rv-down:#f87171] dark:[--rv-chart:#818cf8]",
+].join(" ");
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rv-chart)";
+const FIGURE = "m-0 text-[14px] font-[650]";
+
 export function RevenueCard({
   value,
   defaultValue = { range: "30d", hover: null },
@@ -155,12 +161,16 @@ export function RevenueCard({
   };
 
   return (
-    <section ref={ref} className="rv not-prose" aria-label="Monthly recurring revenue">
-      <header className="rv-head">
-        <span className="rv-label">Monthly recurring revenue</span>
+    <section
+      ref={ref}
+      className={`not-prose grid w-[min(100%,420px)] rounded-[22px] bg-(--rv-surface) px-[18px] pt-[18px] pb-4 font-sans text-(--rv-ink) ${PALETTE}`}
+      aria-label="Monthly recurring revenue"
+    >
+      <header className="flex items-center justify-between gap-2.5">
+        <span className="text-[13px] font-medium text-(--rv-muted)">Monthly recurring revenue</span>
         <LayoutGroup id={id}>
           <ToggleGroup
-            className="rv-ranges"
+            className="flex rounded-[9px] bg-(--rv-field) p-[3px]"
             value={[view.range]}
             onValueChange={(values) =>
               values.length && setView(() => ({ range: values[0] as Range, hover: null }))
@@ -168,20 +178,31 @@ export function RevenueCard({
             aria-label="Range"
           >
             {RANGES.map((option) => (
-              <Toggle key={option} value={option} className="rv-range">
+              <Toggle
+                key={option}
+                value={option}
+                className={`relative h-6 cursor-pointer rounded-[7px] border-0 bg-transparent px-[9px] text-[11.5px] font-semibold text-(--rv-muted) transition-colors duration-200 data-pressed:text-(--rv-ink) ${FOCUS}`}
+              >
                 {option === view.range && (
-                  <motion.span layoutId="range" className="rv-range-pill" transition={FOLLOW} />
+                  <motion.span
+                    layoutId="range"
+                    className="absolute inset-0 rounded-[inherit] bg-(--rv-surface) shadow-[0_1px_2px_rgb(0_0_0/0.1)]"
+                    transition={FOLLOW}
+                  />
                 )}
-                <span>{option.toUpperCase()}</span>
+                <span className="relative">{option.toUpperCase()}</span>
               </Toggle>
             ))}
           </ToggleGroup>
         </LayoutGroup>
       </header>
 
-      <div className="rv-figure">
-        <Odometer value={money(amount)} className="rv-mrr" />
-        <span className="rv-badge" data-down={up ? undefined : ""}>
+      <div className="mt-2.5 flex items-center gap-2.5">
+        <Odometer value={money(amount)} className="text-[34px] font-bold tracking-[-0.03em]" />
+        <span
+          data-down={up ? undefined : ""}
+          className="inline-flex h-6 items-center gap-[3px] rounded-full bg-[color-mix(in_oklab,var(--rv-up)_13%,transparent)] pr-2 pl-1.5 text-[12.5px] font-bold text-(--rv-up) transition-colors duration-300 data-down:bg-[color-mix(in_oklab,var(--rv-down)_12%,transparent)] data-down:text-(--rv-down) [&_svg]:size-[13px]"
+        >
           <Remold.Icon
             icon={<HugeiconsIcon icon={up ? ArrowUp02Icon : ArrowDown02Icon} />}
             strokeWidth={2.6}
@@ -189,7 +210,7 @@ export function RevenueCard({
           <Odometer value={`${Math.abs(change * 100).toFixed(1)}%`} />
         </span>
       </div>
-      <p className="rv-sub">
+      <p className="m-0 mt-0.5 grid min-h-5 text-[12.5px] text-(--rv-muted)">
         <AnimatePresence initial={false} mode="popLayout">
           <motion.span
             key={view.hover === null ? `vs-${view.range}` : `on-${at}`}
@@ -207,7 +228,7 @@ export function RevenueCard({
 
       <div
         ref={chartRef}
-        className="rv-chart"
+        className={`relative mt-3 h-32 cursor-crosshair touch-none [--rv-tone:var(--rv-chart)] data-down:[--rv-tone:var(--rv-down)] [&_svg]:block [&_svg]:size-full [&_svg]:overflow-visible ${FOCUS}`}
         role="img"
         tabIndex={0}
         aria-label={`Revenue over ${series.label}, ${up ? "up" : "down"} ${Math.abs(change * 100).toFixed(1)} percent`}
@@ -221,51 +242,58 @@ export function RevenueCard({
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id={`${id}-fill`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" className="rv-stop-top" />
-              <stop offset="100%" className="rv-stop-bottom" />
+              <stop offset="0%" className="[stop-color:var(--rv-tone)] [stop-opacity:0.22] [transition:stop-color_0.4s]" />
+              <stop offset="100%" className="[stop-color:var(--rv-tone)] [stop-opacity:0]" />
             </linearGradient>
           </defs>
           <motion.path d={areaPath} fill={`url(#${id}-fill)`} />
-          <motion.path d={linePath} className="rv-line" />
+          <motion.path
+            d={linePath}
+            className="fill-none stroke-(--rv-tone) stroke-2 [stroke-linecap:round] [vector-effect:non-scaling-stroke] [transition:stroke_0.4s]"
+          />
         </svg>
 
         <AnimatePresence>
           {view.hover !== null && (
             <motion.div
               key="scrub"
-              className="rv-scrub"
+              className="pointer-events-none absolute inset-y-0 w-0"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, left: `${(x / W) * 100}%` }}
               exit={{ opacity: 0 }}
               transition={FOLLOW}
             >
-              <span className="rv-rule" />
-              <motion.span className="rv-dot" animate={{ top: `${(y / H) * 100}%` }} transition={FOLLOW} />
+              <span className="absolute inset-y-0 -left-[0.5px] w-px bg-[linear-gradient(to_bottom,transparent,var(--rv-quiet)_20%,var(--rv-quiet)_80%,transparent)] opacity-60" />
+              <motion.span
+                className="absolute -left-1.5 -mt-1.5 size-3 rounded-full bg-(--rv-surface) shadow-[0_0_0_3px_var(--rv-tone),0_2px_6px_rgb(0_0_0/0.2)]"
+                animate={{ top: `${(y / H) * 100}%` }}
+                transition={FOLLOW}
+              />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-      <div className="rv-axis" aria-hidden="true">
+      <div className="mt-2 flex justify-between text-[11px] text-(--rv-quiet)" aria-hidden="true">
         <span>{dateOf(series, 0)}</span>
         <span>Today</span>
       </div>
 
-      <dl className="rv-stats">
+      <dl className="m-0 mt-3.5 grid grid-cols-3 border-t border-solid border-(--rv-line) pt-3 [&>div]:grid [&>div]:gap-[3px] [&>div+div]:border-l [&>div+div]:border-solid [&>div+div]:border-(--rv-line) [&>div+div]:pl-3 [&_dt]:text-[11.5px] [&_dt]:text-(--rv-muted)">
         <div>
           <dt>New MRR</dt>
-          <dd>
+          <dd className={`${FIGURE} text-(--rv-up)`}>
             <Odometer value={`+${money(series.stats.added)}`} />
           </dd>
         </div>
         <div>
           <dt>Churned</dt>
-          <dd data-down="">
+          <dd className={`${FIGURE} text-(--rv-down)`}>
             <Odometer value={`−${money(series.stats.churned)}`} />
           </dd>
         </div>
         <div>
           <dt>Customers</dt>
-          <dd>
+          <dd className={`${FIGURE} text-(--rv-ink)`}>
             <Odometer value={series.stats.customers.toLocaleString("en-US")} />
           </dd>
         </div>
@@ -273,8 +301,6 @@ export function RevenueCard({
     </section>
   );
 }
-
-// The docs demo: a short scripted scene that plays the element above. Your app doesn't need it.
 
 const BEATS: readonly (RevenueCardValue & { ms: number })[] = [
   { range: "30d", hover: null, ms: 1800 },

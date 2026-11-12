@@ -7,19 +7,27 @@ import { Remold, useAutoplay } from "@remold-ui/react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform, type MotionValue } from "motion/react";
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type PointerEvent, type Ref, type RefObject } from "react";
 import { useMeasuredSize } from "./use-measured-size";
-import "./peel-reward.css";
 
 type Point = readonly [x: number, y: number];
 
-/** The corner rests lifted this far, so it reads as something to peel. */
 const LIFT = 22;
-/** Peeled past this share of the sticker's diagonal, it comes off when you let go. */
 const OFF_AT = 0.5;
+
+const PALETTE = [
+  "[--prw-ink:#0a0a0b] [--prw-muted:#6e6e76] [--prw-quiet:#a1a1aa] [--prw-surface:#ffffff] [--prw-fill:#f2f2f4] [--prw-good:#16a34a]",
+  "[--prw-sticker:#0a0a0b] [--prw-sticker-ink:#ffffff] [--prw-sticker-muted:rgb(255_255_255/0.55)]",
+  "[--prw-back:#ecebe8] [--prw-back-light:#fbfaf8] [--prw-back-crease:#cfccc6]",
+  "dark:[--prw-ink:#fafafa] dark:[--prw-muted:#a1a1aa] dark:[--prw-quiet:#71717a] dark:[--prw-surface:#161618] dark:[--prw-fill:#232327] dark:[--prw-good:#4ade80]",
+  "dark:[--prw-sticker:#f4f4f5] dark:[--prw-sticker-ink:#0a0a0b] dark:[--prw-sticker-muted:rgb(10_10_11/0.5)]",
+  "dark:[--prw-back:#c9c8c5] dark:[--prw-back-light:#e4e3e0] dark:[--prw-back-crease:#9d9b97]",
+].join(" ");
+
+const FOOT_BUTTON =
+  "inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[14px] border-0 text-[15px] font-[650] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--prw-ink)";
 
 const SNAP_BACK = { type: "spring" as const, duration: 0.55, bounce: 0.35 };
 const FLY_OFF = { type: "spring" as const, duration: 0.7, bounce: 0 };
 
-/** What's left of a polygon on one side of a line: Sutherland–Hodgman against `keep(point) >= 0`. */
 function clip(polygon: readonly Point[], side: (point: Point) => number): Point[] {
   const kept: Point[] = [];
   polygon.forEach((point, index) => {
@@ -38,11 +46,6 @@ function clip(polygon: readonly Point[], side: (point: Point) => number): Point[
 const polygonOf = (points: readonly Point[]) =>
   points.length < 3 ? "polygon(0 0, 0 0, 0 0)" : `polygon(${points.map(([x, y]) => `${x.toFixed(2)}px ${y.toFixed(2)}px`).join(", ")})`;
 
-/**
- * Peeling a sticker by its bottom-right corner. The corner has been pulled to `corner + pull`; the
- * paper folds along the line halfway between where the corner was and where it is now. What's on
- * the corner's side of that line has lifted off, and lies folded back over the rest, mirrored.
- */
 function peel(width: number, height: number, pullX: number, pullY: number) {
   const rect: Point[] = [
     [0, 0],
@@ -53,7 +56,6 @@ function peel(width: number, height: number, pullX: number, pullY: number) {
   const length = Math.hypot(pullX, pullY);
   if (length < 0.5 || !width) return { stuck: polygonOf(rect), lifted: polygonOf([]), mirror: "none", angle: 0 };
 
-  // The unit normal from the fold towards the corner's resting place, and a point on the fold.
   const normalX = -pullX / length;
   const normalY = -pullY / length;
   const foldX = width + pullX / 2;
@@ -62,12 +64,10 @@ function peel(width: number, height: number, pullX: number, pullY: number) {
 
   const stuck = clip(rect, (point) => -side(point));
   const lifted = clip(rect, side);
-  // Reflection across the fold, as a CSS matrix.
   const offset = 2 * (foldX * normalX + foldY * normalY);
   const mirror = `matrix(${1 - 2 * normalX * normalX}, ${-2 * normalX * normalY}, ${-2 * normalX * normalY}, ${
     1 - 2 * normalY * normalY
   }, ${offset * normalX}, ${offset * normalY})`;
-  // The direction the flap's shading runs, from the fold out to its tip.
   const angle = (Math.atan2(normalX, -normalY) * 180) / Math.PI;
   return { stuck: polygonOf(stuck), lifted: polygonOf(lifted), mirror, angle };
 }
@@ -86,9 +86,7 @@ function usePeel(width: number, height: number, pullX: MotionValue<number>, pull
 }
 
 export interface PeelRewardActions {
-  /** Pull the corner by this much, springing there: for scripted demos. */
   pullTo(x: number, y: number): Promise<void>;
-  /** Peel it all the way off. */
   peelOff(): Promise<void>;
   showCopied(): void;
   reset(): void;
@@ -102,7 +100,6 @@ export interface PeelRewardProps {
   ref?: Ref<HTMLElement>;
 }
 
-/** A reward under a sticker: peel it back by the corner, and past halfway it comes off and the code is yours. */
 export function PeelReward({ code = "SPRING-25", prize = "A free drink of your choice", onReveal, actionsRef, ref }: PeelRewardProps) {
   const [ticket, size] = useMeasuredSize<HTMLDivElement>();
   const width = size?.width ?? 0;
@@ -126,7 +123,6 @@ export function PeelReward({ code = "SPRING-25", prize = "A free drink of your c
 
   const peelOff = useCallback(async () => {
     if (!width) return;
-    // Far enough past the opposite corner that every bit of it has lifted and folded away.
     await pullTo(-width * 2.4, -height * 2.4, still ? { duration: 0 } : FLY_OFF);
     setRevealed(true);
     latestOnReveal.current?.();
@@ -154,7 +150,6 @@ export function PeelReward({ code = "SPRING-25", prize = "A free drink of your c
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const start = drag.current;
     if (!start) return;
-    // The corner only peels back over the sticker, never out past its own edges.
     pullX.set(Math.min(0, Math.max(-width * 2, start.pullX + event.clientX - start.x)));
     pullY.set(Math.min(0, Math.max(-height * 2, start.pullY + event.clientY - start.y)));
   };
@@ -178,35 +173,47 @@ export function PeelReward({ code = "SPRING-25", prize = "A free drink of your c
   }, [copied]);
 
   return (
-    <section ref={ref} className="prw not-prose" data-revealed={revealed || undefined} aria-label="Reward">
-      <header className="prw-head">
-        <span className="prw-mark" aria-hidden="true">
+    <section
+      ref={ref}
+      data-revealed={revealed || undefined}
+      className={`group not-prose grid w-[min(100%,360px)] gap-[18px] overflow-clip rounded-[28px] bg-(--prw-surface) p-5 font-sans text-[14px] text-(--prw-ink) ${PALETTE}`}
+      aria-label="Reward"
+    >
+      <header className="flex items-center gap-3">
+        <span
+          className="grid size-[42px] flex-none place-items-center rounded-[14px] bg-(--prw-ink) text-(--prw-surface) [&_svg]:size-[21px]"
+          aria-hidden="true"
+        >
           <HugeiconsIcon icon={Coffee02Icon} strokeWidth={1.8} />
         </span>
-        <span className="prw-titles">
+        <span className="grid gap-px leading-[1.3] [&_b]:text-[15px] [&_b]:font-[650] [&_b]:tracking-[-0.01em] [&>span]:text-[12.5px] [&>span]:text-(--prw-muted)">
           <b>Northwind Coffee</b>
           <span>10 of 10 visits · reward unlocked</span>
         </span>
       </header>
 
-      <ol className="prw-stamps" aria-label="10 of 10 visits">
+      <ol className="m-0 grid list-none grid-cols-10 gap-1 p-0" aria-label="10 of 10 visits">
         {Array.from({ length: 10 }, (_, index) => (
-          <li key={index} />
+          <li key={index} className="h-1 rounded-full bg-(--prw-ink)" />
         ))}
       </ol>
 
-      <div ref={ticket} className="prw-ticket">
-        <div className="prw-prize" aria-hidden={!revealed}>
-          <span className="prw-prize-name">{prize}</span>
-          <span className="prw-code">{code}</span>
-          <span className="prw-valid">Show at the counter · valid until 30 Nov</span>
+      <div ref={ticket} className="relative h-[172px]">
+        <div
+          className="absolute inset-0 grid place-content-center justify-items-center gap-1.5 rounded-[20px] bg-(--prw-fill) text-center"
+          aria-hidden={!revealed}
+        >
+          <span className="text-[13px] font-[550] text-(--prw-muted)">{prize}</span>
+          <span className="scale-[0.94] font-mono text-[28px] font-bold tracking-[0.06em] blur-[2px] [transition:scale_0.5s_cubic-bezier(0.3,1.4,0.5,1)_0.1s,filter_0.5s_ease_0.1s] group-data-revealed:scale-100 group-data-revealed:blur-none motion-reduce:transition-none">
+            {code}
+          </span>
+          <span className="text-[12px] text-(--prw-quiet)">Show at the counter · valid until 30 Nov</span>
         </div>
 
         {!revealed && (
           <>
-            {/* The part still stuck down: you drag it to peel */}
             <motion.div
-              className="prw-sticker"
+              className="absolute inset-0 grid cursor-grab touch-none place-items-center rounded-[20px] bg-(--prw-sticker) bg-[radial-gradient(120%_90%_at_20%_0%,rgb(255_255_255/0.1),transparent_60%)] text-(--prw-sticker-ink) select-none active:cursor-grabbing"
               style={{ clipPath: shape.stuck }}
               role="img"
               aria-label="A sticker covering your code. Drag to peel it off, or use the button below."
@@ -215,15 +222,17 @@ export function PeelReward({ code = "SPRING-25", prize = "A free drink of your c
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
             >
-              <span className="prw-sticker-words">
-                <b>Your reward is under here</b>
-                <span>Peel from the corner</span>
+              <span className="pointer-events-none grid gap-[3px] text-center">
+                <b className="text-[16px] font-[650] tracking-[-0.015em]">Your reward is under here</b>
+                <span className="text-[12.5px] text-(--prw-sticker-muted)">Peel from the corner</span>
               </span>
             </motion.div>
-            {/* The part that's lifted, folded back over the rest: the sticker's paper back */}
-            <span className="prw-flap-shadow" aria-hidden="true">
+            <span
+              className="pointer-events-none absolute inset-0 drop-shadow-[-2px_-3px_5px_rgb(0_0_0/0.28)]"
+              aria-hidden="true"
+            >
               <motion.span
-                className="prw-flap"
+                className="absolute inset-0 origin-top-left rounded-[20px]"
                 style={{ clipPath: shape.lifted, transform: shape.mirror, background: shape.shade }}
               />
             </span>
@@ -231,14 +240,21 @@ export function PeelReward({ code = "SPRING-25", prize = "A free drink of your c
         )}
       </div>
 
-      <footer className="prw-foot">
+      <footer className="grid min-h-12">
         {revealed ? (
-          <Button className="prw-copy" data-copied={copied || undefined} onClick={copy}>
+          <Button
+            data-copied={copied || undefined}
+            className={`${FOOT_BUTTON} animate-rise-in bg-(--prw-ink) text-(--prw-surface) transition-colors duration-300 data-copied:bg-(--prw-good) data-copied:text-white motion-reduce:animate-none [&_svg]:size-[17px]`}
+            onClick={copy}
+          >
             <Remold.Icon icon={<HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} />} strokeWidth={2} />
             <Remold.Text>{copied ? "Copied" : "Copy code"}</Remold.Text>
           </Button>
         ) : (
-          <Button className="prw-help" onClick={() => void peelOff()}>
+          <Button
+            className={`${FOOT_BUTTON} bg-(--prw-fill) text-(--prw-ink) transition-colors duration-150 hover:bg-[color-mix(in_oklab,var(--prw-ink)_7%,var(--prw-fill))]`}
+            onClick={() => void peelOff()}
+          >
             Peel it for me
           </Button>
         )}
@@ -246,8 +262,6 @@ export function PeelReward({ code = "SPRING-25", prize = "A free drink of your c
     </section>
   );
 }
-
-// The docs demo: a scripted peel that plays the element above. Your app doesn't need it.
 
 const STEPS = [
   { ms: 1300, action: "wait" },
