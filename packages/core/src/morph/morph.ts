@@ -1,67 +1,50 @@
-/**
- * Shape morphing.
- *
- * All the expensive work (parsing, matching, subdividing) happens once in `createMorph`. The
- * result is two `Float32Array`s with the same layout, so each frame is a single pass of lerps
- * over flat memory, fast enough to run thousands of points at 120 frames a second.
- */
 import { parsePath } from "../path/parse";
 import { toCubics, type Subpath } from "../path/normalize";
 import { toPathData } from "../render/svg";
 import { matchShapes, type MatchOptions } from "./match";
 
-/** Where one subpath lives in a packed buffer. */
 export interface SubpathLayout {
-  /** Index of the subpath's first number: its start point's x. */
   offset: number;
-  /** Number of cubic segments. Each takes 6 numbers after the 2 for the start point. */
   segments: number;
   closed: boolean;
 }
 
 export interface Morph {
-  /** Shape A, packed. */
   readonly from: Float32Array;
-  /** Shape B, packed with the same layout as `from`. */
   readonly to: Float32Array;
   readonly layout: readonly SubpathLayout[];
-  /**
-   * The packed shape `t` of the way from A to B. `t` may go below 0 or above 1, so springs
-   * can overshoot. Writes into `out` when given; otherwise into one internal buffer that is
-   * reused by every call, so copy it if you need to keep it.
-   */
   at(t: number, out?: Float32Array): Float32Array;
-  /** SVG path data for `at(t)`. */
   d(t: number, precision?: number): string;
 }
 
 export type MorphOptions = MatchOptions;
 
-function layoutOf(subpaths: readonly Subpath[]): { layout: SubpathLayout[]; length: number } {
-  const layout: SubpathLayout[] = [];
-  let length = 0;
+const START_VALUES = 2;
+const VALUES_PER_SEGMENT = 6;
 
-  for (const subpath of subpaths) {
-    layout.push({ offset: length, segments: subpath.segments.length, closed: subpath.closed });
-    length += 2 + 6 * subpath.segments.length;
-  }
-  return { layout, length };
+const sizeOf = (subpath: Subpath) => START_VALUES + VALUES_PER_SEGMENT * subpath.segments.length;
+
+function layoutOf(subpaths: readonly Subpath[]): { layout: SubpathLayout[]; length: number } {
+  const offsets = [0];
+
+  for (const subpath of subpaths) offsets.push(offsets.at(-1)! + sizeOf(subpath));
+
+  return {
+    layout: subpaths.map((subpath, index) => ({ offset: offsets[index]!, segments: subpath.segments.length, closed: subpath.closed })),
+    length: offsets.at(-1)!,
+  };
 }
 
+const flatten = (subpath: Subpath) => [
+  subpath.segments[0]!.p0,
+  ...subpath.segments.flatMap((segment) => [segment.p1, segment.p2, segment.p3]),
+];
+
 function pack(subpaths: readonly Subpath[], layout: readonly SubpathLayout[], buffer: Float32Array): void {
-  subpaths.forEach((subpath, subpathIndex) => {
-    let offset = layout[subpathIndex]!.offset;
-    const start = subpath.segments[0]!.p0;
-    buffer[offset++] = start.x;
-    buffer[offset++] = start.y;
-    for (const segment of subpath.segments) {
-      buffer[offset++] = segment.p1.x;
-      buffer[offset++] = segment.p1.y;
-      buffer[offset++] = segment.p2.x;
-      buffer[offset++] = segment.p2.y;
-      buffer[offset++] = segment.p3.x;
-      buffer[offset++] = segment.p3.y;
-    }
+  subpaths.forEach((subpath, index) => {
+    const values = flatten(subpath).flatMap((point) => [point.x, point.y]);
+
+    buffer.set(values, layout[index]!.offset);
   });
 }
 
@@ -84,14 +67,6 @@ export function lerpBuffers({
 const toSubpaths = (shape: string | readonly Subpath[]): readonly Subpath[] =>
   typeof shape === "string" ? toCubics(parsePath(shape)) : shape;
 
-/**
- * Prepare a morph between two shapes, given as SVG path data or as subpaths.
- *
- * ```ts
- * const morph = createMorph("M0 0 H10 V10 H0 Z", "M5 0 L10 10 H0 Z");
- * path.setAttribute("d", morph.d(0.5));
- * ```
- */
 export function createMorph(
   fromShape: string | readonly Subpath[],
   toShape: string | readonly Subpath[],
@@ -106,12 +81,15 @@ export function createMorph(
   pack(matched.to, layout, to);
 
   const scratch = new Float32Array(length);
+
   const at = (progress: number, output: Float32Array = scratch): Float32Array => {
     if (output.length !== length) {
       throw new RangeError(`morph.at: out must have length ${length}, got ${output.length}`);
     }
+
     return lerpBuffers({ from, to, progress, output });
   };
+
   return {
     from,
     to,

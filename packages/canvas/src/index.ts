@@ -1,4 +1,3 @@
-// @remold-ui/canvas: live scenes drawn on a canvas, with the same springs and matching as the DOM.
 export { backingSize, fitCanvas, type CanvasSize } from "./canvas-size";
 export {
   fitCamera,

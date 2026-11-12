@@ -1,9 +1,3 @@
-/**
- * CSS colours to sRGB bytes, without a canvas: the functions browsers report computed colours in
- * (`rgb()`, `hsl()`, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()` with any CSS colour
- * profile) and hex. The maths and matrices are CSS Color 4's. Anything else (a colour name, say) is
- * read through a 2D canvas when there is one.
- */
 import type { Rgba } from "@remold-ui/core";
 
 type Vector = [number, number, number];
@@ -27,7 +21,6 @@ const D50_TO_D65: Matrix = [
 ];
 const D50_WHITE: Vector = [0.3457 / 0.3585, 1, (1 - 0.3457 - 0.3585) / 0.3585];
 
-/** Each RGB colour profile: its curve to linear light, and its matrix to XYZ (D65, or D50 for ProPhoto). */
 const signed = (curve: (value: number) => number) => (value: number) => Math.sign(value) * curve(Math.abs(value));
 const srgbToLinear = signed((value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
 const PROFILES: Record<string, { linear: (value: number) => number; toXyz?: Matrix; d50?: boolean }> = {
@@ -70,7 +63,6 @@ const PROFILES: Record<string, { linear: (value: number) => number; toXyz?: Matr
   },
 };
 
-/** Linear sRGB from XYZ, adapting D50 to D65 first when it's D50. */
 const fromXyz = (xyz: Vector, d50 = false): Vector => multiply(XYZ_TO_SRGB, d50 ? multiply(D50_TO_D65, xyz) : xyz);
 
 function labToLinear([lightness, a, b]: Vector): Vector {
@@ -107,7 +99,6 @@ function hslToRgb(hue: number, saturation: number, lightness: number): Vector {
   return [channel(0), channel(8), channel(4)];
 }
 
-/** A number, a percentage of `full`, an angle in degrees (for `angle`), or `none`. */
 function read(token: string | undefined, full: number, angle = false): number {
   if (token === undefined || token === "none") return 0;
   const value = Number.parseFloat(token);
@@ -121,54 +112,75 @@ function read(token: string | undefined, full: number, angle = false): number {
   return value;
 }
 
-/** sRGB (0 to 1 a channel, unclamped) and alpha from a colour function, or null if it isn't one. */
-function parseFunction(value: string): [Vector, number] | null {
-  const match = /^([a-z-]+)\((.*)\)$/.exec(value);
-  if (!match) return null;
-  const [, name, body] = match as unknown as [string, string, string];
-  const [channels = "", alphaToken] = body.split("/");
-  const tokens = channels.trim().split(/[\s,]+/);
-  // The legacy comma syntax puts alpha fourth.
-  const alpha = clamp(read(alphaToken?.trim() ?? tokens[name === "color" ? 4 : 3] ?? "1", 1));
+const gamma = (linear: Vector): Vector =>
+  linear.map(
+    (channel) =>
+      Math.sign(channel) * (Math.abs(channel) <= 0.0031308 ? 12.92 * Math.abs(channel) : 1.055 * Math.abs(channel) ** (1 / 2.4) - 0.055),
+  ) as Vector;
 
-  const gamma = (linear: Vector): Vector =>
-    linear.map(
-      (channel) =>
-        Math.sign(channel) * (Math.abs(channel) <= 0.0031308 ? 12.92 * Math.abs(channel) : 1.055 * Math.abs(channel) ** (1 / 2.4) - 0.055),
-    ) as Vector;
+const FUNCTION = /^([a-z-]+)\((.*)\)$/;
+const TOKEN_SEPARATOR = /[\s,]+/;
 
+function hwbToRgb(tokens: readonly string[]): Vector {
+  const [hue, white, black] = [read(tokens[0], 360, true), read(tokens[1], 100) / 100, read(tokens[2], 100) / 100];
+
+  if (white + black >= 1) return [white / (white + black), white / (white + black), white / (white + black)];
+
+  return hslToRgb(hue, 1, 0.5).map((channel) => channel * (1 - white - black) + white) as Vector;
+}
+
+function colorSpaceToRgb(tokens: readonly string[]): Vector | null {
+  const [space = "", ...rest] = tokens;
+  const values = [read(rest[0], 1), read(rest[1], 1), read(rest[2], 1)] as Vector;
+
+  if (space === "xyz" || space === "xyz-d65" || space === "xyz-d50") return gamma(fromXyz(values, space === "xyz-d50"));
+
+  const profile = PROFILES[space];
+
+  if (!profile) return null;
+
+  const linear = values.map(profile.linear) as Vector;
+
+  return gamma(profile.toXyz ? fromXyz(multiply(profile.toXyz, linear), profile.d50) : linear);
+}
+
+function channelsToRgb(name: string, tokens: readonly string[]): Vector | null {
   switch (name) {
     case "rgb":
     case "rgba":
-      return [[read(tokens[0], 255) / 255, read(tokens[1], 255) / 255, read(tokens[2], 255) / 255], alpha];
+      return [read(tokens[0], 255) / 255, read(tokens[1], 255) / 255, read(tokens[2], 255) / 255];
     case "hsl":
     case "hsla":
-      return [hslToRgb(read(tokens[0], 360, true), read(tokens[1], 100) / 100, read(tokens[2], 100) / 100), alpha];
-    case "hwb": {
-      const [hue, white, black] = [read(tokens[0], 360, true), read(tokens[1], 100) / 100, read(tokens[2], 100) / 100];
-      if (white + black >= 1) return [[white / (white + black), white / (white + black), white / (white + black)], alpha];
-      return [hslToRgb(hue, 1, 0.5).map((channel) => channel * (1 - white - black) + white) as Vector, alpha];
-    }
+      return hslToRgb(read(tokens[0], 360, true), read(tokens[1], 100) / 100, read(tokens[2], 100) / 100);
+    case "hwb":
+      return hwbToRgb(tokens);
     case "lab":
-      return [gamma(labToLinear([read(tokens[0], 100), read(tokens[1], 125), read(tokens[2], 125)])), alpha];
+      return gamma(labToLinear([read(tokens[0], 100), read(tokens[1], 125), read(tokens[2], 125)]));
     case "lch":
-      return [gamma(labToLinear(polar(read(tokens[0], 100), read(tokens[1], 150), read(tokens[2], 360, true)))), alpha];
+      return gamma(labToLinear(polar(read(tokens[0], 100), read(tokens[1], 150), read(tokens[2], 360, true))));
     case "oklab":
-      return [gamma(oklabToLinear([read(tokens[0], 1), read(tokens[1], 0.4), read(tokens[2], 0.4)])), alpha];
+      return gamma(oklabToLinear([read(tokens[0], 1), read(tokens[1], 0.4), read(tokens[2], 0.4)]));
     case "oklch":
-      return [gamma(oklabToLinear(polar(read(tokens[0], 1), read(tokens[1], 0.4), read(tokens[2], 360, true)))), alpha];
-    case "color": {
-      const [space = "", ...rest] = tokens;
-      const values = [read(rest[0], 1), read(rest[1], 1), read(rest[2], 1)] as Vector;
-      if (space === "xyz" || space === "xyz-d65" || space === "xyz-d50") return [gamma(fromXyz(values, space === "xyz-d50")), alpha];
-      const profile = PROFILES[space];
-      if (!profile) return null;
-      const linear = values.map(profile.linear) as Vector;
-      return [gamma(profile.toXyz ? fromXyz(multiply(profile.toXyz, linear), profile.d50) : linear), alpha];
-    }
+      return gamma(oklabToLinear(polar(read(tokens[0], 1), read(tokens[1], 0.4), read(tokens[2], 360, true))));
+    case "color":
+      return colorSpaceToRgb(tokens);
     default:
       return null;
   }
+}
+
+function parseFunction(value: string): [Vector, number] | null {
+  const match = FUNCTION.exec(value);
+
+  if (!match) return null;
+
+  const [, name, body] = match as unknown as [string, string, string];
+  const [channels = "", alphaToken] = body.split("/");
+  const tokens = channels.trim().split(TOKEN_SEPARATOR);
+  const alpha = clamp(read(alphaToken?.trim() ?? tokens[name === "color" ? 4 : 3] ?? "1", 1));
+  const rgb = channelsToRgb(name, tokens);
+
+  return rgb ? [rgb, alpha] : null;
 }
 
 function parseHex(value: string): Rgba | null {
@@ -180,7 +192,6 @@ function parseHex(value: string): Rgba | null {
 
 let probe: CanvasRenderingContext2D | null | undefined;
 
-/** A colour the parser doesn't know (a name, say), as the browser's canvas reads it. */
 function throughCanvas(value: string): Rgba | null {
   if (probe === undefined) {
     probe = typeof document === "undefined" ? null : (document.createElement("canvas").getContext("2d") ?? null);
@@ -200,7 +211,6 @@ const toRgba = (parsed: [Vector, number] | null): Rgba | null =>
 
 const colorCache = new Map<string, Rgba>();
 
-/** Convert a computed CSS colour to sRGB byte channels and a unit alpha. */
 export function parseColor(value: string): Rgba {
   if (!value || value === "none") return [0, 0, 0, 0];
 

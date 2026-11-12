@@ -1,8 +1,3 @@
-/**
- * A layout box is an element's position and dimensions. The DOM layer measures boxes relative to
- * a container and normalizes them by the container width, so differently sized layouts can be
- * compared by the core matcher.
- */
 export interface LayoutBox {
   x: number;
   y: number;
@@ -10,7 +5,6 @@ export interface LayoutBox {
   height: number;
 }
 
-/** Normalize a box to its container width without reading from the DOM. */
 export function normalizeLayoutBox(box: LayoutBox, container: LayoutBox): LayoutBox {
   const unit = container.width || 1;
 
@@ -22,7 +16,6 @@ export function normalizeLayoutBox(box: LayoutBox, container: LayoutBox): Layout
   };
 }
 
-/** Measure and normalize an element's box relative to a container element. */
 export function measureLayoutBox(element: Element, container: Element): LayoutBox {
   return normalizeLayoutBox(readLayoutBox(element), readLayoutBox(container));
 }

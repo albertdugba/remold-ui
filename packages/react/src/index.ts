@@ -1,8 +1,3 @@
-/**
- * React bindings for Remold's interface primitives. Canvas-drawn parts (Scene, Story, Particles,
- * Canvas, Globe, DotGrid) and `useDust` live in `@remold-ui/react/canvas`, so an interface-only
- * bundle never carries canvas code.
- */
 export * as Remold from "./index.parts.js";
 export { useRemold } from "./use-remold/use-remold.js";
 export { useRemoldMorph } from "./use-remold-morph/use-remold-morph.js";

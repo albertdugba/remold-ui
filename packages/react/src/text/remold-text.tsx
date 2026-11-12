@@ -4,14 +4,6 @@ import { useIsoLayoutEffect } from "../utils/hooks.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldTextProps, RemoldTextState } from "./types.js";
 
-/**
- * Text that changes letter by letter: shared letters slide into place, the rest fade.
- *
- * @example
- * ```tsx
- * <Remold.Text>{status}</Remold.Text>
- * ```
- */
 export const RemoldText = forwardRef(function RemoldText(
   componentProps: RemoldText.Props,
   forwardedRef: ForwardedRef<HTMLSpanElement>,
@@ -38,7 +30,6 @@ export const RemoldText = forwardRef(function RemoldText(
     });
   }, [children, element]);
 
-  // Ignore completion after unmount because a newer morph normally replaces the prior call.
   useIsoLayoutEffect(
     () => () => {
       latestCall.current++;

@@ -5,22 +5,6 @@ import { useControlled, useIsoLayoutEffect, useLatest } from "../utils/hooks.js"
 import { useRenderElement } from "../utils/use-render-element.js";
 import type { RemoldStoryActions, RemoldStoryAnnotation, RemoldStoryChapter, RemoldStoryProps, RemoldStoryState } from "./types.js";
 
-/**
- * A Scene told in chapters. Each chapter picks a layout, an object to focus and an annotation
- * that follows that object around the canvas.
- *
- * @example
- * ```tsx
- * <Remold.Story
- *   objects={objects}
- *   layouts={layouts}
- *   chapters={[
- *     { id: "overview", layout: "simple", title: "The whole system" },
- *     { id: "api", layout: "scaled", focused: "api", annotation: { object: "api" } },
- *   ]}
- * />
- * ```
- */
 export const RemoldStory = forwardRef(function RemoldStory(
   componentProps: RemoldStory.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,

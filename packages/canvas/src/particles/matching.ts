@@ -6,11 +6,6 @@ let sharedWorker: Promise<Worker | null> | undefined;
 let nextRequestId = 0;
 const pendingRequests = new Map<number, { resolve: (matches: PointMatches) => void; reject: (error: Error) => void }>();
 
-/**
- * Matches a cloud in the background when workers are supported. The worker's script (a copy of the
- * matcher) is loaded the first time it's needed, so clouds small enough to pair on the main thread
- * never download it.
- */
 export function matchOffThread({
   from,
   to,
@@ -36,7 +31,6 @@ export function matchOffThread({
   );
 }
 
-/** Pairs each point with the point at the same index. */
 export function matchByIndex(count: number): PointMatches {
   return { pairs: Array.from({ length: count }, (_, index): [number, number] => [index, index]), leaving: [], arriving: [] };
 }
@@ -74,7 +68,6 @@ function resolveRequest({ id, matches, error }: { id: number; matches?: PointMat
 }
 
 function rejectRequests(): void {
-  // A worker that stopped isn't tried again: later clouds pair on the main thread.
   sharedWorker = Promise.resolve(null);
   for (const request of pendingRequests.values()) request.reject(new Error("particles: the matching worker stopped"));
   pendingRequests.clear();

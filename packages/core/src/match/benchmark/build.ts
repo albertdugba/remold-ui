@@ -1,12 +1,3 @@
-/**
- * A small builder for benchmark pages: nested elements with boxes in pixels and a hidden
- * ground-truth key. The matcher only ever sees the `MatchNode`s; the keys are for scoring.
- *
- * Keys:
- *   "k"        this element is k (the same k on both pages is the same element)
- *   "from:k"   (new page) one of the parts old element k split into
- *   "into:k"   (old page) one of the parts that merged into new element k
- */
 import type { MatchNode, NodeKind, Rgba } from "../nodes";
 
 export type Rect = readonly [x: number, y: number, width: number, height: number];
@@ -42,6 +33,7 @@ export const box = (key: string, rect: Rect, children: Element[] = [], style: St
   style: { ...BOX, ...style },
   children,
 });
+
 export const text = (key: string, value: string, rect: Rect, style: Style = {}): Element => ({
   key,
   kind: "text",
@@ -50,6 +42,7 @@ export const text = (key: string, value: string, rect: Rect, style: Style = {}):
   style: { ...TEXT, ...style },
   children: [],
 });
+
 export const heading = (key: string, value: string, rect: Rect, style: Style = {}): Element => ({
   key,
   kind: "heading",
@@ -58,6 +51,7 @@ export const heading = (key: string, value: string, rect: Rect, style: Style = {
   style: { ...HEADING, ...style },
   children: [],
 });
+
 export const control = (key: string, value: string, rect: Rect, style: Style = {}): Element => ({
   key,
   kind: "control",
@@ -66,6 +60,7 @@ export const control = (key: string, value: string, rect: Rect, style: Style = {
   style: { ...CONTROL, ...style },
   children: [],
 });
+
 export const media = (key: string, id: string, rect: Rect): Element => ({
   key,
   kind: "media",
@@ -78,62 +73,63 @@ export const media = (key: string, id: string, rect: Rect): Element => ({
 
 export interface Page {
   nodes: MatchNode[];
-  /** Ground-truth key of each node, by index. */
   keys: string[];
 }
 
-/** Flatten elements into a node list (parents first), measuring boxes in units of `width`. */
 export function page(width: number, roots: Element[]): Page {
   const nodes: MatchNode[] = [];
   const keys: string[] = [];
-  const visit = (el: Element, parent: number) => {
-    const [x, y, w, h] = el.rect;
+  const visit = (element: Element, parent: number) => {
+    const [x, y, boxWidth, boxHeight] = element.rect;
     const index = nodes.length;
 
     nodes.push({
-      kind: el.kind,
-      text: el.text,
-      ...(el.media === undefined ? {} : { media: el.media }),
+      kind: element.kind,
+      text: element.text,
+      ...(element.media === undefined ? {} : { media: element.media }),
       x: x / width,
       y: y / width,
-      width: w / width,
-      height: h / width,
+      width: boxWidth / width,
+      height: boxHeight / width,
       parent,
-      ...el.style,
+      ...element.style,
     });
-    keys.push(el.key);
-    for (const child of el.children) visit(child, index);
+    keys.push(element.key);
+    for (const child of element.children) visit(child, index);
   };
+
   for (const root of roots) visit(root, -1);
 
   return { nodes, keys };
 }
 
-/** The correct relations between two pages, as "i>j" strings (including parts of splits and merges). */
+const indexByKey = (keys: readonly string[]) => new Map(keys.map((key, index) => [key, index]));
+
+const partOf = (key: string, prefix: string) => (key.startsWith(prefix) ? key.slice(prefix.length) : undefined);
+
 export function truth(a: Page, b: Page): Set<string> {
-  const indexA = new Map<string, number>();
-  const indexB = new Map<string, number>();
+  const indexA = indexByKey(a.keys);
+  const indexB = indexByKey(b.keys);
 
-  a.keys.forEach((key, index) => {
-    indexA.set(key, index);
-  });
-  b.keys.forEach((key, index) => {
-    indexB.set(key, index);
-  });
-  const relations = new Set<string>();
+  const same = [...indexA].flatMap(([key, from]) => {
+    const to = indexB.get(key);
 
-  for (const [k, i] of indexA) {
-    const j = indexB.get(k);
+    return to === undefined ? [] : [`${from}>${to}`];
+  });
 
-    if (j !== undefined) relations.add(`${i}>${j}`);
-  }
-  b.keys.forEach((k, j) => {
-    const i = k.startsWith("from:") ? indexA.get(k.slice(5)) : undefined;
-    if (i !== undefined) relations.add(`${i}>${j}`);
+  const splits = b.keys.flatMap((key, to) => {
+    const whole = partOf(key, "from:");
+    const from = whole === undefined ? undefined : indexA.get(whole);
+
+    return from === undefined ? [] : [`${from}>${to}`];
   });
-  a.keys.forEach((k, i) => {
-    const j = k.startsWith("into:") ? indexB.get(k.slice(5)) : undefined;
-    if (j !== undefined) relations.add(`${i}>${j}`);
+
+  const merges = a.keys.flatMap((key, from) => {
+    const whole = partOf(key, "into:");
+    const to = whole === undefined ? undefined : indexB.get(whole);
+
+    return to === undefined ? [] : [`${from}>${to}`];
   });
-  return relations;
+
+  return new Set([...same, ...splits, ...merges]);
 }

@@ -1,141 +1,147 @@
 import { pathReader } from "./parse";
 
-/**
- * SVG basic shapes as path data.
- *
- * Icons are rarely one `<path>`: they mix circles, rounded rectangles, lines and polygons. A morph
- * needs one path, so each shape is turned into the path the browser would draw for it, following
- * the SVG spec: missing numbers are 0, a rect with only `rx` uses it for `ry` too (and the other
- * way round), corners are clamped to half the size, and a shape with no size draws nothing.
- * Every closed shape runs clockwise from the same starting point the browser uses.
- *
- * `transform` attributes aren't applied: flatten them in your icon first.
- */
-
-/** A shape's attributes, as an SVG element or an icon set (`[tag, attributes]`) gives them. */
 export type ShapeAttributes = Readonly<Record<string, string | number | undefined>>;
 
-/** One element of an icon: its tag and attributes. Lucide's `IconNode` entries have this shape. */
 export type ShapeNode = readonly [tag: string, attributes: ShapeAttributes];
 
 const SHAPES = new Set(["path", "circle", "ellipse", "rect", "line", "polyline", "polygon"]);
 
-/** Short, exact-enough numbers: 3 decimals at most, no trailing zeros. */
-function n(value: number): string {
-  const rounded = Math.round(value * 1000) / 1000;
+const PLAIN_NUMBER = /^\s*[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?(px)?\s*$/i;
+const LIST_SEPARATOR = /[\s,]+/;
+const LEADING_SEPARATORS = /^[\s,]+/;
+const RELATIVE_MOVE = /^m/;
+const NUMBER_START = /^[\d+\-.]/;
+const DECIMALS = 1000;
+
+function format(value: number): string {
+  const rounded = Math.round(value * DECIMALS) / DECIMALS;
 
   return Object.is(rounded, -0) ? "0" : String(rounded);
 }
 
-function number(tag: string, attributes: ShapeAttributes, name: string): number {
+function readNumber(tag: string, attributes: ShapeAttributes, name: string): number {
   const raw = attributes[name];
 
   if (raw === undefined || raw === "") return 0;
 
-  if (typeof raw === "number") {
-    if (Number.isFinite(raw)) return raw;
-  } else if (/^\s*[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?(px)?\s*$/i.test(raw)) {
-    return parseFloat(raw);
-  }
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+
+  if (typeof raw === "string" && PLAIN_NUMBER.test(raw)) return parseFloat(raw);
+
   throw new RangeError(
     `shapeToPath: <${tag}> has ${name}="${raw}", which isn't a plain number (percentages and units other than px can't be resolved without a page)`,
   );
 }
 
-function points(tag: string, raw: string | number | undefined): number[] {
+function readPoints(tag: string, raw: string | number | undefined): number[] {
   if (raw === undefined) return [];
-  const values = String(raw)
-    .trim()
-    .split(/[\s,]+/)
-    .filter(Boolean)
-    .map(Number);
-  if (values.some((v) => !Number.isFinite(v))) throw new RangeError(`shapeToPath: <${tag}> has points="${raw}", which aren't all numbers`);
-  // An odd number out is ignored, as the spec says.
+
+  const values = String(raw).trim().split(LIST_SEPARATOR).filter(Boolean).map(Number);
+
+  if (values.some((value) => !Number.isFinite(value))) {
+    throw new RangeError(`shapeToPath: <${tag}> has points="${raw}", which aren't all numbers`);
+  }
+
   return values.length % 2 ? values.slice(0, -1) : values;
 }
 
-/**
- * The path data for one SVG shape, or `""` when it draws nothing (no size, too few points, or a
- * tag that isn't a shape, such as `<g>` or `<text>`).
- *
- * ```ts
- * shapeToPath("circle", { cx: 12, cy: 12, r: 10 }); // "M22 12A10 10 0 0 1 2 12A10 10 0 0 1 22 12Z"
- * ```
- */
+type Read = (key: string) => number;
+
+function ellipsePath(cx: number, cy: number, rx: number, ry: number): string {
+  if (rx <= 0 || ry <= 0) return "";
+
+  const arcTo = (x: number) => `A${format(rx)} ${format(ry)} 0 0 1 ${format(x)} ${format(cy)}`;
+
+  return `M${format(cx + rx)} ${format(cy)}${arcTo(cx - rx)}${arcTo(cx + rx)}Z`;
+}
+
+const hasRadius = (value: string | number | undefined) => value !== undefined && value !== "auto";
+
+function cornerRadii(attributes: ShapeAttributes, read: Read, width: number, height: number) {
+  const hasRx = hasRadius(attributes.rx);
+  const hasRy = hasRadius(attributes.ry);
+  const rx = hasRx ? Math.max(0, read("rx")) : 0;
+  const ry = hasRy ? Math.max(0, read("ry")) : 0;
+
+  return {
+    rx: Math.min(hasRx || !hasRy ? rx : ry, width / 2),
+    ry: Math.min(hasRy || !hasRx ? ry : rx, height / 2),
+  };
+}
+
+function rectPath(attributes: ShapeAttributes, read: Read): string {
+  const [x, y, width, height] = [read("x"), read("y"), read("width"), read("height")];
+
+  if (width <= 0 || height <= 0) return "";
+
+  const { rx, ry } = cornerRadii(attributes, read, width, height);
+
+  if (rx === 0 || ry === 0) {
+    return `M${format(x)} ${format(y)}H${format(x + width)}V${format(y + height)}H${format(x)}Z`;
+  }
+
+  const arc = (toX: number, toY: number) => `A${format(rx)} ${format(ry)} 0 0 1 ${format(toX)} ${format(toY)}`;
+  const [right, bottom] = [x + width, y + height];
+
+  return [
+    `M${format(x + rx)} ${format(y)}H${format(right - rx)}${arc(right, y + ry)}`,
+    `V${format(bottom - ry)}${arc(right - rx, bottom)}`,
+    `H${format(x + rx)}${arc(x, bottom - ry)}`,
+    `V${format(y + ry)}${arc(x + rx, y)}Z`,
+  ].join("");
+}
+
+function polyPath(tag: string, raw: string | number | undefined, closed: boolean): string {
+  const values = readPoints(tag, raw);
+
+  if (values.length < 4) return "";
+
+  const pairs = Array.from({ length: values.length / 2 }, (_, index) => [values[index * 2]!, values[index * 2 + 1]!]);
+  const path = pairs.map(([x, y], index) => `${index === 0 ? "M" : "L"}${format(x!)} ${format(y!)}`).join("");
+
+  return closed ? `${path}Z` : path;
+}
+
 export function shapeToPath(tag: string, attributes: ShapeAttributes): string {
   const name = tag.toLowerCase();
+
   if (!SHAPES.has(name)) return "";
-  const get = (key: string) => number(name, attributes, key);
+
+  const read: Read = (key) => readNumber(name, attributes, key);
 
   switch (name) {
     case "path":
       return String(attributes.d ?? "").trim();
-    case "circle":
-    case "ellipse": {
-      const cx = get("cx");
-      const cy = get("cy");
-      const rx = name === "circle" ? get("r") : get("rx");
-      const ry = name === "circle" ? rx : get("ry");
-      if (rx <= 0 || ry <= 0) return "";
-      return `M${n(cx + rx)} ${n(cy)}A${n(rx)} ${n(ry)} 0 0 1 ${n(cx - rx)} ${n(cy)}A${n(rx)} ${n(ry)} 0 0 1 ${n(cx + rx)} ${n(cy)}Z`;
+    case "circle": {
+      const radius = read("r");
+
+      return ellipsePath(read("cx"), read("cy"), radius, radius);
     }
-    case "rect": {
-      const x = get("x");
-      const y = get("y");
-      const width = get("width");
-      const height = get("height");
-      if (width <= 0 || height <= 0) return "";
-      const hasRx = attributes.rx !== undefined && attributes.rx !== "auto";
-      const hasRy = attributes.ry !== undefined && attributes.ry !== "auto";
-      let rx = hasRx ? Math.max(0, get("rx")) : 0;
-      let ry = hasRy ? Math.max(0, get("ry")) : 0;
-      if (hasRx && !hasRy) ry = rx;
-      if (hasRy && !hasRx) rx = ry;
-      rx = Math.min(rx, width / 2);
-      ry = Math.min(ry, height / 2);
-      if (rx === 0 || ry === 0) return `M${n(x)} ${n(y)}H${n(x + width)}V${n(y + height)}H${n(x)}Z`;
-      const arc = (toX: number, toY: number) => `A${n(rx)} ${n(ry)} 0 0 1 ${n(toX)} ${n(toY)}`;
-      return (
-        `M${n(x + rx)} ${n(y)}H${n(x + width - rx)}${arc(x + width, y + ry)}` +
-        `V${n(y + height - ry)}${arc(x + width - rx, y + height)}` +
-        `H${n(x + rx)}${arc(x, y + height - ry)}` +
-        `V${n(y + ry)}${arc(x + rx, y)}Z`
-      );
-    }
+    case "ellipse":
+      return ellipsePath(read("cx"), read("cy"), read("rx"), read("ry"));
+    case "rect":
+      return rectPath(attributes, read);
     case "line":
-      return `M${n(get("x1"))} ${n(get("y1"))}L${n(get("x2"))} ${n(get("y2"))}`;
-    default: {
-      // polyline and polygon
-      const p = points(name, attributes.points);
-      if (p.length < 4) return "";
-      let d = `M${n(p[0]!)} ${n(p[1]!)}`;
-      for (let i = 2; i < p.length; i += 2) d += `L${n(p[i]!)} ${n(p[i + 1]!)}`;
-      return name === "polygon" ? `${d}Z` : d;
-    }
+      return `M${format(read("x1"))} ${format(read("y1"))}L${format(read("x2"))} ${format(read("y2"))}`;
+    default:
+      return polyPath(name, attributes.points, name === "polygon");
   }
 }
 
-/**
- * Several shapes as one path, in drawing order: an icon made of a circle, two lines and a path
- * becomes a single `d` that a morph can work with. Takes `[tag, attributes]` pairs, the format
- * icon sets such as Lucide publish (`IconNode`).
- */
-export function shapesToPath(nodes: Iterable<ShapeNode>): string {
-  let d = "";
-  for (const [tag, attributes] of nodes) d += absoluteStart(shapeToPath(tag, attributes));
-  return d;
+function absoluteStart(path: string): string {
+  if (!RELATIVE_MOVE.test(path)) return path;
+
+  const reader = pathReader(path);
+
+  reader.advance();
+
+  const [x, y] = [reader.number().text, reader.number().text];
+  const rest = path.slice(reader.index).replace(LEADING_SEPARATORS, "");
+  const following = rest && NUMBER_START.test(rest) ? `l${rest}` : rest;
+
+  return `M${x} ${y}${following}`;
 }
 
-/**
- * A path's first `m` is absolute on its own, but relative once it follows another shape (icon
- * sets often write `m21 21-4.3-4.3`). Normalize that first move before joining the paths.
- */
-function absoluteStart(d: string): string {
-  if (!/^m/.test(d)) return d;
-  const reader = pathReader(d);
-  reader.advance();
-  const [x, y] = [reader.number().text, reader.number().text];
-  // Any pairs straight after the move are relative lines.
-  const rest = d.slice(reader.index).replace(/^[\s,]+/, "");
-  return `M${x} ${y}${rest && /^[\d+\-.]/.test(rest) ? `l${rest}` : rest}`;
+export function shapesToPath(nodes: Iterable<ShapeNode>): string {
+  return Array.from(nodes, ([tag, attributes]) => absoluteStart(shapeToPath(tag, attributes))).join("");
 }

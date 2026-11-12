@@ -15,17 +15,6 @@ const overlayStyles: CSSProperties = {
   pointerEvents: "none",
 };
 
-/**
- * Draws lines between the `Remold.Anchor`s inside it, and keeps them attached while the elements
- * move. Each line is a `path.rm-connector`: style them with CSS.
- *
- * @example
- * ```tsx
- * <Remold.Connectors radius={12}>
- *   <Remold.Morph trigger={thread}>{comments.map(renderComment)}</Remold.Morph>
- * </Remold.Connectors>
- * ```
- */
 export const RemoldConnectors = forwardRef(function RemoldConnectors(
   componentProps: RemoldConnectors.Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,

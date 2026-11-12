@@ -1,23 +1,8 @@
-/**
- * Keyless View Transitions: the browser's own `document.startViewTransition`, with Remold
- * deciding which elements correspond, and spring timing instead of an ease curve.
- *
- * How it pairs without knowing the new page in advance: every element on the old page gets a
- * unique `view-transition-name` before the browser takes its snapshot. Once `update` has run,
- * each new element is given the name of the old element it came from. Unpaired old elements
- * fade out; unpaired new ones fade in with the page.
- *
- * Trade-off: the browser runs the animation, so it can't be redirected mid-flight with its
- * momentum. A new call skips the running one to its end. Use `transition()` when interruption
- * matters (gestures, rapid toggles); use this for its compositor performance on large changes.
- * Falls back to `transition()` where the API is missing.
- */
 import { matchNodes, springs, springToCss, type SpringConfig } from "@remold-ui/core";
 import { announce, resolveReducedMotion } from "../accessibility";
 import { readNodes } from "../snapshot";
 import { describeChanges, summarize, transition, type Transition, type TransitionOptions, type TransitionResult } from "../transition";
 
-/** Pages with more elements than this fall back to `transition()`: thousands of layers cost more than they save. */
 const MAX_NAMED = 400;
 let sequence = 0;
 
@@ -25,7 +10,6 @@ export function supportsViewTransitions(): boolean {
   return typeof document !== "undefined" && typeof document.startViewTransition === "function";
 }
 
-/** CSS that gives every Remold-named group the spring's timing. */
 function timingRule(prefix: string, spring: SpringConfig): string {
   const { duration, easing } = springToCss(spring);
 
@@ -35,10 +19,6 @@ function timingRule(prefix: string, spring: SpringConfig): string {
   );
 }
 
-/**
- * Animate whatever `update` does to `root` using the View Transitions API. Same options and
- * result as `transition()`.
- */
 export function viewTransition(root: HTMLElement, update: () => void | Promise<void>, options: TransitionOptions = {}): Transition {
   const reduced = resolveReducedMotion(options.reducedMotion);
   const before = readNodes(root);

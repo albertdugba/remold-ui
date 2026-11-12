@@ -1,108 +1,167 @@
-/**
- * Family context: use the matches we're sure of to decide the ones we're not.
- *
- * Three "Get" buttons look identical on their own. But if the card around one button was
- * matched to a card on the new page, the button inside that card is the likely partner.
- * Likewise a container whose contents moved together is probably the same container, and an
- * element sitting beside a matched label (the switch next to "Mentions") follows its label.
- */
 import type { Assignment } from "./hungarian";
 import { ancestors, descendants, type PreparedNode } from "./nodes";
 import { styleSimilarity } from "./similarity";
 
-/** Space between two boxes (0 when they touch or overlap), in root widths. */
+export interface StructureContext {
+  ancestorsA: number[][];
+  ancestorsB: number[][];
+  evidenceA: number[][];
+  evidenceB: number[][];
+  evidenceSetsB: Set<number>[];
+  style: Float64Array;
+}
+
+const UNMATCHED = -1;
+const ALIGNED_DISTANCE = 0.25;
+const ANCHOR_REACH = 0.4;
+const SECOND_ANCHOR_SLACK = 0.01;
+const POSITION_SCALE = 0.3;
+const SHARED_ANCESTOR = 0.5;
+const SHARED_ANCHOR = 0.8;
+const AGREEMENT_WEIGHT = 0.18;
+
+const centre = ({ node }: PreparedNode) => ({ x: node.x + node.width / 2, y: node.y + node.height / 2 });
+
 function gap(p: PreparedNode, q: PreparedNode): number {
-  const a = p.node;
-  const b = q.node;
-  const dx = Math.max(0, Math.abs(a.x + a.width / 2 - (b.x + b.width / 2)) - (a.width + b.width) / 2);
-  const dy = Math.max(0, Math.abs(a.y + a.height / 2 - (b.y + b.height / 2)) - (a.height + b.height) / 2);
+  const [a, b] = [p.node, q.node];
+  const [from, to] = [centre(p), centre(q)];
+  const dx = Math.max(0, Math.abs(from.x - to.x) - (a.width + b.width) / 2);
+  const dy = Math.max(0, Math.abs(from.y - to.y) - (a.height + b.height) / 2);
 
   return Math.hypot(dx, dy);
 }
 
-/** In the same row or column: they overlap by at least half the smaller one's height or width. */
 function aligned(p: PreparedNode, q: PreparedNode): boolean {
-  const a = p.node;
-  const b = q.node;
+  const [a, b] = [p.node, q.node];
   const overlapY = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
   const overlapX = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
 
   return overlapY > 0.5 * Math.min(a.height, b.height) || overlapX > 0.5 * Math.min(a.width, b.width);
 }
 
-/** Where a node's centre sits inside its parent, as fractions of the parent's size. */
 function positionIn(child: PreparedNode, parent: PreparedNode): [number, number] {
-  const c = child.node;
-  const p = parent.node;
+  const { x, y } = centre(child);
+  const { node } = parent;
 
-  return [(c.x + c.width / 2 - p.x) / (p.width || 1), (c.y + c.height / 2 - p.y) / (p.height || 1)];
+  return [(x - node.x) / (node.width || 1), (y - node.y) / (node.height || 1)];
 }
 
-/**
- * Each node's anchors: its nearest already-matched siblings that carry content. Siblings in
- * the same row or column count as four times closer, because that's how people read
- * "belongs together". A second anchor is kept only if it's nearly as close as the first.
- */
-function anchors(nodes: readonly PreparedNode[], matched: Int32Array): number[][] {
-  return nodes.map((n) => {
-    const near: [distance: number, index: number][] = [];
-    for (const m of nodes) {
-      if (m.index === n.index || matched[m.index]! < 0 || m.node.parent !== n.node.parent || !m.hasContent) continue;
-      let d = gap(n, m);
-      if (aligned(n, m)) d *= 0.25;
-      if (d < 0.4) near.push([d, m.index]);
+const isAnchorFor = (node: PreparedNode, matched: Int32Array) => (other: PreparedNode) =>
+  other.index !== node.index && matched[other.index]! >= 0 && other.node.parent === node.node.parent && other.hasContent;
+
+const anchorDistance = (node: PreparedNode, other: PreparedNode) => gap(node, other) * (aligned(node, other) ? ALIGNED_DISTANCE : 1);
+
+function anchorsOf(node: PreparedNode, nodes: readonly PreparedNode[], matched: Int32Array): number[] {
+  const near = nodes
+    .filter(isAnchorFor(node, matched))
+    .map((other) => ({ distance: anchorDistance(node, other), index: other.index }))
+    .filter(({ distance }) => distance < ANCHOR_REACH)
+    .sort((x, y) => x.distance - y.distance);
+
+  const [first, second] = near;
+
+  if (!first) return [];
+
+  const keepSecond = second && second.distance < 2 * first.distance + SECOND_ANCHOR_SLACK;
+
+  return keepSecond ? [first.index, second.index] : [first.index];
+}
+
+const anchors = (nodes: readonly PreparedNode[], matched: Int32Array) => nodes.map((node) => anchorsOf(node, nodes, matched));
+
+const contentDescendants = (nodes: readonly PreparedNode[]) =>
+  nodes.map((_, index) => descendants(nodes, index).filter((child) => nodes[child]!.hasContent));
+
+function sameKindStyle(a: readonly PreparedNode[], b: readonly PreparedNode[], style?: Float64Array): Float64Array {
+  const table = new Float64Array(a.length * b.length);
+
+  for (const [row, from] of a.entries()) {
+    for (const [column, to] of b.entries()) {
+      const cell = row * b.length + column;
+
+      if (from.node.kind === to.node.kind) table[cell] = style ? style[cell]! : styleSimilarity(from, to);
     }
-    near.sort((x, y) => x[0] - y[0]);
-    const first = near[0];
-    return near.filter((x, k) => k === 0 || (k === 1 && x[0] < 2 * first![0] + 0.01)).map((x) => x[1]);
-  });
+  }
+
+  return table;
 }
 
-/** Precomputed relationships that don't change between passes. */
-export interface StructureContext {
-  ancestorsA: number[][];
-  ancestorsB: number[][];
-  /** Descendants that carry content: only they vote, so empty boxes can't echo earlier guesses. */
-  evidenceA: number[][];
-  evidenceB: number[][];
-  /** The same as sets, built once instead of once per pair per pass. */
-  evidenceSetsB: Set<number>[];
-  /** Style similarity of every pair of the same kind (0 otherwise), row-major. */
-  style: Float64Array;
-}
-
-/** `style`, when given, is every pair's style similarity (row-major), already worked out. */
 export function structureContext(a: readonly PreparedNode[], b: readonly PreparedNode[], style?: Float64Array): StructureContext {
-  const evidence = (nodes: readonly PreparedNode[]) => nodes.map((_, i) => descendants(nodes, i).filter((d) => nodes[d]!.hasContent));
-  const evidenceB = evidence(b);
+  const evidenceB = contentDescendants(b);
 
   return {
-    ancestorsA: a.map((_, i) => ancestors(a, i)),
-    ancestorsB: b.map((_, j) => ancestors(b, j)),
-    evidenceA: evidence(a),
+    ancestorsA: a.map((_, index) => ancestors(a, index)),
+    ancestorsB: b.map((_, index) => ancestors(b, index)),
+    evidenceA: contentDescendants(a),
     evidenceB,
-    evidenceSetsB: evidenceB.map((e) => new Set(e)),
+    evidenceSetsB: evidenceB.map((evidence) => new Set(evidence)),
     style: sameKindStyle(a, b, style),
   };
 }
 
-function sameKindStyle(a: readonly PreparedNode[], b: readonly PreparedNode[], style?: Float64Array): Float64Array {
-  const out = new Float64Array(a.length * b.length);
+function partnerTables(pairs: readonly Assignment[], fromCount: number, toCount: number) {
+  const forward = new Int32Array(fromCount).fill(UNMATCHED);
+  const backward = new Int32Array(toCount).fill(UNMATCHED);
 
-  for (let i = 0; i < a.length; i++) {
-    for (let j = 0; j < b.length; j++) {
-      if (a[i]!.node.kind === b[j]!.node.kind) out[i * b.length + j] = style ? style[i * b.length + j]! : styleSimilarity(a[i]!, b[j]!);
-    }
-  }
-  return out;
+  pairs.forEach(({ from, to }) => {
+    forward[from] = to;
+    backward[to] = from;
+  });
+
+  return { forward, backward };
 }
 
-/**
- * Add a family bonus to every base similarity, given the current pairs. The bonus is scaled
- * by how plausible the pair already is, so context can tip a close call but never invent a
- * match between unrelated things. Tables are row-major, `a.length` × `b.length`; the result is
- * written into `out`.
- */
+function agreementBonus(evidenceA: readonly number[], evidenceB: readonly number[], inB: ReadonlySet<number>, forward: Int32Array) {
+  if (evidenceA.length === 0 || evidenceB.length === 0) return 0;
+
+  const agree = evidenceA.reduce((count, child) => (forward[child]! >= 0 && inB.has(forward[child]!) ? count + 1 : count), 0);
+
+  return (AGREEMENT_WEIGHT * (2 * agree)) / (evidenceA.length + evidenceB.length);
+}
+
+interface Family {
+  a: readonly PreparedNode[];
+  b: readonly PreparedNode[];
+  forward: Int32Array;
+  anchorsA: number[][];
+  anchorsB: number[][];
+  context: StructureContext;
+}
+
+const sharesAncestor = ({ forward, context }: Family, row: number, column: number) =>
+  context.ancestorsA[row]!.some((ancestor) => forward[ancestor]! >= 0 && context.ancestorsB[column]!.includes(forward[ancestor]!));
+
+const sharesAnchor = ({ forward, anchorsA, anchorsB }: Family, row: number, column: number) =>
+  anchorsA[row]!.length > 0 && anchorsA[row]!.some((anchor) => anchorsB[column]!.includes(forward[anchor]!));
+
+function parentCloseness({ a, b, forward }: Family, row: number, column: number): number | null {
+  const parentA = a[row]!.node.parent;
+  const parentB = b[column]!.node.parent;
+
+  if (parentA < 0 || parentB < 0 || forward[parentA] !== parentB) return null;
+
+  const [ax, ay] = positionIn(a[row]!, a[parentA]!);
+  const [bx, by] = positionIn(b[column]!, b[parentB]!);
+
+  return 0.5 + 0.5 * Math.exp(-Math.hypot(ax - bx, ay - by) / POSITION_SCALE);
+}
+
+function kinship(family: Family, row: number, column: number): number {
+  const inherited = parentCloseness(family, row, column) ?? (sharesAncestor(family, row, column) ? SHARED_ANCESTOR : 0);
+
+  return sharesAnchor(family, row, column) ? Math.max(inherited, SHARED_ANCHOR) : inherited;
+}
+
+function familyBonus(family: Family, row: number, column: number, cell: number): number {
+  const { context, forward } = family;
+  const kin = kinship(family, row, column);
+  const together = agreementBonus(context.evidenceA[row]!, context.evidenceB[column]!, context.evidenceSetsB[column]!, forward);
+
+  return 0.12 * kin + 0.08 * kin * context.style[cell]! ** 3 + together;
+}
+
+const plausibility = (score: number) => 0.4 + 0.6 * Math.min(1, score / 0.45);
+
 export function withContext(
   base: Float64Array,
   a: readonly PreparedNode[],
@@ -111,55 +170,17 @@ export function withContext(
   context: StructureContext,
   out: Float64Array,
 ): Float64Array {
-  const forward = new Int32Array(a.length).fill(-1);
-  const backward = new Int32Array(b.length).fill(-1);
+  const { forward, backward } = partnerTables(pairs, a.length, b.length);
+  const family: Family = { a, b, forward, anchorsA: anchors(a, forward), anchorsB: anchors(b, backward), context };
 
-  for (const p of pairs) {
-    forward[p.from] = p.to;
-    backward[p.to] = p.from;
-  }
-  const anchorsA = anchors(a, forward);
-  const anchorsB = anchors(b, backward);
-  const cols = b.length;
+  for (let row = 0; row < a.length; row++) {
+    for (let column = 0; column < b.length; column++) {
+      const cell = row * b.length + column;
+      const score = base[cell]!;
 
-  for (let i = 0; i < a.length; i++) {
-    const pa = a[i]!.node.parent;
-    const parentPartner = pa >= 0 ? forward[pa]! : -1;
-    const ancestorsA = context.ancestorsA[i]!;
-    const anchorsOfA = anchorsA[i]!;
-    const da = context.evidenceA[i]!;
-
-    for (let j = 0; j < cols; j++) {
-      const score = base[i * cols + j]!;
-      let family = 0;
-      const pb = b[j]!.node.parent;
-
-      if (pa >= 0 && pb >= 0 && parentPartner === pb) {
-        // Matched parents: the closer the position inside the parent, the stronger.
-        const [ax, ay] = positionIn(a[i]!, a[pa]!);
-        const [bx, by] = positionIn(b[j]!, b[pb]!);
-
-        family = 0.5 + 0.5 * Math.exp(-Math.hypot(ax - bx, ay - by) / 0.3);
-      } else if (ancestorsA.some((x) => forward[x]! >= 0 && context.ancestorsB[j]!.includes(forward[x]!))) {
-        family = 0.5;
-      }
-      if (anchorsOfA.length > 0 && anchorsOfA.some((x) => anchorsB[j]!.includes(forward[x]!))) family = Math.max(family, 0.8);
-
-      // Same slot, same kind, same look: an element whose label or value changed.
-      let bonus = 0.12 * family + 0.08 * family * context.style[i * cols + j]! ** 3;
-
-      // Containers whose contents moved together.
-      const db = context.evidenceB[j]!;
-
-      if (da.length > 0 && db.length > 0) {
-        const inB = context.evidenceSetsB[j]!;
-        let agree = 0;
-
-        for (const c of da) if (forward[c]! >= 0 && inB.has(forward[c]!)) agree++;
-        bonus += (0.18 * (2 * agree)) / (da.length + db.length);
-      }
-      out[i * cols + j] = score + bonus * (0.4 + 0.6 * Math.min(1, score / 0.45));
+      out[cell] = score + familyBonus(family, row, column, cell) * plausibility(score);
     }
   }
+
   return out;
 }
