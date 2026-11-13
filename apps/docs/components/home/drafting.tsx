@@ -152,6 +152,7 @@ export function SpringSpecimen({ spring = springs.snappy }: { spring?: SpringCon
 }
 
 const SPECS = [
+  { name: "Tooling", claim: "Works beside Motion and GSAP", detail: "Use them for springs, gestures and enter and exit. Remold adds the morphs, and its path morphing hands its shapes to either." },
   { name: "Matching", claim: "Nothing to label", detail: "Wrap the part that changes. Remold works out what stayed from what's on screen: text, images, shape and position." },
   { name: "Sources", claim: "Any markup, any source", detail: "The next view can be another component, a server response or content from a CMS, and it still animates." },
   { name: "Interruptions", claim: "Built to be interrupted", detail: "Every change springs from wherever things are, at the speed they were going. Nothing restarts or jumps." },

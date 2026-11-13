@@ -1,7 +1,7 @@
 export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://remoldui.xyz").replace(/\/$/, "");
 
 export const siteDescription =
-  "Open-source React components and motion primitives that preserve continuity across layouts, text, SVG icons, and canvas scenes.";
+  "Open-source animated React components built with Motion and Base UI, with Remold for the morphing: text, SVG icons, shapes and particles.";
 
 export const socialImage = "/og-remold-ui.png";
 

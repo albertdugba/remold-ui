@@ -106,8 +106,8 @@ export default async function HomePage() {
             </div>
             <div className="hm-hero-side">
               <p className="hm-lead">
-                Animated React components for the screens you actually ship, with the micro-animations built in: text that morphs,
-                icons that reshape, layouts that follow a change. Copy one into your app, or animate your own with the Remold engine.
+                Animated React components for the screens you actually ship, ready to copy into your app. Built with Motion and
+                Base UI, with Remold for the morphing: text, icons, shapes and particles.
               </p>
               <div className="hm-actions">
                 <Link className="hm-cta primary" href="/docs/quick-start">
@@ -138,9 +138,9 @@ export default async function HomePage() {
             <div className="hm-split code">
               <div className="hm-head">
                 <Kicker>Build with it</Kicker>
-                <h2>Use the engine at the level you need.</h2>
+                <h2>Use Remold at the level you need.</h2>
                 <p>
-                  Start with a React component, call it from plain JavaScript on any element, or build a canvas scene. The matching and spring logic underneath is available on its own, too.
+                  Reach for it where a morph says more than a fade: as a React component, from plain JavaScript on any element, or in a canvas scene. The matching and spring maths underneath are available on their own, too.
                 </p>
                 <Link className="hm-link" href="/docs/installation">
                   Installation <span aria-hidden="true">→</span>
@@ -154,7 +154,7 @@ export default async function HomePage() {
             <header className="hm-head mb-12">
               <Kicker>Why Remold</Kicker>
               <h2>Made for interfaces that change.</h2>
-              <p>Wrap what changes and keep building. Everything moves on one measured spring, and the rest is handled for you.</p>
+              <p>Remold handles the moments one thing turns into another, and leaves the rest to the tools you already use.</p>
             </header>
             <div className="grid items-start gap-x-[clamp(32px,6vw,96px)] gap-y-12 min-[1000px]:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
               <div className="[container-type:inline-size] min-[1000px]:sticky min-[1000px]:top-24">
@@ -171,7 +171,7 @@ export default async function HomePage() {
                 Make the change feel <Selected>connected</Selected>.
               </h2>
               <p className="mt-6 mb-0 max-w-[52ch] text-[17px] leading-[1.6] text-(--hm-muted)">
-                Bring your own interface. Remold finds what carries over and animates the rest.
+                Copy a component as it is, or bring your own interface and let Remold morph what carries over.
               </p>
               <div className="hm-actions">
                 <Link className="hm-cta primary" href="/docs/quick-start">
@@ -188,7 +188,7 @@ export default async function HomePage() {
             <div className="grid gap-x-8 gap-y-10 min-[760px]:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
               <div>
                 <RemoldMark size={20} wordmark />
-                <p className="hm-footer-note">Change you can follow. The engine is open source under the MIT licence.</p>
+                <p className="hm-footer-note">Change you can follow. Free and open source under the MIT licence.</p>
               </div>
               {FOOTER.map((column) => (
                 <nav key={column.title} aria-label={column.title} className="grid content-start gap-2.5 text-[14px]">

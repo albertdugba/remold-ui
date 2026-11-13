@@ -2,6 +2,8 @@
 
 React components and hooks for [Remold](https://remoldui.xyz). They morph text, icons, SVG paths and whole layouts into what comes next, draw connector lines that stay attached while things move, and re-form canvas particles from one shape into another.
 
+Remold works beside [Motion](https://motion.dev) or GSAP rather than replacing them. Use those for springs, gestures and enter and exit animations, and Remold for the morphs.
+
 ## Install
 
 ```bash

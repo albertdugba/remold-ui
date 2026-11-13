@@ -1,17 +1,21 @@
 ---
 title: "Introduction"
-description: "Animated React components you copy into your app, and the small engine that morphs them."
+description: "Animated React components you copy into your app, built with Motion and Base UI, with Remold for the morphing."
 ---
 
-Remold UI is an open-source library of animated React components, and the engine underneath them. Copy a component into your app, or use the engine to animate changes in your own interface.
+Remold UI is an open-source collection of animated React components, and a small library for morphing. Copy a component into your app, or add Remold's morphs to your own interface.
 
 ## What is this?
 
 Two things that work together.
 
-**Components** for the screens you actually ship: inputs, menus, checkouts, dashboards, chat and more. Each one solves a specific product problem and animates only the change that matters. They're built on [Base UI](https://base-ui.com) for behaviour and accessibility, and animated with [Motion](https://motion.dev) and Remold.
+**Components** for the screens you actually ship: inputs, menus, checkouts, dashboards, chat and more. Each one solves a specific product problem and animates only the change that matters. They're built on [Base UI](https://base-ui.com) for behaviour and accessibility, and most of their movement is [Motion](https://motion.dev): springs, enter and exit, shared elements.
 
-**The engine** that animates change. When your interface updates, Remold compares what was on screen with what's next, finds the elements that correspond, and springs each one into its new place. It works across layouts, text, SVG paths and canvas, including thousands of particles in 3D.
+**Remold**, for the moments one thing turns into another. It morphs text letter by letter, reshapes icons and SVG paths, rearranges a layout by working out which element became which, keeps connector lines attached, and re-forms thousands of particles from one shape into the next.
+
+## Not a replacement for Motion or GSAP
+
+Use Motion or GSAP for springs, gestures and enter and exit animations: they are the right tools for that, and most components here use Motion for exactly those. Reach for Remold where a morph says more than a fade. `@remold-ui/morph` only does the geometry of a path morph, so you can drive it from either.
 
 ## No animation IDs
 
@@ -23,7 +27,7 @@ React gets components and hooks from `@remold-ui/react`. Everywhere else, `@remo
 
 ## You own the code
 
-Components are distributed through a [shadcn registry](/docs/registry). Installing one drops its source and CSS into your project, where you can read it, change it and version it like anything else you wrote. The engine is a normal package you update when you choose.
+Components are distributed through a [shadcn registry](/docs/registry). Installing one drops its source and CSS into your project, where you can read it, change it and version it like anything else you wrote. Remold itself is a normal package you update when you choose.
 
 ## Accessible by default
 
@@ -33,7 +37,7 @@ Remold follows the system's reduced-motion setting: changes happen at once inste
 
 <Cards>
   <Card title="Installation" href="/docs/installation">
-    Requirements, the CLI, and installing the engine.
+    Requirements, the CLI, and installing Remold.
   </Card>
   <Card title="Quick start" href="/docs/quick-start">
     Animate a list that sorts and filters, in a few lines.
