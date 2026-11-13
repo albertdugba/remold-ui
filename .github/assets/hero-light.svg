@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="remold/ui: animated React components with the micro-animations built in. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="remold/ui: animated React components you copy into your app, built with Motion and Base UI. Remold adds the morphing: text, icons, shapes, particles and canvas scenes. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc.">
   <style>.still{display:none}@media (prefers-reduced-motion:reduce){.moving{display:none}.still{display:inline}}</style>
   <clipPath id="frame"><rect width="1280" height="640" rx="24"/></clipPath>
   <g clip-path="url(#frame)">
@@ -25,5 +25,5 @@
   <rect x="585.5" y="396.5" width="96" height="24" rx="5" fill="#0d6efd"/>
   <text x="633.5" y="413" text-anchor="middle" font-family="ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#ffffff">476 × 164</text>
 
-  <text x="640" y="528" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Inter, Helvetica, Arial, sans-serif" font-size="22" letter-spacing="-0.2" fill="#71717a">Animated React components with the micro-animations built in.</text>
+  <text text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Inter, Helvetica, Arial, sans-serif" font-size="22" letter-spacing="-0.2" fill="#71717a"><tspan x="640" y="514">Animated React components you copy into your app, built with Motion and Base UI.</tspan><tspan x="640" y="546">Remold adds the morphing: text, icons, shapes, particles and canvas scenes.</tspan></text>
 </svg>

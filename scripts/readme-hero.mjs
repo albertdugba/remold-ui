@@ -38,7 +38,12 @@ const TRACKING = -8;
 const WORD_LENGTH = 452.4;
 const SUFFIX_LENGTH = 143.7;
 const BASELINE_DROP = 36;
-const TAGLINE_FROM_BOTTOM = 112;
+const TAGLINE = [
+  "Animated React components you copy into your app, built with Motion and Base UI.",
+  "Remold adds the morphing: text, icons, shapes, particles and canvas scenes.",
+];
+const TAGLINE_FROM_BOTTOM = 126;
+const TAGLINE_LEADING = 32;
 
 const MARK_SIZE = 106;
 const MARK_GAP = 46;
@@ -120,7 +125,7 @@ function build(theme, picture) {
   const movingMark = `<path class="moving" d="${mark.still}"><animate attributeName="d" dur="${LOOP_SECONDS}s" repeatCount="indefinite" values="${mark.values}" keyTimes="${mark.keyTimes}"/></path>
     <path class="still" d="${mark.still}"/>`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="remold/ui: animated React components with the micro-animations built in. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc.">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="remold/ui: animated React components you copy into your app, built with Motion and Base UI. Remold adds the morphing: text, icons, shapes, particles and canvas scenes. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc.">
   ${animated ? "<style>.still{display:none}@media (prefers-reduced-motion:reduce){.moving{display:none}.still{display:inline}}</style>" : ""}
   <clipPath id="frame"><rect width="${width}" height="${height}" rx="${corner}"/></clipPath>
   <g clip-path="url(#frame)">
@@ -146,7 +151,7 @@ function build(theme, picture) {
   <rect x="${round(labelX)}" y="${round(box.bottom + 14)}" width="${labelWidth}" height="24" rx="5" fill="${theme.select}"/>
   <text x="${round((box.left + box.right) / 2)}" y="${round(box.bottom + 30.5)}" text-anchor="middle" font-family="${MONO}" font-size="12.5" font-weight="500" fill="#ffffff">${Math.round(boxWidth)} × ${Math.round(boxHeight)}</text>
 
-  <text x="${width / 2}" y="${height - TAGLINE_FROM_BOTTOM}" text-anchor="middle" font-family="${SANS}" font-size="22" letter-spacing="-0.2" fill="${theme.muted}">Animated React components with the micro-animations built in.</text>
+  <text text-anchor="middle" font-family="${SANS}" font-size="22" letter-spacing="-0.2" fill="${theme.muted}">${TAGLINE.map((line, index) => `<tspan x="${width / 2}" y="${height - TAGLINE_FROM_BOTTOM + index * TAGLINE_LEADING}">${line}</tspan>`).join("")}</text>
 </svg>
 `;
 }

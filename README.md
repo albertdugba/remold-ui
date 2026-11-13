@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/hero-dark.svg">
-  <img alt="remold/ui: animated React components with the micro-animations built in. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc." src=".github/assets/hero-light.svg" width="100%">
+  <img alt="remold/ui: animated React components you copy into your app, built with Motion and Base UI. Remold adds the morphing: text, icons, shapes, particles and canvas scenes. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc." src=".github/assets/hero-light.svg" width="100%">
 </picture>
 
 <br />
@@ -12,7 +12,7 @@
 [![npm](https://img.shields.io/npm/v/@remold-ui/react?color=18181b&label=npm)](https://www.npmjs.com/package/@remold-ui/react)
 [![License: MIT](https://img.shields.io/badge/license-MIT-18181b)](LICENSE)
 
-**Animated React components with the micro-animations built in, and the engine that morphs them.**
+**Animated React components you copy into your app. Built with Motion and Base UI, with Remold for the morphing: text, icons, shapes, particles and canvas scenes.**
 
 [Documentation](https://remoldui.xyz/docs) · [Components](https://remoldui.xyz/docs/components) · [Quick start](https://remoldui.xyz/docs/quick-start)
 
@@ -22,10 +22,10 @@
 
 ## What it is
 
-Remold is two things that work together.
+- **Components you copy into your app.** Inputs, menus, checkouts, dashboards and more, each animating only the change that matters. They are built on [Base UI](https://base-ui.com) for behaviour and accessibility, and most of their movement is [Motion](https://motion.dev): springs, enter and exit, shared elements. You install them from a shadcn registry and own the code.
+- **Remold, for the morphing.** A small library for the moments one thing turns into another: text that changes letter by letter, icons and SVG shapes that reshape, layouts that rearrange without ids, connector lines that stay attached, and on canvas, thousands of particles that re-form and scenes that spring between layouts. It works in React, or with plain JavaScript and any UI library.
 
-- **Components you copy into your app.** Inputs, menus, checkouts, dashboards and more, each animating only the change that matters. They are built on [Base UI](https://base-ui.com) for behaviour and accessibility, and animated with [Motion](https://motion.dev) and Remold. You install them from a shadcn registry and own the code.
-- **The engine underneath.** When an interface changes, Remold works out which element became which and morphs one state into the next: text, icons, SVG paths and whole layouts. It needs no ids or matching attributes, and it works in React or with plain JavaScript and any UI library.
+Remold is not a replacement for Motion or GSAP. Use those for springs, gestures and enter and exit animations, and reach for Remold where a morph says more than a fade. [`@remold-ui/morph`](packages/morph) only does the geometry, so you can drive it from either.
 
 ## Install a component
 
@@ -35,7 +35,7 @@ Every component on [remoldui.xyz](https://remoldui.xyz/docs/components) has an i
 npx shadcn@latest add https://remoldui.xyz/r/otp-input.json
 ```
 
-## Use the engine
+## Use Remold
 
 ### React
 
