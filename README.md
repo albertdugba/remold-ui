@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/hero-dark.svg">
-  <img alt="remold/ui: animated React components with the micro-animations built in. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc." src=".github/assets/hero-light.svg" width="100%">
+  <img alt="remold/ui: animated React components you copy into your app, built with Motion and Base UI, with Remold for the morphing. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc." src=".github/assets/hero-light.svg" width="100%">
 </picture>
 
 <br />

@@ -5,7 +5,7 @@ export const siteDescription =
 
 export const socialImage = "/og-remold-ui.png";
 
-export const socialImageAlt = "remold/ui: animated React components with the micro-animations built in.";
+export const socialImageAlt = "remold/ui: animated React components you copy into your app, built with Motion and Base UI, with Remold for the morphing.";
 
 export function absoluteUrl(path = "/") {
   return new URL(path, siteUrl).toString();
