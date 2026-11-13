@@ -5,5 +5,9 @@ import type { ReactNode } from "react";
 import { StaticSearchDialog } from "./search";
 
 export function Provider({ children }: { children: ReactNode }) {
-  return <RootProvider search={{ SearchDialog: StaticSearchDialog }}>{children}</RootProvider>;
+  return (
+    <RootProvider search={{ SearchDialog: StaticSearchDialog }} theme={{ defaultTheme: "dark", enableSystem: false }}>
+      {children}
+    </RootProvider>
+  );
 }
