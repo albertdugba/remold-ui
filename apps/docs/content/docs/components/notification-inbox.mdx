@@ -40,6 +40,7 @@ const [inbox, setInbox] = useState({ open: false, tab: "all", notices });
 - **The count is derived,** never stored: it's how many notices aren't read. The bell rings whenever it goes up, and the number rolls with an odometer whenever it changes.
 - **Rows slide, never jump.** Day names and rows sit in one list; a row leaving fades out of the flow and the rest slide up on a spring, while the shell follows them.
 - **Marking all as read** clears one notice every 70 ms, top to bottom, so the count ticks down instead of snapping to nothing.
+- **Changes are spoken.** A new notification and "Mark all read" are announced through a polite live region with Remold's `announce`, so a screen reader hears the count change without focus moving. Reading a notification yourself isn't announced. The demo stays quiet while it plays by itself; pass `announcements={false}` to do the same.
 - **Each row is one button** that opens it, sitting under the row's content, so the invite's own buttons still work inside it.
 - **All or Unread** is a Base UI Toggle Group with a sliding highlight, like the hover.
 
