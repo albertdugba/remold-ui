@@ -107,7 +107,7 @@ export default async function HomePage() {
             <div className="hm-hero-side">
               <p className="hm-lead">
                 Animated React components for the screens you actually ship, ready to copy into your app. Built with Motion and
-                Base UI, with Remold for the morphing: text, icons, shapes and particles.
+                Base UI, with Remold for the morphing: text, icons, shapes, particles and canvas scenes.
               </p>
               <div className="hm-actions">
                 <Link className="hm-cta primary" href="/docs/quick-start">

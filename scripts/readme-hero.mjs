@@ -38,7 +38,10 @@ const TRACKING = -8;
 const WORD_LENGTH = 452.4;
 const SUFFIX_LENGTH = 143.7;
 const BASELINE_DROP = 36;
-const TAGLINE = ["Animated React components you copy into your app.", "Built with Motion and Base UI, with Remold for the morphing."];
+const TAGLINE = [
+  "Animated React components you copy into your app, built with Motion and Base UI.",
+  "Remold adds the morphing: text, icons, shapes, particles and canvas scenes.",
+];
 const TAGLINE_FROM_BOTTOM = 126;
 const TAGLINE_LEADING = 32;
 
@@ -122,7 +125,7 @@ function build(theme, picture) {
   const movingMark = `<path class="moving" d="${mark.still}"><animate attributeName="d" dur="${LOOP_SECONDS}s" repeatCount="indefinite" values="${mark.values}" keyTimes="${mark.keyTimes}"/></path>
     <path class="still" d="${mark.still}"/>`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="remold/ui: animated React components you copy into your app, built with Motion and Base UI, with Remold for the morphing. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc.">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="remold/ui: animated React components you copy into your app, built with Motion and Base UI. Remold adds the morphing: text, icons, shapes, particles and canvas scenes. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc.">
   ${animated ? "<style>.still{display:none}@media (prefers-reduced-motion:reduce){.moving{display:none}.still{display:inline}}</style>" : ""}
   <clipPath id="frame"><rect width="${width}" height="${height}" rx="${corner}"/></clipPath>
   <g clip-path="url(#frame)">
