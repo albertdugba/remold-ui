@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/mdx";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
-import { getPageMarkdownUrl, siteUrl } from "@/lib/shared";
+import { getPageMarkdownUrl } from "@/lib/shared";
+import { siteUrl, socialImage, socialImageAlt } from "@/lib/seo";
 import { sourceOf } from "@/lib/agent-markdown";
 import { OpenMenu } from "@/components/page-actions";
 
@@ -78,7 +79,16 @@ export async function generateMetadata(props: PageProps<"/docs/[[...slug]]">): P
   if (!page) notFound();
 
   return {
-    title: `${page.data.title} · Remold`,
+    title: page.data.title,
     description: page.data.description,
+    alternates: { canonical: page.url },
+    openGraph: {
+      type: "article",
+      url: page.url,
+      title: `${page.data.title} · Remold UI`,
+      description: page.data.description,
+      images: [{ url: socialImage, width: 1200, height: 630, alt: socialImageAlt }],
+    },
+    twitter: { card: "summary_large_image", images: [socialImage] },
   };
 }

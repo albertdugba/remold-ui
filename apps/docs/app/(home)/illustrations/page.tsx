@@ -10,9 +10,10 @@ import {
   UptimeRouting,
   WalletSecurityMapDemo,
 } from "@/components/demos";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Illustration primitives · Remold UI",
+export const metadata: Metadata = {
+  title: "Illustration primitives",
   description: "Interactive canvas product illustrations built with Remold primitives.",
 };
 

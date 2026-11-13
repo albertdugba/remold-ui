@@ -4,9 +4,8 @@
 // node scripts/readme-hero.mjs
 //
 // It also writes og.svg, the same picture held still at the size link previews use. The docs
-// site's opengraph-image.png and twitter-image.png are that file drawn by a browser, so the system
-// font is the real one:
-// chrome --headless --hide-scrollbars --force-device-scale-factor=2 --window-size=1200,630 --screenshot=apps/docs/app/opengraph-image.png .github/assets/og.svg
+// site's link-preview image is that file drawn by a browser, so the system font is the real one:
+// chrome --headless --hide-scrollbars --window-size=1200,630 --screenshot=apps/docs/public/og-remold-ui.png .github/assets/og.svg
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

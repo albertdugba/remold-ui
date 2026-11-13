@@ -1,5 +1,5 @@
 import { demoSources } from "@/components/generated/demo-sources";
-import { siteUrl } from "./shared";
+import { siteUrl } from "./seo";
 
 interface SourceFile {
   name: string;
