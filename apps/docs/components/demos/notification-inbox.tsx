@@ -17,6 +17,7 @@ import {
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { announce } from "@remold-ui/dom";
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, LayoutGroup, motion, useAnimate, useReducedMotion } from "motion/react";
 import { useEffect, useId, useRef, useState, type Ref } from "react";
@@ -53,8 +54,11 @@ export interface NotificationInboxProps {
   value?: InboxValue;
   defaultValue?: InboxValue;
   onValueChange?: (value: InboxValue, details: ChangeDetails) => void;
+  announcements?: boolean;
   ref?: Ref<HTMLElement>;
 }
+
+const summaryOf = (notice: Notice) => (notice.who ? `${notice.who.name} ${notice.did} ${notice.what}` : `${notice.what} ${notice.did}`);
 
 const KIND_ICON = {
   mention: AtIcon,
@@ -260,7 +264,7 @@ function Row({
   onAnswer: (answer: Exclude<Invite, "pending">) => void;
 }) {
   const still = useReducedMotion();
-  const summary = notice.who ? `${notice.who.name} ${notice.did} ${notice.what}` : `${notice.what} ${notice.did}`;
+  const summary = summaryOf(notice);
 
   return (
     <motion.li
@@ -371,7 +375,7 @@ function AppBar({ open }: { open: boolean }) {
   );
 }
 
-export function NotificationInbox({ value, defaultValue = START, onValueChange, ref }: NotificationInboxProps) {
+export function NotificationInbox({ value, defaultValue = START, onValueChange, announcements = true, ref }: NotificationInboxProps) {
   const [inbox, setInbox] = useControllableState({ value, defaultValue, onValueChange });
   const id = useId();
   const still = useReducedMotion();
@@ -382,6 +386,8 @@ export function NotificationInbox({ value, defaultValue = START, onValueChange, 
   const [bell, animateBell] = useAnimate();
   const marking = useRef<ReturnType<typeof setTimeout>[]>([]);
   const before = useRef<number | null>(null);
+  const known = useRef<Set<string> | null>(null);
+  const clearing = useRef(false);
 
   const open = inbox.open;
   const unread = inbox.notices.filter((notice) => !notice.read).length;
@@ -402,6 +408,27 @@ export function NotificationInbox({ value, defaultValue = START, onValueChange, 
     before.current = unread;
   }, [unread, animateBell, bell, still]);
 
+  useEffect(() => {
+    const seen = known.current;
+    const arrived = seen ? inbox.notices.filter((notice) => !notice.read && !seen.has(notice.id)) : [];
+
+    known.current = new Set(inbox.notices.map((notice) => notice.id));
+
+    if (!announcements || arrived.length === 0) return;
+
+    const news = arrived.length === 1 ? `New notification: ${summaryOf(arrived[0]!)}` : `${arrived.length} new notifications`;
+
+    announce(`${news}. ${unread} unread.`);
+  }, [inbox.notices, unread, announcements]);
+
+  useEffect(() => {
+    if (!clearing.current || unread > 0) return;
+
+    clearing.current = false;
+
+    if (announcements) announce("All notifications marked as read.");
+  }, [unread, announcements]);
+
   useEffect(() => () => marking.current.forEach(clearTimeout), []);
 
   const update = (notice: string, change: Partial<Notice>) =>
@@ -411,6 +438,7 @@ export function NotificationInbox({ value, defaultValue = START, onValueChange, 
     }));
 
   const markAllRead = () => {
+    clearing.current = true;
     marking.current.forEach(clearTimeout);
     marking.current = inbox.notices
       .filter((notice) => !notice.read)
@@ -603,5 +631,5 @@ const fromBeat = (step: number): InboxValue => {
 
 export function NotificationInboxDemo({ playing = true }: { playing?: boolean } = {}) {
   const scene = useScene(BEATS, fromBeat, playing);
-  return <NotificationInbox ref={scene.ref} value={scene.state} onValueChange={scene.onValueChange} />;
+  return <NotificationInbox ref={scene.ref} value={scene.state} onValueChange={scene.onValueChange} announcements={!scene.live} />;
 }
