@@ -6,7 +6,7 @@ import {
   Cancel01Icon,
   CheckIcon,
   CreditCardIcon,
-  Dollar01Icon,
+  PoundIcon,
   FilterIcon,
   Tag01Icon,
 } from "@hugeicons/core-free-icons";
@@ -28,7 +28,7 @@ const FIELDS: Record<Field, { label: string; icon: IconSvgElement; values: strin
     values: ["Travel", "Shopping", "Subscriptions", "Food & drink", "Transport"],
   },
   card: { label: "Card", icon: CreditCardIcon, values: ["Visa ·4242", "Mastercard ·5100", "Amex ·1009"] },
-  amount: { label: "Amount", icon: Dollar01Icon, values: ["Under $25", "$25 – $200", "Over $200"] },
+  amount: { label: "Amount", icon: PoundIcon, values: ["Under £25", "£25 – £200", "Over £200"] },
 };
 const ORDER = Object.keys(FIELDS) as Field[];
 
@@ -84,15 +84,15 @@ const CATEGORY_COLOR: Record<string, string> = {
 
 function passes(payment: Payment, field: Field, value: string): boolean {
   if (field === "amount") {
-    if (value === "Under $25") return payment.amount < 25;
-    if (value === "Over $200") return payment.amount > 200;
+    if (value === "Under £25") return payment.amount < 25;
+    if (value === "Over £200") return payment.amount > 200;
     return payment.amount >= 25 && payment.amount <= 200;
   }
   return payment[field] === value;
 }
 
-const dollars = (amount: number) =>
-  `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const pounds = (amount: number) =>
+  `£${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export type PaymentFilters = Partial<Record<Field, string>>;
 type Filters = PaymentFilters;
@@ -283,7 +283,7 @@ export function FilterBar({ value, defaultValue = {}, onValueChange, ref }: Filt
         <p className="m-0 flex items-baseline gap-1 text-[12px] font-medium text-(--flt-muted)" aria-live="polite">
           <Odometer value={String(results.length)} /> {results.length === 1 ? "payment" : "payments"}
           <span className="text-(--flt-quiet)">·</span>
-          <Odometer className="tabular-nums" value={dollars(spent)} />
+          <Odometer className="tabular-nums" value={pounds(spent)} />
           <HugeiconsIcon icon={ArrowDown01Icon} className="size-3 self-center" aria-hidden="true" />
         </p>
         <AnimatePresence initial={false}>
@@ -331,7 +331,7 @@ export function FilterBar({ value, defaultValue = {}, onValueChange, ref }: Filt
                     {payment.date} · {payment.card}
                   </span>
                 </span>
-                <span className="flex-none text-[13.5px] tabular-nums">−{dollars(payment.amount)}</span>
+                <span className="flex-none text-[13.5px] tabular-nums">−{pounds(payment.amount)}</span>
               </motion.li>
             );
           })}

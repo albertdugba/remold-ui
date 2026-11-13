@@ -102,7 +102,7 @@ const NAV = [
 ];
 
 const KPIS = [
-  { label: "Revenue", value: "$48.2k", delta: "+12.4%" },
+  { label: "Revenue", value: "£48.2k", delta: "+12.4%" },
   { label: "Active users", value: "3,120", delta: "+4.1%" },
   { label: "Churn", value: "1.8%", delta: "−0.3%" },
 ];
@@ -393,7 +393,7 @@ function RevenueChart({ measure }: { measure: MeasureRefs }) {
       <figcaption className="flex items-baseline justify-between text-[12px] text-zinc-500 dark:text-zinc-400">
         <span>Weekly revenue</span>
         <span>
-          <b className="font-semibold text-zinc-900 tabular-nums dark:text-zinc-50">$412,900</b> in 12 weeks
+          <b className="font-semibold text-zinc-900 tabular-nums dark:text-zinc-50">£412,900</b> in 12 weeks
         </span>
       </figcaption>
 
@@ -433,7 +433,7 @@ function RevenueChart({ measure }: { measure: MeasureRefs }) {
           className="absolute origin-top-right -translate-x-[calc(100%+6px)] translate-y-2.5 scale-90 rounded-lg bg-zinc-900 px-2 py-1 text-[11px] whitespace-nowrap text-white opacity-0 transition-[scale,opacity] delay-500 duration-[450ms,200ms] ease-(--pt-spring) group-data-rm-active/chart:scale-100 group-data-rm-active/chart:opacity-100 motion-reduce:transition-none dark:bg-zinc-50 dark:text-[#1c1c20]"
           style={{ left: "calc(100% - 36px)", top: `${heightOf(WEEKS.at(-1)!)}%` }}
         >
-          <b className="font-semibold tabular-nums">$48.2k</b> · best week yet
+          <b className="font-semibold tabular-nums">£48.2k</b> · best week yet
         </span>
       </span>
 

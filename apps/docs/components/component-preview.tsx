@@ -173,6 +173,16 @@ const PREVIEWS: Record<string, Preview> = {
     ),
     width: 420,
   },
+  "chart-switch": {
+    Component: load(() => import("./demos/chart-switch").then((m) => m.ChartSwitchDemo)),
+    width: 380,
+    surface: true,
+  },
+  "qr-code": {
+    Component: load(() => import("./demos/qr-code").then((m) => m.QrCodeDemo)),
+    width: 340,
+    surface: true,
+  },
   "unit-chart": {
     Component: load(() => import("./demos/unit-chart").then((m) => m.UnitChartDemo)),
     width: 440,
@@ -231,11 +241,6 @@ const PREVIEWS: Record<string, Preview> = {
   },
 
   // The home page
-  "home/text": {
-    Component: load(() => import("./demos/text").then((m) => m.PriceDemo)),
-    width: 520,
-    every: 2000,
-  },
   "home/particles": {
     Component: load(() =>
       import("./demos/particles").then((m) => m.ParticlesDemo),

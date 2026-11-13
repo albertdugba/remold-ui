@@ -48,14 +48,14 @@ const savingsGoal: SceneDocument = {
         w4: week(3, false),
         tag: { x: 90, y: -150, z: 90, width: 60, depth: 60, height: 10, opacity: 0 },
       },
-      overlay: { mark: "🫙", title: "GH₵ 0 of GH₵ 6,000", detail: "Lisbon in December", tint: "#fff1c7" },
+      overlay: { mark: "🫙", title: "£0 of £6,000", detail: "Lisbon in December", tint: "#fff1c7" },
     },
     ...[1, 2, 3, 4].map((n) => ({
       id: `week-${n}`,
       name: `Week ${n}`,
       ms: n === 4 ? 1300 : 1000,
       pose: { [`w${n}`]: week(n - 1, true), jar: { fill: 0.06 + n * 0.22 } },
-      overlay: { mark: "🫙", title: `GH₵ ${(n * 1500).toLocaleString("en-US")} of GH₵ 6,000`, detail: "Lisbon in December", tint: "#fff1c7" },
+      overlay: { mark: "🫙", title: `£${(n * 1500).toLocaleString("en-US")} of £6,000`, detail: "Lisbon in December", tint: "#fff1c7" },
     })),
     {
       id: "trip",
@@ -70,7 +70,7 @@ const savingsGoal: SceneDocument = {
     },
   ],
   links: [],
-  footer: "4 weeks · GH₵ 1,500 a week",
+  footer: "4 weeks · £1,500 a week",
 };
 
 const RIDER = 34;
@@ -156,7 +156,7 @@ const foodDelivery: SceneDocument = {
     },
   ],
   links: [],
-  footer: "1× jollof with chicken · GH₵ 85",
+  footer: "1× jollof with chicken · £85",
 };
 
 export const TEMPLATES: readonly SceneDocument[] = [foodDelivery, savingsGoal];

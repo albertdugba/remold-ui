@@ -1,60 +1,35 @@
 "use client";
 import { Remold } from "@remold-ui/react";
 import { useState } from "react";
-import { Frame, Segmented, DEMO_BUTTON } from "./frame";
 
-const STATUSES = ["Uploading 3 files", "Uploading 2 files", "Processing", "Upload complete"];
+const THEME =
+  "[--tx-ink:#0a0a0b] [--tx-muted:#71717a] [--tx-surface:#ffffff] [--tx-well:#f4f4f5] dark:[--tx-ink:#fafafa] dark:[--tx-muted:#a1a1aa] dark:[--tx-surface:#18181b] dark:[--tx-well:#26262b]";
 
-export function StatusDemo() {
-  const [index, setIndex] = useState(0);
+const BUTTON =
+  "h-9 w-[104px] flex-none cursor-pointer rounded-full border-0 text-[13.5px] font-semibold outline-none transition-[background-color,color,scale] duration-150 ease-out focus-visible:shadow-[0_0_0_2px_var(--tx-surface),0_0_0_4px_var(--tx-ink)] active:scale-[0.97] motion-reduce:transition-none";
+
+export function FollowDemo() {
+  const [following, setFollowing] = useState(false);
 
   return (
-    <Frame>
-      <div className="grid justify-items-center gap-4">
-        <Remold.Text className="text-[22px] font-semibold tracking-[-0.02em]">{STATUSES[index]!}</Remold.Text>
+    <div className={`not-prose grid w-full place-items-center font-sans antialiased ${THEME}`}>
+      <section className="flex w-[340px] max-w-full items-center gap-3 rounded-[22px] bg-(--tx-surface) p-3.5 text-(--tx-ink)">
+        <span className="grid size-11 flex-none place-items-center rounded-full bg-[#fef3c7] text-[14px] font-semibold text-[#713f12]" aria-hidden="true">
+          EO
+        </span>
+        <span className="grid min-w-0 flex-1 gap-px">
+          <span className="truncate text-[14.5px] font-semibold tracking-[-0.01em]">Efua Owusu</span>
+          <span className="truncate text-[13px] text-(--tx-muted)">Product designer</span>
+        </span>
         <button
           type="button"
-          className={DEMO_BUTTON}
-          onClick={() => setIndex((current) => (current + 1) % STATUSES.length)}
+          aria-pressed={following}
+          onClick={() => setFollowing(!following)}
+          className={`${BUTTON} ${following ? "bg-(--tx-well) text-(--tx-ink)" : "bg-(--tx-ink) text-(--tx-surface)"}`}
         >
-          Next status
+          <Remold.Text>{following ? "Following" : "Follow"}</Remold.Text>
         </button>
-      </div>
-    </Frame>
-  );
-}
-
-const PLANS = {
-  Monthly: { price: "£12", per: "per month", note: "Billed monthly" },
-  Yearly: { price: "£120", per: "per year", note: "Two months free" },
-} as const;
-
-export function PriceDemo({ framed = true, index }: { framed?: boolean; index?: number }) {
-  const [chosenBilling, setBilling] = useState<keyof typeof PLANS>("Monthly");
-
-  const billing = index === undefined ? chosenBilling : (["Monthly", "Yearly"] as const)[index % 2]!;
-  const plan = PLANS[billing];
-
-  const body = (
-    <div className="grid justify-items-center gap-1.5 text-center">
-      {index === undefined && (
-        <Segmented
-          label="Billing"
-          value={billing}
-          onChange={setBilling}
-          options={["Monthly", "Yearly"] as const}
-        />
-      )}
-      <p className="mt-2.5 text-[13px] font-semibold text-[var(--color-fd-muted-foreground)]">Team</p>
-      <p className="flex items-baseline gap-2 text-[44px] font-bold tracking-[-0.03em] tabular-nums">
-        <Remold.Text>{plan.price}</Remold.Text>
-        <Remold.Text className="text-[15px] font-medium tracking-normal text-[var(--color-fd-muted-foreground)]">
-          {plan.per}
-        </Remold.Text>
-      </p>
-      <Remold.Text className="text-[13px] text-[var(--color-fd-muted-foreground)]">{plan.note}</Remold.Text>
+      </section>
     </div>
   );
-
-  return framed ? <Frame>{body}</Frame> : body;
 }

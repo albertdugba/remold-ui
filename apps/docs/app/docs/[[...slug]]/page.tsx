@@ -1,11 +1,35 @@
 import { source } from "@/lib/source";
-import { DocsBody, DocsDescription, DocsPage, DocsTitle, MarkdownCopyButton, ViewOptionsPopover } from "fumadocs-ui/layouts/docs/page";
+import { DocsBody, DocsDescription, DocsPage, DocsTitle, MarkdownCopyButton } from "fumadocs-ui/layouts/docs/page";
 import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/mdx";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { getPageMarkdownUrl } from "@/lib/shared";
-import { socialImage } from "@/lib/seo";
+import { siteUrl, socialImage, socialImageAlt } from "@/lib/seo";
+import { sourceOf } from "@/lib/agent-markdown";
+import { OpenMenu } from "@/components/page-actions";
+
+const REPO_FILES = "https://github.com/albertdugba/remold-ui/blob/main/apps/docs";
+
+type DocsPageEntry = NonNullable<ReturnType<typeof source.getPage>>;
+
+const componentOf = ({ slugs }: DocsPageEntry) => (slugs[0] === "components" && slugs.length === 2 ? slugs[1] : undefined);
+
+function githubUrlOf(page: DocsPageEntry) {
+  const component = componentOf(page);
+  const entry = component ? sourceOf(component)?.files[0] : undefined;
+
+  return entry ? `${REPO_FILES}/components/demos/${entry.name}` : `${REPO_FILES}/content/docs/${page.path}`;
+}
+
+function promptFor(page: DocsPageEntry, markdownUrl: string) {
+  const url = `${siteUrl}${markdownUrl}`;
+  const { title } = page.data;
+
+  return componentOf(page)
+    ? `I want to add the "${title}" component from Remold UI to my app. Read ${url} first: it has the install command, the dependencies and the full source. Then help me install it and fit it into my project.`
+    : `Read ${url}, the Remold UI docs page "${title}". I want to ask questions about it.`;
+}
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
@@ -31,10 +55,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
       )}
       <div className="flex flex-row gap-2 items-center border-b pb-6">
         <MarkdownCopyButton markdownUrl={markdownUrl} />
-        <ViewOptionsPopover
-          markdownUrl={markdownUrl}
-          githubUrl={`https://github.com/albertdugba/remold-ui/blob/main/apps/docs/content/docs/${page.path}`}
-        />
+        <OpenMenu prompt={promptFor(page, markdownUrl)} markdownUrl={markdownUrl} githubUrl={githubUrlOf(page)} />
       </div>
       <DocsBody>
         <MDX
@@ -66,7 +87,7 @@ export async function generateMetadata(props: PageProps<"/docs/[[...slug]]">): P
       url: page.url,
       title: `${page.data.title} · Remold UI`,
       description: page.data.description,
-      images: [{ url: socialImage, width: 1200, height: 630, alt: "Remold UI interface cards connected by motion traces" }],
+      images: [{ url: socialImage, width: 1200, height: 630, alt: socialImageAlt }],
     },
     twitter: { card: "summary_large_image", images: [socialImage] },
   };

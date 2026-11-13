@@ -93,7 +93,7 @@ const dateOf = (series: Series, index: number) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
-const money = (amount: number) => `$${Math.round(amount).toLocaleString("en-US")}`;
+const money = (amount: number) => `£${Math.round(amount).toLocaleString("en-US")}`;
 
 export interface RevenueCardValue {
   range: Range;

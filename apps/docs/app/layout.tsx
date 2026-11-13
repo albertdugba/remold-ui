@@ -1,6 +1,6 @@
 import { Provider } from "@/components/provider";
 import type { Metadata } from "next";
-import { absoluteUrl, siteDescription, siteUrl, socialImage } from "@/lib/seo";
+import { absoluteUrl, siteDescription, siteUrl, socialImage, socialImageAlt } from "@/lib/seo";
 import "./global.css";
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     siteName: "Remold UI",
     title: "Remold UI · Change you can follow",
     description: siteDescription,
-    images: [{ url: socialImage, width: 1200, height: 630, alt: "Remold UI interface cards connected by motion traces" }],
+    images: [{ url: socialImage, width: 1200, height: 630, alt: socialImageAlt }],
   },
   twitter: {
     card: "summary_large_image",

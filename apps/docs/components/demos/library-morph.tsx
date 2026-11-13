@@ -8,7 +8,7 @@ const FEATURES = ["Unlimited projects", "Version history", "Priority support"];
 
 const PLANS = {
   monthly: { price: 24, note: "Billed every month" },
-  yearly: { price: 19, note: "Billed $228 every year" },
+  yearly: { price: 19, note: "Billed £228 every year" },
 } as const;
 
 type Billing = keyof typeof PLANS;

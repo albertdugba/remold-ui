@@ -23,7 +23,7 @@ const ITEMS = [
   [
     "split-amount",
     "Split amount",
-    "A bill splitter where toggling people re-divides the bar and rolls everyone's share, cents included. Built on Base UI's ToggleGroup.",
+    "A bill splitter: tap the people at the table and your share rolls to the new amount while the bar re-divides. Built on Base UI's ToggleGroup.",
   ],
   [
     "range-slider",
@@ -211,6 +211,11 @@ const ITEMS = [
     "Thousands of dots turning in 3D that flow from a spiral galaxy into a double helix, then the Lorenz attractor's two wings, a honeybee, a butterfly and the Remold mark, drawn with Remold's particles camera.",
   ],
   [
+    "chart-switch",
+    "Chart switch",
+    "One set of figures as a donut or as bars: switching straightens each slice into its bar instead of redrawing the chart.",
+  ],
+  [
     "payment-status",
     "Payment status",
     "A payment's status as one drawing: the card becomes a lock while the bank confirms, then a receipt when it's paid, or the card again with a warning when it's declined.",
@@ -234,6 +239,11 @@ const ITEMS = [
     "focus-timer",
     "Focus timer",
     "A Pomodoro focus timer drawn as a particle hourglass: the sand really falls as the session runs, freezes on pause, and the glass flips into the break.",
+  ],
+  [
+    "qr-code",
+    "QR code",
+    "A share card whose logo breaks into squares and re-forms as a real, scannable QR code, then goes back.",
   ],
   [
     "unit-chart",
@@ -286,6 +296,11 @@ const ITEMS = [
     "A file list that sorts and filters with every row moving to its place.",
   ],
   [
+    "expanding-row",
+    "Expanding row",
+    "A short list where the row you pick grows into a card in place, and the others make room.",
+  ],
+  [
     "morph",
     "Grid and list",
     "People as cards or rows: different markup, matched without keys.",
@@ -298,7 +313,7 @@ const ITEMS = [
   [
     "text",
     "Text morph",
-    "A status label and a price that change only the letters that differ.",
+    "A follow button whose label changes only the letters that differ.",
   ],
   ["icons", "Icon toggles", "Toggle buttons whose icons morph between states."],
   [
@@ -307,7 +322,6 @@ const ITEMS = [
     "A rating whose face morphs part by part: brows, eyes, mouth and cheeks.",
   ],
   ["scene", "Scene", "An isometric canvas scene with layouts and focus."],
-  ["story", "Story", "A scene that steps through a story with Back and Next."],
   [
     "particles",
     "Particles",
@@ -360,6 +374,7 @@ const localImports = (code) =>
   [...code.matchAll(/(?:from|import)\s+(["'])\.\/([^"']+)\1/g)].map(
     (m) => m[2],
   );
+const TYPES = { "d3-shape": "@types/d3-shape" };
 /** Packages the project already has, so they aren't listed as dependencies. */
 const PROVIDED = new Set(["react", "react-dom", "next"]);
 /** Every bare import, as a package name (`@scope/name` or `name`): engine packages, icons and the rest. */
@@ -453,6 +468,7 @@ for (const [name, title, description, folder] of ITEMS) {
     folder ? path.join(app, "components", folder) : demos,
   );
   demoSources[name] = { usage, files: sourceFiles };
+  const typePackages = dependencies.flatMap((dependency) => TYPES[dependency] ?? []);
   const item = {
     $schema: "https://ui.shadcn.com/schema/registry-item.json",
     name,
@@ -460,6 +476,7 @@ for (const [name, title, description, folder] of ITEMS) {
     title,
     description,
     dependencies,
+    ...(typePackages.length > 0 && { devDependencies: typePackages }),
     files,
   };
   await writeFile(
@@ -494,7 +511,7 @@ await writeFile(
     {
       $schema: "https://ui.shadcn.com/schema/registry.json",
       name: "remold",
-      homepage: "/",
+      homepage: process.env.NEXT_PUBLIC_SITE_URL ?? "https://remoldui.xyz",
       items: index,
     },
     null,

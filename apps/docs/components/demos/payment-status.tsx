@@ -95,7 +95,7 @@ export interface PaymentStatusProps {
 
 export function PaymentStatus({
   status,
-  amount = "€48.00",
+  amount = "£48.00",
   card = "Visa ending 4242",
   email = "ama@northwind.app",
 }: PaymentStatusProps) {
