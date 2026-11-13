@@ -57,10 +57,10 @@ const OPTIONS: Option[] = [
 
 const EVENT = {
   name: "DevCongress December Meetup",
-  when: "December · Date and time TBC",
-  where: "Ghana · Venue TBC",
+  when: "Saturday 19 December",
+  where: "Accra Digital Centre",
   month: "Dec",
-  day: "—",
+  day: "19",
 };
 const GOING = 38;
 const SPOTS = 50;
@@ -174,15 +174,15 @@ function SpotsLeft() {
         <Tooltip.Root>
           <Tooltip.Trigger
             className={`grid cursor-help place-items-center border-0 bg-transparent p-0 text-inherit ${FOCUS}`}
-            aria-label="About the evening"
+            aria-label="About this event"
           >
             <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} className="size-3.5" aria-hidden="true" />
           </Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Positioner sideOffset={6}>
               <Tooltip.Popup className="rounded-lg bg-[var(--rsvp-ink,#18181b)] px-[9px] py-1.5 font-sans text-[12px] font-medium text-white transition-[opacity,scale] duration-150 data-ending-style:scale-[0.96] data-ending-style:opacity-0 data-starting-style:scale-[0.96] data-starting-style:opacity-0">
-                Demo RSVP for the DevCongress December meetup in Ghana. Date, venue, and attendance figures
-                are placeholders.
+                Demo RSVP for the DevCongress December meetup at the Accra Digital Centre. The attendance
+                figures are placeholders.
               </Tooltip.Popup>
             </Tooltip.Positioner>
           </Tooltip.Portal>
@@ -274,6 +274,7 @@ function Summary({ answer, going, reminder }: { answer: Answer; going: number; r
   const lines = [
     { term: "Event", detail: EVENT.name },
     { term: "When", detail: EVENT.when },
+    { term: "Where", detail: EVENT.where },
     { term: "Going", detail: <Odometer value={String(going)} /> },
     { term: "Reminder", detail: reminder ? "An hour before" : "None" },
   ];
