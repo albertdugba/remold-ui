@@ -1,6 +1,6 @@
 {
   "name": "@remold-ui/react",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "React bindings for Remold: keyless transitions, text morph and canvas scenes.",
   "license": "MIT",
   "author": "Albert Dugba",
