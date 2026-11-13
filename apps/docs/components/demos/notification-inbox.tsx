@@ -64,17 +64,17 @@ const KIND_ICON = {
   deploy: Rocket01Icon,
 } as const;
 
-const MAYA = { name: "Maya Chen", initials: "MC", tint: "#e0e7ff" };
-const JORDAN = { name: "Jordan Lee", initials: "JL", tint: "#fce7f3" };
-const PRIYA = { name: "Priya Nair", initials: "PN", tint: "#fef3c7" };
-const SAM = { name: "Sam Okafor", initials: "SO", tint: "#dcfce7" };
+const AKOSUA = { name: "Akosua Boateng", initials: "AB", tint: "#e0e7ff" };
+const KWAME = { name: "Kwame Asante", initials: "KA", tint: "#fce7f3" };
+const ABENA = { name: "Abena Osei", initials: "AO", tint: "#fef3c7" };
+const YAW = { name: "Yaw Darko", initials: "YD", tint: "#dcfce7" };
 const AMA = { name: "Ama Mensah", initials: "AM", tint: "#e0f2fe" };
 
 const NOTICES: Notice[] = [
   {
     id: "invite",
     kind: "invite",
-    who: JORDAN,
+    who: KWAME,
     did: "invited you to the",
     what: "Design team",
     time: "12m",
@@ -85,7 +85,7 @@ const NOTICES: Notice[] = [
   {
     id: "comment",
     kind: "comment",
-    who: PRIYA,
+    who: ABENA,
     did: "commented on",
     what: "Checkout redesign",
     quote: "The new totals row reads so much better. Happy to ship this week.",
@@ -105,7 +105,7 @@ const NOTICES: Notice[] = [
   {
     id: "assign",
     kind: "assign",
-    who: SAM,
+    who: YAW,
     did: "assigned you",
     what: "ENG-218 · Tax rounds twice on mobile",
     time: "Yesterday",
@@ -128,7 +128,7 @@ const NOTICES: Notice[] = [
 export const ARRIVING: Notice = {
   id: "mention",
   kind: "mention",
-  who: MAYA,
+  who: AKOSUA,
   did: "mentioned you in",
   what: "Q4 roadmap",
   quote: "@albert could you sanity-check the launch dates before Friday?",

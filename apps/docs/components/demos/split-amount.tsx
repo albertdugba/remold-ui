@@ -3,9 +3,10 @@ import { Button } from "@base-ui/react/button";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Cancel01Icon, Restaurant01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
-import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
-import { useEffect, useId, useRef, useState, type CSSProperties, type Ref } from "react";
+import { Add01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Remold } from "@remold-ui/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import { useEffect, useId, useRef, useState, type Ref } from "react";
 import { Odometer } from "./odometer";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
 import { FK_STAGE, FORM_KIT } from "./form-kit";
@@ -14,7 +15,6 @@ import { useScene } from "./use-scene";
 export interface Diner {
   id: string;
   name: string;
-  color: string;
 }
 
 export interface SplitAmountValue {
@@ -32,11 +32,11 @@ export interface SplitAmountProps {
 }
 
 const DINERS: Diner[] = [
-  { id: "you", name: "You", color: "var(--fk-ink)" },
-  { id: "ama", name: "Ama Owusu", color: "#f59e0b" },
-  { id: "kofi", name: "Kofi Mensah", color: "#0ea5e9" },
-  { id: "efua", name: "Efua Asante", color: "#ec4899" },
-  { id: "yaw", name: "Yaw Boateng", color: "#10b981" },
+  { id: "you", name: "You" },
+  { id: "ama", name: "Ama Owusu" },
+  { id: "kofi", name: "Kofi Mensah" },
+  { id: "efua", name: "Efua Asante" },
+  { id: "yaw", name: "Yaw Boateng" },
 ];
 
 const TIPS = [0, 10, 15, 20];
@@ -45,10 +45,7 @@ const SENT_FOR = 1800;
 
 const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.14 };
 
-const FACE = "flex-none rounded-full bg-(--fk-well)";
-const colorOf = (diner: Diner) => ({ "--spl-color": diner.color }) as CSSProperties;
-
-const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+const money = (cents: number) => `£${(cents / 100).toFixed(2)}`;
 const face = (name: string) =>
   `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=e4e4e7`;
 
@@ -75,18 +72,14 @@ export function SplitAmount({
   useEffect(() => () => clearTimeout(sentTimer.current), []);
 
   const paying = diners.filter((diner) => diner.id === "you" || split.people.includes(diner.id));
-  const waiting = diners.filter((diner) => !paying.includes(diner));
   const total = Math.round(SUBTOTAL * (1 + split.tip / 100));
   const each = shares(total, paying.length);
   const owed = each.reduce((sum, amount, index) => (paying[index]!.id === "you" ? sum : sum + amount), 0);
   const others = paying.length - 1;
 
-  const include = (person: string, on: boolean) => {
+  const choose = (people: string[]) => {
     setSent(false);
-    setSplit((current) => ({
-      ...current,
-      people: on ? [...current.people, person] : current.people.filter((other) => other !== person),
-    }));
+    setSplit((current) => ({ ...current, people: ["you", ...people.filter((person) => person !== "you")] }));
   };
 
   const request = () => {
@@ -102,35 +95,28 @@ export function SplitAmount({
 
   return (
     <MotionConfig transition={SPRING} reducedMotion="user">
-      <div
-        ref={ref}
-        className={`grid w-[min(100%,372px)] gap-4 rounded-[26px] bg-(--fk-surface) p-5 shadow-[0_1px_2px_rgb(0_0_0/0.04),0_16px_40px_-20px_rgb(0_0_0/0.22),0_0_0_1px_var(--fk-line)] ${FORM_KIT}`}
-      >
-        <header className="flex items-center gap-3">
-          <span
-            className="grid size-[42px] flex-none place-items-center rounded-[13px] bg-[#fff1e6] text-[#ea580c] dark:bg-[rgb(234_88_12/0.16)] dark:text-[#fb923c]"
-            aria-hidden="true"
-          >
-            <HugeiconsIcon icon={Restaurant01Icon} strokeWidth={1.8} className="size-5" />
+      <div ref={ref} className={`grid w-[min(100%,360px)] gap-6 rounded-[32px] bg-(--fk-surface) p-6 ${FORM_KIT}`}>
+        <header className="grid gap-2">
+          <span className="flex items-baseline justify-between gap-3 text-[13px] text-(--fk-muted)">
+            <span>Dinner at Buka</span>
+            <span className="inline-flex items-baseline gap-1">
+              <Odometer value={money(total)} /> total
+            </span>
           </span>
-          <span className="grid min-w-0 flex-1 leading-[1.3]">
-            <b className="text-[15px] font-[650]">Dinner at Buka</b>
-            <span className="text-[12px] text-(--fk-muted)">Fri 14 Nov · {diners.length} at the table</span>
-          </span>
-          <span className="grid justify-items-end leading-[1.25]">
-            <Odometer value={money(total)} className="text-[22px] font-bold tracking-[-0.03em]" />
-            <span className="text-[12px] text-(--fk-muted)">{split.tip ? `incl. ${split.tip}% tip` : "no tip"}</span>
+          <Odometer value={money(each[0] ?? 0)} className="text-[44px] font-semibold tracking-[-0.04em]" />
+          <span className="text-[13px] text-(--fk-muted)">
+            {others === 0 ? "Your share. Nobody else is in yet." : `Your share, split ${paying.length} ways`}
           </span>
         </header>
 
-        <div className="flex h-3 gap-1" aria-hidden="true">
+        <div className="flex h-1.5 gap-1" aria-hidden="true">
           <AnimatePresence initial={false}>
             {paying.map((diner) => (
               <motion.span
                 key={diner.id}
                 layout
-                className="min-w-0 basis-0 rounded-full bg-(--spl-color)"
-                style={colorOf(diner)}
+                data-you={diner.id === "you" || undefined}
+                className="min-w-0 basis-0 rounded-full bg-(--fk-well-strong) data-you:bg-(--fk-ink)"
                 initial={{ opacity: 0, flexGrow: 0.001 }}
                 animate={{ opacity: 1, flexGrow: 1 }}
                 exit={{ opacity: 0, flexGrow: 0.001 }}
@@ -139,10 +125,58 @@ export function SplitAmount({
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center justify-between gap-3 text-[13px] text-(--fk-muted)">
-          <span>Tip</span>
+        <ToggleGroup
+          multiple
+          className="flex justify-between"
+          aria-label="Who's splitting"
+          value={paying.map((diner) => diner.id)}
+          onValueChange={(people) => choose(people as string[])}
+        >
+          {diners.map((diner) => {
+            const included = paying.includes(diner);
+            const firstName = diner.name.split(" ")[0];
+
+            return (
+              <Toggle
+                key={diner.id}
+                value={diner.id}
+                disabled={diner.id === "you"}
+                aria-label={diner.id === "you" ? "You" : `Split with ${diner.name}`}
+                className="group/diner grid cursor-pointer justify-items-center gap-2 rounded-[14px] border-0 bg-transparent p-0 outline-none focus-visible:shadow-[0_0_0_2px_var(--fk-surface),0_0_0_4px_var(--fk-ink)] data-disabled:cursor-default"
+              >
+                <span className="relative transition-[scale] duration-150 ease-out group-active/diner:scale-[0.95] group-data-disabled/diner:scale-100 motion-reduce:transition-none">
+                  <img
+                    className="block rounded-full bg-(--fk-well) opacity-35 transition-opacity duration-200 ease-out group-data-pressed/diner:opacity-100 motion-reduce:transition-none"
+                    src={face(diner.name)}
+                    alt=""
+                    width={48}
+                    height={48}
+                    draggable={false}
+                  />
+                  {diner.id !== "you" && (
+                    <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-(--fk-surface)">
+                      <span className="grid size-4 place-items-center rounded-full bg-(--fk-well-strong) text-(--fk-muted) transition-colors duration-200 ease-out group-data-pressed/diner:bg-(--fk-ink) group-data-pressed/diner:text-(--fk-surface) motion-reduce:transition-none">
+                        <Remold.Icon
+                          icon={<HugeiconsIcon icon={included ? Tick02Icon : Add01Icon} />}
+                          strokeWidth={2.6}
+                          className="size-2.5"
+                        />
+                      </span>
+                    </span>
+                  )}
+                </span>
+                <span className="text-[12.5px] font-medium text-(--fk-faint) transition-colors duration-200 ease-out group-data-pressed/diner:text-(--fk-ink) motion-reduce:transition-none">
+                  {firstName}
+                </span>
+              </Toggle>
+            );
+          })}
+        </ToggleGroup>
+
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[13.5px] font-medium">Tip</span>
           <ToggleGroup
-            className="flex h-[34px] rounded-[11px] bg-(--fk-well) p-[3px]"
+            className="flex h-9 rounded-full bg-(--fk-well) p-[3px]"
             aria-label="Tip"
             value={[String(split.tip)]}
             onValueChange={(values) =>
@@ -153,12 +187,12 @@ export function SplitAmount({
               <Toggle
                 key={tip}
                 value={String(tip)}
-                className="relative min-w-[52px] cursor-pointer rounded-lg border-0 bg-transparent px-2.5 text-[12.5px] font-[550] text-(--fk-muted) transition-colors duration-200 data-pressed:text-(--fk-ink)"
+                className="relative min-w-[52px] cursor-pointer rounded-full border-0 bg-transparent px-2.5 text-[13px] font-medium text-(--fk-muted) outline-none transition-colors duration-200 ease-out focus-visible:shadow-[0_0_0_2px_var(--fk-ink)] data-pressed:text-(--fk-ink)"
               >
                 {split.tip === tip && (
                   <motion.span
                     layoutId={`${id}-tip`}
-                    className="absolute inset-0 rounded-lg bg-(--fk-surface) shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_0.5px_var(--fk-line)] dark:bg-(--fk-well-strong)"
+                    className="absolute inset-0 rounded-full bg-(--fk-surface) dark:bg-(--fk-well-strong)"
                   />
                 )}
                 <span className="relative">{tip ? `${tip}%` : "None"}</span>
@@ -167,89 +201,8 @@ export function SplitAmount({
           </ToggleGroup>
         </div>
 
-        <LayoutGroup id={id}>
-          <ul className="-mx-5 grid border-y border-solid border-(--fk-line) px-5 py-1" aria-label="Splitting equally">
-            <AnimatePresence initial={false} mode="popLayout">
-              {paying.map((diner, index) => (
-                <motion.li
-                  key={diner.id}
-                  layout="position"
-                  className="flex h-[52px] items-center gap-3"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                >
-                  <motion.img
-                    layoutId={`${id}-face-${diner.id}`}
-                    className={FACE}
-                    src={face(diner.name)}
-                    alt=""
-                    width={36}
-                    height={36}
-                    draggable={false}
-                  />
-                  <span className="flex min-w-0 flex-1 items-center gap-2 truncate text-[14px] font-[550]">
-                    <i className="size-2 flex-none rounded-full bg-(--spl-color)" style={colorOf(diner)} aria-hidden="true" />
-                    {diner.name}
-                  </span>
-                  <b className="text-[15px] font-[650]">
-                    <Odometer value={money(each[index]!)} />
-                  </b>
-                  {diner.id === "you" ? (
-                    <span className="size-7 flex-none" aria-hidden="true" />
-                  ) : (
-                    <Button
-                      className="grid size-7 flex-none cursor-pointer place-items-center rounded-[9px] border-0 bg-transparent p-0 text-(--fk-faint) transition-colors duration-150 hover:bg-(--fk-well) hover:text-(--fk-ink) [&_svg]:size-3.5"
-                      aria-label={`Leave ${diner.name} out`}
-                      onClick={() => include(diner.id, false)}
-                    >
-                      <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} aria-hidden="true" />
-                    </Button>
-                  )}
-                </motion.li>
-              ))}
-            </AnimatePresence>
-          </ul>
-
-          <div className="grid gap-2.5">
-            <span className="text-[12px] font-[550] text-(--fk-muted)">{waiting.length ? "Also at the table" : "Everyone's in"}</span>
-            <ul className="flex min-h-9 flex-wrap gap-2" aria-label="Also at the table">
-              <AnimatePresence initial={false} mode="popLayout">
-                {waiting.map((diner) => (
-                  <motion.li
-                    key={diner.id}
-                    layout="position"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                  >
-                    <Button
-                      className="flex h-9 cursor-pointer items-center gap-[7px] rounded-full border-0 bg-(--fk-well) pr-[11px] pl-1 text-[13px] font-[550] text-(--fk-ink) transition-colors duration-150 hover:bg-(--fk-well-strong)"
-                      aria-label={`Split with ${diner.name}`}
-                      onClick={() => include(diner.id, true)}
-                    >
-                      <motion.img
-                        layoutId={`${id}-face-${diner.id}`}
-                        className={FACE}
-                        src={face(diner.name)}
-                        alt=""
-                        width={28}
-                        height={28}
-                        draggable={false}
-                      />
-                      <span>{diner.name.split(" ")[0]}</span>
-                      <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} aria-hidden="true" className="size-3.5 text-(--fk-muted)" />
-                    </Button>
-                  </motion.li>
-                ))}
-              </AnimatePresence>
-            </ul>
-          </div>
-        </LayoutGroup>
-
         <Button
-          data-sent={sent || undefined}
-          className="grid h-12 cursor-pointer place-items-center overflow-hidden rounded-[14px] border-0 bg-(--fk-ink) text-[14.5px] font-semibold text-(--fk-surface) transition-[background-color,opacity] duration-250 enabled:hover:opacity-90 disabled:cursor-default disabled:opacity-40 data-sent:bg-(--fk-good) data-sent:text-white"
+          className="grid h-12 cursor-pointer place-items-center overflow-hidden rounded-full border-0 bg-(--fk-ink) text-[14.5px] font-semibold text-(--fk-surface) outline-none transition-[opacity,scale] duration-150 ease-out focus-visible:shadow-[0_0_0_2px_var(--fk-surface),0_0_0_4px_var(--fk-ink)] enabled:active:scale-[0.98] disabled:cursor-default disabled:opacity-35 motion-reduce:transition-none"
           disabled={others === 0}
           onClick={request}
         >

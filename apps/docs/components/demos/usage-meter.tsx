@@ -32,7 +32,7 @@ const METRICS: { id: Metric; label: string; unit: string; icon: IconSvgElement; 
     label: "API requests",
     unit: "",
     icon: FlashIcon,
-    tip: "Over the limit, requests cost $2 per 1,000.",
+    tip: "Over the limit, requests cost £2 per 1,000.",
   },
   {
     id: "bandwidth",
@@ -257,7 +257,7 @@ export function UsageMeter({
                     transition={SPRING}
                   >
                     <span>
-                      <b>You've used all your API requests.</b> Extra ones are billed at $2 per 1,000.
+                      <b>You've used all your API requests.</b> Extra ones are billed at £2 per 1,000.
                     </span>
                     <motion.button
                       type="button"
@@ -279,14 +279,14 @@ export function UsageMeter({
           <div className="flex items-baseline justify-between text-[12.5px] font-medium text-(--um-muted)">
             <span>Projected bill</span>
             <Odometer
-              value={`$${Math.round(bill)}`}
+              value={`£${Math.round(bill)}`}
               className="text-[24px] font-bold tracking-[-0.02em] text-(--um-ink)"
             />
           </div>
           <ul className="m-0 mt-1.5 grid list-none p-0 [&>li]:flex [&>li]:justify-between [&>li]:overflow-hidden [&>li]:text-[12px] [&>li]:leading-[22px] [&>li]:text-(--um-muted) [&>li[data-tone=over]]:text-(--um-over) @max-[400px]:[&>li]:h-auto @max-[400px]:[&>li]:flex-wrap @max-[400px]:[&>li]:gap-y-0.5 @max-[400px]:[&>li]:overflow-visible @max-[400px]:[&>li]:py-0.5 @max-[400px]:[&>li]:leading-[1.4]">
             <li>
               <span>{plan.name} plan</span>
-              <Odometer value={`$${plan.price}`} />
+              <Odometer value={`£${plan.price}`} />
             </li>
             <AnimatePresence initial={false}>
               {overage > 0 && (
@@ -299,7 +299,7 @@ export function UsageMeter({
                   transition={SPRING}
                 >
                   <span>API overage · {format(projectedApi - plan.limits.api)} requests</span>
-                  <Odometer value={`+$${Math.round(overage)}`} />
+                  <Odometer value={`+£${Math.round(overage)}`} />
                 </motion.li>
               )}
             </AnimatePresence>

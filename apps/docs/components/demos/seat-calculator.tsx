@@ -56,7 +56,7 @@ const positionOf = (seats: number) => {
 const percentOf = (seats: number) => `${(positionOf(seats) / STOPS) * 100}%`;
 
 const tierOf = (seats: number) => [...TIERS].reverse().find((candidate) => seats >= candidate.from)!;
-const money = (amount: number) => `$${Math.round(amount).toLocaleString("en-US")}`;
+const money = (amount: number) => `£${Math.round(amount).toLocaleString("en-US")}`;
 
 const FACES = [
   "Ama Mensah",

@@ -1,10 +1,5 @@
 import { demoSources } from "@/components/generated/demo-sources";
-
-/**
- * The site's own address, for install commands an agent can run as they are. Set
- * NEXT_PUBLIC_SITE_URL when deploying; without it, commands use paths on this site.
- */
-const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+import { siteUrl } from "./shared";
 
 interface SourceFile {
   name: string;
@@ -13,12 +8,12 @@ interface SourceFile {
   packages: readonly string[];
 }
 
-const sourceOf = (demo: string) =>
+export const sourceOf = (demo: string) =>
   (demoSources as Record<string, { usage: SourceFile; files: readonly SourceFile[] } | undefined>)[demo];
 
 const fence = (lang: string, code: string) => `\`\`\`${lang}\n${code.trimEnd()}\n\`\`\``;
 
-const installCommand = (name: string) => fence("bash", `npx shadcn@latest add ${SITE}/r/${name}.json`);
+const installCommand = (name: string) => fence("bash", `npx shadcn@latest add ${siteUrl}/r/${name}.json`);
 
 function dependenciesOf(demo: string) {
   const packages = [...new Set(sourceOf(demo)?.files.flatMap((file) => file.packages) ?? [])].sort();

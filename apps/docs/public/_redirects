@@ -3,7 +3,8 @@
 /docs/components/icon /docs/primitives/icon 301
 /docs/components/path-group /docs/primitives/path-group 301
 /docs/components/scene /docs/primitives/scene 301
-/docs/components/story /docs/primitives/story 301
+/docs/components/story /docs/primitives/scene 301
+/docs/primitives/story /docs/primitives/scene 301
 /docs/components/particles /docs/primitives/particles 301
 /docs/components/ignore /docs/primitives/ignore 301
 /docs/examples/diagrams /docs/components/living-diagrams 301

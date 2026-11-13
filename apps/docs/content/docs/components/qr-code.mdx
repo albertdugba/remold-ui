@@ -1,0 +1,43 @@
+---
+title: "QR code"
+description: "A share card whose logo breaks into squares and re-forms as a real, scannable QR code, then goes back."
+status: "new"
+kind: particles
+tags: ["Particles"]
+---
+
+<Stage name="qr-code" code={<Source demo="qr-code" />} minHeight={560}>
+  <QrCodeDemo />
+</Stage>
+
+## Things to try
+
+- **Show the code.** The logo's squares slide apart and settle into a QR code. Point a phone camera at it: it opens the address under it.
+- **Hide it.** The same squares gather back into the logo.
+- **Change your mind halfway.** Press the button again before it settles and the squares turn round from where they are.
+
+## Install
+
+<AddCommand name="qr-code" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="qr-code" />
+
+## Usage
+
+```tsx
+<QrCode value="https://example.com/efua" title="Efua Owusu" logo={logoPathData} />
+```
+
+`value` is what the code opens, `title` is shown under it, and `logo` is your mark as SVG path data. Control it with `open` and `onOpenChange`, or leave it to manage itself.
+
+## How it works
+
+- **One grid for both pictures.** Each square of the code is four smaller ones, and the logo is drawn in those same small squares on the same grid. Showing the code only moves them: nothing is redrawn or resized.
+- **Each square finds a nearby place.** `Remold.Particles` pairs every small square of the logo with one in the code. Spare ones grow in or shrink away.
+- **It stays scannable.** The code sits on a light panel with a clear margin in both themes, because phones read dark squares on a light ground.
+
+<Callout>The code is made with [uqr](https://github.com/unjs/uqr). A longer address makes a denser code with smaller squares.</Callout>

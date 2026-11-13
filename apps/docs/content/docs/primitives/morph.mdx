@@ -3,8 +3,8 @@ title: "Morph"
 description: "Morphs everything inside it whenever its trigger changes."
 ---
 
-<Stage code={<Source demo="files" />}>
-  <FilesDemo />
+<Stage code={<Source demo="expanding-row" />}>
+  <ExpandingRowDemo />
 </Stage>
 
 ## Installation
@@ -46,39 +46,9 @@ When more than one thing can change, pass them as a list. It's compared item by 
 transition(list, () => render({ view, sort, filter }));
 ```
 
-## Examples
-
-### Different markup for each view
-
-The grid and the list below are rendered by different elements. Remold pairs each person by what they show, not by where they sit in the tree.
-
-<Stage code={<Source demo="morph" />}>
-  <MorphDemo />
-</Stage>
-
-```tsx tab="React" tab-group="lang"
-<Remold.Morph trigger={view}>
-  {view === "Grid" ? (
-    <PeopleGrid people={people} />
-  ) : (
-    <PeopleList people={people} />
-  )}
-</Remold.Morph>
-```
-
-```js tab="JavaScript"
-transition(people, () => {
-  people.innerHTML = view === "Grid" ? peopleGrid(data) : peopleList(data);
-});
-```
-
-### Components from other libraries
+## Components from other libraries
 
 To animate a component you don't render yourself, like a Base UI or MUI part, use `useRemoldMorph`. It takes the same `trigger` and options as `Remold.Morph`, and gives you a ref to put on any component that forwards it to its element. Base UI and MUI components both do.
-
-<Stage code={<Source demo="library-morph" />}>
-  <LibraryMorphDemo />
-</Stage>
 
 ```tsx tab="React" tab-group="lang"
 import { useRemoldMorph } from "@remold-ui/react";
@@ -106,7 +76,7 @@ A few things to know when you use it with component libraries:
 - **Turn off the library's own transitions** inside the animated area (MUI's `Collapse` and `Fade`, Base UI's `data-starting-style` styles). Remold skips elements at zero opacity, so an element that's still fading in won't be matched.
 - **Skip decoration** that isn't content, such as MUI's ripple, by wrapping it in `<Remold.Ignore>` or adding `data-rm-ignore`.
 
-### Choreography
+## Choreography
 
 By default everything moves at once. With `choreography`, a change plays in beats instead: what leaves goes first, then what moves, then what arrives, one after another in reading order. Each part gets out of the way of the next, so the change is easier to follow.
 
@@ -129,7 +99,7 @@ Pass an object to change the timing, in seconds:
 
 The beats overlap, so a choreographed change takes only a little longer than an unchoreographed one, and it can still be interrupted at any point. With reduced motion, changes fade at once.
 
-### Announcing changes
+## Announcing changes
 
 ```tsx tab="React" tab-group="lang"
 <Remold.Morph trigger={sort} announce={(summary) => `Sorted. ${summary.moved} files moved.`}>

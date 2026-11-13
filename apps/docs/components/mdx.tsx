@@ -4,7 +4,6 @@ import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import type { MDXComponents } from "mdx/types";
 import * as demos from "./demos";
-import { Showcase } from "./showcase";
 import { AddCommand, Install } from "./package-tabs";
 import { Dependencies, Source } from "./source";
 import { Customize } from "./customize/customize";
@@ -21,7 +20,6 @@ export function getMDXComponents(components?: MDXComponents) {
     Steps,
     Step,
     ...demos,
-    Showcase,
     Source,
     AddCommand,
     Install,

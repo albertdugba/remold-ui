@@ -90,7 +90,7 @@ function makeObjects(kind: Kind, dark: boolean): SceneProps["objects"] {
       ["S", "Starter plan"],
       ["P", "Pro plan"],
       ["B", "Business plan"],
-      ["$", "Prorated credit"],
+      ["£", "Prorated credit"],
     ],
     uptime: [
       ["◎", "Traffic monitor"],

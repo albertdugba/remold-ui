@@ -41,7 +41,7 @@ const OBJECTS: SceneProps["objects"] = {
       edge: true,
       ink: PLATFORM_INK,
       shadow: false,
-      decal: { text: "$", size: 26, color: "#d9d6ea" },
+      decal: { text: "£", size: 26, color: "#d9d6ea" },
     }),
     label: "USDC balance",
   },
@@ -162,7 +162,7 @@ export function TransactionRoute({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
           >
-            Network fee <b>$2.14</b>
+            Network fee <b>£2.14</b>
           </motion.span>
         </AnimatePresence>
         <button type="button" className={NIGHT_CTA} onClick={() => setPhase("quote")}>

@@ -7,10 +7,8 @@ import {
   Calendar03Icon,
   CalendarAdd01Icon,
   Clock01Icon,
-  Hospital01Icon,
   Loading03Icon,
   Location01Icon,
-  StethoscopeIcon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
@@ -97,46 +95,34 @@ function PickSurface({
 }
 
 const PALETTE = [
-  "[--bks-surface:#ffffff] [--bks-ink:#0a0a0b] [--bks-soft:#3f3f46] [--bks-muted:#71717a] [--bks-well:#f4f4f5]",
-  "[--bks-line:rgb(10_10_11/0.07)] [--bks-edge:rgb(0_0_0/0.06)] [--bks-dash:rgb(10_10_11/0.16)] [--bks-good:#16a34a]",
-  "dark:[--bks-surface:#18181b] dark:[--bks-ink:#fafafa] dark:[--bks-soft:#d4d4d8] dark:[--bks-muted:#a1a1aa] dark:[--bks-well:#27272a]",
-  "dark:[--bks-line:rgb(255_255_255/0.08)] dark:[--bks-edge:rgb(255_255_255/0.07)] dark:[--bks-dash:rgb(255_255_255/0.2)] dark:[--bks-good:#4ade80]",
+  "[--bks-surface:#ffffff] [--bks-ink:#0a0a0b] [--bks-soft:#3f3f46] [--bks-muted:#71717a] [--bks-faint:#a1a1aa] [--bks-well:#f4f4f5]",
+  "[--bks-dash:rgb(10_10_11/0.28)] [--bks-good:#16a34a]",
+  "dark:[--bks-surface:#18181b] dark:[--bks-ink:#fafafa] dark:[--bks-soft:#d4d4d8] dark:[--bks-muted:#a1a1aa] dark:[--bks-faint:#71717a] dark:[--bks-well:#27272a]",
+  "dark:[--bks-dash:rgb(255_255_255/0.32)] dark:[--bks-good:#4ade80]",
 ].join(" ");
 
 const RING = "focus-visible:shadow-[0_0_0_2px_var(--bks-surface),0_0_0_4px_var(--bks-ink)]";
-const OPTION = `group/opt relative cursor-pointer border-0 bg-(--bks-well) p-0 text-(--bks-ink) outline-none transition-[background-color,color,scale] duration-200 active:scale-[0.97] not-data-checked:not-data-disabled:hover:bg-[color-mix(in_oklab,var(--bks-well)_86%,var(--bks-ink))] data-checked:text-(--bks-surface) data-disabled:cursor-default data-disabled:bg-transparent data-disabled:shadow-[inset_0_0_0_1px_var(--bks-line)] ${RING}`;
+const OPTION = `group/opt relative cursor-pointer border-0 bg-(--bks-well) p-0 text-(--bks-ink) outline-none transition-[background-color,color,scale] duration-200 active:scale-[0.97] not-data-checked:not-data-disabled:hover:bg-[color-mix(in_oklab,var(--bks-well)_86%,var(--bks-ink))] data-checked:text-(--bks-surface) data-disabled:cursor-default data-disabled:opacity-45 ${RING}`;
 const PILL = "relative grid h-9 place-items-center rounded-full px-2 text-[13px] whitespace-nowrap";
 
 function Host() {
   return (
-    <>
-      <header className="flex items-center gap-3.5">
-        <img
-          className="flex-none rounded-full"
-          src={`https://api.dicebear.com/9.x/notionists/svg?seed=${DOCTOR.seed}&backgroundColor=${DOCTOR.tint}`}
-          alt=""
-          width={52}
-          height={52}
-          draggable={false}
-        />
-        <span className="grid">
-          <span className="text-[12.5px] text-(--bks-muted)">Book an appointment with</span>
-          <span className="text-[20px] leading-[1.2] font-[650] tracking-[-0.025em]">{DOCTOR.name}</span>
-          <span className="text-[13px] text-(--bks-muted)">{DOCTOR.role}</span>
+    <header className="flex items-center gap-3">
+      <img
+        className="flex-none rounded-full"
+        src={`https://api.dicebear.com/9.x/notionists/svg?seed=${DOCTOR.seed}&backgroundColor=${DOCTOR.tint}`}
+        alt=""
+        width={48}
+        height={48}
+        draggable={false}
+      />
+      <span className="grid min-w-0 gap-px">
+        <span className="truncate text-[17px] leading-[1.25] font-[650] tracking-[-0.02em]">{DOCTOR.name}</span>
+        <span className="truncate text-[13px] text-(--bks-muted)">
+          {DOCTOR.role} · {PLACE}
         </span>
-      </header>
-
-      <div className="-mt-1 flex flex-wrap gap-1.5 [&>span]:inline-flex [&>span]:h-7 [&>span]:items-center [&>span]:gap-1.5 [&>span]:rounded-full [&>span]:bg-(--bks-well) [&>span]:pr-[11px] [&>span]:pl-[9px] [&>span]:text-[12.5px] [&>span]:font-medium [&>span]:text-(--bks-soft) [&_svg]:size-3.5">
-        <span>
-          <HugeiconsIcon icon={Hospital01Icon} strokeWidth={1.8} />
-          {PLACE}
-        </span>
-        <span>
-          <HugeiconsIcon icon={StethoscopeIcon} strokeWidth={1.8} />
-          In person
-        </span>
-      </div>
-    </>
+      </span>
+    </header>
   );
 }
 
@@ -195,7 +181,7 @@ function Review({
 }) {
   return (
     <div className="grid gap-3.5">
-      <ul className="m-0 grid list-none gap-0.5 rounded-[20px] bg-(--bks-well) px-3.5 py-1.5 [&_svg]:size-[18px] [&_svg]:flex-none [&_svg]:text-(--bks-muted) [&>li]:flex [&>li]:min-h-[42px] [&>li]:items-center [&>li]:gap-3 [&>li]:font-medium [&>li]:text-(--bks-soft) [&>li+li]:border-t [&>li+li]:border-solid [&>li+li]:border-(--bks-line)">
+      <ul className="m-0 grid list-none rounded-[20px] bg-(--bks-well) px-4 py-2 [&_svg]:size-[18px] [&_svg]:flex-none [&_svg]:text-(--bks-muted) [&>li]:flex [&>li]:min-h-10 [&>li]:items-center [&>li]:gap-3 [&>li]:font-medium [&>li]:text-(--bks-soft)">
         <li>
           <HugeiconsIcon icon={Calendar03Icon} strokeWidth={1.8} />
           {day}
@@ -326,7 +312,7 @@ export function BookingSteps({
         ) : (
           <span
             data-active={(step === index && phase === "choosing") || undefined}
-            className={`${PILL} font-medium text-(--bks-muted) transition-[background-color,color,box-shadow] duration-200 data-active:bg-(--bks-surface) data-active:text-(--bks-ink) data-active:shadow-[0_0_0_1px_var(--bks-line),0_1px_2px_rgb(0_0_0/0.06)]`}
+            className={`${PILL} font-medium text-(--bks-faint) transition-colors duration-200 data-active:text-(--bks-ink)`}
           >
             {label}
           </span>
@@ -430,7 +416,7 @@ export function BookingSteps({
 
   return (
     <section
-      className={`grid w-[min(100%,380px)] gap-[18px] rounded-[36px] border border-solid border-(--bks-edge) bg-(--bks-surface) px-[18px] pt-[22px] pb-[18px] text-[14px] tracking-[-0.006em] text-(--bks-ink) shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)] ${PALETTE}`}
+      className={`grid w-[min(100%,380px)] gap-5 rounded-[32px] bg-(--bks-surface) p-5 text-[14px] tracking-[-0.006em] text-(--bks-ink) ${PALETTE}`}
       aria-label={`Book an appointment with ${DOCTOR.name}`}
     >
       <LayoutGroup id={id}>

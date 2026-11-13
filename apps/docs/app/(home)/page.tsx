@@ -2,12 +2,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { RemoldMark } from "@/components/brand/remold-mark";
 import { X_HANDLE, X_URL } from "@/lib/layout.shared";
-import { FavouriteIcon, StarIcon } from "@hugeicons/core-free-icons";
+import { FavouriteIcon, GithubIcon, StarIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { InstallCommand } from "@/components/home/install-command";
 import { Flavors } from "@/components/home/flavors";
 import { Parts } from "@/components/home/parts";
-import { Points } from "@/components/home/points";
+import { Kicker, Rail, Rails, Selected, SpecSheet, SpringSpecimen } from "@/components/home/drafting";
 import { HeroWord } from "@/components/home/hero-word";
 import { FLAVOR_NAMES, FLAVORS, type Flavor } from "@/components/home/flavors-code";
 import { highlight } from "fumadocs-core/highlight";
@@ -18,10 +18,9 @@ export const metadata = {
     "An open-source morph engine that finds what persists between interface states and animates what changes, across layouts, text, SVG and canvas.",
 };
 
-function Section({ kicker, className, children }: { kicker?: string; className?: string; children: ReactNode }) {
+function Section({ id, className, children }: { id?: string; className?: string; children: ReactNode }) {
   return (
-    <section className={`hm-section${className ? ` ${className}` : ""}`}>
-      {kicker && <p className="hm-kicker">{kicker}</p>}
+    <section id={id} className={`hm-section scroll-mt-20${className ? ` ${className}` : ""}`}>
       {children}
     </section>
   );
@@ -42,6 +41,30 @@ async function highlightFlavors(): Promise<Record<Flavor, ReactNode>> {
 }
 
 const REPO_URL = "https://github.com/albertdugba/remold-ui";
+
+const FOOTER = [
+  {
+    title: "Navigate",
+    links: [
+      { label: "Docs", href: "/docs" },
+      { label: "Examples", href: "/docs/components" },
+    ],
+  },
+  {
+    title: "Follow",
+    links: [
+      { label: `@${X_HANDLE} on X`, href: X_URL },
+      { label: "GitHub", href: REPO_URL },
+    ],
+  },
+  {
+    title: "For assistants",
+    links: [
+      { label: "llms.txt", href: "/llms.txt" },
+      { label: "llms-full.txt", href: "/llms-full.txt" },
+    ],
+  },
+];
 const CREDIT_LINK =
   "font-medium text-fd-foreground underline decoration-fd-border underline-offset-4 transition-colors hover:decoration-fd-foreground";
 
@@ -53,16 +76,29 @@ export default async function HomePage() {
         <div className="hm-frame">
           <section className="hm-hero split">
             <div className="hm-hero-title">
-              <h1 aria-label="Interfaces that remold themselves.">
-                <span aria-hidden="true">Interfaces that</span>
+              <Kicker className="mb-0">
+                100% free and open source
+                <span aria-hidden="true">·</span>
+                <a
+                  className="inline-flex items-center gap-1.5 text-(--hm-ink) underline decoration-(--hm-line) underline-offset-4 transition-colors duration-150 ease-out hover:decoration-(--hm-ink)"
+                  href={REPO_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <HugeiconsIcon icon={GithubIcon} size={14} strokeWidth={2} aria-hidden="true" />
+                  Star on GitHub
+                </a>
+              </Kicker>
+              <h1 aria-label="Components that remold themselves.">
+                <span aria-hidden="true">Components that</span>
                 <br />
                 <HeroWord />
               </h1>
             </div>
             <div className="hm-hero-side">
               <p className="hm-lead">
-                React components for the screens you actually ship, animated with Motion and Remold and ready to copy into your app.
-                Underneath sits the Remold engine, which morphs one state into the next in React, the DOM, SVG and canvas.
+                Animated React components for the screens you actually ship, with the micro-animations built in: text that morphs,
+                icons that reshape, layouts that follow a change. Copy one into your app, or animate your own with the Remold engine.
               </p>
               <div className="hm-actions">
                 <Link className="hm-cta primary" href="/docs/quick-start">
@@ -85,68 +121,82 @@ export default async function HomePage() {
           <Parts />
         </Section>
 
-        <Section kicker="Build with it">
-          <div className="hm-split code">
-            <div className="hm-head">
-              <h2>Use the engine at the level you need.</h2>
-              <p>
-                Start with a React component, call it from plain JavaScript on any element, or build a canvas scene. The matching and spring logic underneath is available on its own, too.
-              </p>
-              <Link className="hm-link" href="/docs/installation">
-                Installation <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-            <Flavors highlighted={highlighted} />
-          </div>
-        </Section>
-
-        <Section kicker="Why Remold">
-          <header className="hm-head">
-            <h2>Made for interfaces that change.</h2>
-            <p>Wrap what changes and keep building. The rest is handled for you.</p>
-          </header>
-          <Points />
-        </Section>
       </div>
 
-      <footer className="hm-end">
-        <div className="hm-end-cta">
-          <h2>Make the change feel connected.</h2>
-          <p>Bring your own interface. Remold finds what carries over and animates the rest.</p>
-          <div className="hm-actions">
-            <Link className="hm-cta primary" href="/docs/quick-start">
-              Get started <span aria-hidden="true">→</span>
-            </Link>
-            <Link className="hm-cta" href="/docs/components">
-              See examples
-            </Link>
-          </div>
-        </div>
-        <div className="hm-footer">
-          <div>
-            <RemoldMark size={20} wordmark />
-            <p className="hm-footer-note">Change you can follow. The engine is open source under the MIT licence.</p>
-          </div>
-          <nav aria-label="Footer">
-            <p>Navigate</p>
-            <Link href="/docs">Docs</Link>
-            <Link href="/docs/components">Examples</Link>
-          </nav>
-          <nav aria-label="Follow">
-            <p>Follow</p>
-            <a href={X_URL} target="_blank" rel="noreferrer">
-              @{X_HANDLE} on X
-            </a>
-            <a href={REPO_URL} target="_blank" rel="noreferrer">
-              GitHub
-            </a>
-          </nav>
-          <nav aria-label="For assistants">
-            <p>For assistants</p>
-            <a href="/llms.txt">llms.txt</a>
-            <a href="/llms-full.txt">llms-full.txt</a>
-          </nav>
-        </div>
+      <div className="hm-frame pb-10">
+        <Rails>
+          <Rail id="build-with-it">
+            <div className="hm-split code">
+              <div className="hm-head">
+                <Kicker>Build with it</Kicker>
+                <h2>Use the engine at the level you need.</h2>
+                <p>
+                  Start with a React component, call it from plain JavaScript on any element, or build a canvas scene. The matching and spring logic underneath is available on its own, too.
+                </p>
+                <Link className="hm-link" href="/docs/installation">
+                  Installation <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+              <Flavors highlighted={highlighted} />
+            </div>
+          </Rail>
+
+          <Rail id="why-remold">
+            <header className="hm-head mb-12">
+              <Kicker>Why Remold</Kicker>
+              <h2>Made for interfaces that change.</h2>
+              <p>Wrap what changes and keep building. Everything moves on one measured spring, and the rest is handled for you.</p>
+            </header>
+            <div className="grid items-start gap-x-[clamp(32px,6vw,96px)] gap-y-12 min-[1000px]:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+              <div className="[container-type:inline-size] min-[1000px]:sticky min-[1000px]:top-24">
+                <SpringSpecimen />
+              </div>
+              <SpecSheet />
+            </div>
+          </Rail>
+
+          <Rail id="start-here">
+            <div className="relative grid justify-items-start overflow-hidden rounded-[28px] border border-solid border-(--hm-line) px-[clamp(24px,5vw,72px)] py-[clamp(64px,9vw,120px)] [background-image:linear-gradient(to_right,color-mix(in_oklab,var(--hm-line)_55%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--hm-line)_55%,transparent)_1px,transparent_1px)] [background-size:40px_40px]">
+              <Kicker>Start here</Kicker>
+              <h2 className="m-0 text-[clamp(34px,5.4vw,72px)] leading-[1.04] font-semibold tracking-[-0.045em]">
+                Make the change feel <Selected>connected</Selected>.
+              </h2>
+              <p className="mt-6 mb-0 max-w-[52ch] text-[17px] leading-[1.6] text-(--hm-muted)">
+                Bring your own interface. Remold finds what carries over and animates the rest.
+              </p>
+              <div className="hm-actions">
+                <Link className="hm-cta primary" href="/docs/quick-start">
+                  Get started <span aria-hidden="true">→</span>
+                </Link>
+                <Link className="hm-cta" href="/docs/components">
+                  See examples
+                </Link>
+              </div>
+            </div>
+          </Rail>
+
+          <Rail as="footer" className="py-[clamp(40px,5vw,64px)]!">
+            <div className="grid gap-x-8 gap-y-10 min-[760px]:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
+              <div>
+                <RemoldMark size={20} wordmark />
+                <p className="hm-footer-note">Change you can follow. The engine is open source under the MIT licence.</p>
+              </div>
+              {FOOTER.map((column) => (
+                <nav key={column.title} aria-label={column.title} className="grid content-start gap-2.5 text-[14px]">
+                  <p className="m-0 mb-1.5 font-mono text-[12px] tracking-[0.08em] text-(--hm-muted) uppercase">{column.title}</p>
+                  {column.links.map((link) => (
+                    <a
+                      key={link.href}
+                      className="text-(--hm-ink) hover:underline hover:underline-offset-4"
+                      href={link.href}
+                      {...(link.href.startsWith("http") && { target: "_blank", rel: "noreferrer" })}
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </nav>
+              ))}
+            </div>
         <div className="mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-fd-border pt-6 text-[13px] text-fd-muted-foreground">
           <p className="m-0 max-w-[60ch] leading-relaxed">
             Made with{" "}
@@ -169,7 +219,9 @@ export default async function HomePage() {
           </p>
           <p className="m-0 text-[12px]">Products, companies and people in the examples are made up.</p>
         </div>
-      </footer>
+          </Rail>
+        </Rails>
+      </div>
     </main>
   );
 }

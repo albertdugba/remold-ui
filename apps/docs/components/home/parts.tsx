@@ -132,6 +132,10 @@ const PromoCodeDemo = dynamic(
   () => import("../demos/promo-code").then((m) => m.PromoCodeDemo),
   { ssr: false },
 );
+const SplitAmountDemo = dynamic(
+  () => import("../demos/split-amount").then((m) => m.SplitAmountDemo),
+  { ssr: false },
+);
 const TagInputDemo = dynamic(
   () => import("../demos/tag-input").then((m) => m.TagInputDemo),
   { ssr: false },
@@ -648,6 +652,16 @@ function allCards() {
         states={["Apply"]}
       >
         {(_, playing) => <PromoCodeDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Split amount"
+        docs="/docs/components/split-amount"
+        states={["Split"]}
+        isNew
+      >
+        {(_, playing) => <SplitAmountDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Particles · Base UI"

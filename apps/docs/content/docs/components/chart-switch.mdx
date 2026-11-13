@@ -1,0 +1,48 @@
+---
+title: "Chart switch"
+description: "One set of figures as a donut or as bars: switching straightens each slice into its bar instead of redrawing the chart."
+status: "new"
+tags: ["Remold", "SVG", "Charts"]
+---
+
+<Stage name="chart-switch" code={<Source demo="chart-switch" />} minHeight={560}>
+  <ChartSwitchDemo />
+</Stage>
+
+## Things to try
+
+- **Switch to Bars.** Each slice of the donut straightens into its own bar, in the same colour, so you can follow Rent or Food from one chart to the other.
+- **Switch back.** The bars bend round into the ring, and the total returns to the middle.
+- **Change your mind halfway.** Switch again before it settles and every shape turns round from where it is.
+
+## Install
+
+<AddCommand name="chart-switch" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself. In a TypeScript project, add `@types/d3-shape` as well.
+
+<Dependencies demo="chart-switch" />
+
+## Usage
+
+```tsx
+<ChartSwitch
+  title="Spending"
+  period="October"
+  segments={[
+    { name: "Rent", value: 980 },
+    { name: "Food", value: 620 },
+  ]}
+/>
+```
+
+Control which chart shows with `value` and `onValueChange`, or leave it to manage itself.
+
+## How it works
+
+- **d3 draws, Remold moves.** [`d3-shape`](https://d3js.org/d3-shape) lays out the donut's slices; the bars are plain rounded rectangles. `Remold.PathGroup` gets one path per category and morphs it whenever that path changes.
+- **Matched by name.** Each part's `id` is its category, so Rent's slice always becomes Rent's bar, whatever order the charts draw in.
+- **Drawn round the same middle.** Both charts share one `viewBox` centred on the ring, so a slice only has to straighten, not travel.
+- **The legend is real text.** The figures are in the list under the chart, where a screen reader can read them; the drawing has a label saying which chart it is.

@@ -1,8 +1,8 @@
 ---
 title: "Split amount"
-description: "Splitting a bill: tap someone at the table and their face flies into the split, the bar re-divides and every share rolls to the new amount, cents and all. Pick a tip, then request what you're owed. Built on Base UI's Button and Toggle Group."
+description: "Splitting a bill: tap the people at the table and your share rolls to the new amount, cents and all, while the bar re-divides. Pick a tip, then request what you're owed. Built on Base UI's Button and Toggle Group."
 status: "new"
-tags: ["Base UI", "Motion"]
+tags: ["Base UI", "Motion", "Remold"]
 ---
 
 <Stage name="split-amount" code={<Source demo="split-amount" />} minHeight={440}>
@@ -11,9 +11,9 @@ tags: ["Base UI", "Motion"]
 
 ## Things to try
 
-- **Add someone.** Tap a face under "Also at the table": it flies up into the split, the bar re-divides and every share rolls down.
-- **Leave someone out.** Press × on their row and they go back to the table; the others' shares grow.
-- **Change the tip.** The total and every share roll to the new amount.
+- **Add someone.** Tap a faded face. It lights up, its plus turns into a tick, the bar gains a slice and your share rolls down.
+- **Leave someone out.** Tap them again and your share grows back.
+- **Change the tip.** The total and your share roll to the new amount.
 - **Request the money.** The button asks the others for what they owe, then says it's sent.
 - **Look at the cents.** The shares always add up to the bill exactly.
 
@@ -29,7 +29,8 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **One face, two places.** Each person's face is the same Motion element in the tray and in the list, so it travels between them when they join or leave the split.
-- **The bill re-divides.** Each slice of the bar is a Motion flex item, so they resize together; the amounts roll with the Odometer.
-- **Built on Base UI.** `Button` for adding, removing and requesting; `ToggleGroup` for the tip. `SplitAmount` takes `value` / `onValueChange` (who's paying and the tip) or runs on its own, plus your `diners` and an `onRequest` hook.
+- **The bill re-divides.** Each slice of the bar is a Motion flex item, so they resize together. The dark slice is yours; the rest is what you get back.
+- **The amounts roll.** Your share, the total and the figure on the button use the Odometer, so only the digits that change move.
+- **The plus becomes a tick.** Each badge is a `Remold.Icon`, so its strokes reshape instead of swapping.
+- **Built on Base UI.** The faces are a `ToggleGroup` that allows several at once, so they work from the keyboard and say whether they're pressed; the tip is a second one. `SplitAmount` takes `value` / `onValueChange` (who's paying and the tip) or runs on its own, plus your `diners` and an `onRequest` hook.
 - **No lost cents.** What's left after an even split goes a cent at a time to the first people.
