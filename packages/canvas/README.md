@@ -1,50 +1,78 @@
 # @remold-ui/canvas
 
-Live canvas pieces for [Remold](https://github.com/albertdugba/remold-ui): point clouds that re-form from one shape into the next with no keys to match, a dot grid that answers the cursor, a dotted globe, isometric scenes whose layouts spring between each other, and a canvas you paint with springs.
+The canvas parts of [Remold](https://remoldui.xyz): particles that re-form from one shape into the next, a dot grid that answers the cursor, a dotted globe, isometric scenes that spring between layouts, and a canvas you paint yourself with the sizing and frame loop handled.
+
+Using React? These are components in [`@remold-ui/react/canvas`](https://www.npmjs.com/package/@remold-ui/react).
+
+## Install
 
 ```bash
 npm install @remold-ui/canvas
 ```
 
-ESM and CommonJS, fully typed, free of side effects. For React, use [`@remold-ui/react/canvas`](https://www.npmjs.com/package/@remold-ui/react) instead.
+Ships ESM and CommonJS with types, and tree-shakes.
 
 ## Usage
+
+### Particles
 
 ```js
 import { particles, sampleTextPoints } from "@remold-ui/canvas";
 
-const cloud = particles(canvas, { points: sampleTextPoints("Hello") });
+const canvas = document.querySelector("canvas");
 
-// Each dot springs to the nearest place in the new shape. Big clouds do the pairing in a
-// Web Worker, loaded only when it's needed.
-cloud.to(sampleTextPoints("World"));
+const dots = particles(canvas, {
+  points: sampleTextPoints("Hello", { count: 2000 }),
+  label: "Hello",
+});
+
+// Each dot springs to a nearby place in the new shape. Spare dots shrink away and new ones grow in.
+dots.to(sampleTextPoints("World", { count: 2000 }), { label: "World" });
 
 // When the canvas leaves the page:
-cloud.destroy();
+dots.destroy();
 ```
 
-Points can come from text (`sampleTextPoints`), an image (`sampleImagePoints`), an element on the page (`sampleElementPoints`), or the 3D `shapes` in `@remold-ui/core`, seen through an optional `camera`.
+Points can come from text (`sampleTextPoints`), an image (`sampleImagePoints`), an element on the page (`sampleElementPoints`), or the 3D `shapes` in `@remold-ui/core`, which a `camera` turns in space:
 
-## What's in it
+```js
+import { particles } from "@remold-ui/canvas";
+import { shapes } from "@remold-ui/core";
+
+particles(canvas, {
+  points: shapes.torus().points(2000),
+  camera: true,
+  label: "A turning ring",
+});
+```
+
+Pairing the dots of a large cloud runs in a Web Worker, which is loaded only when it is needed.
+
+## API
 
 | Function | What it does |
 | --- | --- |
-| `particles(canvas, options?)` | A point cloud that re-forms into new shapes, in 2D or 3D. |
-| `dotGrid(canvas, options?)` | A field of dots that answers the cursor. |
-| `globe(canvas, options?)` | A dotted globe with markers, arcs and pulses. |
-| `scene(canvas, options)` | An isometric scene whose layouts spring between each other. |
-| `painter(canvas, options)` | A canvas you draw yourself, with springs for the values you animate. |
-| `dust(container, options?)` | A soft drift of dust over an element, for backgrounds. |
-| `loadPixels(source)` | Reads an image's pixels in the browser, for photo-shaped clouds. |
+| [`particles(canvas, options?)`](https://remoldui.xyz/docs/canvas/particles) | Dots that rebuild themselves into each new shape, in 2D or 3D. |
+| `dotGrid(canvas, options?)` | A field of dots that swell and lean away from the cursor. |
+| `globe(canvas, options?)` | A dotted globe with markers, pulses and arcs between places. |
+| [`scene(canvas, options)`](https://remoldui.xyz/docs/canvas/scene) | An isometric scene of objects that springs between named layouts. |
+| [`painter(canvas, options)`](https://remoldui.xyz/docs/canvas/painter) | A canvas you draw yourself, with sizing, the frame loop and springs handled. |
+| `dust(container, options?)` | Breaks elements into dots that pour into another element, and back. |
+| `sampleTextPoints` · `sampleImagePoints` · `sampleElementPoints` | Points for `particles`, from text, an image or an element. |
+| `loadPixels(source)` | Reads an image's pixels, for a photo-shaped cloud with `shapes.fromPixels`. |
 | `looks` · `palettes` | Ready-made object looks and colour palettes for scenes. |
 
-Every animation follows `prefers-reduced-motion`, and each piece sizes itself to its canvas and the screen's pixel ratio.
+`particles`, `dotGrid`, `globe`, `scene`, `painter` and `dust` each return a handle with `destroy()`, to call when the canvas leaves the page. Each part sizes itself to its canvas and the screen's pixel ratio.
+
+## Accessibility
+
+Every part follows `prefers-reduced-motion` by default: with it on, particles go straight to the new shape instead of flying there. Pass a `label` to give the canvas an accessible name. See [Accessibility](https://remoldui.xyz/docs/concepts/accessibility).
 
 ## Related packages
 
-- [`@remold-ui/react`](https://www.npmjs.com/package/@remold-ui/react): these pieces as React components, from `@remold-ui/react/canvas`.
+- [`@remold-ui/react`](https://www.npmjs.com/package/@remold-ui/react): these parts as React components, from `@remold-ui/react/canvas`.
 - [`@remold-ui/core`](https://www.npmjs.com/package/@remold-ui/core): the shapes, springs and matching underneath.
 
 ## License
 
-MIT © Albert Dugba
+[MIT](https://github.com/albertdugba/remold-ui/blob/main/LICENSE) © Albert Dugba

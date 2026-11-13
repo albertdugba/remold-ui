@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="remold/ui: animated React components with the micro-animations built in. The word remold sits in a selection box with corner handles, and the logo beside it remolds between a square shoulder and an arc.">
+  
+  <clipPath id="frame"><rect width="1200" height="630" rx="0"/></clipPath>
+  <g clip-path="url(#frame)">
+    <rect width="1200" height="630" fill="#fafafa"/>
+    <path d="M40 0V630M80 0V630M120 0V630M160 0V630M200 0V630M240 0V630M280 0V630M320 0V630M360 0V630M400 0V630M440 0V630M480 0V630M520 0V630M560 0V630M600 0V630M640 0V630M680 0V630M720 0V630M760 0V630M800 0V630M840 0V630M880 0V630M920 0V630M960 0V630M1000 0V630M1040 0V630M1080 0V630M1120 0V630M1160 0V630M0 40H1200M0 80H1200M0 120H1200M0 160H1200M0 200H1200M0 240H1200M0 280H1200M0 320H1200M0 360H1200M0 400H1200M0 440H1200M0 480H1200M0 520H1200M0 560H1200M0 600H1200" stroke="#efeff1" stroke-width="1" fill="none"/>
+    <path d="M0 213.5H1200M0 377.5H1200M355.5 0V630M831.5 0V630" stroke="#0d6efd" stroke-opacity="0.22" stroke-width="1" fill="none"/>
+  </g>
+  
+
+  <g transform="translate(177.73 203.78) scale(5.89)" fill="#09090b">
+    <path d="M7 23.5C7 21 7 18.5 7 16C7 13.5 7 11 7 8.5C7 7.67 7.67 7 8.5 7C10.33 7 12.17 7 14 7C17.04 7 19.79 8.23 21.78 10.22C23.77 12.21 25 14.96 25 18C22.67 18 20.33 18 18 18C18 15.79 16.21 14 14 14C14 17.17 14 20.33 14 23.5C14 24.33 13.33 25 12.5 25C11.17 25 9.83 25 8.5 25C7.67 25 7 24.33 7 23.5Z"/>
+  </g>
+
+  <rect x="355.5" y="213.5" width="476" height="164" fill="#0d6efd" fill-opacity="0.07" stroke="#0d6efd" stroke-width="1.5"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Inter, Helvetica, Arial, sans-serif" font-size="160" letter-spacing="-8">
+    <text x="370.95" y="351" font-weight="650" fill="#09090b" textLength="452.4" lengthAdjust="spacing">remold</text>
+    <text x="845.35" y="351" font-weight="500" fill="#a1a1aa" textLength="143.7" lengthAdjust="spacing">/ui</text>
+  </g>
+  <rect x="350" y="208" width="11" height="11" fill="#ffffff" stroke="#0d6efd" stroke-width="1.5"/>
+  <rect x="826" y="208" width="11" height="11" fill="#ffffff" stroke="#0d6efd" stroke-width="1.5"/>
+  <rect x="350" y="372" width="11" height="11" fill="#ffffff" stroke="#0d6efd" stroke-width="1.5"/>
+  <rect x="826" y="372" width="11" height="11" fill="#ffffff" stroke="#0d6efd" stroke-width="1.5"/>
+  <rect x="545.5" y="391.5" width="96" height="24" rx="5" fill="#0d6efd"/>
+  <text x="593.5" y="408" text-anchor="middle" font-family="ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#ffffff">476 × 164</text>
+
+  <text x="600" y="518" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Inter, Helvetica, Arial, sans-serif" font-size="22" letter-spacing="-0.2" fill="#71717a">Animated React components with the micro-animations built in.</text>
+</svg>
