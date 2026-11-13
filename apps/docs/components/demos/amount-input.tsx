@@ -20,8 +20,8 @@ export interface AmountInputProps {
 }
 
 const PALETTE = [
-  "[--amt-surface:#ffffff] [--amt-ink:#0a0a0b] [--amt-muted:#71717a] [--amt-faint:#c4c4cc]",
-  "[--amt-line:rgb(10_10_11/0.1)] [--amt-focus:#0a0a0b] [--amt-bad:#e5484d]",
+  "[--amt-surface:#ffffff] [--amt-ink:#0a0a0b] [--amt-muted:#6c6c75] [--amt-faint:#c4c4cc]",
+  "[--amt-line:rgb(10_10_11/0.1)] [--amt-focus:#0a0a0b] [--amt-bad:#c8323a]",
   "dark:[--amt-surface:#18181b] dark:[--amt-ink:#fafafa] dark:[--amt-muted:#a1a1aa] dark:[--amt-faint:#52525b]",
   "dark:[--amt-line:rgb(255_255_255/0.1)] dark:[--amt-focus:#fafafa] dark:[--amt-bad:#ff6369]",
 ].join(" ");

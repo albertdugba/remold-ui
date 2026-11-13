@@ -105,7 +105,7 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
       ref={autoplay.ref}
       data-phase={phase}
       data-pill={pill || undefined}
-      className="otp group not-prose @container relative grid w-[min(100%,360px)] justify-items-center rounded-[28px] border-0 bg-(--otp-surface) px-6 pt-[34px] pb-[22px] text-center font-sans text-(--otp-ink) [--otp-accent:#7c3aed] [--otp-bad:#dc2626] [--otp-good:#16a34a] [--otp-ink:#18181b] [--otp-muted:#71717a] [--otp-on-ink:#fafafa] [--otp-surface:#ffffff] @max-[360px]:px-4 dark:[--otp-accent:#a78bfa] dark:[--otp-bad:#f87171] dark:[--otp-good:#22c55e] dark:[--otp-ink:#fafafa] dark:[--otp-muted:#a1a1aa] dark:[--otp-on-ink:#18181b] dark:[--otp-surface:#232327]"
+      className="otp group not-prose @container relative grid w-[min(100%,360px)] justify-items-center rounded-[28px] border-0 bg-(--otp-surface) px-6 pt-[34px] pb-[22px] text-center font-sans text-(--otp-ink) [--otp-accent:#7c3aed] [--otp-bad:#dc2626] [--otp-good:#15803d] [--otp-ink:#18181b] [--otp-muted:#6c6c75] [--otp-on-ink:#fafafa] [--otp-surface:#ffffff] @max-[360px]:px-4 dark:[--otp-accent:#a78bfa] dark:[--otp-bad:#f87171] dark:[--otp-good:#22c55e] dark:[--otp-ink:#fafafa] dark:[--otp-muted:#a1a1aa] dark:[--otp-on-ink:#18181b] dark:[--otp-surface:#232327]"
       aria-label="Verify your email"
     >
       <span

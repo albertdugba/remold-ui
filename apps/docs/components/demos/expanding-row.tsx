@@ -33,7 +33,7 @@ const PLANS: Plan[] = [
 ];
 
 const THEME =
-  "[--xr-ink:#0a0a0b] [--xr-muted:#71717a] [--xr-surface:#ffffff] [--xr-well:#f4f4f5] dark:[--xr-ink:#fafafa] dark:[--xr-muted:#a1a1aa] dark:[--xr-surface:#18181b] dark:[--xr-well:#26262b]";
+  "[--xr-ink:#0a0a0b] [--xr-muted:#6c6c75] [--xr-surface:#ffffff] [--xr-well:#f4f4f5] dark:[--xr-ink:#fafafa] dark:[--xr-muted:#a1a1aa] dark:[--xr-surface:#18181b] dark:[--xr-well:#26262b]";
 
 const ITEM =
   "w-full cursor-pointer rounded-[14px] border-0 text-left text-(--xr-ink) outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--xr-ink)]";

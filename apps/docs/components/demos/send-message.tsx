@@ -70,7 +70,7 @@ export function SendMessage({ value, defaultValue = REST, onValueChange, onSend,
   return (
     <section
       ref={ref}
-      className="not-prose grid w-[min(100%,360px)] rounded-[26px] bg-(--ch-surface) p-3.5 font-sans text-(--ch-ink) [--ch-accent:#2563eb] [--ch-field:#f4f4f5] [--ch-ink:#18181b] [--ch-line:rgb(24_24_27/0.08)] [--ch-me:#18181b] [--ch-muted:#71717a] [--ch-on-me:#fafafa] [--ch-surface:#ffffff] [--ch-them:#f1f1f3] dark:[--ch-accent:#60a5fa] dark:[--ch-field:#2e2e33] dark:[--ch-ink:#fafafa] dark:[--ch-line:rgb(255_255_255/0.08)] dark:[--ch-me:#fafafa] dark:[--ch-muted:#a1a1aa] dark:[--ch-on-me:#18181b] dark:[--ch-surface:#232327] dark:[--ch-them:#34343a]"
+      className="not-prose grid w-[min(100%,360px)] rounded-[26px] bg-(--ch-surface) p-3.5 font-sans text-(--ch-ink) [--ch-accent:#2563eb] [--ch-field:#f4f4f5] [--ch-ink:#18181b] [--ch-line:rgb(24_24_27/0.08)] [--ch-me:#18181b] [--ch-muted:#6c6c75] [--ch-on-me:#fafafa] [--ch-surface:#ffffff] [--ch-them:#f1f1f3] dark:[--ch-accent:#60a5fa] dark:[--ch-field:#2e2e33] dark:[--ch-ink:#fafafa] dark:[--ch-line:rgb(255_255_255/0.08)] dark:[--ch-me:#fafafa] dark:[--ch-muted:#a1a1aa] dark:[--ch-on-me:#18181b] dark:[--ch-surface:#232327] dark:[--ch-them:#34343a]"
       aria-label={`Chat with ${THEM}`}
     >
       <header className="flex items-center gap-[9px] border-b border-(--ch-line) px-0.5 pb-3">

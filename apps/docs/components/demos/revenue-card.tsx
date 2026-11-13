@@ -111,8 +111,8 @@ export interface RevenueCardProps {
 }
 
 const PALETTE = [
-  "[--rv-surface:#ffffff] [--rv-field:#f4f4f5] [--rv-line:rgb(24_24_27/0.08)] [--rv-ink:#18181b] [--rv-muted:#71717a] [--rv-quiet:#a1a1aa]",
-  "[--rv-up:#059669] [--rv-down:#dc2626] [--rv-chart:#4f46e5]",
+  "[--rv-surface:#ffffff] [--rv-field:#f4f4f5] [--rv-line:rgb(24_24_27/0.08)] [--rv-ink:#18181b] [--rv-muted:#6c6c75] [--rv-quiet:#a1a1aa]",
+  "[--rv-up:#047857] [--rv-down:#dc2626] [--rv-chart:#4f46e5]",
   "dark:[--rv-surface:#1f1f23] dark:[--rv-field:#2a2a2f] dark:[--rv-line:rgb(255_255_255/0.08)] dark:[--rv-ink:#fafafa] dark:[--rv-muted:#a1a1aa] dark:[--rv-quiet:#71717a]",
   "dark:[--rv-up:#34d399] dark:[--rv-down:#f87171] dark:[--rv-chart:#818cf8]",
 ].join(" ");

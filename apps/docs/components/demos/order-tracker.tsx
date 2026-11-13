@@ -77,9 +77,10 @@ const MS = [4200, 3600, 3800, 4400];
 export interface OrderTrackerProps {
   stage: number;
   onStageChange?: (stage: number) => void;
+  live?: boolean;
 }
 
-export function OrderTracker({ stage, onStageChange }: OrderTrackerProps) {
+export function OrderTracker({ stage, onStageChange, live }: OrderTrackerProps) {
   const id = STAGES[stage]!.id;
   const riding = id === "riding";
   const delivered = id === "delivered";
@@ -91,6 +92,7 @@ export function OrderTracker({ stage, onStageChange }: OrderTrackerProps) {
       stages={STAGES}
       stage={stage}
       onStageChange={onStageChange}
+      live={live}
       under={
         <StoryFrame shown={riding}>
           <line
@@ -134,10 +136,10 @@ export interface OrderTrackerDemoProps {
 }
 
 export function OrderTrackerDemo({ playing }: OrderTrackerDemoProps = {}) {
-  const { ref, state, takeOver } = useStory(MS, playing);
+  const { ref, state, takeOver, live } = useStory(MS, playing);
   return (
     <div ref={ref} className={STORY_STAGE}>
-      <OrderTracker stage={state} onStageChange={takeOver} />
+      <OrderTracker stage={state} onStageChange={takeOver} live={live} />
     </div>
   );
 }

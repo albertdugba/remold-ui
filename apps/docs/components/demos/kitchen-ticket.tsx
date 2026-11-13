@@ -22,7 +22,7 @@ const of = (id: Status) => STATUSES.find((status) => status.id === id)!;
 const SPRING = { type: "spring" as const, duration: 0.4, bounce: 0.15 };
 
 const TOKENS = [
-  "[--kt-fill:#f4f4f5] [--kt-line:rgb(24_24_27/0.08)] [--kt-ink:#18181b] [--kt-muted:#71717a] [--kt-quiet:#a1a1aa]",
+  "[--kt-fill:#f4f4f5] [--kt-line:rgb(24_24_27/0.08)] [--kt-ink:#18181b] [--kt-muted:#6c6c75] [--kt-quiet:#a1a1aa]",
   "[--kt-preparing:#e07a2f] [--kt-ready:#10b981] [--kt-picked:#6366f1]",
   "dark:[--kt-fill:#2e2e33] dark:[--kt-line:rgb(255_255_255/0.08)] dark:[--kt-ink:#fafafa] dark:[--kt-muted:#a1a1aa] dark:[--kt-quiet:#71717a]",
   "dark:[--kt-preparing:#fb923c] dark:[--kt-ready:#34d399] dark:[--kt-picked:#818cf8]",

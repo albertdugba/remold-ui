@@ -85,8 +85,8 @@ export interface UsageMeterProps {
 }
 
 const TOKENS = [
-  "[--um-surface:#ffffff] [--um-panel:#f7f7f8] [--um-track:#efeff1] [--um-line:rgb(24_24_27/0.08)] [--um-ink:#18181b] [--um-on-ink:#fafafa] [--um-muted:#71717a] [--um-quiet:#a1a1aa]",
-  "[--um-fill:#4f46e5] [--um-low:#d97706] [--um-over:#dc2626] [--um-good:#059669]",
+  "[--um-surface:#ffffff] [--um-panel:#f7f7f8] [--um-track:#efeff1] [--um-line:rgb(24_24_27/0.08)] [--um-ink:#18181b] [--um-on-ink:#fafafa] [--um-muted:#6c6c75] [--um-quiet:#a1a1aa]",
+  "[--um-fill:#4f46e5] [--um-low:#d97706] [--um-over:#dc2626] [--um-good:#047857]",
   "dark:[--um-surface:#1f1f23] dark:[--um-panel:#26262b] dark:[--um-track:#2e2e33] dark:[--um-line:rgb(255_255_255/0.08)] dark:[--um-ink:#fafafa] dark:[--um-on-ink:#18181b] dark:[--um-muted:#a1a1aa] dark:[--um-quiet:#71717a]",
   "dark:[--um-fill:#818cf8] dark:[--um-low:#fbbf24] dark:[--um-over:#f87171] dark:[--um-good:#34d399]",
   "font-sans",

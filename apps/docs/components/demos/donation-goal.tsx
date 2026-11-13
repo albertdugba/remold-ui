@@ -135,7 +135,7 @@ export function DonationGoal({
     <MotionConfig reducedMotion="user">
       <section
         ref={ref}
-        className="not-prose grid w-[min(100%,360px)] gap-[18px] rounded-[20px] bg-(--dg-surface) p-[22px] font-sans text-[13px] text-(--dg-ink) [--dg-accent:#2563eb] [--dg-ghost:#dbe5f8] [--dg-ink:#18181b] [--dg-muted:#71717a] [--dg-soft:#f4f4f5] [--dg-surface:#ffffff] [--dg-thumb:#ffffff] [--dg-on-accent:#ffffff] dark:[--dg-accent:#60a5fa] dark:[--dg-ghost:#263552] dark:[--dg-ink:#fafafa] dark:[--dg-muted:#a1a1aa] dark:[--dg-soft:#27272a] dark:[--dg-surface:#1c1c1f] dark:[--dg-thumb:#3f3f46] dark:[--dg-on-accent:#0b1220]"
+        className="not-prose grid w-[min(100%,360px)] gap-[18px] rounded-[20px] bg-(--dg-surface) p-[22px] font-sans text-[13px] text-(--dg-ink) [--dg-accent:#2563eb] [--dg-ghost:#dbe5f8] [--dg-ink:#18181b] [--dg-muted:#6c6c75] [--dg-soft:#f4f4f5] [--dg-surface:#ffffff] [--dg-thumb:#ffffff] [--dg-on-accent:#ffffff] dark:[--dg-accent:#60a5fa] dark:[--dg-ghost:#263552] dark:[--dg-ink:#fafafa] dark:[--dg-muted:#a1a1aa] dark:[--dg-soft:#27272a] dark:[--dg-surface:#1c1c1f] dark:[--dg-thumb:#3f3f46] dark:[--dg-on-accent:#0b1220]"
         aria-label="Donation goal"
         data-reached={reached || undefined}
       >

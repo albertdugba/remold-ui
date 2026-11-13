@@ -48,7 +48,7 @@ const LABEL_SCALE = 0.75;
 
 const FLAG = "grid w-[22px] flex-none place-items-center text-[20px] leading-none";
 const POPUP = [
-  "[--fk-surface:#ffffff] [--fk-well:#f4f4f5] [--fk-ink:#0a0a0b] [--fk-muted:#71717a] [--fk-faint:#b4b4bd] [--fk-line:rgb(10_10_11/0.08)]",
+  "[--fk-surface:#ffffff] [--fk-well:#f4f4f5] [--fk-ink:#0a0a0b] [--fk-muted:#6c6c75] [--fk-faint:#b4b4bd] [--fk-line:rgb(10_10_11/0.08)]",
   "dark:[--fk-surface:#1c1c1f] dark:[--fk-well:#2a2a2f] dark:[--fk-ink:#fafafa] dark:[--fk-muted:#a1a1aa] dark:[--fk-faint:#5b5b64] dark:[--fk-line:rgb(255_255_255/0.08)]",
   "flex max-h-[min(340px,var(--available-height,70dvh))] w-(--anchor-width) flex-col overflow-hidden rounded-[18px] border border-solid border-(--fk-line) bg-(--fk-surface) font-sans text-[14px] text-(--fk-ink) antialiased outline-none",
   "shadow-[0_0_0_0.5px_rgb(0_0_0/0.02),0_2px_4px_rgb(0_0_0/0.04),0_12px_24px_-6px_rgb(0_0_0/0.08),0_32px_64px_-16px_rgb(0_0_0/0.14)] dark:shadow-[0_24px_48px_-20px_rgb(0_0_0/0.7)]",

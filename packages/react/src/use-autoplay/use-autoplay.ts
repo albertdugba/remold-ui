@@ -1,3 +1,4 @@
+import { prefersReducedMotion, type ReducedMotion } from "@remold-ui/dom";
 import { useCallback, useEffect, useState } from "react";
 import type { Autoplay, AutoplayControlAttribute, AutoplayOptions } from "./types.js";
 
@@ -26,6 +27,24 @@ function useInView(element: HTMLElement | null): boolean {
   return visible;
 }
 
+function useReducedMotion(setting: ReducedMotion): boolean {
+  const [system, setSystem] = useState(false);
+
+  useEffect(() => {
+    if (setting !== "user" || typeof matchMedia !== "function") return;
+
+    const query = matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setSystem(prefersReducedMotion());
+
+    update();
+    query.addEventListener("change", update);
+
+    return () => query.removeEventListener("change", update);
+  }, [setting]);
+
+  return setting === "always" || (setting === "user" && system);
+}
+
 function useStopOnInteraction(element: HTMLElement | null, enabled: boolean, stop: () => void) {
   useEffect(() => {
     if (!element || !enabled) return;
@@ -38,25 +57,32 @@ function useStopOnInteraction(element: HTMLElement | null, enabled: boolean, sto
 
     element.addEventListener("pointerdown", onInteract, true);
     element.addEventListener("keydown", onInteract, true);
+    element.addEventListener("click", onInteract, true);
+    element.addEventListener("keyup", onInteract, true);
 
     return () => {
       element.removeEventListener("pointerdown", onInteract, true);
       element.removeEventListener("keydown", onInteract, true);
+      element.removeEventListener("click", onInteract, true);
+      element.removeEventListener("keyup", onInteract, true);
     };
   }, [element, enabled, stop]);
 }
 
 /** Steps through a sequence by itself while it's on screen, and stops when someone takes over. */
 export function useAutoplay(count: number, options: AutoplayOptions = {}): Autoplay {
-  const { every = 2400, initial = 0, stopOnInteraction = true, autoStart = true } = options;
+  const { every = 2400, initial = 0, stopOnInteraction = true, autoStart = true, reducedMotion = "user" } = options;
 
   const [step, setStep] = useState(initial);
-  const [playing, setPlaying] = useState(autoStart);
+  const [requested, setPlaying] = useState(autoStart);
+  const [started, setStarted] = useState(false);
   const [element, setElement] = useState<HTMLElement | null>(null);
   const visible = useInView(element);
+  const reduced = useReducedMotion(reducedMotion);
 
   const shown = Math.min(step, Math.max(0, count - 1));
   const delay = typeof every === "function" ? every(shown) : every;
+  const playing = requested && (!reduced || started);
   const active = playing && visible;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: shown restarts the timer for each visible step.
@@ -73,7 +99,15 @@ export function useAutoplay(count: number, options: AutoplayOptions = {}): Autop
   useStopOnInteraction(element, stopOnInteraction && playing, stop);
 
   const next = useCallback(() => setStep((current) => (current + 1) % Math.max(1, count)), [count]);
-  const toggle = useCallback(() => setPlaying((current) => !current), []);
+  const play = useCallback(() => {
+    setStarted(true);
+    setPlaying(true);
+  }, []);
+
+  const toggle = useCallback(() => {
+    if (playing) setPlaying(false);
+    else play();
+  }, [playing, play]);
 
   return {
     ref: setElement,
@@ -83,6 +117,7 @@ export function useAutoplay(count: number, options: AutoplayOptions = {}): Autop
     playing,
     active,
     setPlaying,
+    play,
     toggleProps: { [CONTROL]: "", "aria-pressed": playing, onClick: toggle },
   };
 }

@@ -48,7 +48,7 @@ const titleCase = (text: string) => text.trim().replace(/^\w/, (first) => first.
 const ROW_EXIT = { opacity: 0, transition: { duration: 0.1 } };
 
 const TOKENS = [
-  "[--lp-surface:#ffffff] [--lp-raised:#ffffff] [--lp-field:#f4f4f5] [--lp-line:rgb(24_24_27/0.08)] [--lp-ink:#18181b] [--lp-muted:#71717a] [--lp-quiet:#a1a1aa] [--lp-accent:#4f46e5]",
+  "[--lp-surface:#ffffff] [--lp-raised:#ffffff] [--lp-field:#f4f4f5] [--lp-line:rgb(24_24_27/0.08)] [--lp-ink:#18181b] [--lp-muted:#6c6c75] [--lp-quiet:#a1a1aa] [--lp-accent:#4f46e5]",
   "[--lp-shadow:0_18px_40px_-12px_rgb(0_0_0/0.22),0_0_0_1px_rgb(24_24_27/0.06)]",
   "dark:[--lp-surface:#1f1f23] dark:[--lp-raised:#2a2a2f] dark:[--lp-field:#2e2e33] dark:[--lp-line:rgb(255_255_255/0.08)] dark:[--lp-ink:#fafafa] dark:[--lp-muted:#a1a1aa] dark:[--lp-quiet:#71717a] dark:[--lp-accent:#818cf8]",
   "dark:[--lp-shadow:0_18px_40px_-12px_rgb(0_0_0/0.6),0_0_0_1px_rgb(255_255_255/0.08)]",

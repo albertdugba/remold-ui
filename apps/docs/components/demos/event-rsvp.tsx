@@ -89,7 +89,7 @@ const QUICK = { duration: 0.14 };
 const ROUND = { borderRadius: 999 };
 
 const PALETTE = [
-  "[--rsvp-surface:#ffffff] [--rsvp-well:#f4f4f5] [--rsvp-line:rgb(24_24_27/0.08)] [--rsvp-ink:#18181b] [--rsvp-muted:#71717a] [--rsvp-good:#16a34a]",
+  "[--rsvp-surface:#ffffff] [--rsvp-well:#f4f4f5] [--rsvp-line:rgb(24_24_27/0.08)] [--rsvp-ink:#18181b] [--rsvp-muted:#6c6c75] [--rsvp-good:#15803d]",
   "dark:[--rsvp-surface:#1f1f23] dark:[--rsvp-well:#2a2a2f] dark:[--rsvp-line:rgb(255_255_255/0.08)] dark:[--rsvp-ink:#fafafa] dark:[--rsvp-muted:#a1a1aa] dark:[--rsvp-good:#22c55e]",
 ].join(" ");
 

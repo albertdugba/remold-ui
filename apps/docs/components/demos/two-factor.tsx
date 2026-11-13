@@ -150,7 +150,7 @@ export function TwoFactor({
     <section
       ref={ref}
       style={{ minHeight: Math.max(OPEN, tallest) }}
-      className="grid w-[min(100%,360px)] content-start font-sans text-(--tf-ink) [--tf-faint:#a1a1aa] [--tf-fill:#f4f4f5] [--tf-good:#15803d] [--tf-ink:#18181b] [--tf-line:rgb(24_24_27/0.07)] [--tf-muted:#71717a] [--tf-on:#18181b] [--tf-surface:#ffffff] [--tf-track:#e4e4e7] dark:[--tf-faint:#71717a] dark:[--tf-fill:#2c2c31] dark:[--tf-good:#4ade80] dark:[--tf-ink:#fafafa] dark:[--tf-line:rgb(255_255_255/0.07)] dark:[--tf-muted:#a1a1aa] dark:[--tf-on:#fafafa] dark:[--tf-surface:#232327] dark:[--tf-track:#3a3a40]"
+      className="grid w-[min(100%,360px)] content-start font-sans text-(--tf-ink) [--tf-faint:#a1a1aa] [--tf-fill:#f4f4f5] [--tf-good:#15803d] [--tf-ink:#18181b] [--tf-line:rgb(24_24_27/0.07)] [--tf-muted:#6c6c75] [--tf-on:#18181b] [--tf-surface:#ffffff] [--tf-track:#e4e4e7] dark:[--tf-faint:#71717a] dark:[--tf-fill:#2c2c31] dark:[--tf-good:#4ade80] dark:[--tf-ink:#fafafa] dark:[--tf-line:rgb(255_255_255/0.07)] dark:[--tf-muted:#a1a1aa] dark:[--tf-on:#fafafa] dark:[--tf-surface:#232327] dark:[--tf-track:#3a3a40]"
       data-phase={setup.phase}
       aria-label="Two-factor settings"
     >

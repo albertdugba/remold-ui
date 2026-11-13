@@ -245,7 +245,7 @@ export interface ParticleShapesDemoProps extends Omit<ParticleShapesProps, "shap
 }
 
 export function ParticleShapesDemo({ playing, ...settings }: ParticleShapesDemoProps = {}) {
-  const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing ?? true);
+  const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing, true);
   return (
     <div ref={ref} className="not-prose grid w-full">
       <ParticleShapes {...settings} shape={state} onShapeChange={takeOver} paused={playing === false} />

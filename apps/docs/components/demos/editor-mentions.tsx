@@ -47,7 +47,7 @@ const firstName = (personId: string) => personById(personId).name.split(" ")[0]!
 
 const TOKENS = [
   "[--em-surface:#ffffff] [--em-raised:#ffffff] [--em-field:#f6f6f7] [--em-line:rgb(24_24_27/0.08)] [--em-ink:#18181b] [--em-on-ink:#fafafa]",
-  "[--em-muted:#71717a] [--em-quiet:#a1a1aa] [--em-accent:#4f46e5] [--em-accent-soft:#eef2ff] [--em-chip:rgb(79_70_229/0.09)] [--em-chip-ink:#3f37c9]",
+  "[--em-muted:#6c6c75] [--em-quiet:#a1a1aa] [--em-accent:#4f46e5] [--em-accent-soft:#eef2ff] [--em-chip:rgb(79_70_229/0.09)] [--em-chip-ink:#3f37c9]",
   "[--em-query:rgb(79_70_229/0.08)] [--em-lift:0_1px_2px_rgb(24_24_27/0.04),0_8px_24px_-10px_rgb(24_24_27/0.18)] [--em-online:#22c55e]",
   "dark:[--em-surface:#1f1f23] dark:[--em-raised:#1c1c1f] dark:[--em-field:#26262b] dark:[--em-line:rgb(255_255_255/0.08)] dark:[--em-ink:#fafafa] dark:[--em-on-ink:#18181b]",
   "dark:[--em-muted:#a1a1aa] dark:[--em-quiet:#71717a] dark:[--em-accent:#818cf8] dark:[--em-accent-soft:rgb(129_140_248/0.16)] dark:[--em-chip:rgb(129_140_248/0.16)] dark:[--em-chip-ink:#c7d2fe]",

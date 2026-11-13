@@ -26,7 +26,7 @@ const FOLLOW = { type: "spring" as const, stiffness: 900, damping: 60 };
 
 const PALETTE = [
   "[--ssl-surface:#ffffff] [--ssl-well:#f4f4f5] [--ssl-line:rgb(10_10_11/0.1)] [--ssl-edge:rgb(0_0_0/0.06)]",
-  "[--ssl-ink:#0a0a0b] [--ssl-soft:#3f3f46] [--ssl-muted:#71717a]",
+  "[--ssl-ink:#0a0a0b] [--ssl-soft:#3f3f46] [--ssl-muted:#6c6c75]",
   "dark:[--ssl-surface:#18181b] dark:[--ssl-well:#27272a] dark:[--ssl-line:rgb(255_255_255/0.12)] dark:[--ssl-edge:rgb(255_255_255/0.07)]",
   "dark:[--ssl-ink:#fafafa] dark:[--ssl-soft:#d4d4d8] dark:[--ssl-muted:#a1a1aa]",
 ].join(" ");

@@ -79,7 +79,7 @@ export function Streak({
   return (
     <section
       ref={ref}
-      className="not-prose group/streak grid w-[min(100%,340px)] justify-items-center rounded-[28px] bg-(--st-surface) px-[22px] pt-[26px] pb-5 text-center font-sans text-(--st-ink) [--st-fire-soft:#ffedd5] [--st-fire:#f97316] [--st-ink:#18181b] [--st-muted:#71717a] [--st-off:#e4e4e7] [--st-on-ink:#fafafa] [--st-surface:#ffffff] dark:[--st-fire-soft:rgb(251_146_60/0.16)] dark:[--st-fire:#fb923c] dark:[--st-ink:#fafafa] dark:[--st-muted:#a1a1aa] dark:[--st-off:#3a3a40] dark:[--st-on-ink:#18181b] dark:[--st-surface:#232327]"
+      className="not-prose group/streak grid w-[min(100%,340px)] justify-items-center rounded-[28px] bg-(--st-surface) px-[22px] pt-[26px] pb-5 text-center font-sans text-(--st-ink) [--st-fire-soft:#ffedd5] [--st-fire:#f97316] [--st-ink:#18181b] [--st-muted:#6c6c75] [--st-off:#e4e4e7] [--st-on-ink:#fafafa] [--st-surface:#ffffff] dark:[--st-fire-soft:rgb(251_146_60/0.16)] dark:[--st-fire:#fb923c] dark:[--st-ink:#fafafa] dark:[--st-muted:#a1a1aa] dark:[--st-off:#3a3a40] dark:[--st-on-ink:#18181b] dark:[--st-surface:#232327]"
       aria-label="Daily streak"
       data-lit={streak.lit || undefined}
     >

@@ -111,7 +111,7 @@ const REST: BulkSelectValue = {
 const SPRING = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
 
 const PALETTE = [
-  "[--bk-surface:#ffffff] [--bk-ink:#18181b] [--bk-muted:#71717a] [--bk-quiet:#a1a1aa] [--bk-line:rgb(24_24_27/0.07)] [--bk-hover:rgb(24_24_27/0.035)]",
+  "[--bk-surface:#ffffff] [--bk-ink:#18181b] [--bk-muted:#6c6c75] [--bk-quiet:#a1a1aa] [--bk-line:rgb(24_24_27/0.07)] [--bk-hover:rgb(24_24_27/0.035)]",
   "[--bk-accent:#4f46e5] [--bk-band:rgb(79_70_229/0.07)] [--bk-box:rgb(24_24_27/0.22)]",
   "[--bk-bar:#18181b] [--bk-bar-ink:#fafafa] [--bk-bar-muted:#a1a1aa] [--bk-bar-hover:rgb(255_255_255/0.09)] [--bk-danger:#f87171]",
   "dark:[--bk-surface:#1f1f23] dark:[--bk-ink:#fafafa] dark:[--bk-muted:#a1a1aa] dark:[--bk-quiet:#71717a] dark:[--bk-line:rgb(255_255_255/0.07)] dark:[--bk-hover:rgb(255_255_255/0.04)]",

@@ -28,7 +28,7 @@ export function CodeField({
 }: CodeFieldProps) {
   return (
     <label
-      className={`${className ?? ""} relative flex cursor-text gap-2 rounded-full py-2.5 text-[var(--cf-ink)] [--cf-bad:#dc2626] [--cf-bad-bg:#fef2f2] [--cf-cell:#f1f1f1] [--cf-ink:#18181b] dark:[--cf-bad:#f87171] dark:[--cf-bad-bg:rgb(248_113_113_/_0.14)] dark:[--cf-cell:#3a3a40] dark:[--cf-ink:#fafafa] data-[invalid]:[&_.cf-cell]:bg-[var(--cf-bad-bg)] data-[invalid]:[&_.cf-cell]:text-[var(--cf-bad)]`}
+      className={`${className ?? ""} relative flex cursor-text gap-2 rounded-full py-2.5 text-[var(--cf-ink)] has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-(--cf-ink) [--cf-bad:#dc2626] [--cf-bad-bg:#fef2f2] [--cf-cell:#f1f1f1] [--cf-ink:#18181b] dark:[--cf-bad:#f87171] dark:[--cf-bad-bg:rgb(248_113_113_/_0.14)] dark:[--cf-cell:#3a3a40] dark:[--cf-ink:#fafafa] data-[invalid]:[&_.cf-cell]:bg-[var(--cf-bad-bg)] data-[invalid]:[&_.cf-cell]:text-[var(--cf-bad)]`}
       data-invalid={invalid || undefined}
     >
       <input

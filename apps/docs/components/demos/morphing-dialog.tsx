@@ -364,7 +364,7 @@ export function MorphingDialogDemo({ playing, preview }: MorphingDialogDemoProps
       <div
         ref={setStage}
         data-mdg-stage=""
-        className="grid min-h-[460px] w-full place-items-center text-[14px] text-(--mdg-ink) [--mdg-ink:#0a0a0b] [--mdg-input-line:rgb(10_10_11/0.12)] [--mdg-line:rgb(10_10_11/0.08)] [--mdg-muted:#71717a] [--mdg-surface:#ffffff] [--mdg-well:#f4f4f5] dark:[--mdg-ink:#fafafa] dark:[--mdg-input-line:rgb(255_255_255/0.14)] dark:[--mdg-line:rgb(255_255_255/0.1)] dark:[--mdg-muted:#a1a1aa] dark:[--mdg-surface:#1f1f23] dark:[--mdg-well:#2a2a2f]"
+        className="grid min-h-[460px] w-full place-items-center text-[14px] text-(--mdg-ink) [--mdg-ink:#0a0a0b] [--mdg-input-line:rgb(10_10_11/0.12)] [--mdg-line:rgb(10_10_11/0.08)] [--mdg-muted:#6c6c75] [--mdg-surface:#ffffff] [--mdg-well:#f4f4f5] dark:[--mdg-ink:#fafafa] dark:[--mdg-input-line:rgb(255_255_255/0.14)] dark:[--mdg-line:rgb(255_255_255/0.1)] dark:[--mdg-muted:#a1a1aa] dark:[--mdg-surface:#1f1f23] dark:[--mdg-well:#2a2a2f]"
       >
         <LayoutGroup>
           <section className="w-[min(100%,380px)] rounded-[22px] bg-(--mdg-surface) p-2" aria-label="Habits">

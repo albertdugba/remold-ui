@@ -22,7 +22,7 @@ export function DotGridDemo() {
   const [ambient, setAmbient] = useState(true);
 
   return (
-    <div className="grid w-[min(100%,560px)] gap-3.5 font-sans [--dgd-accent:#6366f1] [--dgd-dots:rgb(24_24_27/0.18)] [--dgd-ink:#18181b] [--dgd-muted:#71717a] [--dgd-soft:#f4f4f5] [--dgd-surface:#ffffff] dark:[--dgd-accent:#a5b4fc] dark:[--dgd-dots:rgb(255_255_255/0.16)] dark:[--dgd-ink:#fafafa] dark:[--dgd-muted:#a1a1aa] dark:[--dgd-soft:#27272a] dark:[--dgd-surface:#111113]">
+    <div className="grid w-[min(100%,560px)] gap-3.5 font-sans [--dgd-accent:#6366f1] [--dgd-dots:rgb(24_24_27/0.18)] [--dgd-ink:#18181b] [--dgd-muted:#6c6c75] [--dgd-soft:#f4f4f5] [--dgd-surface:#ffffff] dark:[--dgd-accent:#a5b4fc] dark:[--dgd-dots:rgb(255_255_255/0.16)] dark:[--dgd-ink:#fafafa] dark:[--dgd-muted:#a1a1aa] dark:[--dgd-soft:#27272a] dark:[--dgd-surface:#111113]">
       <div className="relative h-[280px] overflow-hidden rounded-[20px] bg-(--dgd-surface)">
         <Remold.DotGrid
           className="absolute inset-0 size-full text-(--dgd-dots) accent-(--dgd-accent)"

@@ -95,8 +95,8 @@ function PickSurface({
 }
 
 const PALETTE = [
-  "[--bks-surface:#ffffff] [--bks-ink:#0a0a0b] [--bks-soft:#3f3f46] [--bks-muted:#71717a] [--bks-faint:#a1a1aa] [--bks-well:#f4f4f5]",
-  "[--bks-dash:rgb(10_10_11/0.28)] [--bks-good:#16a34a]",
+  "[--bks-surface:#ffffff] [--bks-ink:#0a0a0b] [--bks-soft:#3f3f46] [--bks-muted:#6c6c75] [--bks-faint:#a1a1aa] [--bks-well:#f4f4f5]",
+  "[--bks-dash:rgb(10_10_11/0.28)] [--bks-good:#15803d]",
   "dark:[--bks-surface:#18181b] dark:[--bks-ink:#fafafa] dark:[--bks-soft:#d4d4d8] dark:[--bks-muted:#a1a1aa] dark:[--bks-faint:#71717a] dark:[--bks-well:#27272a]",
   "dark:[--bks-dash:rgb(255_255_255/0.32)] dark:[--bks-good:#4ade80]",
 ].join(" ");

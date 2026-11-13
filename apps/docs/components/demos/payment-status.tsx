@@ -17,7 +17,7 @@ const BRAND: Record<PaymentStatusValue, string> = {
   card: "[--ils-brand:#4f46e5] dark:[--ils-brand:#818cf8]",
   processing: "[--ils-brand:#4f46e5] dark:[--ils-brand:#818cf8]",
   declined: "[--ils-brand:#dc2626] dark:[--ils-brand:#f87171]",
-  paid: "[--ils-brand:#16a34a] dark:[--ils-brand:#4ade80]",
+  paid: "[--ils-brand:#15803d] dark:[--ils-brand:#4ade80]",
 };
 
 function stagesFor(amount: string, card: string, email: string): readonly StoryStage[] {
@@ -91,6 +91,7 @@ export interface PaymentStatusProps {
   amount?: string;
   card?: string;
   email?: string;
+  live?: boolean;
 }
 
 export function PaymentStatus({
@@ -98,6 +99,7 @@ export function PaymentStatus({
   amount = "£48.00",
   card = "Visa ending 4242",
   email = "ama@northwind.app",
+  live,
 }: PaymentStatusProps) {
   return (
     <IllustratedStory
@@ -106,6 +108,7 @@ export function PaymentStatus({
       stages={stagesFor(amount, card, email)}
       stage={PAYMENT_STATUSES.indexOf(status)}
       steps={false}
+      live={live}
     />
   );
 }
@@ -132,14 +135,14 @@ export interface PaymentStatusDemoProps {
 }
 
 export function PaymentStatusDemo({ playing }: PaymentStatusDemoProps = {}) {
-  const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing ?? true);
+  const { ref, state, takeOver, live } = useScene(BEATS, fromBeat, playing, true);
 
   return (
     <div ref={ref} className={STORY_STAGE}>
-      <PaymentStatus status={state} />
+      <PaymentStatus status={state} live={live} />
       <ToggleGroup
         className="mt-[18px] inline-flex max-w-full overflow-x-auto rounded-[10px] border border-solid border-fd-border bg-fd-muted p-[3px]"
-        aria-label="Payment status"
+        aria-label="Show status"
         value={[state]}
         onValueChange={(values) => values[0] && takeOver(values[0] as PaymentStatusValue)}
       >

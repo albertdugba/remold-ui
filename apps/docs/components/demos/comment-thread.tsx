@@ -38,7 +38,7 @@ import {
 } from "./comment-thread.model";
 
 const PALETTE = [
-  "[--cx-bg:#ffffff] [--cx-subtle:#f6f6f7] [--cx-border:#e7e7ea] [--cx-text:#18181b] [--cx-body:#27272a] [--cx-muted:#71717a] [--cx-faint:#a1a1aa]",
+  "[--cx-bg:#ffffff] [--cx-subtle:#f6f6f7] [--cx-border:#e7e7ea] [--cx-text:#18181b] [--cx-body:#27272a] [--cx-muted:#6c6c75] [--cx-faint:#a1a1aa]",
   "[--cx-line:#dcdce0] [--cx-ink:#18181b] [--cx-mention:#2563eb] [--cx-pressed:#ffffff] [--cx-official:#18181b] [--cx-on-official:#ffffff] [--cx-scrollbar:#d4d4d8]",
   "dark:[--cx-bg:#18181b] dark:[--cx-subtle:#27272a] dark:[--cx-border:#3f3f46] dark:[--cx-text:#fafafa] dark:[--cx-body:#fafafa] dark:[--cx-muted:#d4d4d8] dark:[--cx-faint:#a1a1aa]",
   "dark:[--cx-line:#71717a] dark:[--cx-ink:#fafafa] dark:[--cx-mention:#60a5fa] dark:[--cx-pressed:#3f3f46] dark:[--cx-official:#a78bfa] dark:[--cx-on-official:#1e1b4b] dark:[--cx-scrollbar:#71717a]",

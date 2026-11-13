@@ -40,15 +40,16 @@ export interface IllustratedStoryProps {
   extras?: ReactNode;
   over?: ReactNode;
   steps?: boolean;
+  live?: boolean;
 }
 
 export const STORY_COLORS =
-  "[--ils-ink:#27272a] [--ils-brand:#16a34a] [--ils-soft:#d4d4d8] [--ils-track:#e4e4e7] dark:[--ils-ink:#e4e4e7] dark:[--ils-soft:#3f3f46] dark:[--ils-track:#3f3f46]";
+  "[--ils-ink:#27272a] [--ils-brand:#15803d] [--ils-soft:#d4d4d8] [--ils-track:#e4e4e7] dark:[--ils-ink:#e4e4e7] dark:[--ils-soft:#3f3f46] dark:[--ils-track:#3f3f46]";
 
 export const STORY_STAGE = "not-prose grid w-full place-items-center px-4 py-6";
 
 const BASE =
-  "[--ils-light:#ffffff] [--ils-muted:#71717a] [--ils-sheen:rgb(255_255_255/0.16)] dark:[--ils-light:#18181b] dark:[--ils-muted:#a1a1aa] dark:[--ils-sheen:rgb(0_0_0/0.12)]";
+  "[--ils-light:#ffffff] [--ils-muted:#6c6c75] [--ils-sheen:rgb(255_255_255/0.16)] dark:[--ils-light:#18181b] dark:[--ils-muted:#a1a1aa] dark:[--ils-sheen:rgb(0_0_0/0.12)]";
 
 const VIEW_BOX = "0 0 160 128";
 const POINT = "M80 64h0.1v0.1h-0.1Z";
@@ -115,6 +116,7 @@ export function IllustratedStory({
   extras,
   over,
   steps = true,
+  live,
 }: IllustratedStoryProps) {
   const current = stages[stage]!;
   const motion = current.motion ?? {};
@@ -157,7 +159,7 @@ export function IllustratedStory({
         {over}
       </div>
 
-      <div className="grid gap-1" aria-live="polite">
+      <div className="grid gap-1" aria-live={live ? "off" : "polite"}>
         <Remold.Text className="text-[22px] leading-[1.2] font-[650] tracking-[-0.015em]">{current.title}</Remold.Text>
         <Remold.Text className="text-[14px] text-(--ils-muted) tabular-nums">{current.line}</Remold.Text>
       </div>
@@ -187,5 +189,5 @@ export function IllustratedStory({
 
 export function useStory(ms: readonly number[], playing?: boolean) {
   const [beats] = useState(() => ms.map((duration) => ({ ms: duration })));
-  return useScene(beats, fromBeat, playing ?? true);
+  return useScene(beats, fromBeat, playing, true);
 }

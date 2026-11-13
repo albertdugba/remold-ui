@@ -300,7 +300,7 @@ function Cleanup({
           if (typeof ref === "function") ref(element);
           else if (ref) ref.current = element;
         }}
-        className="not-prose relative block w-[min(100%,420px)] overflow-hidden rounded-3xl bg-(--stg-surface) font-sans text-[13px] text-(--stg-ink) antialiased [--stg-bad:#e5484d] [--stg-files:#6366f1] [--stg-free:#ececee] [--stg-good:#16a34a] [--stg-ink:#18181b] [--stg-line:rgb(24_24_27/0.07)] [--stg-mail:#a1a1aa] [--stg-muted:#71717a] [--stg-photos:#f59e0b] [--stg-quiet:#a1a1aa] [--stg-surface:#ffffff] [--stg-well:#f4f4f5] dark:[--stg-bad:#ff6369] dark:[--stg-files:#818cf8] dark:[--stg-free:#2c2c31] dark:[--stg-good:#4ade80] dark:[--stg-ink:#fafafa] dark:[--stg-line:rgb(255_255_255/0.07)] dark:[--stg-mail:#71717a] dark:[--stg-muted:#a1a1aa] dark:[--stg-photos:#fbbf24] dark:[--stg-quiet:#71717a] dark:[--stg-surface:#1c1c1f] dark:[--stg-well:#26262b]"
+        className="not-prose relative block w-[min(100%,420px)] overflow-hidden rounded-3xl bg-(--stg-surface) font-sans text-[13px] text-(--stg-ink) antialiased [--stg-bad:#c8323a] [--stg-files:#6366f1] [--stg-free:#ececee] [--stg-good:#15803d] [--stg-ink:#18181b] [--stg-line:rgb(24_24_27/0.07)] [--stg-mail:#a1a1aa] [--stg-muted:#6c6c75] [--stg-photos:#f59e0b] [--stg-quiet:#a1a1aa] [--stg-surface:#ffffff] [--stg-well:#f4f4f5] dark:[--stg-bad:#ff6369] dark:[--stg-files:#818cf8] dark:[--stg-free:#2c2c31] dark:[--stg-good:#4ade80] dark:[--stg-ink:#fafafa] dark:[--stg-line:rgb(255_255_255/0.07)] dark:[--stg-mail:#71717a] dark:[--stg-muted:#a1a1aa] dark:[--stg-photos:#fbbf24] dark:[--stg-quiet:#71717a] dark:[--stg-surface:#1c1c1f] dark:[--stg-well:#26262b]"
         aria-label="Free up space"
         style={{ height }}
       >

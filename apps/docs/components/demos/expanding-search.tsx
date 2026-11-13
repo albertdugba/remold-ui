@@ -47,7 +47,7 @@ const PICKS = [PRODUCTS[1]!, PRODUCTS[2]!];
 const SETTLE = { type: "spring" as const, duration: 0.38, bounce: 0 };
 
 const PALETTE = [
-  "[--xs-surface:#ffffff] [--xs-ink:#0a0a0b] [--xs-soft:#3f3f46] [--xs-muted:#71717a] [--xs-well:#f4f4f5] [--xs-line:rgb(10_10_11/0.07)] [--xs-edge:rgb(0_0_0/0.06)]",
+  "[--xs-surface:#ffffff] [--xs-ink:#0a0a0b] [--xs-soft:#3f3f46] [--xs-muted:#6c6c75] [--xs-well:#f4f4f5] [--xs-line:rgb(10_10_11/0.07)] [--xs-edge:rgb(0_0_0/0.06)]",
   "dark:[--xs-surface:#18181b] dark:[--xs-ink:#fafafa] dark:[--xs-soft:#d4d4d8] dark:[--xs-muted:#a1a1aa] dark:[--xs-well:#27272a] dark:[--xs-line:rgb(255_255_255/0.08)] dark:[--xs-edge:rgb(255_255_255/0.07)]",
 ].join(" ");
 

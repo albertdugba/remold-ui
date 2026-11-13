@@ -107,8 +107,8 @@ function featuresUpTo(tier: Tier) {
 }
 
 const PALETTE = [
-  "[--sc-surface:#ffffff] [--sc-panel:#f7f7f8] [--sc-field:#f1f1f3] [--sc-line:rgb(24_24_27/0.08)] [--sc-ink:#18181b] [--sc-on-ink:#fafafa] [--sc-muted:#71717a] [--sc-quiet:#a1a1aa]",
-  "[--sc-accent:#4f46e5] [--sc-accent-soft:#eef2ff] [--sc-good:#059669] [--sc-good-soft:#d1fae5]",
+  "[--sc-surface:#ffffff] [--sc-panel:#f7f7f8] [--sc-field:#f1f1f3] [--sc-line:rgb(24_24_27/0.08)] [--sc-ink:#18181b] [--sc-on-ink:#fafafa] [--sc-muted:#6c6c75] [--sc-quiet:#a1a1aa]",
+  "[--sc-accent:#4f46e5] [--sc-accent-soft:#eef2ff] [--sc-good:#047857] [--sc-good-soft:#d1fae5]",
   "dark:[--sc-surface:#1f1f23] dark:[--sc-panel:#26262b] dark:[--sc-field:#2e2e33] dark:[--sc-line:rgb(255_255_255/0.08)] dark:[--sc-ink:#fafafa] dark:[--sc-on-ink:#18181b] dark:[--sc-muted:#a1a1aa] dark:[--sc-quiet:#71717a]",
   "dark:[--sc-accent:#818cf8] dark:[--sc-accent-soft:rgb(129_140_248/0.16)] dark:[--sc-good:#34d399] dark:[--sc-good-soft:rgb(52_211_153/0.14)]",
 ].join(" ");

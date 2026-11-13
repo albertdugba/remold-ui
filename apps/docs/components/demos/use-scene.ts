@@ -7,12 +7,13 @@ export function useScene<S>(
   beats: readonly { ms: number }[],
   beatState: (step: number) => S,
   playing?: boolean,
+  defaultPlaying = false,
 ) {
   const standalone = playing === undefined;
   const autoplay = useAutoplay(beats.length, {
     every: (index) => beats[index]!.ms,
     stopOnInteraction: standalone,
-    autoStart: Boolean(playing),
+    autoStart: playing ?? defaultPlaying,
   });
   const { setPlaying } = autoplay;
   const [userState, setUserState] = useState<S | null>(null);

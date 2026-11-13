@@ -101,7 +101,7 @@ export function ChartSwitch({ title, period, segments, value, defaultValue = "do
   return (
     <section
       ref={ref}
-      className="not-prose grid w-[340px] max-w-full gap-5 rounded-[24px] bg-(--cs-surface) p-5 font-sans text-(--cs-ink) antialiased [--cs-ink:#0a0a0b] [--cs-muted:#71717a] [--cs-surface:#ffffff] [--cs-well:#f4f4f5] dark:[--cs-ink:#fafafa] dark:[--cs-muted:#a1a1aa] dark:[--cs-surface:#18181b] dark:[--cs-well:#26262b]"
+      className="not-prose grid w-[340px] max-w-full gap-5 rounded-[24px] bg-(--cs-surface) p-5 font-sans text-(--cs-ink) antialiased [--cs-ink:#0a0a0b] [--cs-muted:#6c6c75] [--cs-surface:#ffffff] [--cs-well:#f4f4f5] dark:[--cs-ink:#fafafa] dark:[--cs-muted:#a1a1aa] dark:[--cs-surface:#18181b] dark:[--cs-well:#26262b]"
       aria-label={title}
     >
       <header className="flex items-center justify-between gap-3">

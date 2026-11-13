@@ -83,7 +83,7 @@ const SENDING_FOR = 1100;
 const SENT_FOR = 2400;
 
 const PALETTE = [
-  "[--fx-surface:#f3f3f5] [--fx-well:#ffffff] [--fx-line:rgb(24_24_27/0.08)] [--fx-ink:#18181b] [--fx-muted:#71717a] [--fx-quiet:#a1a1aa]",
+  "[--fx-surface:#f3f3f5] [--fx-well:#ffffff] [--fx-line:rgb(24_24_27/0.08)] [--fx-ink:#18181b] [--fx-muted:#6c6c75] [--fx-quiet:#a1a1aa]",
   "dark:[--fx-surface:#1c1c1f] dark:[--fx-well:#2c2c31] dark:[--fx-line:rgb(255_255_255/0.1)] dark:[--fx-ink:#fafafa] dark:[--fx-muted:#a1a1aa] dark:[--fx-quiet:#71717a]",
 ].join(" ");
 

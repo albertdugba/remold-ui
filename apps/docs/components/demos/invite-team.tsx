@@ -104,8 +104,8 @@ const TEAM: readonly Person[] = [
 const EMPTY: InviteTeamValue = { draft: "", chips: [], pending: [], team: TEAM };
 
 const PALETTE = [
-  "[--iv-surface:#ffffff] [--iv-well:#f4f4f5] [--iv-token:#e8e8eb] [--iv-ink:#18181b] [--iv-muted:#71717a] [--iv-faint:#a1a1aa]",
-  "[--iv-line:rgb(24_24_27/0.08)] [--iv-border:rgb(24_24_27/0.12)] [--iv-good:#16a34a] [--iv-on-good:#ffffff] [--iv-bad:#e5484d]",
+  "[--iv-surface:#ffffff] [--iv-well:#f4f4f5] [--iv-token:#e8e8eb] [--iv-ink:#18181b] [--iv-muted:#6c6c75] [--iv-faint:#a1a1aa]",
+  "[--iv-line:rgb(24_24_27/0.08)] [--iv-border:rgb(24_24_27/0.12)] [--iv-good:#15803d] [--iv-on-good:#ffffff] [--iv-bad:#c8323a]",
   "dark:[--iv-surface:#1c1c1f] dark:[--iv-well:#26262b] dark:[--iv-token:#313137] dark:[--iv-ink:#fafafa] dark:[--iv-muted:#a1a1aa] dark:[--iv-faint:#63636b]",
   "dark:[--iv-line:rgb(255_255_255/0.07)] dark:[--iv-border:rgb(255_255_255/0.14)] dark:[--iv-good:#4ade80] dark:[--iv-on-good:#0a0a0b] dark:[--iv-bad:#ff6369]",
 ].join(" ");

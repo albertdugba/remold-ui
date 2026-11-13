@@ -108,7 +108,7 @@ export interface FilterBarProps {
 }
 
 const TOKENS = [
-  "[--flt-surface:#ffffff] [--flt-raised:#ffffff] [--flt-field:#f4f4f5] [--flt-line:rgb(24_24_27/0.08)] [--flt-ink:#18181b] [--flt-muted:#71717a] [--flt-quiet:#a1a1aa] [--flt-accent:#4f46e5]",
+  "[--flt-surface:#ffffff] [--flt-raised:#ffffff] [--flt-field:#f4f4f5] [--flt-line:rgb(24_24_27/0.08)] [--flt-ink:#18181b] [--flt-muted:#6c6c75] [--flt-quiet:#a1a1aa] [--flt-accent:#4f46e5]",
   "[--flt-shadow:0_18px_40px_-12px_rgb(0_0_0/0.22),0_0_0_1px_rgb(24_24_27/0.06)] [--flt-hover:color-mix(in_oklab,var(--flt-ink)_6%,var(--flt-field))]",
   "dark:[--flt-surface:#1f1f23] dark:[--flt-raised:#2a2a2f] dark:[--flt-field:#2e2e33] dark:[--flt-line:rgb(255_255_255/0.08)] dark:[--flt-ink:#fafafa] dark:[--flt-muted:#a1a1aa] dark:[--flt-quiet:#71717a] dark:[--flt-accent:#818cf8]",
   "dark:[--flt-shadow:0_18px_40px_-12px_rgb(0_0_0/0.6),0_0_0_1px_rgb(255_255_255/0.08)]",

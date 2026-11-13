@@ -105,8 +105,8 @@ function useCardSize(size: Size, radiusTarget: number, reduced: boolean) {
 }
 
 const PALETTE = [
-  "[--fbp-surface:#ffffff] [--fbp-ink:#0a0a0b] [--fbp-muted:#71717a] [--fbp-well:#f4f4f5] [--fbp-line:rgb(10_10_11/0.08)]",
-  "[--fbp-good:#16a34a] [--fbp-good-soft:#dcfce7] [--fbp-bad:#dc2626] [--fbp-bad-soft:#fee2e2]",
+  "[--fbp-surface:#ffffff] [--fbp-ink:#0a0a0b] [--fbp-muted:#6c6c75] [--fbp-well:#f4f4f5] [--fbp-line:rgb(10_10_11/0.08)]",
+  "[--fbp-good:#15803d] [--fbp-good-soft:#dcfce7] [--fbp-bad:#dc2626] [--fbp-bad-soft:#fee2e2]",
   "dark:[--fbp-surface:#1f1f23] dark:[--fbp-ink:#fafafa] dark:[--fbp-muted:#a1a1aa] dark:[--fbp-well:#2a2a2f] dark:[--fbp-line:rgb(255_255_255/0.1)]",
   "dark:[--fbp-good:#4ade80] dark:[--fbp-good-soft:rgb(74_222_128/0.16)] dark:[--fbp-bad:#f87171] dark:[--fbp-bad-soft:rgb(248_113_113/0.16)]",
 ].join(" ");

@@ -57,8 +57,8 @@ const SPRING = { duration: 0.65, bounce: 0.28 };
 const FILL = { type: "spring" as const, duration: 0.7, bounce: 0.1 };
 
 const PALETTE = [
-  "[--ob-surface:#ffffff] [--ob-panel:#f7f7f8] [--ob-line:rgb(24_24_27/0.08)] [--ob-ink:#18181b] [--ob-on-ink:#fafafa] [--ob-muted:#71717a] [--ob-quiet:#a1a1aa]",
-  "[--ob-accent:#4f46e5] [--ob-good:#059669] [--ob-track:#ececf0]",
+  "[--ob-surface:#ffffff] [--ob-panel:#f7f7f8] [--ob-line:rgb(24_24_27/0.08)] [--ob-ink:#18181b] [--ob-on-ink:#fafafa] [--ob-muted:#6c6c75] [--ob-quiet:#a1a1aa]",
+  "[--ob-accent:#4f46e5] [--ob-good:#047857] [--ob-track:#ececf0]",
   "dark:[--ob-surface:#1f1f23] dark:[--ob-panel:#26262b] dark:[--ob-line:rgb(255_255_255/0.08)] dark:[--ob-ink:#fafafa] dark:[--ob-on-ink:#18181b] dark:[--ob-muted:#a1a1aa] dark:[--ob-quiet:#71717a]",
   "dark:[--ob-accent:#818cf8] dark:[--ob-good:#34d399] dark:[--ob-track:#34343a]",
 ].join(" ");

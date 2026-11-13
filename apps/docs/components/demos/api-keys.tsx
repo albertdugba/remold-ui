@@ -86,7 +86,7 @@ const QUICK = { duration: 0.14 };
 const CARD_PADDING = 18;
 
 const PALETTE = [
-  "[--ak-surface:#ffffff] [--ak-field:#f4f4f5] [--ak-line:rgb(24_24_27/0.07)] [--ak-ink:#18181b] [--ak-muted:#71717a] [--ak-quiet:#a1a1aa]",
+  "[--ak-surface:#ffffff] [--ak-field:#f4f4f5] [--ak-line:rgb(24_24_27/0.07)] [--ak-ink:#18181b] [--ak-muted:#6c6c75] [--ak-quiet:#a1a1aa]",
   "[--ak-live:#22c55e] [--ak-test:#f59e0b] [--ak-vault:#111113] [--ak-vault-ink:#f4f4f5] [--ak-vault-muted:#8b8b93] [--ak-vault-line:rgb(255_255_255/0.08)]",
   "[--ak-danger:#dc2626] [--ak-on-danger:#ffffff] [--ak-danger-tint:color-mix(in_oklab,#dc2626_7%,transparent)]",
   "dark:[--ak-surface:#1f1f23] dark:[--ak-field:#2a2a2f] dark:[--ak-line:rgb(255_255_255/0.07)] dark:[--ak-ink:#fafafa] dark:[--ak-muted:#a1a1aa] dark:[--ak-quiet:#71717a] dark:[--ak-vault:#0b0b0d]",

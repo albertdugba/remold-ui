@@ -382,7 +382,7 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
   };
 
   return (
-    <div className="co not-prose @container my-6 w-full overflow-hidden rounded-[14px] border border-solid border-(--co-border) bg-white font-sans text-(--co-text) [--co-border:#e7e7ea] [--co-done:#16a34a] [--co-faint:#a1a1aa] [--co-ink:#18181b] [--co-muted:#71717a] [--co-subtle:#f6f6f7] [--co-text:#18181b]">
+    <div className="co not-prose @container my-6 w-full overflow-hidden rounded-[14px] border border-solid border-(--co-border) bg-white font-sans text-(--co-text) [--co-border:#e7e7ea] [--co-done:#15803d] [--co-faint:#a1a1aa] [--co-ink:#18181b] [--co-muted:#6c6c75] [--co-subtle:#f6f6f7] [--co-text:#18181b]">
       <CourseHeader finished={finished} total={lessons.length} />
       <ShowFilter show={show} upNext={upNext} onChange={setShow} />
 

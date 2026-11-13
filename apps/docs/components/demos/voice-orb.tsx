@@ -338,7 +338,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
   return (
     <div
       ref={auto.ref}
-      className="not-prose grid w-[min(100%,400px)] justify-items-center gap-[22px] py-2 font-sans text-(--vo-ink) [--vo-faint:#a1a1aa] [--vo-fill:rgb(24_24_27/0.05)] [--vo-ink:#18181b] [--vo-muted:#71717a] [--vo-ring:rgb(24_24_27/0.1)] dark:[--vo-faint:#71717a] dark:[--vo-fill:rgb(255_255_255/0.07)] dark:[--vo-ink:#fafafa] dark:[--vo-muted:#a1a1aa] dark:[--vo-ring:rgb(255_255_255/0.12)]"
+      className="not-prose grid w-[min(100%,400px)] justify-items-center gap-[22px] py-2 font-sans text-(--vo-ink) [--vo-faint:#a1a1aa] [--vo-fill:rgb(24_24_27/0.05)] [--vo-ink:#18181b] [--vo-muted:#6c6c75] [--vo-ring:rgb(24_24_27/0.1)] dark:[--vo-faint:#71717a] dark:[--vo-fill:rgb(255_255_255/0.07)] dark:[--vo-ink:#fafafa] dark:[--vo-muted:#a1a1aa] dark:[--vo-ring:rgb(255_255_255/0.12)]"
     >
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 text-[14px] font-medium">
         <span className="text-right">{source.name}</span>

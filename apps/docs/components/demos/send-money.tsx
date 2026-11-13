@@ -110,7 +110,7 @@ function sendLabel(phase: SendMoneyValue["phase"], total: number) {
 }
 
 const PALETTE = [
-  "[--sm-surface:#ffffff] [--sm-key:#f4f4f5] [--sm-key-press:#e4e4e7] [--sm-ink:#18181b] [--sm-on-ink:#fafafa] [--sm-muted:#71717a] [--sm-faint:#d4d4d8] [--sm-good:#059669] [--sm-bad:#dc2626]",
+  "[--sm-surface:#ffffff] [--sm-key:#f4f4f5] [--sm-key-press:#e4e4e7] [--sm-ink:#18181b] [--sm-on-ink:#fafafa] [--sm-muted:#6c6c75] [--sm-faint:#d4d4d8] [--sm-good:#047857] [--sm-bad:#dc2626]",
   "dark:[--sm-surface:#232327] dark:[--sm-key:#2e2e33] dark:[--sm-key-press:#3a3a40] dark:[--sm-ink:#fafafa] dark:[--sm-on-ink:#18181b] dark:[--sm-muted:#a1a1aa] dark:[--sm-faint:#52525b] dark:[--sm-good:#34d399] dark:[--sm-bad:#f87171]",
 ].join(" ");
 

@@ -50,7 +50,7 @@ const box = (delay = 0) => ({
 const guestsLabel = (count: number) => `${count} ${count === 1 ? "guest" : "guests"}`;
 
 const PALETTE = [
-  "[--tbk-surface:#ffffff] [--tbk-well:#f4f4f5] [--tbk-line:rgb(24_24_27/0.08)] [--tbk-ink:#18181b] [--tbk-muted:#71717a]",
+  "[--tbk-surface:#ffffff] [--tbk-well:#f4f4f5] [--tbk-line:rgb(24_24_27/0.08)] [--tbk-ink:#18181b] [--tbk-muted:#6c6c75]",
   "[--tbk-warn:#ea580c] [--tbk-warn-well:#fff4ec] [--tbk-warn-ink:#7c2d12] [--tbk-warn-muted:#9a5a3c]",
   "dark:[--tbk-surface:#1f1f23] dark:[--tbk-well:#2a2a2f] dark:[--tbk-line:rgb(255_255_255/0.08)] dark:[--tbk-ink:#fafafa] dark:[--tbk-muted:#a1a1aa]",
   "dark:[--tbk-warn:#fb923c] dark:[--tbk-warn-well:rgb(251_146_60/0.12)] dark:[--tbk-warn-ink:#fed7aa] dark:[--tbk-warn-muted:#d6a184]",

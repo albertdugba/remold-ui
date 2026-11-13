@@ -14,7 +14,7 @@ const LIFT = 22;
 const OFF_AT = 0.5;
 
 const PALETTE = [
-  "[--prw-ink:#0a0a0b] [--prw-muted:#6e6e76] [--prw-quiet:#a1a1aa] [--prw-surface:#ffffff] [--prw-fill:#f2f2f4] [--prw-good:#16a34a] [--prw-festive:#c8202f] [--prw-frame:#8a1c24]",
+  "[--prw-ink:#0a0a0b] [--prw-muted:#6e6e76] [--prw-quiet:#a1a1aa] [--prw-surface:#ffffff] [--prw-fill:#f2f2f4] [--prw-good:#15803d] [--prw-festive:#c8202f] [--prw-frame:#8a1c24]",
   "[--prw-sticker:#0a0a0b] [--prw-sticker-ink:#ffffff] [--prw-sticker-muted:rgb(255_255_255/0.55)]",
   "[--prw-back:#ecebe8] [--prw-back-light:#fbfaf8] [--prw-back-crease:#cfccc6]",
   "dark:[--prw-ink:#fafafa] dark:[--prw-muted:#a1a1aa] dark:[--prw-quiet:#71717a] dark:[--prw-surface:#161618] dark:[--prw-fill:#232327] dark:[--prw-good:#4ade80] dark:[--prw-festive:#ef4b57] dark:[--prw-frame:#9e2b33]",
@@ -298,12 +298,18 @@ const STEPS = [
   { ms: 500, action: "reset" },
 ] as const;
 
-export function PeelRewardDemo({ playing = true }: { playing?: boolean } = {}) {
+export function PeelRewardDemo({ playing }: { playing?: boolean } = {}) {
   const actions = useRef<PeelRewardActions | null>(null);
-  const autoplay = useAutoplay(STEPS.length, { every: (step) => STEPS[step]!.ms, autoStart: playing });
+  const autoplay = useAutoplay(STEPS.length, {
+    every: (step) => STEPS[step]!.ms,
+    autoStart: playing ?? true,
+    stopOnInteraction: playing === undefined,
+  });
   const { step, active, setPlaying } = autoplay;
 
-  useEffect(() => setPlaying(playing), [playing, setPlaying]);
+  useEffect(() => {
+    if (playing !== undefined) setPlaying(playing);
+  }, [playing, setPlaying]);
 
   useEffect(() => {
     if (!active) return;

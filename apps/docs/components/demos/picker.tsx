@@ -28,7 +28,7 @@ export interface PickerProps<V extends string> {
 }
 
 const PALETTE = [
-  "[--pk-surface:#ffffff] [--pk-raised:#ffffff] [--pk-fill:#f4f4f5] [--pk-line:rgb(24_24_27/0.08)] [--pk-ink:#18181b] [--pk-muted:#71717a] [--pk-quiet:#a1a1aa] [--pk-focus:#6366f1]",
+  "[--pk-surface:#ffffff] [--pk-raised:#ffffff] [--pk-fill:#f4f4f5] [--pk-line:rgb(24_24_27/0.08)] [--pk-ink:#18181b] [--pk-muted:#6c6c75] [--pk-quiet:#a1a1aa] [--pk-focus:#6366f1]",
   "dark:[--pk-surface:#232327] dark:[--pk-raised:#2a2a2f] dark:[--pk-fill:#34343a] dark:[--pk-line:rgb(255_255_255/0.09)] dark:[--pk-ink:#fafafa] dark:[--pk-muted:#a1a1aa] dark:[--pk-quiet:#71717a] dark:[--pk-focus:#818cf8]",
 ].join(" ");
 
