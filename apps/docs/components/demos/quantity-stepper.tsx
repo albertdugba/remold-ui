@@ -2,10 +2,13 @@
 import { NumberField } from "@base-ui/react/number-field";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, Delete02Icon, MinusSignIcon } from "@hugeicons/core-free-icons";
+import { announce } from "@remold-ui/dom";
 import { Remold } from "@remold-ui/react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import { useRef, useState } from "react";
 import { Odometer } from "./odometer";
 import { FK_STAGE, FORM_KIT } from "./form-kit";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useScene } from "./use-scene";
 
 export interface QuantityStepperProps {
@@ -18,64 +21,87 @@ const STRETCH = { type: "spring" as const, duration: 0.45, bounce: 0.16 };
 
 const PILL = "h-9 flex-none rounded-full bg-(--fk-ink) text-(--fk-surface)";
 const STEP_BUTTON =
-  "grid size-[30px] cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-inherit transition-colors duration-150 not-data-disabled:hover:bg-[color-mix(in_oklab,var(--fk-surface)_14%,transparent)] data-disabled:cursor-default data-disabled:opacity-35 [&_svg]:size-4";
+  "grid size-[30px] cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-inherit transition-colors duration-150 not-data-disabled:hover:bg-[color-mix(in_oklab,var(--fk-surface)_14%,transparent)] data-disabled:cursor-default data-disabled:opacity-35 focus-visible:outline-2 focus-visible:-outline-offset-2! focus-visible:outline-current! [&_svg]:size-4";
 
 export function QuantityStepper({ value, onValueChange, max = 9 }: QuantityStepperProps) {
+  const root = useRef<HTMLSpanElement>(null);
+  const [swaps, setSwaps] = useState(0);
+
+  useFocusAfterChange(root, swaps, (stepper) =>
+    stepper.querySelector<HTMLElement>(value === 0 ? "[data-stq-add]" : "[data-stq-increase]"),
+  );
+
   return (
-    <AnimatePresence initial={false} mode="popLayout">
-      {value === 0 ? (
-        <motion.button
-          key="add"
-          type="button"
-          layoutId="stq-pill"
-          className={`${PILL} cursor-pointer border-0 pr-3.5 pl-[11px] text-[13.5px] font-semibold`}
-          onClick={() => onValueChange(1)}
-          transition={STRETCH}
-        >
-          <motion.span
-            className="inline-flex items-center gap-[5px]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} className="size-[15px]" />
-            Add
-          </motion.span>
-        </motion.button>
-      ) : (
-        <NumberField.Root
-          key="stepper"
-          value={value}
-          min={0}
-          max={max}
-          onValueChange={(next) => onValueChange(next ?? 0)}
-          render={<motion.div layoutId="stq-pill" className={PILL} transition={STRETCH} />}
-        >
-          <NumberField.Group className="flex h-full items-center px-[3px]">
-            <NumberField.Decrement
-              className={STEP_BUTTON}
-              aria-label={value === 1 ? "Remove from cart" : "Decrease quantity"}
-              data-remove={value === 1 || undefined}
+    <MotionConfig reducedMotion="user">
+      <span ref={root} className="contents">
+        <AnimatePresence initial={false} mode="popLayout" onExitComplete={() => setSwaps((count) => count + 1)}>
+          {value === 0 ? (
+            <motion.button
+              key="add"
+              type="button"
+              layoutId="stq-pill"
+              className={`${PILL} cursor-pointer border-0 pr-3.5 pl-[11px] text-[13.5px] font-semibold`}
+              aria-label="Add to cart"
+              data-stq-add=""
+              onClick={() => {
+                announce("Added to cart, quantity 1");
+                onValueChange(1);
+              }}
+              transition={STRETCH}
             >
-              <Remold.Icon
-                icon={<HugeiconsIcon icon={value === 1 ? Delete02Icon : MinusSignIcon} />}
-                strokeWidth={2}
-              />
-            </NumberField.Decrement>
-            <span className="relative grid min-w-[22px] place-items-center text-[14.5px] font-[650]">
-              <Odometer value={String(value)} />
-              <NumberField.Input
-                className="absolute inset-0 w-full border-0 bg-transparent p-0 text-center text-transparent caret-transparent outline-none"
-                aria-label="Quantity"
-              />
-            </span>
-            <NumberField.Increment className={STEP_BUTTON} aria-label="Increase quantity">
-              <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} />
-            </NumberField.Increment>
-          </NumberField.Group>
-        </NumberField.Root>
-      )}
-    </AnimatePresence>
+              <motion.span
+                className="inline-flex items-center gap-[5px]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} className="size-[15px]" aria-hidden="true" />
+                Add
+              </motion.span>
+            </motion.button>
+          ) : (
+            <NumberField.Root
+              key="stepper"
+              value={value}
+              min={0}
+              max={max}
+              onValueChange={(next, details) => {
+                const quantity = next ?? 0;
+                if (quantity === 0) announce("Removed from cart");
+                else if (details.reason === "increment-press" || details.reason === "decrement-press")
+                  announce(`Quantity ${quantity}`);
+                onValueChange(quantity);
+              }}
+              render={<motion.div layoutId="stq-pill" className={PILL} transition={STRETCH} />}
+            >
+              <NumberField.Group className="flex h-full items-center px-[3px]">
+                <NumberField.Decrement
+                  className={STEP_BUTTON}
+                  aria-label={value === 1 ? "Remove from cart" : "Decrease quantity"}
+                  data-remove={value === 1 || undefined}
+                >
+                  <Remold.Icon
+                    icon={<HugeiconsIcon icon={value === 1 ? Delete02Icon : MinusSignIcon} />}
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  />
+                </NumberField.Decrement>
+                <span className="relative grid min-w-[22px] place-items-center text-[14.5px] font-[650]">
+                  <Odometer value={String(value)} />
+                  <NumberField.Input
+                    className="absolute inset-0 w-full rounded-[5px] border-0 bg-transparent p-0 text-center text-transparent caret-transparent outline-none focus-visible:shadow-[0_0_0_3px_var(--fk-ink),0_0_0_5px_var(--fk-surface)]"
+                    aria-label="Quantity"
+                  />
+                </span>
+                <NumberField.Increment className={STEP_BUTTON} aria-label="Increase quantity" data-stq-increase="">
+                  <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} aria-hidden="true" />
+                </NumberField.Increment>
+              </NumberField.Group>
+            </NumberField.Root>
+          )}
+        </AnimatePresence>
+      </span>
+    </MotionConfig>
   );
 }
 

@@ -2,9 +2,11 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, Cancel01Icon, Search01Icon, CheckIcon } from "@hugeicons/core-free-icons";
 import { Popover } from "@base-ui/react/popover";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import { useId, useRef, type KeyboardEvent, type Ref } from "react";
+import { announce } from "@remold-ui/dom";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
+import { useId, useRef, useState, type KeyboardEvent, type Ref } from "react";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { typing, useScene } from "./use-scene";
 import { usePortalContainer } from "./portal-container";
 
@@ -94,7 +96,7 @@ function LabelChip({
       {label.name}
       <button
         type="button"
-        className={`grid size-5 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--lp-quiet) hover:bg-(--lp-surface) hover:text-(--lp-ink) ${FOCUS}`}
+        className={`relative grid size-5 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--lp-muted) before:absolute before:-inset-0.5 before:content-[''] hover:bg-(--lp-surface) hover:text-(--lp-ink) ${FOCUS}`}
         onClick={onRemove}
         aria-label={`Remove ${label.name}`}
       >
@@ -227,7 +229,11 @@ export function LabelPicker({
   const [picker, setPicker] = useControllableState({ value, defaultValue, onValueChange });
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const chipList = useRef<HTMLUListElement>(null);
+  const [exits, setExits] = useState(0);
   const portal = usePortalContainer();
+
+  useFocusAfterChange(chipList, exits, (list) => list.querySelector<HTMLElement>("[data-add-label]"));
 
   const search = picker.query.trim().toLowerCase();
   const found = picker.labels.filter((label) => label.name.toLowerCase().includes(search));
@@ -236,7 +242,9 @@ export function LabelPicker({
   const nextColor = PALETTE[(picker.labels.length - LABELS.length) % PALETTE.length]!;
   const rows = found.length + (canCreate ? 1 : 0);
   const active = Math.min(picker.active, Math.max(0, rows - 1));
-  const rowId = (index: number) => `${id}-row-${index}`;
+  const optionId = (name: string) => `${id}-option-${encodeURIComponent(name)}`;
+  const createId = `${id}-create`;
+  const activeId = active < found.length ? optionId(found[active]!.name) : createId;
   const rowDelay = (index: number) => (picker.open ? index * 0.035 : 0);
 
   const chips = picker.applied
@@ -245,15 +253,19 @@ export function LabelPicker({
 
   const highlight = (index: number) => setPicker((current) => ({ ...current, active: index }));
 
-  const toggle = (name: string) =>
+  const toggle = (name: string) => {
+    announce(picker.applied.includes(name) ? `${name} removed` : `${name} added`);
     setPicker((current) => ({
       ...current,
       applied: current.applied.includes(name)
         ? current.applied.filter((applied) => applied !== name)
         : [...current.applied, name],
     }));
+  };
 
-  const create = () =>
+  const create = () => {
+    const created = titleCase(picker.query);
+    if (created) announce(`${created} created and added`);
     setPicker((current) => {
       const name = titleCase(current.query);
       if (!name) return current;
@@ -266,6 +278,7 @@ export function LabelPicker({
         active: 0,
       };
     });
+  };
 
   const onOpenChange = (open: boolean) =>
     setPicker((current) => ({ ...current, open, query: open ? current.query : "", active: 0 }));
@@ -284,103 +297,120 @@ export function LabelPicker({
   };
 
   return (
-    <section
-      ref={ref}
-      className={`not-prose grid w-[min(100%,400px)] rounded-[22px] bg-(--lp-surface) p-[18px] text-(--lp-ink) ${TOKENS}`}
-      aria-label="Issue"
-    >
-      <span className="text-[12px] font-medium text-(--lp-muted)">ENG-218</span>
-      <h4 className="m-0 mt-1.5 text-[16px] leading-[1.35] font-[650] tracking-[-0.01em]">
-        Checkout total rounds tax twice on mobile
-      </h4>
-      <p className="m-0 mt-1.5 text-[13px] leading-normal text-(--lp-muted)">
-        The tax line is rounded once per item and again on the subtotal, so totals drift by a cedi.
-      </p>
+    <MotionConfig reducedMotion="user">
+      <section
+        ref={ref}
+        className={`not-prose grid w-[min(100%,400px)] rounded-[22px] bg-(--lp-surface) p-[18px] text-(--lp-ink) ${TOKENS}`}
+        aria-label="Issue"
+      >
+        <span className="text-[12px] font-medium text-(--lp-muted)">ENG-218</span>
+        <h4 className="m-0 mt-1.5 text-[16px] leading-[1.35] font-[650] tracking-[-0.01em]">
+          Checkout total rounds tax twice on mobile
+        </h4>
+        <p className="m-0 mt-1.5 text-[13px] leading-normal text-(--lp-muted)">
+          The tax line is rounded once per item and again on the subtotal, so totals drift by a cedi.
+        </p>
 
-      <div className="mt-4 grid gap-2 border-t border-solid border-(--lp-line) pt-3.5">
-        <span className="text-[11.5px] font-semibold text-(--lp-quiet)">Labels</span>
+        <div className="mt-4 grid gap-2 border-t border-solid border-(--lp-line) pt-3.5">
+          <span id={`${id}-labels`} className="text-[11.5px] font-semibold text-(--lp-muted)">
+            Labels
+          </span>
 
-        <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0">
-          <AnimatePresence initial={false} mode="popLayout">
-            {chips.map((label) => (
-              <LabelChip key={label.name} label={label} onRemove={() => toggle(label.name)} />
-            ))}
+          <ul ref={chipList} className="m-0 flex list-none flex-wrap gap-1.5 p-0" aria-labelledby={`${id}-labels`}>
+            <AnimatePresence
+              initial={false}
+              mode="popLayout"
+              onExitComplete={() => setExits((count) => count + 1)}
+            >
+              {chips.map((label) => (
+                <LabelChip key={label.name} label={label} onRemove={() => toggle(label.name)} />
+              ))}
 
-            <motion.li key="add" layout="position" transition={SPRING}>
-              <Popover.Root open={picker.open} onOpenChange={onOpenChange} modal={false}>
-                <Popover.Trigger
-                  className={`inline-flex h-7 cursor-pointer items-center gap-1 rounded-full border border-dashed border-[color-mix(in_oklab,var(--lp-ink)_22%,transparent)] bg-transparent pr-[11px] pl-2 text-[12.5px] font-medium text-(--lp-muted) hover:border-solid hover:text-(--lp-ink) data-popup-open:border-solid data-popup-open:text-(--lp-ink) ${FOCUS}`}
-                >
-                  <HugeiconsIcon icon={Add01Icon} className="size-3.5" aria-hidden="true" />
-                  Label
-                </Popover.Trigger>
+              <motion.li key="add" layout="position" transition={SPRING}>
+                <Popover.Root open={picker.open} onOpenChange={onOpenChange} modal={false}>
+                  <Popover.Trigger
+                    className={`inline-flex h-7 cursor-pointer items-center gap-1 rounded-full border border-dashed border-[color-mix(in_oklab,var(--lp-ink)_22%,transparent)] bg-transparent pr-[11px] pl-2 text-[12.5px] font-medium text-(--lp-muted) hover:border-solid hover:text-(--lp-ink) data-popup-open:border-solid data-popup-open:text-(--lp-ink) ${FOCUS}`}
+                    data-add-label=""
+                  >
+                    <HugeiconsIcon icon={Add01Icon} className="size-3.5" aria-hidden="true" />
+                    Label
+                  </Popover.Trigger>
 
-                <Popover.Portal container={portal}>
-                  <Popover.Positioner className={TOKENS} side="bottom" align="start" sideOffset={8}>
-                    <Popover.Popup
-                      className="w-[236px] origin-(--transform-origin) rounded-[14px] bg-(--lp-raised) p-[5px] text-(--lp-ink) shadow-(--lp-shadow) outline-none [transition:opacity_0.16s,transform_0.24s_cubic-bezier(0.2,0.9,0.3,1.2)] data-ending-style:opacity-0 data-ending-style:[transform:scale(0.94)_translateY(-4px)] data-starting-style:opacity-0 data-starting-style:[transform:scale(0.94)_translateY(-4px)]"
-                      initialFocus={focusOnOpen ? inputRef : false}
-                      finalFocus={focusOnOpen}
-                    >
-                      <label className="mb-1 flex h-[34px] items-center gap-[7px] border-b border-solid border-(--lp-line) px-[9px] text-(--lp-quiet)">
-                        <HugeiconsIcon icon={Search01Icon} className="size-3.5 flex-none" aria-hidden="true" />
-                        <input
-                          className="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-(--lp-ink) outline-none placeholder:text-(--lp-quiet)"
-                          ref={inputRef}
-                          value={picker.query}
-                          onChange={(event) =>
-                            setPicker((current) => ({ ...current, query: event.target.value, active: 0 }))
-                          }
-                          onKeyDown={onKeyDown}
-                          placeholder="Find or create a label"
-                          aria-label="Find or create a label"
-                          role="combobox"
-                          aria-expanded="true"
-                          aria-controls={`${id}-list`}
-                          aria-activedescendant={rows ? rowId(active) : undefined}
-                        />
-                      </label>
+                  <Popover.Portal container={portal}>
+                    <Popover.Positioner className={TOKENS} side="bottom" align="start" sideOffset={8}>
+                      <Popover.Popup
+                        className="w-[236px] origin-(--transform-origin) rounded-[14px] bg-(--lp-raised) p-[5px] text-(--lp-ink) shadow-(--lp-shadow) outline-none [transition:opacity_0.16s,transform_0.24s_cubic-bezier(0.2,0.9,0.3,1.2)] data-ending-style:opacity-0 data-ending-style:[transform:scale(0.94)_translateY(-4px)] data-starting-style:opacity-0 data-starting-style:[transform:scale(0.94)_translateY(-4px)]"
+                        initialFocus={focusOnOpen ? inputRef : false}
+                        finalFocus={focusOnOpen}
+                        aria-label="Labels"
+                      >
+                        <label className="mb-1 flex h-[34px] items-center gap-[7px] border-b border-solid border-(--lp-line) px-[9px] text-(--lp-quiet)">
+                          <HugeiconsIcon icon={Search01Icon} className="size-3.5 flex-none" aria-hidden="true" />
+                          <input
+                            className="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-(--lp-ink) outline-none placeholder:text-(--lp-muted)"
+                            ref={inputRef}
+                            value={picker.query}
+                            onChange={(event) =>
+                              setPicker((current) => ({ ...current, query: event.target.value, active: 0 }))
+                            }
+                            onKeyDown={onKeyDown}
+                            placeholder="Find or create a label"
+                            aria-label="Find or create a label"
+                            role="combobox"
+                            aria-expanded="true"
+                            aria-autocomplete="list"
+                            aria-controls={`${id}-list`}
+                            aria-activedescendant={rows ? activeId : undefined}
+                          />
+                        </label>
 
-                      <LayoutGroup id={id}>
-                        <ul id={`${id}-list`} role="listbox" aria-label="Labels" className="m-0 grid max-h-[230px] list-none overflow-auto p-0">
-                          <AnimatePresence initial={false} mode="popLayout">
-                            {found.map((label, index) => (
-                              <LabelOption
-                                key={label.name}
-                                label={label}
-                                rowId={rowId(index)}
-                                applied={picker.applied.includes(label.name)}
-                                highlighted={index === active}
-                                delay={rowDelay(index)}
-                                onHighlight={() => highlight(index)}
-                                onToggle={() => toggle(label.name)}
-                              />
-                            ))}
+                        <LayoutGroup id={id}>
+                          <ul
+                            id={`${id}-list`}
+                            role="listbox"
+                            aria-label="Labels"
+                            aria-multiselectable="true"
+                            className="m-0 grid max-h-[230px] list-none overflow-auto p-0"
+                          >
+                            <AnimatePresence initial={false} mode="popLayout">
+                              {found.map((label, index) => (
+                                <LabelOption
+                                  key={label.name}
+                                  label={label}
+                                  rowId={optionId(label.name)}
+                                  applied={picker.applied.includes(label.name)}
+                                  highlighted={index === active}
+                                  delay={rowDelay(index)}
+                                  onHighlight={() => highlight(index)}
+                                  onToggle={() => toggle(label.name)}
+                                />
+                              ))}
 
-                            {canCreate && (
-                              <CreateOption
-                                key="create"
-                                name={titleCase(picker.query)}
-                                color={nextColor}
-                                rowId={rowId(found.length)}
-                                highlighted={active === found.length}
-                                delay={rowDelay(found.length)}
-                                onHighlight={() => highlight(found.length)}
-                                onCreate={create}
-                              />
-                            )}
-                          </AnimatePresence>
-                        </ul>
-                      </LayoutGroup>
-                    </Popover.Popup>
-                  </Popover.Positioner>
-                </Popover.Portal>
-              </Popover.Root>
-            </motion.li>
-          </AnimatePresence>
-        </ul>
-      </div>
-    </section>
+                              {canCreate && (
+                                <CreateOption
+                                  key="create"
+                                  name={titleCase(picker.query)}
+                                  color={nextColor}
+                                  rowId={createId}
+                                  highlighted={active === found.length}
+                                  delay={rowDelay(found.length)}
+                                  onHighlight={() => highlight(found.length)}
+                                  onCreate={create}
+                                />
+                              )}
+                            </AnimatePresence>
+                          </ul>
+                        </LayoutGroup>
+                      </Popover.Popup>
+                    </Popover.Positioner>
+                  </Popover.Portal>
+                </Popover.Root>
+              </motion.li>
+            </AnimatePresence>
+          </ul>
+        </div>
+      </section>
+    </MotionConfig>
   );
 }
 

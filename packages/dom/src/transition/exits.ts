@@ -28,6 +28,7 @@ export function buildExitRecords({
   const exits: ExitRecord[] = [];
   let layer: HTMLElement | null = null;
   const removed = removedIndexes(matches);
+  const carried = markCarried(before, removed, clones);
 
   for (const index of removed) {
     if (removed.has(before.nodes[index]!.parent)) continue;
@@ -61,7 +62,29 @@ export function buildExitRecords({
       }),
     });
   }
+
+  for (const element of carried) element.removeAttribute(CARRIED_ATTRIBUTE);
+
   return { exits, layer };
+}
+
+const CARRIED_ATTRIBUTE = "data-rm-carried";
+
+function markCarried(before: PageSnapshot, removed: ReadonlySet<number>, clones: ReadonlyMap<Element, Element>): Element[] {
+  return before.elements.flatMap((element, index) => {
+    const copy = removed.has(index) ? undefined : clones.get(element);
+
+    copy?.setAttribute(CARRIED_ATTRIBUTE, "");
+
+    return copy ? [copy] : [];
+  });
+}
+
+function hideCarried(clone: HTMLElement) {
+  for (const element of clone.querySelectorAll<HTMLElement>(`[${CARRIED_ATTRIBUTE}]`)) {
+    element.style.visibility = "hidden";
+    element.removeAttribute(CARRIED_ATTRIBUTE);
+  }
 }
 
 function removedIndexes(matches: NodeMatches): Set<number> {
@@ -101,6 +124,7 @@ function createExitClone({
   const clone = source.cloneNode(true) as HTMLElement;
 
   clone.setAttribute("data-rm-exiting", "");
+  hideCarried(clone);
   for (const element of [clone, ...clone.querySelectorAll<HTMLElement>("*")]) {
     element.style.removeProperty("translate");
     element.style.removeProperty("scale");

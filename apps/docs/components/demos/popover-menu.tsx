@@ -13,7 +13,7 @@ import {
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Remold } from "@remold-ui/react";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { useRef, useState, type MouseEvent } from "react";
+import { useRef, useState } from "react";
 import { useScript } from "./use-script";
 
 type Action = { label: string; icon: IconSvgElement; destructive?: boolean };
@@ -40,10 +40,7 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
     if (!nextOpen) setHoveredAction(null);
   };
 
-  const choose = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    close(false);
-  };
+  const choose = () => close(false);
 
   useScript(shellRef, playing, [
     [900, () => close(true)],
@@ -86,8 +83,8 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden border border-black/[0.06] bg-white text-[#1f1f1d] shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] dark:border-white/[0.07] dark:bg-[#1c1c1f] dark:text-[#fafafa] dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)]"
           >
             <Popover.Trigger
-              aria-label={open ? "Close photo menu" : "Open photo menu"}
-              className={`absolute z-10 grid place-items-center text-[#1f1f1d] transition-[background-color,border-radius,color,transform] duration-150 ease-out active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-fd-ring dark:text-[#fafafa] ${
+              aria-label="Photo options"
+              className={`absolute z-10 grid place-items-center text-[#1f1f1d] transition-[background-color,border-radius,color,transform] duration-150 ease-out active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#1f1f1d] dark:text-[#fafafa] dark:focus-visible:outline-[#fafafa] ${
                 open
                   ? "right-[5px] top-[5px] size-11 rounded-full bg-[#efefeb] hover:bg-[#e6e6e0] dark:bg-[#2c2c31] dark:hover:bg-[#36363c]"
                   : "right-0 top-0 size-[52px] rounded-full hover:bg-[#efefeb] dark:hover:bg-[#2c2c31]"
@@ -125,14 +122,16 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
                     className="absolute inset-x-1 top-2"
                   >
                     <div className="flex h-[52px] items-center px-5 pr-16 text-[16px] font-semibold leading-5 tracking-[-0.015em] text-[#1f1f1d] dark:text-[#fafafa]">
-                      <span className="truncate">Sunset at Labadi</span>
+                      <Popover.Title render={<span />} className="truncate">
+                        Sunset at Labadi
+                      </Popover.Title>
                     </div>
                     <LayoutGroup id="popover-menu">
                       <div onPointerLeave={() => setHoveredAction(null)}>
                         {actions.map((action, index) => (
-                          <motion.a
+                          <motion.button
                             key={action.label}
-                            href={`#${action.label.toLowerCase().replace(" ", "-")}`}
+                            type="button"
                             {...rise(0.11 + index * 0.045)}
                             whileTap={{ scale: 0.99 }}
                             onPointerEnter={(event) =>
@@ -140,9 +139,9 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
                             }
                             onFocus={() => setHoveredAction(action.label)}
                             onClick={choose}
-                            className={`relative flex h-11 w-full items-center gap-3 rounded-xl px-5 text-left text-[15px] font-medium leading-5 tracking-[-0.01em] focus-visible:outline-none ${
+                            className={`relative flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-5 text-left text-[15px] font-medium leading-5 tracking-[-0.01em] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#1f1f1d] dark:focus-visible:outline-[#fafafa] ${
                               action.destructive
-                                ? "text-[#e5484d] dark:text-[#ff6369]"
+                                ? "text-[#c8323a] dark:text-[#ff6369]"
                                 : "text-[#1f1f1d] dark:text-[#fafafa]"
                             }`}
                           >
@@ -167,7 +166,7 @@ export function PopoverMenuDemo({ playing }: { playing?: boolean }) {
                               aria-hidden="true"
                             />
                             <span className="relative whitespace-nowrap">{action.label}</span>
-                          </motion.a>
+                          </motion.button>
                         ))}
                       </div>
                     </LayoutGroup>

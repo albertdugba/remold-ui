@@ -98,7 +98,7 @@ export function PaymentStatus({
   status,
   amount = "£48.00",
   card = "Visa ending 4242",
-  email = "ama@northwind.app",
+  email = "ama@remold.app",
   live,
 }: PaymentStatusProps) {
   return (
@@ -150,7 +150,7 @@ export function PaymentStatusDemo({ playing }: PaymentStatusDemoProps = {}) {
           <Toggle
             key={status}
             value={status}
-            className="cursor-pointer rounded-[7px] border-0 bg-transparent px-2.5 py-1.5 text-[12.5px] whitespace-nowrap text-fd-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-fd-foreground data-pressed:bg-fd-background data-pressed:text-fd-foreground data-pressed:shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
+            className="cursor-pointer rounded-[7px] border-0 bg-transparent px-2.5 py-1.5 text-[12.5px] whitespace-nowrap text-fd-foreground/70 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-fd-foreground data-pressed:bg-fd-background data-pressed:text-fd-foreground data-pressed:shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
           >
             {LABELS[status]}
           </Toggle>

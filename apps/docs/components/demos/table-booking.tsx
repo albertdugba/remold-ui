@@ -9,6 +9,7 @@ import { Alert02Icon, ArrowLeft01Icon, ArrowRight01Icon, Restaurant01Icon } from
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
 import { useRef, useState } from "react";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useMeasuredSize } from "./use-measured-size";
 import { useScript } from "./use-script";
 
@@ -27,6 +28,7 @@ const OPTIONS: Option[] = [
 ];
 
 const RESTAURANT = { name: "Bosphorus", date: "Fri 14 Nov", code: "BOSP-4182" };
+const CODE_HINT = "Show this at the door";
 const SIZES = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.2 };
@@ -59,6 +61,7 @@ const PALETTE = [
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--tbk-ink)";
 const FACE = "grid gap-2.5";
 const BAR = "flex items-center gap-2 text-[14.5px] [&_b]:font-[650]";
+const TITLE = `rounded-[4px] ${FOCUS}`;
 const BACK = `grid size-8 cursor-pointer place-items-center rounded-full border-0 bg-(--tbk-well) p-0 text-(--tbk-ink) [&_svg]:size-4 ${FOCUS}`;
 const PLACE = "grid flex-none";
 const PLACE_NAME = "text-[14px] font-[650]";
@@ -101,6 +104,22 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
     setPicked(option);
     setFace("booking");
   };
+
+  const release = () => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && card.current?.contains(active)) active.blur();
+  };
+
+  const show = (next: Face) => {
+    release();
+    setFace(next);
+  };
+
+  useFocusAfterChange(card, face, (root) =>
+    root.querySelector<HTMLElement>(
+      face === "notice" ? `[data-option="${picked.id}"]` : `[data-face-title="${face}"]`,
+    ),
+  );
 
   useScript(card, playing, [
     [1500, () => choose(OPTIONS[0]!)],
@@ -168,7 +187,11 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                             <Button
                               key={option.id}
                               className={`group/option relative flex w-full cursor-pointer items-center gap-3 rounded-2xl border-0 bg-transparent py-2.5 pr-3 pl-2.5 text-left text-inherit transition-[background-color] duration-150 [&>*:not([data-surface])]:relative ${FOCUS}`}
-                              onClick={() => choose(option)}
+                              data-option={option.id}
+                              onClick={() => {
+                                release();
+                                choose(option);
+                              }}
                               render={<motion.button {...(landing ? STAY : box(0.08 + index * 0.04))} />}
                             >
                               <Surface option={option} radius={16} />
@@ -198,11 +221,13 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                         <Button
                           className={BACK}
                           aria-label="Back to the options"
-                          onClick={() => setFace("notice")}
+                          onClick={() => show("notice")}
                         >
                           <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} aria-hidden="true" />
                         </Button>
-                        <b>Booking changed</b>
+                        <b role="heading" aria-level={3} tabIndex={-1} data-face-title="booking" className={TITLE}>
+                          Booking changed
+                        </b>
                       </motion.header>
                       <div className="relative grid gap-1 p-3 [&>*:not([data-surface])]:relative">
                         <Surface option={picked} radius={18} />
@@ -226,7 +251,7 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                             <dd>
                               <Button
                                 className={`inline-flex cursor-pointer items-center gap-2 rounded-full border-0 bg-(--tbk-surface) py-1 pr-1 pl-2.5 font-semibold text-inherit ${FOCUS}`}
-                                onClick={() => setFace("guests")}
+                                onClick={() => show("guests")}
                               >
                                 <Remold.Text>{guestsLabel(guests)}</Remold.Text>
                                 <span className="rounded-full bg-(--tbk-well) px-2 py-[3px] text-[11.5px] font-semibold text-(--tbk-muted)">
@@ -240,19 +265,20 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                             <dd>
                               <Tooltip.Root>
                                 <Tooltip.Trigger
-                                  className={`cursor-help font-[ui-monospace,'SF_Mono',Menlo,monospace] text-[12.5px] tracking-[0.04em] ${FOCUS}`}
-                                  render={<span tabIndex={0} />}
+                                  className="cursor-help font-[ui-monospace,'SF_Mono',Menlo,monospace] text-[12.5px] tracking-[0.04em]"
+                                  render={<span />}
                                 >
                                   {RESTAURANT.code}
                                 </Tooltip.Trigger>
                                 <Tooltip.Portal>
                                   <Tooltip.Positioner sideOffset={6}>
                                     <Tooltip.Popup className="rounded-lg bg-[#18181b] px-[9px] py-1.5 font-sans text-[12px] font-medium text-white transition-[opacity,scale] duration-150 data-ending-style:scale-[0.96] data-ending-style:opacity-0 data-starting-style:scale-[0.96] data-starting-style:opacity-0">
-                                      Show this at the door
+                                      {CODE_HINT}
                                     </Tooltip.Popup>
                                   </Tooltip.Positioner>
                                 </Tooltip.Portal>
                               </Tooltip.Root>
+                              <span className="sr-only">. {CODE_HINT}.</span>
                             </dd>
                           </div>
                         </motion.dl>
@@ -266,11 +292,13 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                         <Button
                           className={BACK}
                           aria-label="Back to the booking"
-                          onClick={() => setFace("booking")}
+                          onClick={() => show("booking")}
                         >
                           <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} aria-hidden="true" />
                         </Button>
-                        <b>How many of you?</b>
+                        <b role="heading" aria-level={3} tabIndex={-1} data-face-title="guests" className={TITLE}>
+                          How many of you?
+                        </b>
                       </motion.header>
                       <ToggleGroup
                         className="grid grid-cols-4 gap-2"
@@ -279,7 +307,7 @@ export function TableBookingDemo({ playing }: { playing?: boolean } = {}) {
                         onValueChange={(value) => {
                           if (!value[0]) return;
                           setGuests(Number(value[0]));
-                          setFace("booking");
+                          show("booking");
                         }}
                       >
                         {SIZES.map((size, index) => (

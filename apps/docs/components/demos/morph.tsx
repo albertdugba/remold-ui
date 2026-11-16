@@ -7,7 +7,7 @@ const PEOPLE = [
   { name: "Adjoa Tetteh", role: "Design", hue: 210 },
   { name: "Kwabena Frimpong", role: "Engineering", hue: 150 },
   { name: "Chloé Martin", role: "Product", hue: 30 },
-  { name: "Selorm Agbeko", role: "Engineering", hue: 280 },
+  { name: "Elorm Agbeko", role: "Engineering", hue: 280 },
 ];
 
 export function MorphDemo() {

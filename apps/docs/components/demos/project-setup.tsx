@@ -190,13 +190,13 @@ export function ProjectSetup({ value, defaultValue = { done: [] }, onValueChange
         <div className="grid content-start gap-3.5 px-5 py-[22px] shadow-[1px_0_0_var(--ps-line)] max-[560px]:shadow-[0_1px_0_var(--ps-line)]">
           <header className="grid gap-0.5">
             <strong className="text-[15px] font-semibold">
-              {finished ? "Lumen is ready" : "Set up Lumen"}
+              {finished ? "Remold is ready" : "Set up Remold"}
             </strong>
             <span className="text-(--ps-muted) tabular-nums">{`${done.size} of ${IDS.length} done`}</span>
           </header>
           <div className="h-[3px] overflow-hidden rounded-full bg-(--ps-fill)" aria-hidden="true">
             <span
-              className="block h-full rounded-[inherit] bg-(--ps-ink) transition-[width] duration-600 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              className="block h-full rounded-[inherit] bg-(--ps-ink) transition-[width] duration-600 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
               style={{ width: `${(done.size / IDS.length) * 100}%` }}
             />
           </div>
@@ -211,10 +211,10 @@ export function ProjectSetup({ value, defaultValue = { done: [] }, onValueChange
                     onCheckedChange={() => toggle(step.id)}
                   >
                     <Checkbox.Indicator
-                      className="mt-px grid size-[18px] flex-none place-items-center rounded-full text-(--ps-surface) shadow-[inset_0_0_0_1.5px_var(--ps-faint)] transition-[background-color,box-shadow] duration-250 data-checked:bg-(--ps-ink) data-checked:shadow-none [&_svg]:size-[11px]"
+                      className="mt-px grid size-[18px] flex-none place-items-center rounded-full text-(--ps-surface) shadow-[inset_0_0_0_1.5px_var(--ps-muted)] transition-[background-color,box-shadow] duration-250 data-checked:bg-(--ps-ink) data-checked:shadow-none [&_svg]:size-[11px]"
                       keepMounted
                     >
-                      <HugeiconsIcon icon={CheckIcon} strokeWidth={3} />
+                      <HugeiconsIcon icon={CheckIcon} strokeWidth={3} aria-hidden="true" />
                     </Checkbox.Indicator>
                     <span className="grid gap-px">
                       <strong className="font-medium transition-colors duration-250 group-data-checked/step:text-(--ps-muted)">

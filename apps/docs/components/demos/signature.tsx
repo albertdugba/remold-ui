@@ -1,5 +1,6 @@
 "use client";
 
+import { announce } from "@remold-ui/dom";
 import { Remold } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
@@ -295,6 +296,7 @@ export function Signature({
 }: SignatureProps) {
   const [signature, setSignature] = useControllableState({ value, defaultValue, onValueChange });
   const pad = useRef<SVGSVGElement>(null);
+  const card = useRef<HTMLDivElement>(null);
 
   const [drawing, setDrawing] = useState<Point[] | null>(null);
   const started = useRef(0);
@@ -343,7 +345,10 @@ export function Signature({
       className="grid w-[min(100%,460px)] font-sans text-[13px] text-(--sg-ink) [--sg-faint:#b4b4b4] [--sg-fill:#f6f6f6] [--sg-ink:#111111] [--sg-line:rgb(0_0_0/0.08)] [--sg-muted:#737373] [--sg-surface:#ffffff] dark:[--sg-faint:#5c5c5c] dark:[--sg-fill:#212121] dark:[--sg-ink:#f5f5f5] dark:[--sg-line:rgb(255_255_255/0.1)] dark:[--sg-muted:#a3a3a3] dark:[--sg-surface:#171717]"
       aria-label="Adopt your signature"
     >
-      <div className="grid gap-4 rounded-[18px] bg-(--sg-surface) p-[22px] in-[.rm-stage]:shadow-[inset_0_0_0_1px_var(--sg-line)]">
+      <div
+        ref={card}
+        className="grid gap-4 rounded-[18px] bg-(--sg-surface) p-[22px] in-[.rm-stage]:shadow-[inset_0_0_0_1px_var(--sg-line)]"
+      >
         <header className="grid gap-[3px]">
           <strong className="text-[15px] font-semibold">Adopt your signature</strong>
           <span className="text-(--sg-muted)">Used wherever you sign in this document.</span>
@@ -364,7 +369,7 @@ export function Signature({
         </label>
 
         <ToggleGroup
-          className="relative grid grid-cols-2 rounded-[10px] bg-(--sg-fill) p-[3px] before:absolute before:top-[3px] before:bottom-[3px] before:left-[3px] before:w-[calc(50%-3px)] before:rounded-lg before:bg-(--sg-surface) before:shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_1px_var(--sg-line)] before:transition-[translate] before:duration-350 before:ease-[cubic-bezier(0.32,0.72,0,1)] before:content-[''] data-[mode=type]:before:translate-x-full"
+          className="relative grid grid-cols-2 rounded-[10px] bg-(--sg-fill) p-[3px] before:absolute before:top-[3px] before:bottom-[3px] before:left-[3px] before:w-[calc(50%-3px)] before:rounded-lg before:bg-(--sg-surface) before:shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_1px_var(--sg-line)] before:transition-[translate] before:duration-350 before:ease-[cubic-bezier(0.32,0.72,0,1)] before:content-[''] data-[mode=type]:before:translate-x-full motion-reduce:before:transition-none"
           aria-label="Signature style"
           data-mode={signature.mode}
           value={[signature.mode]}
@@ -395,7 +400,13 @@ export function Signature({
             className="absolute inset-0 size-full group-data-[mode=draw]/pad:cursor-crosshair group-data-[mode=draw]/pad:touch-none"
             viewBox={`0 0 ${W} ${H}`}
             role="img"
-            aria-label={signature.mode === "type" ? `Signature: ${signature.name}` : "Your drawn signature"}
+            aria-label={
+              empty
+                ? "Signature pad, empty"
+                : signature.mode === "type"
+                  ? `Signature: ${signature.name}`
+                  : "Your drawn signature"
+            }
             onPointerDown={down}
             onPointerMove={move}
             onPointerUp={up}
@@ -422,7 +433,7 @@ export function Signature({
             </svg>
           )}
           {empty && !drawing && (
-            <span className="pointer-events-none absolute inset-0 grid place-items-center text-(--sg-faint)">
+            <span className="pointer-events-none absolute inset-0 grid place-items-center text-(--sg-muted)">
               {signature.mode === "draw" ? "Sign here" : "Type your name above"}
             </span>
           )}
@@ -433,7 +444,9 @@ export function Signature({
             type="button"
             className={`cursor-pointer border-0 bg-transparent p-0 text-(--sg-muted) hover:text-(--sg-ink) disabled:cursor-default disabled:opacity-35 ${FOCUS}`}
             disabled={empty}
-            onClick={() => {
+            onClick={(event) => {
+              if (document.activeElement === event.currentTarget)
+                card.current?.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus();
               setAdopted(false);
               setInkKey((key) => key + 1);
               setSignature((current) =>
@@ -447,7 +460,10 @@ export function Signature({
             type="button"
             className={`h-9 cursor-pointer rounded-[10px] border-0 bg-(--sg-ink) px-4 font-semibold text-(--sg-surface) disabled:cursor-default disabled:opacity-35 ${FOCUS}`}
             disabled={empty}
-            onClick={() => setAdopted(true)}
+            onClick={() => {
+              setAdopted(true);
+              announce("Signature adopted");
+            }}
           >
             {adopted ? "Adopted" : "Adopt and sign"}
           </button>

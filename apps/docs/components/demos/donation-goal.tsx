@@ -1,11 +1,15 @@
 "use client";
 
+import { Radio } from "@base-ui/react/radio";
+import { RadioGroup } from "@base-ui/react/radio-group";
 import { samplePath, type CloudPoint } from "@remold-ui/core";
+import { announce } from "@remold-ui/dom";
 import { Remold } from "@remold-ui/react/canvas";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useEffect, useMemo, useState, type Ref } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type Ref } from "react";
 import { Odometer } from "./odometer";
 import { useControllableState } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useScene } from "./use-scene";
 
 const GOAL = 1000;
@@ -119,22 +123,41 @@ export function DonationGoal({
 }: DonationGoalProps) {
   const [goal, setGoal] = useControllableState({ value, defaultValue, onValueChange });
   const [choice, setChoice] = useState(1);
+  const [settled, setSettled] = useState(0);
+  const root = useRef<HTMLElement | null>(null);
   const reached = goal.raised >= GOAL;
   const percent = Math.min(100, (goal.raised / GOAL) * 100);
 
-  const donate = () =>
+  const attach = useCallback(
+    (element: HTMLElement | null) => {
+      root.current = element;
+      if (typeof ref === "function") ref(element);
+      else if (ref) ref.current = element;
+    },
+    [ref],
+  );
+
+  useFocusAfterChange(root, settled, (section) => section.querySelector<HTMLElement>("[data-autofocus]"));
+
+  const donate = () => {
+    const raised = Math.min(GOAL, goal.raised + AMOUNTS[choice]!);
+    announce(raised >= GOAL ? "Goal reached. Thank you!" : `${money(raised)} of ${money(GOAL)} raised`);
     setGoal((current) => ({
       raised: Math.min(GOAL, current.raised + AMOUNTS[choice]!),
       backers: current.backers + 1,
       from: [0.2, 0.5, 0.8][choice] ?? 0.5,
     }));
+  };
 
-  const reset = () => setGoal({ raised: START, backers: 41, from: 0.5 });
+  const reset = () => {
+    announce(`Started again at ${money(START)}`);
+    setGoal({ raised: START, backers: 41, from: 0.5 });
+  };
 
   return (
     <MotionConfig reducedMotion="user">
       <section
-        ref={ref}
+        ref={attach}
         className="not-prose grid w-[min(100%,360px)] gap-[18px] rounded-[20px] bg-(--dg-surface) p-[22px] font-sans text-[13px] text-(--dg-ink) [--dg-accent:#2563eb] [--dg-ghost:#dbe5f8] [--dg-ink:#18181b] [--dg-muted:#6c6c75] [--dg-soft:#f4f4f5] [--dg-surface:#ffffff] [--dg-thumb:#ffffff] [--dg-on-accent:#ffffff] dark:[--dg-accent:#60a5fa] dark:[--dg-ghost:#263552] dark:[--dg-ink:#fafafa] dark:[--dg-muted:#a1a1aa] dark:[--dg-soft:#27272a] dark:[--dg-surface:#1c1c1f] dark:[--dg-thumb:#3f3f46] dark:[--dg-on-accent:#0b1220]"
         aria-label="Donation goal"
         data-reached={reached || undefined}
@@ -165,7 +188,7 @@ export function DonationGoal({
           </span>
         </div>
 
-        <AnimatePresence mode="popLayout" initial={false}>
+        <AnimatePresence mode="popLayout" initial={false} onExitComplete={() => setSettled((count) => count + 1)}>
           {reached ? (
             <motion.div
               key="done"
@@ -181,6 +204,7 @@ export function DonationGoal({
                 className="grid size-8 cursor-pointer place-items-center rounded-lg border-0 bg-transparent text-(--dg-muted) hover:bg-(--dg-soft) hover:text-(--dg-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--dg-accent)"
                 onClick={reset}
                 aria-label="Start again"
+                data-autofocus=""
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -205,10 +229,11 @@ export function DonationGoal({
               exit={{ opacity: 0 }}
               transition={POP}
             >
-              <div
+              <RadioGroup
                 className="relative grid h-full flex-1 grid-cols-3 rounded-[10px] bg-(--dg-soft) p-[3px]"
-                role="radiogroup"
                 aria-label="Amount"
+                value={choice}
+                onValueChange={(value) => setChoice(value as number)}
               >
                 <motion.span
                   className="absolute inset-y-[3px] left-[3px] w-[calc((100%-6px)/3)] rounded-[7px] bg-(--dg-thumb) shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
@@ -218,23 +243,23 @@ export function DonationGoal({
                   transition={POP}
                 />
                 {AMOUNTS.map((amount, index) => (
-                  <button
+                  <Radio.Root
                     key={amount}
-                    type="button"
-                    role="radio"
-                    aria-checked={choice === index}
+                    nativeButton
+                    value={index}
                     className="relative cursor-pointer border-0 bg-transparent font-[550] text-(--dg-muted) tabular-nums transition-colors duration-200 aria-checked:text-(--dg-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--dg-accent)"
-                    onClick={() => setChoice(index)}
+                    render={<button type="button" />}
                   >
                     {money(amount)}
-                  </button>
+                  </Radio.Root>
                 ))}
-              </div>
+              </RadioGroup>
               <motion.button
                 type="button"
                 className="h-full flex-none cursor-pointer rounded-[10px] border-0 bg-(--dg-accent) px-5 font-semibold text-(--dg-on-accent) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--dg-accent)"
                 onClick={donate}
                 whileTap={{ scale: 0.96 }}
+                data-autofocus=""
               >
                 Donate
               </motion.button>

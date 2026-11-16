@@ -3,7 +3,7 @@ import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { shapes } from "@remold-ui/core";
 import { Remold } from "@remold-ui/react/canvas";
-import { motion } from "motion/react";
+import { MotionConfig, motion } from "motion/react";
 import { useEffect, useId, useState } from "react";
 import { useScene } from "./use-scene";
 
@@ -187,45 +187,47 @@ export function ParticleShapes({
       : { spin: turning, tilt, sway: 0, distance };
 
   return (
-    <figure className="pts relative m-0 grid overflow-hidden rounded-[20px] bg-[radial-gradient(120%_90%_at_50%_40%,#15132a_0%,#07070b_70%)]">
-      {stars && <Remold.Canvas draw={drawStars} className={CANVAS} aria-hidden="true" />}
-      <Remold.Particles
-        key={[radius, dot, glow, duration, bounce, pointer].join()}
-        shape={SHAPES[shape]}
-        count={dots}
-        label={`Particles forming a ${NAMES[shape].toLowerCase()}`}
-        palette={PALETTE}
-        pairing={pairing}
-        transition={transition === "scatter" ? { type: "scatter", spread, hold, stagger } : "direct"}
-        camera={camera}
-        blend={glow ? "add" : "normal"}
-        dot={dot}
-        radius={radius}
-        padding={6}
-        pointer={pointer ? { radius: 110, strength: 28 } : false}
-        spring={{ duration, bounce }}
-        className={CANVAS}
-      />
-      <figcaption data-shape-picker className="absolute inset-x-0 bottom-[18px] flex justify-center px-3">
-        <ToggleGroup
-          className="inline-flex max-w-full overflow-x-auto rounded-full bg-[rgb(20_20_28/0.55)] p-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.07),inset_0_1px_0_rgb(255_255_255/0.08),0_10px_30px_-12px_rgb(0_0_0/0.6)] backdrop-blur-[14px] backdrop-saturate-[1.4] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          aria-label="Shape"
-          value={[shape]}
-          onValueChange={(values) => values[0] && onShapeChange?.(values[0] as ParticleShape)}
-        >
-          {PARTICLE_SHAPES.map((name) => (
-            <Toggle
-              key={name}
-              value={name}
-              className="relative inline-flex h-[34px] flex-none cursor-pointer items-center rounded-full border-0 bg-transparent px-3.5 text-[13px] font-medium tracking-[-0.005em] whitespace-nowrap text-white/50 transition-colors duration-250 ease-out not-data-pressed:hover:text-white/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70 data-pressed:text-white motion-reduce:transition-none"
-            >
-              {name === shape && <motion.span layoutId={`${id}-picked`} className="absolute inset-0 rounded-[inherit] bg-white/11 shadow-[inset_0_1px_0_rgb(255_255_255/0.1)]" transition={SLIDE} />}
-              <span className="relative">{NAMES[name]}</span>
-            </Toggle>
-          ))}
-        </ToggleGroup>
-      </figcaption>
-    </figure>
+    <MotionConfig reducedMotion="user">
+      <figure className="pts relative m-0 grid overflow-hidden rounded-[20px] bg-[radial-gradient(120%_90%_at_50%_40%,#15132a_0%,#07070b_70%)]">
+        {stars && <Remold.Canvas draw={drawStars} className={CANVAS} aria-hidden="true" />}
+        <Remold.Particles
+          key={[radius, dot, glow, duration, bounce, pointer].join()}
+          shape={SHAPES[shape]}
+          count={dots}
+          label={`Particles forming a ${NAMES[shape].toLowerCase()}`}
+          palette={PALETTE}
+          pairing={pairing}
+          transition={transition === "scatter" ? { type: "scatter", spread, hold, stagger } : "direct"}
+          camera={camera}
+          blend={glow ? "add" : "normal"}
+          dot={dot}
+          radius={radius}
+          padding={6}
+          pointer={pointer ? { radius: 110, strength: 28 } : false}
+          spring={{ duration, bounce }}
+          className={CANVAS}
+        />
+        <figcaption data-shape-picker className="absolute inset-x-0 bottom-[18px] flex justify-center px-3">
+          <ToggleGroup
+            className="inline-flex max-w-full overflow-x-auto rounded-full bg-[rgb(20_20_28/0.55)] p-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.07),inset_0_1px_0_rgb(255_255_255/0.08),0_10px_30px_-12px_rgb(0_0_0/0.6)] backdrop-blur-[14px] backdrop-saturate-[1.4] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            aria-label="Shape"
+            value={[shape]}
+            onValueChange={(values) => values[0] && onShapeChange?.(values[0] as ParticleShape)}
+          >
+            {PARTICLE_SHAPES.map((name) => (
+              <Toggle
+                key={name}
+                value={name}
+                className="relative inline-flex h-[34px] flex-none cursor-pointer items-center rounded-full border-0 bg-transparent px-3.5 text-[13px] font-medium tracking-[-0.005em] whitespace-nowrap text-white/50 transition-colors duration-250 ease-out not-data-pressed:hover:text-white/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70 data-pressed:text-white motion-reduce:transition-none"
+              >
+                {name === shape && <motion.span layoutId={`${id}-picked`} className="absolute inset-0 rounded-[inherit] bg-white/11 shadow-[inset_0_1px_0_rgb(255_255_255/0.1)]" transition={SLIDE} />}
+                <span className="relative">{NAMES[name]}</span>
+              </Toggle>
+            ))}
+          </ToggleGroup>
+        </figcaption>
+      </figure>
+    </MotionConfig>
   );
 }
 

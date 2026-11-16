@@ -19,11 +19,12 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { announce } from "@remold-ui/dom";
 import { Remold } from "@remold-ui/react";
-import { AnimatePresence, LayoutGroup, motion, useAnimate, useReducedMotion } from "motion/react";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion, useAnimate, useReducedMotion } from "motion/react";
 import { useEffect, useId, useRef, useState, type Ref } from "react";
 import useMeasure from "react-use-measure";
 import { Odometer } from "./odometer";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useScene } from "./use-scene";
 
 type Kind = "mention" | "comment" | "invite" | "assign" | "deploy";
@@ -214,10 +215,18 @@ function Avatar({ notice }: { notice: Notice }) {
   );
 }
 
-function InviteAnswer({ notice, onAnswer }: { notice: Notice; onAnswer: (answer: Exclude<Invite, "pending">) => void }) {
+function InviteAnswer({
+  notice,
+  onAnswer,
+  onSettled,
+}: {
+  notice: Notice;
+  onAnswer: (answer: Exclude<Invite, "pending">) => void;
+  onSettled: () => void;
+}) {
   return (
     <div className="grid min-h-8">
-      <AnimatePresence initial={false} mode="popLayout">
+      <AnimatePresence initial={false} mode="popLayout" onExitComplete={onSettled}>
         {notice.invite === "pending" ? (
           <motion.div key="ask" className="pointer-events-auto flex gap-1.5" {...SWAP}>
             <Button className={`${SMALL_BUTTON} bg-(--nbx-ink) text-(--nbx-surface)`} onClick={() => onAnswer("accepted")}>
@@ -237,7 +246,9 @@ function InviteAnswer({ notice, onAnswer }: { notice: Notice; onAnswer: (answer:
             className="m-0 inline-flex items-center gap-1.5 text-[13px] font-semibold text-(--nbx-muted) data-[answer=accepted]:text-(--nbx-good)"
             {...SWAP}
           >
-            {notice.invite === "accepted" && <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-4" />}
+            {notice.invite === "accepted" && (
+              <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-4" aria-hidden="true" />
+            )}
             {notice.invite === "accepted" ? `You joined the ${notice.what}` : "Invitation declined"}
           </motion.p>
         )}
@@ -265,9 +276,14 @@ function Row({
 }) {
   const still = useReducedMotion();
   const summary = summaryOf(notice);
+  const row = useRef<HTMLLIElement>(null);
+  const [settled, setSettled] = useState(0);
+
+  useFocusAfterChange(row, settled, (item) => item.querySelector<HTMLElement>("button"));
 
   return (
     <motion.li
+      ref={row}
       {...rise(still, delay)}
       data-read={notice.read || undefined}
       className="group/row relative grid grid-cols-[auto_1fr_auto] gap-3 rounded-2xl px-3 py-2.5"
@@ -305,10 +321,12 @@ function Row({
             {notice.quote}
           </p>
         )}
-        {notice.invite && <InviteAnswer notice={notice} onAnswer={onAnswer} />}
+        {notice.invite && (
+          <InviteAnswer notice={notice} onAnswer={onAnswer} onSettled={() => setSettled((count) => count + 1)} />
+        )}
       </div>
       <span className="pointer-events-none relative grid content-start justify-items-end gap-2 pt-px">
-        <span className="text-[12px] whitespace-nowrap text-(--nbx-quiet)">{notice.time}</span>
+        <span className="text-[12px] whitespace-nowrap text-(--nbx-muted)">{notice.time}</span>
         <AnimatePresence initial={false}>
           {!notice.read && (
             <motion.span
@@ -334,7 +352,7 @@ function CaughtUp({ still }: { still: boolean | null }) {
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: "spring", duration: 0.6, bounce: 0.45, delay: 0.15 }}
       >
-        <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.2} className="size-6" />
+        <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.2} className="size-6" aria-hidden="true" />
       </motion.span>
       <b className="text-[14.5px] font-[650]">You&apos;re all caught up</b>
       <span className="mt-1 text-[13px] text-(--nbx-muted)">New notifications will show up here.</span>
@@ -352,7 +370,7 @@ function AppBar({ open }: { open: boolean }) {
         >
           N
         </span>
-        <span>Northwind</span>
+        <span>Remold</span>
         <span className="text-(--nbx-quiet)" aria-hidden="true">
           /
         </span>
@@ -388,6 +406,10 @@ export function NotificationInbox({ value, defaultValue = START, onValueChange, 
   const before = useRef<number | null>(null);
   const known = useRef<Set<string> | null>(null);
   const clearing = useRef(false);
+  const closedByPerson = useRef(false);
+  const list = useRef<HTMLUListElement>(null);
+  const filters = useRef<HTMLDivElement>(null);
+  const [exits, setExits] = useState(0);
 
   const open = inbox.open;
   const unread = inbox.notices.filter((notice) => !notice.read).length;
@@ -431,6 +453,18 @@ export function NotificationInbox({ value, defaultValue = START, onValueChange, 
 
   useEffect(() => () => marking.current.forEach(clearTimeout), []);
 
+  useEffect(() => {
+    if (inbox.open) closedByPerson.current = false;
+  }, [inbox.open]);
+
+  useFocusAfterChange(
+    list,
+    exits,
+    (rows) =>
+      rows.querySelector<HTMLElement>("li button") ??
+      filters.current?.querySelector<HTMLElement>("[aria-pressed='true']"),
+  );
+
   const update = (notice: string, change: Partial<Notice>) =>
     setInbox((current) => ({
       ...current,
@@ -445,160 +479,175 @@ export function NotificationInbox({ value, defaultValue = START, onValueChange, 
       .map((notice, index) => setTimeout(() => update(notice.id, { read: true }), index * 70));
   };
 
+  const answer = (notice: Notice, reply: Exclude<Invite, "pending">) => {
+    update(notice.id, { invite: reply, read: true });
+    announce(reply === "accepted" ? `You joined the ${notice.what}` : "Invitation declined");
+  };
+
   const onOpenChange = (next: boolean) => {
+    closedByPerson.current = !next;
     setInbox((current) => ({ ...current, open: next }));
     if (!next) setHighlighted(null);
   };
 
   return (
-    <section ref={ref} className={`not-prose grid w-full justify-items-center ${PALETTE}`} aria-label="Workspace">
-      <div ref={anchor} className="relative h-[640px] w-[min(100%,420px)]">
-        <AppBar open={open} />
+    <MotionConfig reducedMotion="user">
+      <section ref={ref} className={`not-prose grid w-full justify-items-center ${PALETTE}`} aria-label="Workspace">
+        <div ref={anchor} className="relative h-[640px] w-[min(100%,420px)]">
+          <AppBar open={open} />
 
-        <Popover.Root open={open && shell !== null} onOpenChange={onOpenChange} modal={false}>
-          <motion.div
-            ref={setShell}
-            className="absolute top-0 left-0 overflow-hidden bg-(--nbx-surface)"
-            initial={false}
-            animate={
-              open
-                ? { x: barWidth - width, y: DROP, width, height: Math.max(size.height, BELL), borderRadius: 26 }
-                : { x: bellX, y: bellY, width: BELL, height: BELL, borderRadius: BELL / 2 }
-            }
-            transition={still ? { duration: 0.12 } : { ...MORPH, delay: open ? 0 : 0.08 }}
-          >
-            <Popover.Trigger
-              className="group absolute top-0 right-0 z-2 grid size-10 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-(--nbx-ink) transition-[top,right,width,height,background-color,scale] duration-200 ease-out hover:bg-(--nbx-fill) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--nbx-accent) active:scale-[0.96] data-popup-open:top-2 data-popup-open:right-2 data-popup-open:size-9 data-popup-open:bg-(--nbx-fill) data-popup-open:hover:bg-(--nbx-fill-hover) motion-reduce:transition-none"
-              aria-label={open ? "Close notifications" : unread ? `Notifications, ${unread} unread` : "Notifications"}
+          <Popover.Root open={open && shell !== null} onOpenChange={onOpenChange} modal={false}>
+            <motion.div
+              ref={setShell}
+              className="absolute top-0 left-0 overflow-hidden bg-(--nbx-surface)"
+              initial={false}
+              animate={
+                open
+                  ? { x: barWidth - width, y: DROP, width, height: Math.max(size.height, BELL), borderRadius: 26 }
+                  : { x: bellX, y: bellY, width: BELL, height: BELL, borderRadius: BELL / 2 }
+              }
+              transition={still ? { duration: 0.12 } : { ...MORPH, delay: open ? 0 : 0.08 }}
             >
-              <span ref={bell} className="grid origin-[50%_10%] [&_svg]:size-5 group-data-popup-open:[&_svg]:size-4">
-                <Remold.Icon
-                  icon={<HugeiconsIcon icon={open ? Cancel01Icon : Notification03Icon} />}
-                  strokeWidth={2}
-                  spring={{ duration: 0.32, bounce: 0.08 }}
-                  aria-hidden="true"
-                />
-              </span>
-            </Popover.Trigger>
+              <Popover.Trigger
+                className="group absolute top-0 right-0 z-2 grid size-10 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-(--nbx-ink) transition-[top,right,width,height,background-color,scale] duration-200 ease-out hover:bg-(--nbx-fill) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--nbx-accent) active:scale-[0.96] data-popup-open:top-2 data-popup-open:right-2 data-popup-open:size-9 data-popup-open:bg-(--nbx-fill) data-popup-open:hover:bg-(--nbx-fill-hover) motion-reduce:transition-none"
+                aria-label={open ? "Close notifications" : unread ? `Notifications, ${unread} unread` : "Notifications"}
+              >
+                <span ref={bell} className="grid origin-[50%_10%] [&_svg]:size-5 group-data-popup-open:[&_svg]:size-4">
+                  <Remold.Icon
+                    icon={<HugeiconsIcon icon={open ? Cancel01Icon : Notification03Icon} />}
+                    strokeWidth={2}
+                    spring={{ duration: 0.32, bounce: 0.08 }}
+                    aria-hidden="true"
+                  />
+                </span>
+              </Popover.Trigger>
 
-            <Popover.Portal container={shell}>
-              <Popover.Positioner className="absolute! inset-0! transform-none!" side="bottom" align="center">
-                <Popover.Popup
-                  className="absolute inset-0 outline-none transition-[opacity,filter] duration-100 ease-out data-ending-style:opacity-0 data-ending-style:blur-[3px] motion-reduce:transition-none"
-                  initialFocus={false}
-                >
-                  <motion.div
-                    ref={content}
-                    className="absolute top-0 left-0"
-                    style={{ width }}
-                    initial={still ? { opacity: 0 } : { opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={still ? { duration: 0.16 } : { ...SLIDE, delay: 0.06 }}
+              <Popover.Portal container={shell}>
+                <Popover.Positioner className="absolute! inset-0! transform-none!" side="bottom" align="center">
+                  <Popover.Popup
+                    className="absolute inset-0 outline-none transition-[opacity,filter] duration-100 ease-out data-ending-style:opacity-0 data-ending-style:blur-[3px] motion-reduce:transition-none"
+                    initialFocus={false}
+                    finalFocus={() => closedByPerson.current}
                   >
-                    <header className="flex h-[52px] items-center pr-[60px] pl-5">
-                      <Popover.Title className="m-0 text-[16px] font-bold tracking-[-0.015em]">Notifications</Popover.Title>
-                    </header>
+                    <motion.div
+                      ref={content}
+                      className="absolute top-0 left-0"
+                      style={{ width }}
+                      initial={still ? { opacity: 0 } : { opacity: 0, y: 14 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={still ? { duration: 0.16 } : { ...SLIDE, delay: 0.06 }}
+                    >
+                      <header className="flex h-[52px] items-center pr-[60px] pl-5">
+                        <Popover.Title className="m-0 text-[16px] font-bold tracking-[-0.015em]">Notifications</Popover.Title>
+                      </header>
 
-                    <div className="flex items-center justify-between gap-2 pr-3 pb-1.5 pl-3.5">
-                      <ToggleGroup
-                        className="flex rounded-xl bg-(--nbx-fill) p-[3px]"
-                        aria-label="Show"
-                        value={[inbox.tab]}
-                        onValueChange={(next) => {
-                          if (next[0]) setInbox((current) => ({ ...current, tab: next[0] as InboxTab }));
-                        }}
-                      >
-                        {(["all", "unread"] as const).map((tab) => (
-                          <Toggle
-                            key={tab}
-                            value={tab}
-                            className={`relative h-[30px] cursor-pointer rounded-[9px] border-0 bg-transparent px-3.5 text-[13px] font-semibold text-(--nbx-muted) transition-colors duration-200 data-pressed:text-(--nbx-ink) ${FOCUS_RING}`}
-                          >
-                            {inbox.tab === tab && (
-                              <motion.span
-                                layoutId={`${id}-tab`}
-                                className="absolute inset-0 rounded-[inherit] bg-(--nbx-surface)"
-                                transition={HIGHLIGHT}
-                              />
-                            )}
-                            <span className="relative inline-flex items-center gap-1.5">
-                              {tab === "all" ? "All" : "Unread"}
-                              {tab === "unread" && unread > 0 && (
-                                <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-(--nbx-ink) px-[5px] text-[10.5px] font-bold text-(--nbx-surface)">
-                                  <Odometer value={String(unread)} />
-                                </span>
+                      <div ref={filters} className="flex items-center justify-between gap-2 pr-3 pb-1.5 pl-3.5">
+                        <ToggleGroup
+                          className="flex rounded-xl bg-(--nbx-fill) p-[3px]"
+                          aria-label="Show"
+                          value={[inbox.tab]}
+                          onValueChange={(next) => {
+                            if (next[0]) setInbox((current) => ({ ...current, tab: next[0] as InboxTab }));
+                          }}
+                        >
+                          {(["all", "unread"] as const).map((tab) => (
+                            <Toggle
+                              key={tab}
+                              value={tab}
+                              className={`relative h-[30px] cursor-pointer rounded-[9px] border-0 bg-transparent px-3.5 text-[13px] font-semibold text-(--nbx-muted) transition-colors duration-200 data-pressed:text-(--nbx-ink) ${FOCUS_RING}`}
+                            >
+                              {inbox.tab === tab && (
+                                <motion.span
+                                  layoutId={`${id}-tab`}
+                                  className="absolute inset-0 rounded-[inherit] bg-(--nbx-surface)"
+                                  transition={HIGHLIGHT}
+                                />
                               )}
-                            </span>
-                          </Toggle>
-                        ))}
-                      </ToggleGroup>
+                              <span className="relative inline-flex items-center gap-1.5">
+                                {tab === "all" ? "All" : "Unread"}
+                                {tab === "unread" && unread > 0 && (
+                                  <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-(--nbx-ink) px-[5px] text-[10.5px] font-bold text-(--nbx-surface)">
+                                    <Odometer value={String(unread)} />
+                                  </span>
+                                )}
+                              </span>
+                            </Toggle>
+                          ))}
+                        </ToggleGroup>
 
-                      <Button
-                        className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-transparent px-2.5 text-[12.5px] font-semibold whitespace-nowrap text-(--nbx-accent) transition-colors duration-150 hover:bg-[color-mix(in_oklab,var(--nbx-accent)_9%,transparent)] data-disabled:cursor-default data-disabled:bg-transparent data-disabled:text-(--nbx-quiet) ${FOCUS_RING}`}
-                        disabled={!unread}
-                        focusableWhenDisabled
-                        onClick={markAllRead}
-                      >
-                        <HugeiconsIcon icon={TickDouble02Icon} strokeWidth={2} className="size-4" />
-                        Mark all read
-                      </Button>
-                    </div>
+                        <Button
+                          className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-transparent px-2.5 text-[12.5px] font-semibold whitespace-nowrap text-(--nbx-accent) transition-colors duration-150 hover:bg-[color-mix(in_oklab,var(--nbx-accent)_9%,transparent)] data-disabled:cursor-default data-disabled:bg-transparent data-disabled:text-(--nbx-quiet) ${FOCUS_RING}`}
+                          disabled={!unread}
+                          focusableWhenDisabled
+                          onClick={markAllRead}
+                        >
+                          <HugeiconsIcon icon={TickDouble02Icon} strokeWidth={2} className="size-4" aria-hidden="true" />
+                          Mark all read
+                        </Button>
+                      </div>
 
-                    <LayoutGroup id={id}>
-                      <ul
-                        className="relative m-0 max-h-[452px] list-none overflow-y-auto overscroll-contain px-2 pt-0 pb-2.5 [mask-image:linear-gradient(to_bottom,#000_calc(100%-32px),transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                        onPointerLeave={() => setHighlighted(null)}
-                      >
-                        <AnimatePresence initial mode="popLayout">
-                          {entries.map((entry, index) =>
-                            "heading" in entry ? (
-                              <motion.li
-                                key={entry.heading}
-                                {...rise(still, 0.1 + index * 0.035)}
-                                className="px-3 pt-3 pb-1 text-[11.5px] font-semibold tracking-[0.02em] text-(--nbx-quiet)"
-                              >
-                                {entry.heading}
-                              </motion.li>
-                            ) : (
-                              <Row
-                                key={entry.id}
-                                notice={entry}
-                                delay={0.1 + index * 0.035}
-                                layoutGroup={id}
-                                highlighted={highlighted === entry.id}
-                                onHighlight={() => setHighlighted(entry.id)}
-                                onOpen={() => update(entry.id, { read: true })}
-                                onAnswer={(answer) => update(entry.id, { invite: answer, read: true })}
-                              />
-                            ),
-                          )}
-                          {entries.length === 0 && <CaughtUp key="caught-up" still={still} />}
-                        </AnimatePresence>
-                      </ul>
-                    </LayoutGroup>
-                  </motion.div>
-                </Popover.Popup>
-              </Popover.Positioner>
-            </Popover.Portal>
-          </motion.div>
-        </Popover.Root>
+                      <LayoutGroup id={id}>
+                        <ul
+                          ref={list}
+                          className="relative m-0 max-h-[452px] list-none overflow-y-auto overscroll-contain px-2 pt-0 pb-2.5 [mask-image:linear-gradient(to_bottom,#000_calc(100%-32px),transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                          onPointerLeave={() => setHighlighted(null)}
+                        >
+                          <AnimatePresence
+                            initial
+                            mode="popLayout"
+                            onExitComplete={() => setExits((count) => count + 1)}
+                          >
+                            {entries.map((entry, index) =>
+                              "heading" in entry ? (
+                                <motion.li
+                                  key={entry.heading}
+                                  {...rise(still, 0.1 + index * 0.035)}
+                                  className="px-3 pt-3 pb-1 text-[11.5px] font-semibold tracking-[0.02em] text-(--nbx-muted)"
+                                >
+                                  {entry.heading}
+                                </motion.li>
+                              ) : (
+                                <Row
+                                  key={entry.id}
+                                  notice={entry}
+                                  delay={0.1 + index * 0.035}
+                                  layoutGroup={id}
+                                  highlighted={highlighted === entry.id}
+                                  onHighlight={() => setHighlighted(entry.id)}
+                                  onOpen={() => update(entry.id, { read: true })}
+                                  onAnswer={(reply) => answer(entry, reply)}
+                                />
+                              ),
+                            )}
+                            {entries.length === 0 && <CaughtUp key="caught-up" still={still} />}
+                          </AnimatePresence>
+                        </ul>
+                      </LayoutGroup>
+                    </motion.div>
+                  </Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </motion.div>
+          </Popover.Root>
 
-        <AnimatePresence initial={false}>
-          {!open && unread > 0 && (
-            <motion.span
-              className="pointer-events-none absolute z-3 grid h-4 min-w-4 place-items-center rounded-full bg-(--nbx-badge) px-1 text-[10px] font-bold text-white shadow-[0_0_0_2px_var(--nbx-surface)]"
-              style={{ left: bellX + BELL - 15, top: bellY - 1 }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0, transition: { duration: 0.12 } }}
-              transition={{ type: "spring", duration: 0.4, bounce: 0.35 }}
-            >
-              <Odometer value={String(unread)} />
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </div>
-    </section>
+          <AnimatePresence initial={false}>
+            {!open && unread > 0 && (
+              <motion.span
+                className="pointer-events-none absolute z-3 grid h-4 min-w-4 place-items-center rounded-full bg-(--nbx-badge) px-1 text-[10px] font-bold text-white shadow-[0_0_0_2px_var(--nbx-surface)]"
+                style={{ left: bellX + BELL - 15, top: bellY - 1 }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0, transition: { duration: 0.12 } }}
+                transition={{ type: "spring", duration: 0.4, bounce: 0.35 }}
+                aria-hidden="true"
+              >
+                <Odometer value={String(unread)} />
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </section>
+    </MotionConfig>
   );
 }
 

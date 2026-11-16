@@ -12,12 +12,14 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { announce } from "@remold-ui/dom";
 import { Remold, useTour } from "@remold-ui/react";
 import { useEffect, useId, useRef, useState, type CSSProperties, type Ref, type RefObject } from "react";
 import useMeasure, { type RectReadOnly } from "react-use-measure";
 
 import { Frame } from "./frame";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useScene } from "./use-scene";
 
 export type Target = "new" | "search" | "revenue" | "chart" | "reports" | "share";
@@ -230,6 +232,10 @@ function SearchText() {
       setTyped(0);
       return;
     }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setTyped(QUERY.length);
+      return;
+    }
     let timer: ReturnType<typeof setInterval> | undefined;
     const start = setTimeout(() => {
       timer = setInterval(() => setTyped((count) => Math.min(QUERY.length, count + 1)), 70);
@@ -244,7 +250,7 @@ function SearchText() {
   return (
     <span className="flex flex-1 items-center truncate text-zinc-900 max-sm:hidden dark:text-zinc-50">
       {QUERY.slice(0, typed)}
-      <span className="ml-px h-3.5 w-px animate-pulse bg-(--pt-accent)" aria-hidden="true" />
+      <span className="ml-px h-3.5 w-px animate-pulse bg-(--pt-accent) motion-reduce:animate-none" aria-hidden="true" />
     </span>
   );
 }
@@ -264,8 +270,8 @@ function DashboardHeader({ measure }: { measure: MeasureRefs }) {
           <Remold.Anchor
             name="search"
             render={
-              <label
-                className="flex h-8 w-[150px] items-center gap-[7px] rounded-[9px] bg-zinc-100 pr-1.5 pl-2.5 text-zinc-400 max-sm:w-8 max-sm:justify-center max-sm:px-0 dark:bg-[#2c2c31] dark:text-zinc-500 [&_svg]:size-[15px]"
+              <div
+                className="flex h-8 w-[150px] items-center gap-[7px] rounded-[9px] bg-zinc-100 pr-1.5 pl-2.5 text-zinc-600 max-sm:w-8 max-sm:justify-center max-sm:px-0 dark:bg-[#2c2c31] dark:text-zinc-400 [&_svg]:size-[15px]"
               />
             }
           />
@@ -401,7 +407,7 @@ function RevenueChart({ measure }: { measure: MeasureRefs }) {
         {[50, 40, 30].map((value) => (
           <span
             key={value}
-            className="absolute inset-x-0 flex items-center gap-2 text-[10.5px] text-zinc-400 tabular-nums dark:text-zinc-500"
+            className="absolute inset-x-0 flex items-center gap-2 text-[10.5px] text-zinc-500 tabular-nums dark:text-zinc-400"
             style={{ top: `${heightOf(value)}%` }}
           >
             <span className="h-px flex-1 border-t border-dashed border-zinc-200 dark:border-white/10" />
@@ -437,7 +443,7 @@ function RevenueChart({ measure }: { measure: MeasureRefs }) {
         </span>
       </span>
 
-      <span className="relative h-3.5 text-[10.5px] text-zinc-400 dark:text-zinc-500" aria-hidden="true">
+      <span className="relative h-3.5 text-[10.5px] text-zinc-500 dark:text-zinc-400" aria-hidden="true">
         {WEEK_LABELS.map(({ week, label }) => (
           <span
             key={label}
@@ -457,11 +463,11 @@ function Dashboard({ inert, measure }: { inert: boolean; measure: MeasureRefs })
     <div className="grid h-full grid-cols-[150px_1fr] max-sm:grid-cols-1" inert={inert || undefined}>
       <Sidebar measure={measure} />
 
-      <main className="grid min-w-0 grid-rows-[auto_auto_1fr] gap-3.5 px-[18px] pt-4 pb-[18px] max-sm:px-3.5">
+      <div className="grid min-w-0 grid-rows-[auto_auto_1fr] gap-3.5 px-[18px] pt-4 pb-[18px] max-sm:px-3.5">
         <DashboardHeader measure={measure} />
         <Kpis measure={measure} />
         <RevenueChart measure={measure} />
-      </main>
+      </div>
     </div>
   );
 }
@@ -478,14 +484,28 @@ function TipContent({
   titleId,
   bodyId,
   nextRef,
+  announceSteps,
 }: {
   steps: readonly Step[];
   titleId: string;
   bodyId: string;
   nextRef: RefObject<HTMLButtonElement | null>;
+  announceSteps: boolean;
 }) {
   const tour = useTour();
   const current = steps[tour.index]!;
+  const backRef = useRef<HTMLButtonElement>(null);
+  const spoken = useRef(tour.index);
+
+  useEffect(() => {
+    if (spoken.current === tour.index) return;
+    spoken.current = tour.index;
+    if (announceSteps) announce(`${current.title}. ${current.body}`);
+  }, [tour.index, announceSteps, current.title, current.body]);
+
+  useEffect(() => {
+    if (tour.first && document.activeElement === backRef.current) nextRef.current?.focus({ preventScroll: true });
+  }, [tour.first, nextRef]);
 
   return (
     <>
@@ -494,7 +514,7 @@ function TipContent({
           {`${tour.index + 1} of ${tour.count}`}
         </Remold.Text>
         <Remold.Tour.Close
-          className={`-mt-1 -mr-1 grid size-6 place-items-center rounded-[7px] text-zinc-400 dark:text-zinc-500 [&_svg]:size-3.5 ${QUIET_BUTTON} ${FOCUS}`}
+          className={`-mt-1 -mr-1 grid size-6 place-items-center rounded-[7px] text-zinc-500 [&_svg]:size-3.5 ${QUIET_BUTTON} ${FOCUS}`}
           aria-label="End tour"
         >
           <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} aria-hidden="true" />
@@ -521,6 +541,7 @@ function TipContent({
         </span>
 
         <Remold.Tour.Previous
+          ref={backRef}
           className={`h-[30px] rounded-[9px] px-3 font-medium text-zinc-500 data-rm-disabled:hidden dark:text-zinc-400 ${QUIET_BUTTON} ${FOCUS}`}
         >
           Back
@@ -587,6 +608,7 @@ export function ProductTour({
   const id = useId();
   const nextRef = useRef<HTMLButtonElement>(null);
   const helpRef = useRef<HTMLButtonElement>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
 
   const [stageRef, stage] = useMeasure();
   const [newRef, newBox] = useMeasure();
@@ -632,6 +654,8 @@ export function ProductTour({
     (touring ? nextRef.current : helpRef.current)?.focus({ preventScroll: true });
   }, [touring, moveFocus]);
 
+  useFocusAfterChange(tipRef, step, () => (moveFocus ? nextRef.current : null));
+
   const bright = dim < 0.25;
   const look = {
     "--pt-accent": accent,
@@ -674,6 +698,7 @@ export function ProductTour({
               pulse={connector && pulse && target ? step : undefined}
               render={
                 <div
+                  ref={tipRef}
                   className={TIP_SURFACE}
                   data-open={touring || undefined}
                   role={touring ? "dialog" : undefined}
@@ -684,7 +709,13 @@ export function ProductTour({
               }
             >
               {touring ? (
-                <TipContent steps={steps} titleId={`${id}-title`} bodyId={`${id}-body`} nextRef={nextRef} />
+                <TipContent
+                  steps={steps}
+                  titleId={`${id}-title`}
+                  bodyId={`${id}-body`}
+                  nextRef={nextRef}
+                  announceSteps={moveFocus}
+                />
               ) : (
                 <HelpButton helpRef={helpRef} />
               )}

@@ -119,7 +119,7 @@ export function ChartSwitch({ title, period, segments, value, defaultValue = "do
             <Toggle
               key={option}
               value={option}
-              className="h-7 cursor-pointer rounded-full border-0 bg-transparent px-3 text-[13px] font-medium text-(--cs-muted) capitalize outline-none transition-[background-color,color,box-shadow] duration-150 ease-out focus-visible:shadow-[0_0_0_2px_var(--cs-ink)] data-pressed:bg-(--cs-surface) data-pressed:text-(--cs-ink) data-pressed:shadow-[0_1px_2px_rgb(0_0_0/0.08)] motion-reduce:transition-none"
+              className="h-7 cursor-pointer rounded-full border-0 bg-transparent px-3 text-[13px] font-medium text-(--cs-muted) capitalize transition-[background-color,color,box-shadow] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-(--cs-ink) data-pressed:bg-(--cs-surface) data-pressed:text-(--cs-ink) data-pressed:shadow-[0_1px_2px_rgb(0_0_0/0.08)] motion-reduce:transition-none"
             >
               {option}
             </Toggle>

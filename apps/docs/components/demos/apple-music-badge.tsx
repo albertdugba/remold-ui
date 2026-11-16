@@ -42,7 +42,11 @@ export function AppleMusicBadge() {
       </span>
     </span>
   );
-  if (useInPreview()) return <span aria-label="Listen on Apple Music">{badge}</span>;
+  if (useInPreview()) return (
+      <span role="img" aria-label="Listen on Apple Music">
+        {badge}
+      </span>
+    );
   return (
     <a
       href="https://music.apple.com/gh/artist/kofi-kinaata/744862250"

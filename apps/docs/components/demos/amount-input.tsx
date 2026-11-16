@@ -1,7 +1,8 @@
 "use client";
 import { Input } from "@base-ui/react/input";
+import { announce } from "@remold-ui/dom";
 import { Remold } from "@remold-ui/react";
-import { AnimatePresence, motion, useAnimate } from "motion/react";
+import { AnimatePresence, MotionConfig, motion, useAnimate, useReducedMotion } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { typing, useScene } from "./use-scene";
 
@@ -76,6 +77,7 @@ export function AmountInput({
   const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useState(false);
   const [number, animate] = useAnimate<HTMLSpanElement>();
+  const reduced = useReducedMotion() ?? false;
 
   const track = (field: HTMLInputElement) => {
     const end = field.value.length;
@@ -96,7 +98,7 @@ export function AmountInput({
   const amount = Number(value || 0);
   const over = balance !== undefined && amount > balance;
   const shake = () => {
-    if (number.current) void animate(number.current, { x: [0, -7, 6, -4, 2, 0] }, SHAKE);
+    if (number.current && !reduced) void animate(number.current, { x: [0, -7, 6, -4, 2, 0] }, SHAKE);
   };
 
   const wasOver = useRef(over);
@@ -115,112 +117,120 @@ export function AmountInput({
   const tone = over ? "bad" : focused ? "focus" : undefined;
 
   return (
-    <div
-      data-over={over || undefined}
-      data-selected={(focused && selected) || undefined}
-      className={`group grid w-[min(100%,340px)] gap-2 text-start font-sans text-(--amt-ink) tabular-nums antialiased ${PALETTE}`}
-    >
-      <span className="flex min-h-[22px] items-center justify-between px-0.5">
-        <label htmlFor={id} className="cursor-text text-[12.5px] font-[550] text-(--amt-muted)">
-          {label}
-        </label>
-        {balance !== undefined && (
-          <button
-            type="button"
-            className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-semibold text-(--amt-muted) transition-colors duration-150 hover:text-(--amt-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--amt-focus)"
-            onClick={() => onValueChange(balance.toFixed(decimals).replace(/\.?0+$/, ""))}
-          >
-            Max
-          </button>
-        )}
-      </span>
+    <MotionConfig reducedMotion="user">
       <div
-        data-tone={tone}
-        className="flex h-[52px] cursor-text items-center gap-3 rounded-[14px] border-[1.8px] border-solid border-(--amt-line) bg-(--amt-surface) pr-3.5 pl-4 transition-[border-color] duration-[180ms] data-[tone=bad]:border-(--amt-bad) data-[tone=focus]:border-(--amt-ink)"
-        onPointerDown={(event) => {
-          if (event.target !== input.current) {
-            event.preventDefault();
-            input.current?.focus();
-          }
-        }}
+        data-over={over || undefined}
+        data-selected={(focused && selected) || undefined}
+        className={`group grid w-[min(100%,340px)] gap-2 text-start font-sans text-(--amt-ink) tabular-nums antialiased ${PALETTE}`}
       >
-        <span className="relative flex h-12 min-w-0 flex-1 items-baseline gap-[5px] overflow-hidden leading-[48px]">
-          <span
-            data-muted={!value || undefined}
-            className="text-[18px] font-medium text-(--amt-muted) transition-colors duration-200 data-muted:text-(--amt-faint)"
-          >
-            {symbol}
-          </span>
-          <span
-            ref={number}
-            className="inline-flex items-baseline text-[18px] font-semibold tracking-[-0.015em] whitespace-pre group-data-over:text-(--amt-bad) group-data-selected:rounded group-data-selected:bg-[color-mix(in_oklab,#3b82f6_22%,transparent)]"
-            aria-hidden="true"
-          >
-            <AnimatePresence initial={false} mode="popLayout">
-              {characters(value).map(({ key, char, muted }) => (
-                <motion.span
-                  key={key}
-                  layout="position"
-                  data-muted={muted || undefined}
-                  className="inline-block data-muted:text-(--amt-faint)"
-                  initial={{ y: "45%", opacity: 0, filter: "blur(3px)" }}
-                  animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                  exit={{ y: "45%", opacity: 0, filter: "blur(3px)", transition: { duration: 0.14 } }}
-                  transition={DIGIT}
-                >
-                  {char}
-                </motion.span>
-              ))}
-            </AnimatePresence>
-            {focused && !selected && (
-              <motion.span
-                layout="position"
-                className="ml-0.5 h-5 w-[1.5px] animate-caret-blink self-center rounded-[1px] bg-(--amt-ink) group-data-over:bg-(--amt-bad) motion-reduce:animate-none"
-                transition={DIGIT}
-              />
-            )}
-          </span>
-          <Input
-            ref={input}
-            id={id}
-            className="absolute inset-0 w-full border-0 bg-transparent p-0 text-[16px] text-transparent caret-transparent opacity-0 outline-none"
-            inputMode="decimal"
-            autoComplete="off"
-            spellCheck={false}
-            value={value}
-            aria-invalid={over || undefined}
-            aria-describedby={helper ? `${id}-help` : undefined}
-            onFocus={() => setFocused(true)}
-            onBlur={() => {
-              setFocused(false);
-              setSelected(false);
-            }}
-            onSelect={(event) => track(event.currentTarget)}
-            onValueChange={(typed) => {
-              setSelected(false);
-              const accepted = accept(typed, decimals, maxDigits);
-              if (accepted === null) shake();
-              else onValueChange(accepted);
-            }}
-          />
+        <span className="flex min-h-[22px] items-center justify-between px-0.5">
+          <label htmlFor={id} className="cursor-text text-[12.5px] font-[550] text-(--amt-muted)">
+            {label}
+          </label>
+          {balance !== undefined && (
+            <button
+              type="button"
+              className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-semibold text-(--amt-muted) transition-colors duration-150 hover:text-(--amt-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--amt-focus)"
+              onClick={() => onValueChange(balance.toFixed(decimals).replace(/\.?0+$/, ""))}
+            >
+              Max
+            </button>
+          )}
         </span>
-        <span className="flex h-[22px] flex-none items-center gap-[7px] border-l border-solid border-(--amt-line) pl-3 text-[13.5px] font-semibold tracking-[0.01em] text-(--amt-ink)">
-          <span className="grid size-[18px] place-items-center overflow-hidden rounded-full text-[24px] leading-none" aria-hidden="true">
-            {flagOf(currency)}
-          </span>
-          {currency}
-        </span>
-      </div>
-      {helper && (
-        <Remold.Text
-          id={`${id}-help`}
-          className="px-0.5 text-[12.5px] text-(--amt-muted) transition-colors duration-200 group-data-over:font-[550] group-data-over:text-(--amt-bad)"
-          aria-live="polite"
+        <div
+          data-tone={tone}
+          className="flex h-[52px] cursor-text items-center gap-3 rounded-[14px] border-[1.8px] border-solid border-(--amt-line) bg-(--amt-surface) pr-3.5 pl-4 transition-[border-color] duration-[180ms] data-[tone=bad]:border-(--amt-bad) data-[tone=focus]:border-(--amt-ink)"
+          onPointerDown={(event) => {
+            if (event.target !== input.current) {
+              event.preventDefault();
+              input.current?.focus();
+            }
+          }}
         >
-          {helper}
-        </Remold.Text>
-      )}
-    </div>
+          <span className="relative flex h-12 min-w-0 flex-1 items-baseline gap-[5px] overflow-hidden leading-[48px]">
+            <span
+              data-muted={!value || undefined}
+              className="text-[18px] font-medium text-(--amt-muted) transition-colors duration-200 data-muted:text-(--amt-faint)"
+            >
+              {symbol}
+            </span>
+            <span
+              ref={number}
+              className="inline-flex items-baseline text-[18px] font-semibold tracking-[-0.015em] whitespace-pre group-data-over:text-(--amt-bad) group-data-selected:rounded group-data-selected:bg-[color-mix(in_oklab,#3b82f6_22%,transparent)]"
+              aria-hidden="true"
+            >
+              <AnimatePresence initial={false} mode="popLayout">
+                {characters(value).map(({ key, char, muted }) => (
+                  <motion.span
+                    key={key}
+                    layout="position"
+                    data-muted={muted || undefined}
+                    className="inline-block data-muted:text-(--amt-faint)"
+                    initial={{ y: "45%", opacity: 0, filter: "blur(3px)" }}
+                    animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                    exit={{ y: "45%", opacity: 0, filter: "blur(3px)", transition: { duration: 0.14 } }}
+                    transition={DIGIT}
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </AnimatePresence>
+              {focused && !selected && (
+                <motion.span
+                  layout="position"
+                  className="ml-0.5 h-5 w-[1.5px] animate-caret-blink self-center rounded-[1px] bg-(--amt-ink) group-data-over:bg-(--amt-bad) motion-reduce:animate-none"
+                  transition={DIGIT}
+                />
+              )}
+            </span>
+            <Input
+              ref={input}
+              id={id}
+              className="absolute inset-0 w-full border-0 bg-transparent p-0 text-[16px] text-transparent caret-transparent opacity-0 outline-none"
+              inputMode="decimal"
+              autoComplete="off"
+              spellCheck={false}
+              value={value}
+              aria-invalid={over || undefined}
+              aria-describedby={helper ? `${id}-help` : undefined}
+              onFocus={() => setFocused(true)}
+              onBlur={() => {
+                setFocused(false);
+                setSelected(false);
+              }}
+              onSelect={(event) => track(event.currentTarget)}
+              onValueChange={(typed) => {
+                setSelected(false);
+                const accepted = accept(typed, decimals, maxDigits);
+                if (accepted === null) {
+                  shake();
+                  announce(
+                    decimals > 0
+                      ? `Up to ${maxDigits} digits and ${decimals} decimal places`
+                      : `Up to ${maxDigits} digits, no decimals`,
+                  );
+                } else onValueChange(accepted);
+              }}
+            />
+          </span>
+          <span className="flex h-[22px] flex-none items-center gap-[7px] border-l border-solid border-(--amt-line) pl-3 text-[13.5px] font-semibold tracking-[0.01em] text-(--amt-ink)">
+            <span className="grid size-[18px] place-items-center overflow-hidden rounded-full text-[24px] leading-none" aria-hidden="true">
+              {flagOf(currency)}
+            </span>
+            {currency}
+          </span>
+        </div>
+        {helper && (
+          <Remold.Text
+            id={`${id}-help`}
+            className="px-0.5 text-[12.5px] text-(--amt-muted) transition-colors duration-200 group-data-over:font-[550] group-data-over:text-(--amt-bad)"
+            aria-live="polite"
+          >
+            {helper}
+          </Remold.Text>
+        )}
+      </div>
+    </MotionConfig>
   );
 }
 
@@ -247,10 +257,11 @@ interface AmountInputDemoProps {
 
 const STILL: State = { value: "1250.50" };
 
-export function AmountInputDemo({ playing, preview }: AmountInputDemoProps = {}) {
-  const scene = useScene(BEATS, fromBeat, playing);
+export function AmountInputDemo({ playing, preview: previewing }: AmountInputDemoProps = {}) {
+  const scene = useScene(BEATS, fromBeat, playing, false, previewing ? STILL : undefined);
+  const preview = previewing && !scene.taken;
   const { ref, takeOver } = scene;
-  const state = preview && !playing ? STILL : scene.state;
+  const state = scene.state;
   return (
     <div ref={ref} className="not-prose grid w-full place-items-center">
       <AmountInput
