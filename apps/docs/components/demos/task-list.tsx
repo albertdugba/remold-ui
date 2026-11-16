@@ -1,12 +1,14 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
-import { LayoutGroup, motion } from "motion/react";
+import { announce } from "@remold-ui/dom";
+import { LayoutGroup, MotionConfig, motion } from "motion/react";
 import { useEffect, useRef, useState, type CSSProperties, type Ref } from "react";
 import { TaskStatusIcon } from "./demo-icons";
 import { Frame } from "./frame";
 import { Odometer } from "./odometer";
 import { useControllableState } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useScene } from "./use-scene";
 
 type Status = "progress" | "todo" | "done";
@@ -110,13 +112,14 @@ function Row({
       className={`flex h-10 items-center gap-2.5 px-3.5 not-first:shadow-[0_-1px_0_var(--tl-line)] ${FRESH_ROW}`}
       data-fresh={fresh || undefined}
     >
-      <span className="w-[58px] flex-none font-mono text-[11.5px] text-(--tl-faint) tabular-nums">
+      <span className="w-[58px] flex-none font-mono text-[11.5px] text-(--tl-muted) tabular-nums">
         {issue.id}
       </span>
       <button
         type="button"
         className="-mx-[3px] grid size-5 flex-none cursor-pointer place-items-center rounded-[5px] border-0 bg-transparent p-0 hover:bg-(--tl-head) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--tl-done)"
         aria-label={done ? `Reopen ${issue.id}` : `Complete ${issue.id}`}
+        data-toggle={issue.id}
         onClick={onToggle}
       >
         <TaskStatusIcon status={status} />
@@ -130,8 +133,8 @@ function Row({
       </span>
       <span
         className="grid size-5 flex-none place-items-center rounded-full bg-(--tl-head) text-[8.5px] font-semibold text-(--tl-muted) shadow-[inset_0_0_0_1px_var(--tl-line)]"
-        aria-label={`Assigned to ${issue.assignee}`}
       >
+        <span className="sr-only">Assigned to </span>
         {issue.assignee}
       </span>
     </motion.li>
@@ -157,6 +160,8 @@ export function TaskList({
   const [fresh, setFresh] = useState<string | null>(null);
   const [doneCount, setDoneCount] = useState(done.length);
   const doneBefore = useRef(list.done.length);
+  const body = useRef<HTMLDivElement>(null);
+  const focusNext = useRef<string | null>(null);
 
   useEffect(() => {
     const grew = list.done.length > doneBefore.current;
@@ -172,105 +177,123 @@ export function TaskList({
     return () => clearTimeout(timer);
   }, [done.length, doneCount]);
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    const buttons = [...(body.current?.querySelectorAll<HTMLElement>("[data-toggle]") ?? [])];
+    const at = buttons.findIndex((button) => button.dataset.toggle === id);
+    focusNext.current = (buttons[at + 1] ?? buttons[at - 1])?.dataset.toggle ?? null;
+    const reopened = isDone.has(id);
+    announce(`${id} ${reopened ? "reopened" : "completed"}, ${list.done.length + (reopened ? -1 : 1)} done`);
     setList((current) => ({
       ...current,
       done: current.done.includes(id)
         ? current.done.filter((issueId) => issueId !== id)
         : [id, ...current.done],
     }));
+  };
+
+  useFocusAfterChange(
+    body,
+    list.done.join(),
+    (root) =>
+      root.querySelector<HTMLElement>(`[data-toggle="${focusNext.current}"]`) ??
+      root.querySelector<HTMLElement>("[data-fold]"),
+  );
   const fold = () => setList((current) => ({ ...current, open: !current.open }));
 
   return (
-    <section
-      ref={ref}
-      className="grid min-h-[330px] w-[min(100%,560px)] grid-cols-[minmax(0,1fr)] content-start font-sans text-[13px] text-(--tl-ink) [--tl-done:#5e6ad2] [--tl-faint:#a1a1aa] [--tl-head:#f7f7f8] [--tl-ink:#18181b] [--tl-line:rgb(24_24_27/0.06)] [--tl-muted:#6b6b76] [--tl-progress:#e2a33b] [--tl-surface:#ffffff] [--tl-todo:#b4b4bd] dark:[--tl-done:#7d86e6] dark:[--tl-faint:#6b6b76] dark:[--tl-head:#222226] dark:[--tl-ink:#ededef] dark:[--tl-line:rgb(255_255_255/0.06)] dark:[--tl-muted:#9b9ba5] dark:[--tl-progress:#f0b44c] dark:[--tl-surface:#1c1c1f] dark:[--tl-todo:#6b6b76]"
-      aria-label="Issues"
-    >
-      <LayoutGroup id="task-list">
-        <motion.div
-          layout
-          transition={LAYOUT_SPRING}
-          className="grid min-w-0 grid-cols-[minmax(0,1fr)] rounded-xl bg-(--tl-surface) in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(24_24_27/0.08)] dark:in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]"
-        >
-          {GROUPS.map(({ status, name }) => {
-            const issues = ISSUES.filter((issue) => issue.status === status && !isDone.has(issue.id));
-            if (!issues.length) return null;
-            return (
-              <motion.div
-                layout
-                transition={LAYOUT_SPRING}
-                key={status}
-                className="group/section not-first:shadow-[0_-1px_0_var(--tl-line)]"
-              >
-                <header className="flex h-[34px] w-full items-center gap-2 border-0 bg-(--tl-head) px-3.5 text-left text-inherit group-first/section:rounded-t-xl group-last/section:last:rounded-b-xl [&>strong]:font-medium">
-                  <TaskStatusIcon status={status} />
-                  <strong>{name}</strong>
-                  <Odometer className="text-(--tl-faint)" value={String(issues.length)} />
-                </header>
-                <ul className="m-0 grid list-none grid-cols-[minmax(0,1fr)] p-0">
-                  {issues.map((issue) => (
-                    <Row key={issue.id} issue={issue} status={status} onToggle={() => toggle(issue.id)} />
-                  ))}
-                </ul>
-              </motion.div>
-            );
-          })}
-
+    <MotionConfig reducedMotion="user">
+      <section
+        ref={ref}
+        className="grid min-h-[330px] w-[min(100%,560px)] grid-cols-[minmax(0,1fr)] content-start font-sans text-[13px] text-(--tl-ink) [--tl-done:#5e6ad2] [--tl-faint:#a1a1aa] [--tl-head:#f7f7f8] [--tl-ink:#18181b] [--tl-line:rgb(24_24_27/0.06)] [--tl-muted:#6b6b76] [--tl-progress:#e2a33b] [--tl-surface:#ffffff] [--tl-todo:#b4b4bd] dark:[--tl-done:#7d86e6] dark:[--tl-faint:#6b6b76] dark:[--tl-head:#222226] dark:[--tl-ink:#ededef] dark:[--tl-line:rgb(255_255_255/0.06)] dark:[--tl-muted:#9b9ba5] dark:[--tl-progress:#f0b44c] dark:[--tl-surface:#1c1c1f] dark:[--tl-todo:#6b6b76]"
+        aria-label="Issues"
+      >
+        <LayoutGroup id="task-list">
           <motion.div
+            ref={body}
             layout
             transition={LAYOUT_SPRING}
-            className="group/section not-first:shadow-[0_-1px_0_var(--tl-line)]"
+            className="grid min-w-0 grid-cols-[minmax(0,1fr)] rounded-xl bg-(--tl-surface) in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(24_24_27/0.08)] dark:in-[.rm-stage]:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]"
           >
-            <button
-              type="button"
-              className="group/fold cursor-pointer pl-2 flex h-[34px] w-full items-center gap-2 border-0 bg-(--tl-head) px-3.5 text-left text-inherit group-first/section:rounded-t-xl group-last/section:last:rounded-b-xl [&>strong]:font-medium focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--tl-done)"
-              aria-expanded={list.open}
-              onClick={fold}
+            {GROUPS.map(({ status, name }) => {
+              const issues = ISSUES.filter((issue) => issue.status === status && !isDone.has(issue.id));
+              if (!issues.length) return null;
+              return (
+                <motion.div
+                  layout
+                  transition={LAYOUT_SPRING}
+                  key={status}
+                  className="group/section not-first:shadow-[0_-1px_0_var(--tl-line)]"
+                >
+                  <header className="flex h-[34px] w-full items-center gap-2 border-0 bg-(--tl-head) px-3.5 text-left text-inherit group-first/section:rounded-t-xl group-last/section:last:rounded-b-xl [&>strong]:font-medium">
+                    <TaskStatusIcon status={status} />
+                    <strong>{name}</strong>
+                    <Odometer className="text-(--tl-muted)" value={String(issues.length)} />
+                  </header>
+                  <ul className="m-0 grid list-none grid-cols-[minmax(0,1fr)] p-0">
+                    {issues.map((issue) => (
+                      <Row key={issue.id} issue={issue} status={status} onToggle={() => toggle(issue.id)} />
+                    ))}
+                  </ul>
+                </motion.div>
+              );
+            })}
+
+            <motion.div
+              layout
+              transition={LAYOUT_SPRING}
+              className="group/section not-first:shadow-[0_-1px_0_var(--tl-line)]"
             >
-              <HugeiconsIcon
-                icon={ArrowRight01Icon}
-                aria-hidden="true"
-                className="-mr-0.5 size-[13px] text-(--tl-faint) transition-[rotate] duration-200 group-aria-expanded/fold:rotate-90"
-              />
-              <TaskStatusIcon status="done" />
-              <strong>Done</strong>
-              <Odometer className="text-(--tl-faint)" value={String(doneCount)} />
-              {!list.open && (
-                <span className="ml-auto flex items-center gap-2.5">
-                  {done.slice(0, PEEK).map((issue) => (
-                    <motion.span
-                      layoutId={`issue-${issue.id}`}
+              <button
+                type="button"
+                className="group/fold cursor-pointer pl-2 flex h-[34px] w-full items-center gap-2 border-0 bg-(--tl-head) px-3.5 text-left text-inherit group-first/section:rounded-t-xl group-last/section:last:rounded-b-xl [&>strong]:font-medium focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--tl-done)"
+                aria-expanded={list.open}
+                data-fold=""
+                onClick={fold}
+              >
+                <HugeiconsIcon
+                  icon={ArrowRight01Icon}
+                  aria-hidden="true"
+                  className="-mr-0.5 size-[13px] text-(--tl-faint) transition-[rotate] duration-200 group-aria-expanded/fold:rotate-90 motion-reduce:transition-none"
+                />
+                <TaskStatusIcon status="done" />
+                <strong>Done</strong>
+                <Odometer className="text-(--tl-muted)" value={String(doneCount)} />
+                {!list.open && (
+                  <span className="ml-auto flex items-center gap-2.5">
+                    {done.slice(0, PEEK).map((issue) => (
+                      <motion.span
+                        layoutId={`issue-${issue.id}`}
+                        key={issue.id}
+                        className={`flex-none rounded-[5px] px-1 -mx-1 font-mono text-[11.5px] text-(--tl-muted) tabular-nums ${FRESH}`}
+                        data-fresh={issue.id === fresh || undefined}
+                      >
+                        {issue.id}
+                      </motion.span>
+                    ))}
+                    {done.length > PEEK && (
+                      <span className="text-[12px] text-(--tl-muted)">{`+${done.length - PEEK}`}</span>
+                    )}
+                  </span>
+                )}
+              </button>
+              {list.open && (
+                <ul className="m-0 grid list-none grid-cols-[minmax(0,1fr)] p-0">
+                  {done.map((issue) => (
+                    <Row
                       key={issue.id}
-                      className={`flex-none rounded-[5px] px-1 -mx-1 font-mono text-[11.5px] text-(--tl-faint) tabular-nums ${FRESH}`}
-                      data-fresh={issue.id === fresh || undefined}
-                    >
-                      {issue.id}
-                    </motion.span>
+                      issue={issue}
+                      status="done"
+                      fresh={issue.id === fresh}
+                      onToggle={() => toggle(issue.id)}
+                    />
                   ))}
-                  {done.length > PEEK && (
-                    <span className="text-[12px] text-(--tl-faint)">{`+${done.length - PEEK}`}</span>
-                  )}
-                </span>
+                </ul>
               )}
-            </button>
-            {list.open && (
-              <ul className="m-0 grid list-none grid-cols-[minmax(0,1fr)] p-0">
-                {done.map((issue) => (
-                  <Row
-                    key={issue.id}
-                    issue={issue}
-                    status="done"
-                    fresh={issue.id === fresh}
-                    onToggle={() => toggle(issue.id)}
-                  />
-                ))}
-              </ul>
-            )}
+            </motion.div>
           </motion.div>
-        </motion.div>
-      </LayoutGroup>
-    </section>
+        </LayoutGroup>
+      </section>
+    </MotionConfig>
   );
 }
 

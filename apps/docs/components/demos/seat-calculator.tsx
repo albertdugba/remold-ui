@@ -5,7 +5,8 @@ import { NumberField } from "@base-ui/react/number-field";
 import { Slider } from "@base-ui/react/slider";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { announce } from "@remold-ui/dom";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
 import { useId, type Ref } from "react";
 import { Odometer } from "./odometer";
 import { useControllableState } from "./use-controllable-state";
@@ -100,6 +101,14 @@ function priceFor(tier: Tier, seats: number, yearly: boolean) {
   return { perSeat, monthly, full, saving: (full - monthly) * 12 };
 }
 
+const clampSeats = (count: number) => Math.max(1, Math.min(999, Math.round(count)));
+
+function planSummary(seats: number, yearly: boolean) {
+  const tier = tierOf(seats);
+  if (tier.price === null) return `${tier.name}. Let's talk.`;
+  return `${tier.name}, ${money(priceFor(tier, seats, yearly).monthly)} a month`;
+}
+
 function featuresUpTo(tier: Tier) {
   return TIERS.filter((included) => included.from <= tier.from).flatMap((included) =>
     included.adds.map((feature) => ({ feature, tier: included.name })),
@@ -116,7 +125,15 @@ const PALETTE = [
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--sc-accent)";
 const STEP = `grid h-[30px] w-7 cursor-pointer place-items-center rounded-lg border-0 bg-transparent text-(--sc-muted) hover:bg-(--sc-surface) hover:text-(--sc-ink) [&_svg]:size-3.5 ${FOCUS}`;
 
-function SeatInput({ seats, onChange }: { seats: number; onChange: (seats: number) => void }) {
+function SeatInput({
+  seats,
+  onChange,
+  onCommit,
+}: {
+  seats: number;
+  onChange: (seats: number) => void;
+  onCommit: (seats: number) => void;
+}) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="grid gap-0.5 text-[14.5px]">
@@ -126,6 +143,7 @@ function SeatInput({ seats, onChange }: { seats: number; onChange: (seats: numbe
       <NumberField.Root
         value={seats}
         onValueChange={(value) => value !== null && onChange(value)}
+        onValueCommitted={(value) => value !== null && onCommit(value)}
         min={1}
         max={999}
       >
@@ -150,10 +168,12 @@ function SeatSlider({
   seats,
   tier,
   onChange,
+  onCommit,
 }: {
   seats: number;
   tier: Tier;
   onChange: (seats: number) => void;
+  onCommit: (seats: number) => void;
 }) {
   return (
     <>
@@ -161,13 +181,14 @@ function SeatSlider({
         className="group/slider mt-[34px]"
         value={positionOf(seats)}
         onValueChange={(value) => onChange(seatsAt(Array.isArray(value) ? value[0]! : value))}
+        onValueCommitted={(value) => onCommit(seatsAt(Array.isArray(value) ? value[0]! : value))}
         min={0}
         max={STOPS}
         aria-label="Seats"
       >
         <Slider.Control className="flex h-[22px] cursor-pointer touch-none items-center">
           <Slider.Track className="relative h-1.5 w-full rounded-[3px] bg-(--sc-field)">
-            <Slider.Indicator className="rounded-[inherit] bg-[linear-gradient(90deg,var(--sc-accent),color-mix(in_oklab,var(--sc-accent)_70%,#ec4899))] [transition:width_0.55s_cubic-bezier(0.2,0.8,0.2,1),inset-inline-start_0.55s_cubic-bezier(0.2,0.8,0.2,1)] group-data-dragging/slider:transition-none!" />
+            <Slider.Indicator className="rounded-[inherit] bg-[linear-gradient(90deg,var(--sc-accent),color-mix(in_oklab,var(--sc-accent)_70%,#ec4899))] [transition:width_0.55s_cubic-bezier(0.2,0.8,0.2,1),inset-inline-start_0.55s_cubic-bezier(0.2,0.8,0.2,1)] group-data-dragging/slider:transition-none! motion-reduce:transition-none!" />
             {TIERS.slice(1).map((step) => (
               <span
                 key={step.name}
@@ -178,7 +199,7 @@ function SeatSlider({
               />
             ))}
             <Slider.Thumb
-              className="size-[22px] rounded-full bg-white shadow-[0_0_0_1px_rgb(0_0_0/0.08),0_2px_8px_rgb(0_0_0/0.18)] outline-none [transition:left_0.55s_cubic-bezier(0.2,0.8,0.2,1),inset-inline-start_0.55s_cubic-bezier(0.2,0.8,0.2,1),transform_0.2s] has-focus-visible:shadow-[0_0_0_4px_color-mix(in_oklab,var(--sc-accent)_35%,transparent),0_2px_8px_rgb(0_0_0/0.18)] group-data-dragging/slider:[transform:scale(1.12)] group-data-dragging/slider:transition-none!"
+              className="size-[22px] rounded-full bg-white shadow-[0_0_0_1px_rgb(0_0_0/0.08),0_2px_8px_rgb(0_0_0/0.18)] outline-none [transition:left_0.55s_cubic-bezier(0.2,0.8,0.2,1),inset-inline-start_0.55s_cubic-bezier(0.2,0.8,0.2,1),transform_0.2s] has-focus-visible:shadow-[0_0_0_2px_var(--sc-surface),0_0_0_4px_var(--sc-accent),0_2px_8px_rgb(0_0_0/0.18)] group-data-dragging/slider:[transform:scale(1.12)] group-data-dragging/slider:transition-none! motion-reduce:transition-none!"
               aria-label="Seats"
               getAriaValueText={() => `${seats} seats`}
             >
@@ -199,7 +220,7 @@ function SeatSlider({
             key={option.name}
             data-active={option === tier || undefined}
             data-first={index === 0 || undefined}
-            className="absolute top-0 -translate-x-1/2 text-[11px] font-medium whitespace-nowrap text-(--sc-quiet) transition-colors duration-250 data-active:font-semibold data-active:text-(--sc-accent) data-first:translate-x-0"
+            className="absolute top-0 -translate-x-1/2 text-[11px] font-medium whitespace-nowrap text-(--sc-muted) transition-colors duration-250 data-active:font-semibold data-active:text-(--sc-accent) data-first:translate-x-0"
             style={{ left: percentOf(option.from) }}
           >
             {option.name}
@@ -215,7 +236,11 @@ function TeamFaces({ seats }: { seats: number }) {
   const more = seats - shown;
 
   return (
-    <span className="flex min-h-8 min-w-0 items-center [&_img]:relative [&_img]:-mr-2.5 [&_img]:size-7 [&_img]:flex-none [&_img]:rounded-full [&_img]:shadow-[0_0_0_2px_var(--sc-surface)] [&_img:last-of-type]:mr-0">
+    <span
+      role="img"
+      aria-label={`${seats} people`}
+      className="flex min-h-8 min-w-0 items-center [&_img]:relative [&_img]:-mr-2.5 [&_img]:size-7 [&_img]:flex-none [&_img]:rounded-full [&_img]:shadow-[0_0_0_2px_var(--sc-surface)] [&_img:last-of-type]:mr-0"
+    >
       <AnimatePresence initial={false} mode="popLayout">
         {FACES.slice(0, shown).map((name, index) => (
           <motion.img
@@ -337,12 +362,13 @@ function Plan({ tier, seats, yearly }: { tier: Tier; seats: number; yearly: bool
               <AnimatePresence initial={false}>
                 {yearly && (
                   <motion.s
-                    className="inline-block overflow-hidden text-[18px] font-medium whitespace-nowrap text-(--sc-quiet)"
+                    className="inline-block overflow-hidden text-[18px] font-medium whitespace-nowrap text-(--sc-muted)"
                     initial={{ opacity: 0, width: 0 }}
                     animate={{ opacity: 1, width: "auto" }}
                     exit={{ opacity: 0, width: 0 }}
                     transition={SPRING}
                   >
+                    <span className="sr-only">Was </span>
                     {money(full)}
                   </motion.s>
                 )}
@@ -378,6 +404,7 @@ function Plan({ tier, seats, yearly }: { tier: Tier; seats: number; yearly: bool
                   <HugeiconsIcon icon={CheckIcon} aria-hidden="true" />
                 </motion.span>
                 {feature}
+                {from === tier.name && from !== "Starter" && <span className="sr-only"> (new in {from})</span>}
               </span>
             </motion.li>
           ))}
@@ -416,27 +443,33 @@ export function SeatCalculator({
   const { seats, yearly } = pricing;
   const tier = tierOf(seats);
 
-  const setSeats = (count: number) =>
-    setPricing((current) => ({ ...current, seats: Math.max(1, Math.min(999, Math.round(count))) }));
+  const setSeats = (count: number) => setPricing((current) => ({ ...current, seats: clampSeats(count) }));
 
-  const setYearly = (next: boolean) => setPricing((current) => ({ ...current, yearly: next }));
+  const setYearly = (next: boolean) => {
+    announce(planSummary(seats, next));
+    setPricing((current) => ({ ...current, yearly: next }));
+  };
+
+  const saySeats = (count: number) => announce(planSummary(clampSeats(count), yearly));
 
   return (
-    <section
-      ref={ref}
-      className={`not-prose grid w-[min(100%,420px)] rounded-3xl bg-(--sc-surface) p-[18px] font-sans text-(--sc-ink) ${PALETTE}`}
-      aria-label="Pricing calculator"
-    >
-      <SeatInput seats={seats} onChange={setSeats} />
-      <SeatSlider seats={seats} tier={tier} onChange={setSeats} />
+    <MotionConfig reducedMotion="user">
+      <section
+        ref={ref}
+        className={`not-prose grid w-[min(100%,420px)] rounded-3xl bg-(--sc-surface) p-[18px] font-sans text-(--sc-ink) ${PALETTE}`}
+        aria-label="Pricing calculator"
+      >
+        <SeatInput seats={seats} onChange={setSeats} onCommit={saySeats} />
+        <SeatSlider seats={seats} tier={tier} onChange={setSeats} onCommit={saySeats} />
 
-      <div className="mt-4 flex min-w-0 items-center justify-between gap-2.5" aria-label={`${seats} people`}>
-        <TeamFaces seats={seats} />
-        <BillingToggle yearly={yearly} onChange={setYearly} />
-      </div>
+        <div className="mt-4 flex min-w-0 items-center justify-between gap-2.5">
+          <TeamFaces seats={seats} />
+          <BillingToggle yearly={yearly} onChange={setYearly} />
+        </div>
 
-      <Plan tier={tier} seats={seats} yearly={yearly} />
-    </section>
+        <Plan tier={tier} seats={seats} yearly={yearly} />
+      </section>
+    </MotionConfig>
   );
 }
 

@@ -548,3 +548,32 @@ describe("drawing cost", () => {
     s.destroy();
   });
 });
+
+describe("scene set and project", () => {
+  it("replaces the layout on screen and springs to it, without touching the options it was given", () => {
+    const frames = manualLoop();
+    const given = options({ loop: frames.loop, reducedMotion: "never" });
+    const s = scene(canvas, given);
+
+    s.set("stacked", { objects: { core: { x: 200, y: -150, width: 300, depth: 300 } } });
+    frames.run();
+
+    expect(s.box("core")!.x).toBeCloseTo(200, 0);
+    expect(given.layouts.stacked!.objects.core!.x).toBe(-150);
+
+    s.set("extra", { objects: { core: { x: 0, y: 0, width: 100, depth: 100 } } });
+    expect(s.layout).toBe("stacked");
+    expect(() => s.to("extra")).not.toThrow();
+    s.destroy();
+  });
+
+  it("projects floor points to the canvas, higher points landing higher up", () => {
+    const s = scene(canvas, options());
+    const floor = s.project(0, 0);
+    const raised = s.project(0, 0, 100);
+
+    expect(Number.isFinite(floor.x) && Number.isFinite(floor.y)).toBe(true);
+    expect(raised.y).toBeLessThan(floor.y);
+    s.destroy();
+  });
+});

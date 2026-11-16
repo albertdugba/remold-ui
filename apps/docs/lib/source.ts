@@ -12,11 +12,13 @@ const docs = defineDocs({
     // component drawn on a canvas (illustrations and diagrams), listed apart from interface ones;
     // `kind: particles` marks product UI built from particles.
     // `status` (such as `new`) marks a page as new on the components page.
+    // `hidden: true` takes a page off the site without deleting it: no route, sidebar entry or card.
     // All reuse the schema's own string type, so the docs don't need their own copy of zod.
     schema: pageSchema.extend({
       tags: pageSchema.shape.title.array().optional(),
       kind: pageSchema.shape.title.optional(),
       status: pageSchema.shape.title.optional(),
+      hidden: pageSchema.shape.full,
     }),
     postprocess: {
       includeProcessedMarkdown: true,
@@ -27,10 +29,13 @@ const docs = defineDocs({
   },
 });
 
+const everything = docs.toFumadocsSource();
+const shown = { ...everything, files: everything.files.filter((file) => file.type !== "page" || !file.data.hidden) };
+
 // See https://fumadocs.dev/docs/headless/source-api for more info
 export const source = loader({
   baseUrl: docsRoute,
-  source: docs.toFumadocsSource(),
+  source: shown,
   plugins: [
     lucideIconsPlugin(),
   ],

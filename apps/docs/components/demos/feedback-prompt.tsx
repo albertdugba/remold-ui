@@ -26,8 +26,9 @@ import { typing, useScene } from "./use-scene";
 
 export type Rating = "up" | "down";
 
-const SIZE = { type: "spring" as const, duration: 0.5, bounce: 0.1 };
+const SIZE = { type: "spring" as const, duration: 0.5, bounce: 0.16 };
 const SETTLE = { type: "spring" as const, duration: 0.38, bounce: 0 };
+const RISE = { type: "spring" as const, duration: 0.45, bounce: 0.15 };
 const FLY = { type: "spring" as const, duration: 0.55, bounce: 0.22 };
 
 const REASONS: Record<Rating, string[]> = {
@@ -69,10 +70,10 @@ function fadeIn(reduced: boolean, delay = 0) {
   }
 
   return {
-    initial: { opacity: 0, y: 4, scale: 0.98, filter: "blur(4px)" },
+    initial: { opacity: 0, y: 8, scale: 0.97, filter: "blur(4px)" },
     animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
     exit: { opacity: 0, scale: 0.98, filter: "blur(3px)", transition: EXIT },
-    transition: { ...SETTLE, delay, layout: SETTLE },
+    transition: { ...RISE, delay, layout: SETTLE },
   };
 }
 
@@ -112,12 +113,12 @@ const PALETTE = [
 ].join(" ");
 
 const RING = "focus-visible:shadow-[0_0_0_2px_var(--fbp-surface),0_0_0_4px_var(--fbp-ink)]";
-const QUESTION = "text-[14px] font-medium tracking-[-0.005em]";
+const QUESTION = "text-[15px] font-medium tracking-[-0.005em]";
 const DIM = "transition-opacity duration-200 group-has-[[data-sending]]/card:opacity-55";
 const THUMB_LOOK = {
-  plain: "size-[30px] [&_svg]:size-[17px]",
-  head: "size-[30px] bg-(--fbp-good-soft) text-(--fbp-good) data-[rating=down]:bg-(--fbp-bad-soft) data-[rating=down]:text-(--fbp-bad) [&_svg]:size-[17px]",
-  done: "size-7 bg-(--fbp-good) text-white [&_svg]:size-3.5",
+  plain: "size-[34px] [&_svg]:size-[19px]",
+  head: "size-9 bg-(--fbp-good-soft) text-(--fbp-good) data-[rating=down]:bg-(--fbp-bad-soft) data-[rating=down]:text-(--fbp-bad) [&_svg]:size-[19px]",
+  done: "size-8 bg-(--fbp-good) text-white [&_svg]:size-4",
 };
 
 function Thumb({
@@ -143,7 +144,13 @@ function Thumb({
       className={`grid flex-none place-items-center rounded-full [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round] ${THUMB_LOOK[look]}`}
       transition={reduced ? { duration: 0 } : FLY}
     >
-      <Remold.Icon icon={<HugeiconsIcon icon={icon} />} strokeWidth={1.8} />
+      <span
+        className={`grid transition-[rotate,translate] duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none ${
+          look !== "plain" ? "" : which === "up" ? "group-hover/thumb:-translate-y-px group-hover/thumb:-rotate-12" : "group-hover/thumb:translate-y-px group-hover/thumb:rotate-12"
+        }`}
+      >
+        <Remold.Icon icon={<HugeiconsIcon icon={icon} />} strokeWidth={1.8} aria-hidden="true" />
+      </span>
     </motion.span>
   );
 }
@@ -152,7 +159,7 @@ function SendButton({ sending, reduced }: { sending: boolean; reduced: boolean }
   return (
     <Button
       type="submit"
-      className={`grid h-8 min-w-[68px] cursor-pointer place-items-center rounded-full border-0 bg-(--fbp-ink) px-[15px] text-[13.5px] font-semibold text-(--fbp-surface) outline-none transition-[scale] duration-150 active:scale-[0.96] data-sending:cursor-progress ${RING}`}
+      className={`grid h-10 min-w-[80px] cursor-pointer place-items-center rounded-full border-0 bg-(--fbp-ink) px-[18px] text-[14.5px] font-semibold text-(--fbp-surface) outline-none transition-[scale] duration-150 active:scale-[0.96] data-sending:cursor-progress ${RING}`}
       data-sending={sending || undefined}
       aria-busy={sending || undefined}
       aria-disabled={sending || undefined}
@@ -167,7 +174,7 @@ function SendButton({ sending, reduced }: { sending: boolean; reduced: boolean }
             exit={{ opacity: 0 }}
             transition={SETTLE}
           >
-            <HugeiconsIcon icon={Loading03Icon} strokeWidth={2.2} />
+            <HugeiconsIcon icon={Loading03Icon} strokeWidth={2.2} aria-hidden="true" />
             <span className="sr-only">Sending</span>
           </motion.span>
         ) : (
@@ -214,7 +221,7 @@ function FeedbackForm({
   return (
     <motion.form
       ref={ref}
-      className="grid gap-3.5 p-3"
+      className="grid gap-4 p-4"
       aria-labelledby={`${id}-title`}
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
@@ -228,20 +235,20 @@ function FeedbackForm({
         <Thumb which={rating} layoutId={`${id}-thumb-${rating}`} look="head" reduced={reduced} />
         <motion.h3
           id={`${id}-title`}
-          className="m-0 flex-1 text-[14px] font-semibold tracking-[-0.01em]"
-          {...fadeIn(reduced, 0.08)}
+          className="m-0 flex-1 text-[16px] font-semibold tracking-[-0.01em]"
+          {...fadeIn(reduced, 0.06)}
         >
           {TITLES[rating]}
         </motion.h3>
-        <motion.span {...fadeIn(reduced, 0.12)}>
+        <motion.span {...fadeIn(reduced, 0.1)}>
           <Button
             type="button"
-            className={`grid size-7 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--fbp-muted) outline-none transition-[background-color,opacity] duration-150 group-has-[[data-sending]]/card:opacity-55 hover:bg-(--fbp-well) hover:text-(--fbp-ink) focus-visible:shadow-[0_0_0_2px_var(--fbp-ink)] [&_svg]:size-[15px]`}
+            className={`grid size-8 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--fbp-muted) outline-none transition-[background-color,opacity] duration-150 group-has-[[data-sending]]/card:opacity-55 hover:bg-(--fbp-well) hover:text-(--fbp-ink) focus-visible:shadow-[0_0_0_2px_var(--fbp-ink)] [&_svg]:size-4`}
             disabled={sending}
             aria-label="Close"
             onClick={onClose}
           >
-            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} aria-hidden="true" />
           </Button>
         </motion.span>
       </div>
@@ -251,7 +258,7 @@ function FeedbackForm({
         multiple
         value={reasons}
         onValueChange={(next) => onReasonsChange(next as string[])}
-        className={`flex flex-wrap gap-1.5 ${DIM}`}
+        className={`flex flex-wrap gap-2 ${DIM}`}
         aria-label="Reasons"
       >
         {REASONS[rating].map((reason, index) => (
@@ -259,9 +266,9 @@ function FeedbackForm({
             key={reason}
             value={reason}
             data-part="reason"
-            className="group/reason inline-flex h-[30px] cursor-pointer items-center rounded-full border-0 bg-transparent px-3 text-[13px] font-medium text-(--fbp-ink) shadow-[inset_0_0_0_1px_var(--fbp-line)] outline-none [transition:background-color_0.18s,color_0.18s,box-shadow_0.18s,padding_0.22s_cubic-bezier(0.32,0.72,0,1)] not-data-pressed:hover:bg-(--fbp-well) focus-visible:shadow-[0_0_0_2px_var(--fbp-surface),0_0_0_4px_var(--fbp-ink)]! data-pressed:bg-(--fbp-ink) data-pressed:pl-2.5 data-pressed:text-(--fbp-surface) data-pressed:shadow-[inset_0_0_0_1px_var(--fbp-ink)] motion-reduce:transition-none"
+            className="group/reason inline-flex h-[34px] cursor-pointer items-center rounded-full border-0 bg-transparent px-3.5 text-[14px] font-medium text-(--fbp-ink) shadow-[inset_0_0_0_1px_var(--fbp-line)] outline-none [transition:background-color_0.18s,color_0.18s,box-shadow_0.18s,padding_0.22s_cubic-bezier(0.32,0.72,0,1)] not-data-pressed:hover:bg-(--fbp-well) focus-visible:shadow-[0_0_0_2px_var(--fbp-surface),0_0_0_4px_var(--fbp-ink)]! data-pressed:bg-(--fbp-ink) data-pressed:pl-3 data-pressed:text-(--fbp-surface) data-pressed:shadow-[inset_0_0_0_1px_var(--fbp-ink)] motion-reduce:transition-none"
             render={
-              <motion.button type="button" layout="position" {...fadeIn(reduced, 0.12 + index * 0.035)} />
+              <motion.button type="button" layout="position" whileTap={{ scale: 0.95 }} {...fadeIn(reduced, 0.1 + index * 0.03)} />
             }
           >
             <span
@@ -275,11 +282,11 @@ function FeedbackForm({
         ))}
       </ToggleGroup>
 
-      <motion.div {...fadeIn(reduced, 0.24)}>
+      <motion.div {...fadeIn(reduced, 0.18)}>
         <Field.Root className={`grid ${DIM}`}>
           <Field.Label className="sr-only">Tell us more</Field.Label>
           <Field.Control
-            className="min-h-[76px] w-full resize-none rounded-[14px] border-[1.8px] border-solid border-transparent bg-(--fbp-well) px-3 py-2.5 text-[14px] leading-[1.45] text-(--fbp-ink) outline-none transition-[border-color,background-color] duration-[180ms] placeholder:text-(--fbp-muted) focus:border-(--fbp-ink) focus:bg-(--fbp-surface)"
+            className="min-h-[96px] w-full resize-none rounded-[16px] border-[1.8px] border-solid border-transparent bg-(--fbp-well) px-3.5 py-3 text-[15px] leading-[1.45] text-(--fbp-ink) outline-none transition-[border-color,background-color] duration-[180ms] placeholder:text-(--fbp-muted) focus:border-(--fbp-ink) focus:bg-(--fbp-surface)"
             readOnly={sending}
             placeholder="Tell us more (optional)"
             value={comment}
@@ -289,8 +296,8 @@ function FeedbackForm({
         </Field.Root>
       </motion.div>
 
-      <motion.div className="flex items-center justify-between gap-3" {...fadeIn(reduced, 0.28)}>
-        <span className="pl-0.5 text-[12px] text-(--fbp-muted)">Anonymous · helps us fix this page</span>
+      <motion.div className="flex items-center justify-between gap-3" {...fadeIn(reduced, 0.22)}>
+        <span className="pl-0.5 text-[13px] text-(--fbp-muted)">Anonymous · helps us fix this page</span>
         <SendButton sending={sending} reduced={reduced} />
       </motion.div>
     </motion.form>
@@ -321,7 +328,7 @@ export function FeedbackPrompt({
   const [content, size] = useMeasuredSize<HTMLDivElement>();
 
   const phase: Phase = sent ? "thanks" : rating ? "form" : "idle";
-  const cardStyle = useCardSize(size, phase === "form" ? 20 : 24, reduced);
+  const cardStyle = useCardSize(size, phase === "form" ? 24 : 28, reduced);
 
   const interacted = useRef(false);
   const lastRating = useRef<Rating | null>(null);
@@ -332,10 +339,13 @@ export function FeedbackPrompt({
     const card = root.current;
     if (!card) return;
 
+    const active = document.activeElement;
+    if (active && active !== document.body && !card.contains(active)) return;
+
     let target: HTMLElement | null = card;
     if (phase === "form") target = card.querySelector<HTMLElement>("[data-part=reason]");
     if (phase === "idle")
-      target = card.querySelector<HTMLElement>(`[data-rating=${lastRating.current ?? "up"}]`);
+      target = card.querySelector<HTMLElement>(`button[data-rating=${lastRating.current ?? "up"}]`);
     target?.focus({ preventScroll: true });
   }, [phase]);
 
@@ -367,13 +377,13 @@ export function FeedbackPrompt({
           <div
             ref={content}
             data-phase={phase}
-            className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 data-[phase=form]:w-[340px]"
+            className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 data-[phase=form]:w-[380px]"
           >
             <AnimatePresence initial={false} mode="popLayout">
               {phase === "idle" && (
                 <motion.div
                   key="idle"
-                  className="flex h-12 items-center gap-0.5 pr-1.5 pl-[18px] whitespace-nowrap"
+                  className="flex h-14 items-center gap-1 pr-2 pl-5 whitespace-nowrap"
                   role="group"
                   aria-labelledby={`${id}-question`}
                   {...fadeIn(reduced)}
@@ -381,12 +391,12 @@ export function FeedbackPrompt({
                   <span id={`${id}-question`} className={QUESTION}>
                     {question}
                   </span>
-                  <span className="mr-2 ml-3.5 h-5 w-px bg-(--fbp-line)" aria-hidden="true" />
+                  <span className="mr-2 ml-4 h-6 w-px bg-(--fbp-line)" aria-hidden="true" />
                   {(["up", "down"] as const).map((which) => (
                     <Button
                       key={which}
                       data-rating={which}
-                      className={`grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--fbp-muted) outline-none transition-[background-color,color,scale] duration-150 active:scale-[0.92] data-[rating=down]:hover:bg-(--fbp-bad-soft) data-[rating=down]:hover:text-(--fbp-bad) data-[rating=up]:hover:bg-(--fbp-good-soft) data-[rating=up]:hover:text-(--fbp-good) ${RING}`}
+                      className={`group/thumb grid size-10 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--fbp-muted) outline-none transition-[background-color,color,scale] duration-150 active:scale-[0.92] data-[rating=down]:hover:bg-(--fbp-bad-soft) data-[rating=down]:hover:text-(--fbp-bad) data-[rating=up]:hover:bg-(--fbp-good-soft) data-[rating=up]:hover:text-(--fbp-good) ${RING}`}
                       aria-label={which === "up" ? "Yes, it helped" : "No, it didn't help"}
                       onClick={() => rate(which)}
                     >
@@ -415,11 +425,16 @@ export function FeedbackPrompt({
               {phase === "thanks" && rating && (
                 <motion.div
                   key="thanks"
-                  className="flex h-12 items-center gap-2.5 pr-[18px] pl-2.5 whitespace-nowrap"
+                  className="flex h-14 items-center gap-3 pr-5 pl-3 whitespace-nowrap"
                   {...fadeIn(reduced)}
                 >
                   <Thumb which={rating} layoutId={`${id}-thumb-${rating}`} look="done" check reduced={reduced} />
-                  <motion.span className={QUESTION} {...fadeIn(reduced, 0.1)}>
+                  <motion.span
+                    className={QUESTION}
+                    initial={reduced ? { opacity: 0 } : { opacity: 0, x: -8, filter: "blur(4px)" }}
+                    animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                    transition={{ ...RISE, delay: 0.12 }}
+                  >
                     Thanks for the feedback
                   </motion.span>
                 </motion.div>
@@ -473,10 +488,11 @@ interface FeedbackPromptDemoProps {
   preview?: boolean;
 }
 
-export function FeedbackPromptDemo({ playing, preview }: FeedbackPromptDemoProps = {}) {
-  const scene = useScene(BEATS, fromBeat, playing);
+export function FeedbackPromptDemo({ playing, preview: previewing }: FeedbackPromptDemoProps = {}) {
+  const scene = useScene(BEATS, fromBeat, playing, false, previewing ? STILL : undefined);
+  const preview = previewing && !scene.taken;
   const { ref, takeOver, live } = scene;
-  const state = preview && !playing ? STILL : scene.state;
+  const state = scene.state;
 
   useEffect(() => {
     if (live || preview || !state.sent) return;
@@ -497,7 +513,7 @@ export function FeedbackPromptDemo({ playing, preview }: FeedbackPromptDemoProps
   }, [state.sending, live, preview, takeOver]);
 
   return (
-    <div ref={ref} className="not-prose grid min-h-[380px] w-full place-items-center">
+    <div ref={ref} className="not-prose grid min-h-[420px] w-full place-items-center">
       <FeedbackPrompt
         rating={state.rating}
         onRatingChange={(rating) =>

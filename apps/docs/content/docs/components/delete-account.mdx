@@ -1,0 +1,35 @@
+---
+title: "Delete account"
+description: "A delete-account dialog that grows out of its button and unlocks as you type your email: each matching character fills in and the red button fills with it. Deleting shrinks the dialog into an undo bar with a countdown."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="delete-account" code={<Source demo="delete-account" />} minHeight={520}>
+  <DeleteAccountDemo />
+</Stage>
+
+## Things to try
+
+- **Press Delete account.** The button's red tint grows into the dialog and turns white as it arrives, then the list of what you lose fades in.
+- **Type the email.** The grey characters fill in as you match them, the count under the field re-letters, and the button fills from the left.
+- **Type a wrong character.** The field shakes and turns red, and the button stops filling until you fix it.
+- **Finish the email.** The button pops as it unlocks. Press it, or press Enter.
+- **Delete.** The dialog shrinks into a dark bar at the bottom with Undo and a ring that counts down six seconds.
+- **Undo.** Your account comes back. Wait instead, and it's gone for good.
+- **Cancel, or press Escape.** The dialog shrinks back into the button.
+
+## Install
+
+<AddCommand name="delete-account" />
+
+## Dependencies
+
+<Dependencies demo="delete-account" />
+
+## How it works
+
+- **One surface, three places.** The button's tint, the dialog's sheet and the undo bar share a Motion layout id, so it's one surface that grows, then shrinks into the bar. It's an empty shape, so no words stretch; the content fades in once it has arrived.
+- **Characters fill in.** The email sits in grey behind the field in the same type, so what you type lands exactly on top of it. Any text is accepted, including paste and dictation; it only counts once it matches.
+- **The button fills with a clip.** The red layer carries its own white label and is clipped to how much of the email you've matched, so the label reads on both sides of the edge.
+- **Focus follows the action.** Opening puts focus in the field. Deleting moves it to Undo, since the button that opened the dialog no longer exists.

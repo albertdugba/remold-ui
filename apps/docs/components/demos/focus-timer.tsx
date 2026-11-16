@@ -214,10 +214,11 @@ export interface FocusTimerHandle {
 export interface FocusTimerProps {
   actionsRef?: Ref<FocusTimerHandle>;
   onAction?: (action: FocusTimerAction) => void;
+  announcements?: boolean;
   ref?: Ref<HTMLElement>;
 }
 
-export function FocusTimer({ actionsRef, onAction, ref }: FocusTimerProps) {
+export function FocusTimer({ actionsRef, onAction, announcements = true, ref }: FocusTimerProps) {
   const [timer, dispatch] = useReducer(reduce, INITIAL);
   const active = timer.running || timer.rush || timer.wait > 0;
 
@@ -241,7 +242,7 @@ export function FocusTimer({ actionsRef, onAction, ref }: FocusTimerProps) {
       <section
         ref={ref}
         data-phase={timer.phase}
-        className="group not-prose grid w-[min(100%,340px)] justify-items-center gap-[22px] rounded-3xl bg-(--ft-surface) px-7 pt-8 pb-7 font-sans text-(--ft-ink) [--ft-glass:#e4e4e7] [--ft-ink:#18181b] [--ft-muted:#a1a1aa] [--ft-rest:#0f9d7a] [--ft-sand:#d98a1c] [--ft-soft:#f4f4f5] [--ft-surface:#ffffff] dark:[--ft-glass:#34343a] dark:[--ft-ink:#fafafa] dark:[--ft-muted:#71717a] dark:[--ft-rest:#34d3a6] dark:[--ft-sand:#f0b04a] dark:[--ft-soft:#27272a] dark:[--ft-surface:#1c1c1f]"
+        className="group not-prose grid w-[min(100%,340px)] justify-items-center gap-[22px] rounded-3xl bg-(--ft-surface) px-7 pt-8 pb-7 font-sans text-(--ft-ink) [--ft-glass:#e4e4e7] [--ft-ink:#18181b] [--ft-muted:#6c6c75] [--ft-rest:#0f9d7a] [--ft-rest-text:#047857] [--ft-sand:#d98a1c] [--ft-sand-text:#a16207] [--ft-soft:#f4f4f5] [--ft-surface:#ffffff] dark:[--ft-glass:#34343a] dark:[--ft-ink:#fafafa] dark:[--ft-muted:#a1a1aa] dark:[--ft-rest:#34d3a6] dark:[--ft-rest-text:#34d3a6] dark:[--ft-sand:#f0b04a] dark:[--ft-sand-text:#f0b04a] dark:[--ft-soft:#27272a] dark:[--ft-surface:#1c1c1f]"
         aria-label="Focus timer"
       >
         <div className="grid h-[250px] place-items-center">
@@ -250,20 +251,19 @@ export function FocusTimer({ actionsRef, onAction, ref }: FocusTimerProps) {
 
         <div className="grid justify-items-center gap-1">
           <Odometer className="text-[42px] font-medium tracking-[-0.03em] tabular-nums" value={clock(shown(timer))} />
-          <span className="text-[13px] text-(--ft-muted) tabular-nums">
-            <span className="font-semibold text-(--ft-sand) transition-colors duration-400 group-data-[phase=break]:text-(--ft-rest)">{focus ? "Focus" : "Break"}</span> · {timer.round} of {ROUNDS}
+          <span className="text-[13px] text-(--ft-muted) tabular-nums" aria-live={announcements ? "polite" : "off"}>
+            <span className="font-semibold text-(--ft-sand-text) transition-colors duration-400 group-data-[phase=break]:text-(--ft-rest-text)">{focus ? "Focus" : "Break"}</span> · {timer.round} of {ROUNDS}
           </span>
         </div>
 
         <div className="flex items-center gap-5">
-          <button type="button" className="grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--ft-muted) transition-colors duration-200 hover:bg-(--ft-soft) hover:text-(--ft-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ft-sand)" aria-label="Reset" onClick={() => act({ type: "reset" })}>
+          <button type="button" className="grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--ft-muted) transition-colors duration-200 hover:bg-(--ft-soft) hover:text-(--ft-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ft-ink)" aria-label="Reset" onClick={() => act({ type: "reset" })}>
             <HugeiconsIcon icon={RotateLeft01Icon} size={17} strokeWidth={2} aria-hidden="true" />
           </button>
           <motion.button
             type="button"
-            className="grid size-14 cursor-pointer place-items-center rounded-full border-0 bg-(--ft-ink) p-0 text-(--ft-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ft-sand)"
+            className="grid size-14 cursor-pointer place-items-center rounded-full border-0 bg-(--ft-ink) p-0 text-(--ft-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ft-ink)"
             aria-label={timer.running ? "Pause" : "Start"}
-            aria-pressed={timer.running}
             onClick={() => act({ type: "toggle" })}
             whileTap={{ scale: 0.92 }}
           >
@@ -276,7 +276,7 @@ export function FocusTimer({ actionsRef, onAction, ref }: FocusTimerProps) {
           </motion.button>
           <button
             type="button"
-            className="grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--ft-muted) transition-colors duration-200 hover:bg-(--ft-soft) hover:text-(--ft-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ft-sand)"
+            className="grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--ft-muted) transition-colors duration-200 hover:bg-(--ft-soft) hover:text-(--ft-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ft-ink)"
             aria-label={focus ? "Skip to break" : "Skip break"}
             onClick={() => act({ type: "skip" })}
           >
@@ -306,5 +306,5 @@ export function FocusTimerDemo({ playing }: { playing?: boolean } = {}) {
     if (scene.live) timer.current?.dispatch(BEATS[scene.step]!.action);
   }, [scene.live, scene.step]);
 
-  return <FocusTimer ref={scene.ref} actionsRef={timer} onAction={() => scene.takeOver(scene.state)} />;
+  return <FocusTimer ref={scene.ref} actionsRef={timer} onAction={() => scene.takeOver(scene.state)} announcements={!scene.live} />;
 }

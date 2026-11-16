@@ -61,7 +61,8 @@ function screenEdge(points: readonly { x: number; y: number }[], left: boolean) 
 
 /** An isometric scene whose objects spring between named layouts. */
 export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
-  const layoutNames = Object.keys(options.layouts);
+  const layouts: Record<string, SceneLayout> = { ...options.layouts };
+  const layoutNames = Object.keys(layouts);
 
   if (layoutNames.length === 0) throw new RangeError("scene: at least one layout is required");
 
@@ -77,9 +78,10 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
   let size: CanvasSize = fitCanvas(canvas, { maxPixelRatio: options.maxPixelRatio });
   let current = options.initial ?? layoutNames[0]!;
 
-  if (!options.layouts[current]) throw new RangeError(`scene: unknown initial layout "${current}"`);
+  if (!layouts[current]) throw new RangeError(`scene: unknown initial layout "${current}"`);
 
   let focused: string | null = null;
+  let aimedAt: SceneLayout["camera"] = layouts[current]!.camera;
   let hovered: string | null = null;
   let time = 0;
   let running = false;
@@ -100,7 +102,7 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
       size,
     );
 
-  const firstLayout = options.layouts[current]!;
+  const firstLayout = layouts[current]!;
   const objects = Object.keys(options.objects).map((id) => createObject(id, options, current, spring, basePalette));
   const byId = new Map(objects.map((object) => [object.id, object]));
 
@@ -118,7 +120,7 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
 
   const describe = () => {
     const object = focused ? byId.get(focused) : undefined;
-    const caption = options.layouts[current]!.caption ?? "";
+    const caption = layouts[current]!.caption ?? "";
 
     description.textContent = object ? [object.label, object.description].filter(Boolean).join(": ") : `${current}. ${caption}`.trim();
   };
@@ -177,7 +179,8 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
 
     if (moving || camera.yaw.held) changed = true;
 
-    draw();
+    if (visible) draw();
+
     running = moving || camera.yaw.held || (flowing() && visible);
 
     return running;
@@ -187,7 +190,8 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
     if (destroyed) return;
 
     changed = true;
-    draw();
+
+    if (visible) draw();
 
     if (running) return;
 
@@ -383,7 +387,7 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
   }
 
   function to(name: string): void {
-    const layout = options.layouts[name];
+    const layout = layouts[name];
 
     if (!layout) throw new RangeError(`scene: unknown layout "${name}"`);
 
@@ -393,7 +397,9 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
 
     for (const link of links) go(link.opacity, shownIn(link.spec.layouts, name) ? 1 : 0);
 
-    applyCamera(cameraTarget(layout, size), false);
+    if (layout.camera === "fit" || layout.camera !== aimedAt) applyCamera(cameraTarget(layout, size), false);
+
+    aimedAt = layout.camera;
 
     if (focused && !layout.objects[focused]) focused = null;
 
@@ -467,7 +473,7 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
       ? new ResizeObserver(() => {
           size = fitCanvas(canvas, { maxPixelRatio: options.maxPixelRatio });
 
-          if (options.layouts[current]!.camera === "fit") applyCamera(cameraTarget(options.layouts[current]!, size), true);
+          if (layouts[current]!.camera === "fit") applyCamera(cameraTarget(layouts[current]!, size), true);
 
           changed = true;
           draw();
@@ -481,7 +487,12 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
       ? new IntersectionObserver(([entry]) => {
           visible = entry?.isIntersecting ?? true;
 
-          if (visible && flowing()) wake();
+          if (!visible) return;
+
+          changed = true;
+          draw();
+
+          if (flowing()) wake();
         })
       : null;
 
@@ -533,6 +544,16 @@ export function scene(canvas: HTMLCanvasElement, options: SceneOptions): Scene {
     },
 
     pick: (x, y) => hitTest({ x, y }),
+
+    project(x, y, z = 0) {
+      return view().project(x, y, z);
+    },
+
+    set(name, layout) {
+      layouts[name] = layout;
+
+      if (name === current) to(name);
+    },
 
     render() {
       changed = true;

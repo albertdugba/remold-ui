@@ -56,10 +56,6 @@ const DonationGoalDemo = dynamic(
   () => import("../demos/donation-goal").then((m) => m.DonationGoalDemo),
   { ssr: false },
 );
-const MorphingDialogDemo = dynamic(
-  () => import("../demos/morphing-dialog").then((m) => m.MorphingDialogDemo),
-  { ssr: false },
-);
 const InviteTeamDemo = dynamic(
   () => import("../demos/invite-team").then((m) => m.InviteTeamDemo),
   { ssr: false },
@@ -176,12 +172,20 @@ const LabelPickerDemo = dynamic(
   () => import("../demos/label-picker").then((m) => m.LabelPickerDemo),
   { ssr: false },
 );
+const DeleteAccountDemo = dynamic(
+  () => import("../demos/delete-account").then((m) => m.DeleteAccountDemo),
+  { ssr: false },
+);
 const PeelRewardDemo = dynamic(
   () => import("../demos/peel-reward").then((m) => m.PeelRewardDemo),
   { ssr: false },
 );
 const NotificationInboxDemo = dynamic(
   () => import("../demos/notification-inbox").then((m) => m.NotificationInboxDemo),
+  { ssr: false },
+);
+const FileUploadDemo = dynamic(
+  () => import("../demos/file-upload").then((m) => m.FileUploadDemo),
   { ssr: false },
 );
 const WalletStackDemo = dynamic(
@@ -197,13 +201,15 @@ const LogoMorph = dynamic(
 
 /** Labels for the catalogue. The home grid shows every card, in the order below. */
 export const CATEGORIES = [
-  { id: "morphing", label: "Morphing" },
-  { id: "svg", label: "SVG" },
-  { id: "illustrations", label: "Illustrations" },
-  { id: "connectors", label: "Connectors" },
-  { id: "canvas", label: "Canvas & Particles" },
-  { id: "charts", label: "Charts & Data" },
   { id: "forms", label: "Forms & Inputs" },
+  { id: "popovers", label: "Popovers & Menus" },
+  { id: "dialogs", label: "Modals & Dialogs" },
+  { id: "morphing", label: "Morphing" },
+  { id: "buttons", label: "Buttons & Toggles" },
+  { id: "lists", label: "Lists & Cards" },
+  { id: "charts", label: "Charts & Data" },
+  { id: "status", label: "Status & Progress" },
+  { id: "canvas", label: "Canvas & Particles" },
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number]["id"];
@@ -625,7 +631,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="Layout · Icon · Text"
-        category="svg"
+        category="forms"
         title="Code to verified"
         docs="/docs/components/otp-input"
         states={["Code"]}
@@ -636,7 +642,7 @@ function allCards() {
       <PartCard
         featured
         kicker="Base UI · Motion"
-        category="forms"
+        category="buttons"
         title="Event RSVP"
         docs="/docs/components/event-rsvp"
         states={["RSVP"]}
@@ -660,12 +666,13 @@ function allCards() {
         docs="/docs/components/split-amount"
         states={["Split"]}
         isNew
+        minHeight={640}
       >
         {(_, playing) => <SplitAmountDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Particles · Base UI"
-        category="canvas"
+        category="status"
         title="Free up space"
         docs="/docs/components/storage-cleanup"
         states={["Delete"]}
@@ -686,7 +693,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="Base UI · Motion"
-        category="forms"
+        category="popovers"
         title="Notification inbox"
         isNew
         docs="/docs/components/notification-inbox"
@@ -694,6 +701,17 @@ function allCards() {
         minHeight={700}
       >
         {(_, playing) => <NotificationInboxDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
+        category="forms"
+        title="File upload"
+        isNew
+        docs="/docs/components/file-upload"
+        states={["Upload"]}
+        minHeight={600}
+      >
+        {(_, playing) => <FileUploadDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Motion · Base UI"
@@ -706,18 +724,8 @@ function allCards() {
         {(_, playing) => <PeelRewardDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Base UI · Motion"
-        category="morphing"
-        title="Button to dialog"
-        docs="/docs/components/morphing-dialog"
-        states={["New habit"]}
-        minHeight={560}
-      >
-        {(_, playing) => <MorphingDialogDemo playing={playing} />}
-      </PartCard>
-      <PartCard
         kicker="Layout · Text"
-        category="morphing"
+        category="dialogs"
         title="Option to booking"
         docs="/docs/components/table-booking"
         states={["Booking"]}
@@ -735,7 +743,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="SVG · Branding"
-        category="svg"
+        category="morphing"
         title="Logo into logo"
         bare
         docs="/docs/components/logo-morph"
@@ -753,7 +761,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="SVG · Illustration"
-        category="illustrations"
+        category="status"
         title="Order tracker"
         docs="/docs/components/order-tracker"
         states={["Track"]}
@@ -771,7 +779,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="Base UI · Motion"
-        category="morphing"
+        category="popovers"
         title="Popover menu"
         docs="/docs/components/popover-menu"
         states={["Menu"]}
@@ -812,7 +820,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="Base UI · Motion"
-        category="morphing"
+        category="buttons"
         title="Feedback prompt"
         docs="/docs/components/feedback-prompt"
         states={["Helpful?"]}
@@ -822,7 +830,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="Particles · Motion"
-        category="canvas"
+        category="charts"
         title="Donation goal"
         docs="/docs/components/donation-goal"
         states={["Give"]}
@@ -832,7 +840,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="Layout · Reveal"
-        category="morphing"
+        category="buttons"
         title="Turn on two-factor"
         docs="/docs/components/two-factor"
         states={["Two-factor"]}
@@ -842,7 +850,7 @@ function allCards() {
       <PartCard
         featured
         kicker="Motion · createMorph"
-        category="illustrations"
+        category="charts"
         title="Streak"
         docs="/docs/components/streak"
         states={["Streak"]}
@@ -863,7 +871,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="SVG · Base UI"
-        category="svg"
+        category="status"
         title="Payment status"
         docs="/docs/components/payment-status"
         states={["Pay"]}
@@ -884,7 +892,7 @@ function allCards() {
       <PartCard
         featured
         kicker="Motion · createMorph"
-        category="forms"
+        category="lists"
         title="Send a message"
         docs="/docs/components/send-message"
         states={["Send"]}
@@ -895,7 +903,7 @@ function allCards() {
       <PartCard
         featured
         kicker="Base UI · Motion"
-        category="forms"
+        category="lists"
         title="API keys"
         docs="/docs/components/api-keys"
         states={["Keys"]}
@@ -945,7 +953,7 @@ function allCards() {
       <PartCard
         featured
         kicker="Layout · Base UI"
-        category="morphing"
+        category="lists"
         title="Onboarding checklist"
         docs="/docs/components/onboarding-checklist"
         states={["Checklist"]}
@@ -955,7 +963,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="Layout · Connectors"
-        category="connectors"
+        category="lists"
         title="Post and comments"
         spotlight
         wide
@@ -968,7 +976,7 @@ function allCards() {
       <PartCard
         featured
         kicker="Base UI · Motion"
-        category="charts"
+        category="lists"
         title="Bulk selection"
         docs="/docs/components/bulk-select"
         states={["Select"]}
@@ -979,7 +987,7 @@ function allCards() {
       <PartCard
         featured
         kicker="Base UI · Motion"
-        category="charts"
+        category="lists"
         title="Filter bar"
         docs="/docs/components/filter-bar"
         states={["Filters"]}
@@ -990,13 +998,24 @@ function allCards() {
       <PartCard
         featured
         kicker="Base UI · Motion"
-        category="forms"
+        category="popovers"
         title="Label picker"
         docs="/docs/components/label-picker"
         states={["Labels"]}
         minHeight={560}
       >
         {(_, playing) => <LabelPickerDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        featured
+        kicker="Base UI · Motion"
+        category="dialogs"
+        title="Delete account"
+        docs="/docs/components/delete-account"
+        states={["Delete"]}
+        minHeight={520}
+      >
+        {(_, playing) => <DeleteAccountDemo playing={playing} preview />}
       </PartCard>
       <PartCard
         featured
@@ -1033,7 +1052,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="SVG · Shapes"
-        category="svg"
+        category="canvas"
         title="Artwork in motion"
         bare
         docs="/docs/primitives/icon"

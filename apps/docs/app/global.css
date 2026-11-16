@@ -1226,10 +1226,10 @@ html > body[data-scroll-locked] {
   color: var(--color-fd-muted-foreground);
 }
 
-/* The docs share the landing page's frame (1520 px, like its navbar), and the article fills the
-   column between the sidebar and "On this page" instead of stopping at Fumadocs' 900 px. */
+/* The docs span the whole window: the sidebar sits at the left edge, and the article fills the
+   column between it and "On this page" instead of stopping at Fumadocs' 900 px. */
 #nd-docs-layout {
-  --fd-layout-width: 1520px;
+  --fd-layout-width: 100vw;
 }
 
 #nd-page {

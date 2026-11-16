@@ -142,6 +142,32 @@ describe("transition", () => {
     expect(root.querySelector("[data-rm-ignore]")).toBeNull();
   });
 
+  it("hides what travels on out of a removed element, so it isn't drawn twice", async () => {
+    const root = mount(
+      `<div data-box="0 0 300 80" style="background-color: rgb(240, 240, 240)"><span data-box="10 10 40 40" style="background-color: rgb(20, 20, 20)"></span><p data-box="60 10 200 30">Carry me</p></div>`,
+    );
+    const frames = manualLoop();
+    const t = transition(
+      root,
+      () => {
+        root.innerHTML = `<p data-box="0 200 200 30">Carry me</p>`;
+      },
+      { loop: frames.loop, reducedMotion: "never" },
+    );
+    await t.ready;
+
+    const ghost = root.querySelector("[data-rm-exiting]") as HTMLElement;
+    const carried = ghost.querySelector("p") as HTMLElement;
+    const left = ghost.querySelector("span") as HTMLElement;
+
+    expect(carried.style.visibility).toBe("hidden");
+    expect(left.style.visibility).toBe("");
+    expect(ghost.querySelector("[data-rm-carried]")).toBeNull();
+
+    frames.run();
+    await t.finished;
+  });
+
   it("fades in what was added and marks it while it arrives", async () => {
     const root = mount(list([["Keep", 0]]));
     const frames = manualLoop();

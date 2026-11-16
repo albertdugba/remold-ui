@@ -1,0 +1,39 @@
+---
+title: "Date range picker"
+description: "A date range button that opens two months with quick ranges beside them. The range stretches to the day under your pointer, the ends glide to their new days, months slide the way you move, and the label re-letters when you apply."
+status: "new"
+tags: ["Base UI", "Motion", "React DayPicker"]
+hidden: true
+---
+
+<Stage name="date-range-picker" code={<Source demo="date-range-picker" />} minHeight={640}>
+  <DateRangePickerDemo />
+</Stage>
+
+## Things to try
+
+- **Open it.** The button shows the range; press it and two months open with quick ranges on the left.
+- **Pick a first day, then move the pointer.** The band stretches to whatever day you're over, and the end marker glides along with it.
+- **Pick the last day.** The line at the bottom counts the days. Pick backwards and the two ends swap.
+- **Press a quick range.** The highlight slides to it, the ends fly to their new days and the band sweeps in between them.
+- **Change month.** The grid slides in from the side you moved towards and the month names re-letter.
+- **Apply.** The button's label re-letters and the total rolls to the new figure. Cancel, Escape or a click outside leaves things as they were.
+- **Use the keyboard.** Arrow keys move day by day and across months, and the band follows the focused day.
+
+Days after "today" can't be picked. The demo's today is fixed at 19 November 2026 so the page reads the same for everyone, and the sales figures are made up.
+
+## Install
+
+<AddCommand name="date-range-picker" />
+
+## Dependencies
+
+<Dependencies demo="date-range-picker" />
+
+## How it works
+
+- **React DayPicker does the calendar.** It handles the grid, keyboard movement, focus and screen reader labels. Each day is drawn by a custom day button, which is where the motion lives.
+- **The ends are two shared shapes.** The start and end markers each carry a Motion layout id, so when the range changes they travel to their new days instead of blinking.
+- **The band is painted per day.** Every day between the ends draws its own strip, so the band can wrap across weeks and months. After a quick range, the strips arrive in order from the start, which reads as a sweep.
+- **Nothing changes until you apply.** The popover works on a draft. Apply hands it back; closing any other way throws it away.
+- **It folds for small screens.** Where there is less than 660 pixels of room it shows one month, with the quick ranges as chips above it.

@@ -91,6 +91,26 @@ const ITEMS = [
     "A New trip button that grows into its dialog, and a dialog that shrinks into the trip it created. Built on Base UI's Dialog, Field and Toggle Group.",
   ],
   [
+    "date-range-picker",
+    "Date range picker",
+    "A date range button that opens two months with quick ranges beside them: the range stretches to the day under your pointer, months slide the way you move, and the label re-letters when you apply. Built on React DayPicker and Base UI's Popover.",
+  ],
+  [
+    "file-upload",
+    "File upload",
+    "A drop zone that folds into a strip as files land in a list, each with a progress bar that turns into a check, retry for failures and a summary that counts along. Built on Base UI's Progress and Button.",
+  ],
+  [
+    "sign-in",
+    "Sign in",
+    "A sign-in card that works in steps: your email shrinks into a chip, the password step slides in, and the button becomes a check before the card greets you by name. Built on Base UI's Field, Button, Toggle, Avatar and Separator.",
+  ],
+  [
+    "delete-account",
+    "Delete account",
+    "A delete-account dialog that grows from its button and unlocks as you type your email, then shrinks into an undo bar. Built on Base UI's Dialog, Field and Button.",
+  ],
+  [
     "podcast-player",
     "Podcast",
     "A mini now-playing bar that opens into the full player: the artwork grows from a thumbnail into the cover and the title, show and play button settle into place, matched with no ids.",

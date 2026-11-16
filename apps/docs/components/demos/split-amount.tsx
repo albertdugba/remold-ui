@@ -4,9 +4,10 @@ import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { announce } from "@remold-ui/dom";
 import { Remold } from "@remold-ui/react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useEffect, useId, useRef, useState, type Ref } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type Ref } from "react";
 import { Odometer } from "./odometer";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
 import { FK_STAGE, FORM_KIT } from "./form-kit";
@@ -45,9 +46,27 @@ const SENT_FOR = 1800;
 
 const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.14 };
 
+const STAGE = 300;
+const CENTRE = STAGE / 2;
+const TABLE = 70;
+const RING = 14;
+const SEATS = 122;
+const GAP = 0.035;
+const BENCH_Y = STAGE + 72;
+const BENCH_STEP = 66;
+const FIELD_HEIGHT = BENCH_Y + 54;
+
+const HUES = [
+  { tone: "#6366f1", soft: "e0e7ff" },
+  { tone: "#f59e0b", soft: "fef3c7" },
+  { tone: "#10b981", soft: "d1fae5" },
+  { tone: "#ec4899", soft: "fce7f3" },
+  { tone: "#0ea5e9", soft: "e0f2fe" },
+] as const;
+
 const money = (cents: number) => `£${(cents / 100).toFixed(2)}`;
-const face = (name: string) =>
-  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=e4e4e7`;
+const face = (name: string, soft: string) =>
+  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=${soft}`;
 
 function shares(total: number, count: number): number[] {
   if (!count) return [];
@@ -89,89 +108,152 @@ export function SplitAmount({
         .filter((share) => share.id !== "you"),
     );
     setSent(true);
+    announce("Requests sent");
     clearTimeout(sentTimer.current);
     sentTimer.current = setTimeout(() => setSent(false), SENT_FOR);
   };
 
+  const slice = paying.length ? 360 / paying.length : 360;
+  const seatAngle = (index: number) => 90 + index * slice;
+  const hueOf = (diner: Diner) => HUES[Math.max(0, diners.indexOf(diner)) % HUES.length]!;
+  const benched = diners.filter((diner) => !paying.includes(diner));
+  const placeOf = (diner: Diner) => {
+    const seat = paying.indexOf(diner);
+
+    if (seat >= 0) {
+      const angle = (seatAngle(seat) * Math.PI) / 180;
+
+      return { x: CENTRE + Math.cos(angle) * SEATS, y: CENTRE + Math.sin(angle) * SEATS };
+    }
+
+    const spot = benched.indexOf(diner);
+
+    return { x: CENTRE + (spot - (benched.length - 1) / 2) * BENCH_STEP, y: BENCH_Y };
+  };
+  const gap = paying.length > 1 ? GAP : 0;
+
   return (
     <MotionConfig transition={SPRING} reducedMotion="user">
-      <div ref={ref} className={`grid w-[min(100%,360px)] gap-6 rounded-[32px] bg-(--fk-surface) p-6 ${FORM_KIT}`}>
-        <header className="grid gap-2">
-          <span className="flex items-baseline justify-between gap-3 text-[13px] text-(--fk-muted)">
-            <span>Dinner at Buka</span>
-            <span className="inline-flex items-baseline gap-1">
-              <Odometer value={money(total)} /> total
-            </span>
-          </span>
-          <Odometer value={money(each[0] ?? 0)} className="text-[44px] font-semibold tracking-[-0.04em]" />
-          <span className="text-[13px] text-(--fk-muted)">
-            {others === 0 ? "Your share. Nobody else is in yet." : `Your share, split ${paying.length} ways`}
+      <div ref={ref} className={`grid w-[min(100%,380px)] gap-5 rounded-[32px] bg-(--fk-surface) p-6 ${FORM_KIT}`}>
+        <header className="flex items-baseline justify-between gap-3">
+          <span className="text-[15px] font-semibold tracking-[-0.01em]">Dinner at Buka</span>
+          <span className="inline-flex items-baseline gap-1 text-[13px] text-(--fk-muted)">
+            <Odometer value={money(total)} /> total
           </span>
         </header>
 
-        <div className="flex h-1.5 gap-1" aria-hidden="true">
+        <div className="relative mx-auto w-[300px]" style={{ height: FIELD_HEIGHT }}>
+          <svg viewBox={`0 0 ${STAGE} ${STAGE}`} className="absolute inset-x-0 top-0 size-[300px] overflow-visible" aria-hidden="true">
+            <circle
+              cx={CENTRE}
+              cy={CENTRE}
+              r={TABLE - RING / 2 - 6}
+              className="fill-[color-mix(in_oklab,#d6b48c_16%,var(--fk-surface))] dark:fill-[color-mix(in_oklab,#d6b48c_10%,var(--fk-surface))]"
+            />
+            <circle cx={CENTRE} cy={CENTRE} r={TABLE} fill="none" strokeWidth={RING} className="stroke-(--fk-well)" />
+            <AnimatePresence initial={false}>
+              {paying.map((diner, index) => (
+                <motion.circle
+                  key={diner.id}
+                  cx={CENTRE}
+                  cy={CENTRE}
+                  r={TABLE}
+                  fill="none"
+                  strokeWidth={RING}
+                  strokeLinecap="round"
+                  stroke={hueOf(diner).tone}
+                  style={{ transformBox: "fill-box", transformOrigin: "center" }}
+                  initial={{ pathLength: 0, rotate: seatAngle(index), opacity: 0 }}
+                  animate={{
+                    pathLength: Math.max(0.001, 1 / paying.length - gap),
+                    rotate: seatAngle(index) - slice / 2 + (gap * 360) / 2,
+                    opacity: 1,
+                  }}
+                  exit={{ pathLength: 0, opacity: 0, transition: { ...SPRING, bounce: 0 } }}
+                />
+              ))}
+            </AnimatePresence>
+          </svg>
+
+          <div className="pointer-events-none absolute top-[150px] left-1/2 grid -translate-x-1/2 -translate-y-1/2 justify-items-center gap-0.5 text-center">
+            <Odometer value={money(each[0] ?? 0)} className="text-[30px] font-semibold tracking-[-0.03em]" />
+            <span className="inline-flex items-center gap-1.5 text-[12.5px] text-(--fk-muted)">
+              <span className="size-2 rounded-full" style={{ background: hueOf(paying.find((diner) => diner.id === "you") ?? diners[0]!).tone }} aria-hidden="true" />
+              {others === 0 ? "Just you so far" : `Your share of ${paying.length}`}
+            </span>
+          </div>
+
+          <ToggleGroup
+            multiple
+            className="contents"
+            aria-label="Who's splitting"
+            value={paying.map((diner) => diner.id)}
+            onValueChange={(people) => choose(people as string[])}
+          >
+            {diners.map((diner) => {
+              const included = paying.includes(diner);
+              const firstName = diner.name.split(" ")[0];
+              const place = placeOf(diner);
+              const hue = hueOf(diner);
+
+              return (
+                <Toggle
+                  key={diner.id}
+                  value={diner.id}
+                  disabled={diner.id === "you"}
+                  aria-label={diner.id === "you" ? "You" : `Split with ${diner.name}`}
+                  className="group/diner absolute top-0 left-0 -mt-6 -ml-[30px] grid w-[60px] cursor-pointer justify-items-center gap-1.5 rounded-[14px] border-0 bg-transparent p-0 outline-none focus-visible:shadow-[0_0_0_2px_var(--fk-surface),0_0_0_4px_var(--fk-ink)] data-disabled:cursor-default"
+                  style={{ "--seat": hue.tone } as CSSProperties}
+                  render={<motion.button type="button" initial={false} animate={place} />}
+                >
+                  <motion.span
+                    className="relative block"
+                    animate={{ scale: included ? 1 : 0.88 }}
+                    whileTap={diner.id === "you" ? undefined : { scale: 0.82 }}
+                  >
+                    <img
+                      className="block rounded-full bg-(--fk-well) opacity-45 grayscale transition-[opacity,filter,box-shadow] duration-200 ease-out group-data-pressed/diner:opacity-100 group-data-pressed/diner:shadow-[0_0_0_2.5px_var(--fk-surface),0_0_0_4.5px_var(--seat)] group-data-pressed/diner:grayscale-0 motion-reduce:transition-none"
+                      src={face(diner.name, hue.soft)}
+                      alt=""
+                      width={48}
+                      height={48}
+                      draggable={false}
+                    />
+                    {diner.id !== "you" && (
+                      <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-(--fk-surface)">
+                        <span className="grid size-4 place-items-center rounded-full bg-(--fk-well-strong) text-(--fk-muted) transition-colors duration-200 ease-out group-data-pressed/diner:bg-(--seat) group-data-pressed/diner:text-white motion-reduce:transition-none">
+                          <Remold.Icon
+                            icon={<HugeiconsIcon icon={included ? Tick02Icon : Add01Icon} />}
+                            strokeWidth={2.6}
+                            className="size-2.5"
+                          />
+                        </span>
+                      </span>
+                    )}
+                  </motion.span>
+                  <span className="text-[12px] font-medium text-(--fk-muted) transition-colors duration-200 ease-out group-data-pressed/diner:text-(--fk-ink) motion-reduce:transition-none">
+                    {firstName}
+                  </span>
+                </Toggle>
+              );
+            })}
+          </ToggleGroup>
+
           <AnimatePresence initial={false}>
-            {paying.map((diner) => (
+            {benched.length > 0 && (
               <motion.span
-                key={diner.id}
-                layout
-                data-you={diner.id === "you" || undefined}
-                className="min-w-0 basis-0 rounded-full bg-(--fk-well-strong) data-you:bg-(--fk-ink)"
-                initial={{ opacity: 0, flexGrow: 0.001 }}
-                animate={{ opacity: 1, flexGrow: 1 }}
-                exit={{ opacity: 0, flexGrow: 0.001 }}
-              />
-            ))}
+                key="bench"
+                className="absolute inset-x-0 text-center text-[11.5px] font-medium tracking-[0.02em] text-(--fk-muted) uppercase"
+                style={{ top: BENCH_Y - 46 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                Tap to add
+              </motion.span>
+            )}
           </AnimatePresence>
         </div>
-
-        <ToggleGroup
-          multiple
-          className="flex justify-between"
-          aria-label="Who's splitting"
-          value={paying.map((diner) => diner.id)}
-          onValueChange={(people) => choose(people as string[])}
-        >
-          {diners.map((diner) => {
-            const included = paying.includes(diner);
-            const firstName = diner.name.split(" ")[0];
-
-            return (
-              <Toggle
-                key={diner.id}
-                value={diner.id}
-                disabled={diner.id === "you"}
-                aria-label={diner.id === "you" ? "You" : `Split with ${diner.name}`}
-                className="group/diner grid cursor-pointer justify-items-center gap-2 rounded-[14px] border-0 bg-transparent p-0 outline-none focus-visible:shadow-[0_0_0_2px_var(--fk-surface),0_0_0_4px_var(--fk-ink)] data-disabled:cursor-default"
-              >
-                <span className="relative transition-[scale] duration-150 ease-out group-active/diner:scale-[0.95] group-data-disabled/diner:scale-100 motion-reduce:transition-none">
-                  <img
-                    className="block rounded-full bg-(--fk-well) opacity-35 transition-opacity duration-200 ease-out group-data-pressed/diner:opacity-100 motion-reduce:transition-none"
-                    src={face(diner.name)}
-                    alt=""
-                    width={48}
-                    height={48}
-                    draggable={false}
-                  />
-                  {diner.id !== "you" && (
-                    <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-(--fk-surface)">
-                      <span className="grid size-4 place-items-center rounded-full bg-(--fk-well-strong) text-(--fk-muted) transition-colors duration-200 ease-out group-data-pressed/diner:bg-(--fk-ink) group-data-pressed/diner:text-(--fk-surface) motion-reduce:transition-none">
-                        <Remold.Icon
-                          icon={<HugeiconsIcon icon={included ? Tick02Icon : Add01Icon} />}
-                          strokeWidth={2.6}
-                          className="size-2.5"
-                        />
-                      </span>
-                    </span>
-                  )}
-                </span>
-                <span className="text-[12.5px] font-medium text-(--fk-faint) transition-colors duration-200 ease-out group-data-pressed/diner:text-(--fk-ink) motion-reduce:transition-none">
-                  {firstName}
-                </span>
-              </Toggle>
-            );
-          })}
-        </ToggleGroup>
 
         <div className="flex items-center justify-between gap-3">
           <span className="text-[13.5px] font-medium">Tip</span>
@@ -220,7 +302,7 @@ export function SplitAmount({
                   Requests sent
                 </>
               ) : others === 0 ? (
-                "Pick who's splitting"
+                "Tap a seat to split"
               ) : (
                 <>
                   Request <Odometer value={money(owed)} /> from{" "}

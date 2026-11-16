@@ -12,7 +12,8 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useMeasuredSize } from "./use-measured-size";
 import { useScene } from "./use-scene";
 
@@ -138,16 +139,18 @@ function Booked({
   reduced: boolean;
 }) {
   return (
-    <div className="grid justify-items-center gap-1.5 px-2 pt-4 pb-1.5 text-center" role="status">
+    <div className="grid justify-items-center gap-1.5 px-2 pt-4 pb-1.5 text-center">
       <motion.span
         className="mb-2 grid size-14 place-items-center rounded-full bg-(--bks-good) text-white [&_svg]:size-[26px]"
         initial={reduced ? false : { scale: 0.4, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", duration: 0.5, bounce: 0.35, delay: 0.12 }}
       >
-        <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.6} />
+        <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.6} aria-hidden="true" />
       </motion.span>
-      <span className="text-[20px] font-[650] tracking-[-0.02em]">You&rsquo;re booked</span>
+      <span className="text-[20px] font-[650] tracking-[-0.02em] outline-none" tabIndex={-1} data-autofocus="">
+        You&rsquo;re booked
+      </span>
       <span className="max-w-[270px] text-[13.5px] leading-[1.45] text-(--bks-muted)">
         {day}, {time} – {until}. We&rsquo;ll text you a reminder the day before.
       </span>
@@ -155,7 +158,7 @@ function Booked({
         type="button"
         className="mt-2.5 inline-flex h-10 cursor-pointer items-center gap-[7px] rounded-full border-0 bg-(--bks-well) px-4 text-[13.5px] font-semibold text-(--bks-ink) outline-none focus-visible:shadow-[0_0_0_2px_var(--bks-ink)] [&_svg]:size-4"
       >
-        <HugeiconsIcon icon={CalendarAdd01Icon} strokeWidth={1.8} />
+        <HugeiconsIcon icon={CalendarAdd01Icon} strokeWidth={1.8} aria-hidden="true" />
         Add to calendar
       </button>
     </div>
@@ -183,15 +186,15 @@ function Review({
     <div className="grid gap-3.5">
       <ul className="m-0 grid list-none rounded-[20px] bg-(--bks-well) px-4 py-2 [&_svg]:size-[18px] [&_svg]:flex-none [&_svg]:text-(--bks-muted) [&>li]:flex [&>li]:min-h-10 [&>li]:items-center [&>li]:gap-3 [&>li]:font-medium [&>li]:text-(--bks-soft)">
         <li>
-          <HugeiconsIcon icon={Calendar03Icon} strokeWidth={1.8} />
+          <HugeiconsIcon icon={Calendar03Icon} strokeWidth={1.8} aria-hidden="true" />
           {day}
         </li>
         <li>
-          <HugeiconsIcon icon={Clock01Icon} strokeWidth={1.8} />
+          <HugeiconsIcon icon={Clock01Icon} strokeWidth={1.8} aria-hidden="true" />
           {time} – {until} · {visit}
         </li>
         <li>
-          <HugeiconsIcon icon={Location01Icon} strokeWidth={1.8} />
+          <HugeiconsIcon icon={Location01Icon} strokeWidth={1.8} aria-hidden="true" />
           {PLACE}, Outpatients
         </li>
       </ul>
@@ -201,6 +204,7 @@ function Review({
         onClick={() => phase === "choosing" && onBook()}
         aria-busy={phase === "booking" || undefined}
         aria-disabled={phase === "booking" || undefined}
+        data-autofocus=""
       >
         <AnimatePresence initial={false} mode="popLayout">
           {phase === "booking" ? (
@@ -212,7 +216,7 @@ function Review({
               exit={{ opacity: 0 }}
               transition={SETTLE}
             >
-              <HugeiconsIcon icon={Loading03Icon} strokeWidth={2.2} />
+              <HugeiconsIcon icon={Loading03Icon} strokeWidth={2.2} aria-hidden="true" />
               <span className="sr-only">Booking</span>
             </motion.span>
           ) : (
@@ -228,6 +232,12 @@ function Review({
 
 export type BookingPhase = "choosing" | "booking" | "booked";
 
+function statusText(phase: BookingPhase, day: string | undefined, time: string | undefined, until: string) {
+  if (phase === "booked") return `You're booked. ${day}, ${time} – ${until}.`;
+  if (phase === "booking") return "Booking your appointment";
+  return "";
+}
+
 export interface BookingStepsProps {
   step: number;
   onStepChange: (step: number) => void;
@@ -237,6 +247,7 @@ export interface BookingStepsProps {
   onChoose: (slot: Slot, value: string) => void;
   phase: BookingPhase;
   onBook: () => void;
+  announcements?: boolean;
 }
 
 export function BookingSteps({
@@ -248,12 +259,35 @@ export function BookingSteps({
   onChoose,
   phase,
   onBook,
+  announcements = true,
 }: BookingStepsProps) {
   const reduced = useReducedMotion() ?? false;
   const id = useId();
+  const card = useRef<HTMLElement>(null);
   const [content, size] = useMeasuredSize<HTMLDivElement>();
+  const [settled, setSettled] = useState(0);
+
+  const panel = phase === "booked" ? "booked" : String(step);
+  const signature = [panel, visit, day, time].join("|");
+  const [browsed, setBrowsed] = useState<string | null>(null);
+  const [seen, setSeen] = useState(signature);
+  if (seen !== signature) {
+    setSeen(signature);
+    setBrowsed(null);
+  }
+
+  useFocusAfterChange(card, `${panel}:${settled}`, (root) => {
+    const view = root.querySelector<HTMLElement>(`[data-panel="${panel}"]`);
+    return (
+      view?.querySelector<HTMLElement>('[role="radio"][data-checked]:not([data-disabled])') ??
+      view?.querySelector<HTMLElement>('[role="radio"]:not([data-disabled]), [data-autofocus]')
+    );
+  });
 
   const values: Record<Slot, string | undefined> = { visit, day, time };
+  const current = SLOTS[step]?.key;
+  const shown: Record<Slot, string | undefined> =
+    browsed !== null && current ? { ...values, [current]: browsed } : values;
   const fly = reduced ? { duration: 0 } : FLY;
   const minutes = VISITS.find((item) => item.value === visit)?.minutes ?? 20;
   const until = endTime(time, minutes);
@@ -279,8 +313,17 @@ export function BookingSteps({
     body: ReactNode,
     disabled = false,
   ) => (
-    <Radio.Root key={value} value={value} disabled={disabled} className={`${OPTION} ${className}`}>
-      {values[slot] === value && surface(slot, radius)}
+    <Radio.Root
+      key={value}
+      value={value}
+      disabled={disabled}
+      className={`${OPTION} ${className}`}
+      onClick={() => onChoose(slot, value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") onChoose(slot, value);
+      }}
+    >
+      {shown[slot] === value && surface(slot, radius)}
       <span className={`relative grid h-full ${bodyClassName}`}>{body}</span>
     </Radio.Root>
   );
@@ -312,7 +355,8 @@ export function BookingSteps({
         ) : (
           <span
             data-active={(step === index && phase === "choosing") || undefined}
-            className={`${PILL} font-medium text-(--bks-faint) transition-colors duration-200 data-active:text-(--bks-ink)`}
+            aria-current={step === index && phase === "choosing" ? "step" : undefined}
+            className={`${PILL} font-medium text-(--bks-muted) transition-colors duration-200 data-active:text-(--bks-ink)`}
           >
             {label}
           </span>
@@ -327,8 +371,8 @@ export function BookingSteps({
         <RadioGroup
           className="grid gap-2"
           aria-label="Visit"
-          value={visit ?? null}
-          onValueChange={(value) => onChoose("visit", value as string)}
+          value={shown.visit ?? null}
+          onValueChange={(value) => setBrowsed(value as string)}
         >
           {VISITS.map((item) =>
             option(
@@ -352,8 +396,8 @@ export function BookingSteps({
         <RadioGroup
           className="grid grid-cols-5 gap-1.5"
           aria-label="Day"
-          value={day ?? null}
-          onValueChange={(value) => onChoose("day", value as string)}
+          value={shown.day ?? null}
+          onValueChange={(value) => setBrowsed(value as string)}
         >
           {DAYS.map((item) =>
             option(
@@ -383,8 +427,8 @@ export function BookingSteps({
         <RadioGroup
           className="grid grid-cols-3 gap-2"
           aria-label={`Time on ${day}`}
-          value={time ?? null}
-          onValueChange={(value) => onChoose("time", value as string)}
+          value={shown.time ?? null}
+          onValueChange={(value) => setBrowsed(value as string)}
         >
           {TIMES.map((item) =>
             option(
@@ -416,6 +460,7 @@ export function BookingSteps({
 
   return (
     <section
+      ref={card}
       className={`grid w-[min(100%,380px)] gap-5 rounded-[32px] bg-(--bks-surface) p-5 text-[14px] tracking-[-0.006em] text-(--bks-ink) ${PALETTE}`}
       aria-label={`Book an appointment with ${DOCTOR.name}`}
     >
@@ -433,9 +478,10 @@ export function BookingSteps({
           transition={reduced ? { duration: 0 } : SIZE}
         >
           <div ref={content} className="relative pb-0.5">
-            <AnimatePresence initial={false} mode="popLayout">
+            <AnimatePresence initial={false} mode="popLayout" onExitComplete={() => setSettled((count) => count + 1)}>
               <motion.div
-                key={phase === "booked" ? "booked" : step}
+                key={panel}
+                data-panel={panel}
                 className="grid gap-3.5"
                 {...enter}
                 transition={SETTLE}
@@ -458,6 +504,9 @@ export function BookingSteps({
           </div>
         </motion.div>
       </LayoutGroup>
+      <p className="sr-only" role="status">
+        {announcements ? statusText(phase, day, time, until) : ""}
+      </p>
     </section>
   );
 }
@@ -498,10 +547,11 @@ interface BookingStepsDemoProps {
   preview?: boolean;
 }
 
-export function BookingStepsDemo({ playing, preview }: BookingStepsDemoProps = {}) {
-  const scene = useScene(BEATS, fromBeat, playing);
+export function BookingStepsDemo({ playing, preview: previewing }: BookingStepsDemoProps = {}) {
+  const scene = useScene(BEATS, fromBeat, playing, false, previewing ? STILL : undefined);
+  const preview = previewing && !scene.taken;
   const { ref, takeOver, live } = scene;
-  const state = preview && !playing ? STILL : scene.state;
+  const state = scene.state;
   const advance = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(advance.current), []);
 
@@ -535,6 +585,7 @@ export function BookingStepsDemo({ playing, preview }: BookingStepsDemoProps = {
         }}
         phase={state.phase}
         onBook={() => takeOver((current) => ({ ...current, phase: "booking" }))}
+        announcements={!live}
       />
     </div>
   );

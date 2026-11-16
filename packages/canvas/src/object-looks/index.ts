@@ -1,6 +1,7 @@
 import type { Matrix, Projector } from "../camera";
 import { caption } from "../extrude";
 import { halo } from "../glow";
+import { browser, coin, database, file, person, phone, queue, region, server, vault } from "./system";
 import { ellipse, extent, projectOutline, roundedRect, silhouette, type Box3, type Outline, type ScreenPoint } from "../geometry";
 
 export interface Palette {
@@ -384,5 +385,28 @@ export const grid: Look = {
 };
 
 /** The built-in looks, by name. */
-export const looks = { plate, chip, cylinder, tower, glass, wire, portrait, atlas, grid, caption } as const;
+export const looks = {
+  plate,
+  chip,
+  cylinder,
+  tower,
+  glass,
+  wire,
+  portrait,
+  atlas,
+  grid,
+  caption,
+  browser,
+  server,
+  database,
+  queue,
+  phone,
+  file,
+  person,
+  vault,
+  region,
+  coin,
+} as const;
+
+export { browser, coin, database, file, person, phone, queue, region, server, vault };
 export type LookName = keyof typeof looks;

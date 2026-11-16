@@ -94,7 +94,6 @@ export function QrCode({ value, title, logo = REMOLD_MARK, open, defaultOpen = f
       </div>
       <button
         type="button"
-        aria-pressed={shown}
         onClick={() => setShown(!shown)}
         className={`h-10 cursor-pointer rounded-full border-0 text-[14px] font-semibold outline-none transition-[background-color,color,scale] duration-150 ease-out focus-visible:shadow-[0_0_0_2px_var(--qr-surface),0_0_0_4px_var(--qr-ink)] active:scale-[0.97] motion-reduce:transition-none ${
           shown ? "bg-(--qr-well) text-(--qr-ink)" : "bg-(--qr-ink) text-(--qr-surface)"
