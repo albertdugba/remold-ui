@@ -9,10 +9,12 @@ import {
   PlayIcon,
   RepeatOne02Icon,
 } from "@hugeicons/core-free-icons";
+import { announce } from "@remold-ui/dom";
 import { Remold, useConnectorMotion } from "@remold-ui/react";
-import { motion } from "motion/react";
+import { MotionConfig, motion } from "motion/react";
 import {
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -36,9 +38,10 @@ import {
   updateComment,
   type Comment,
 } from "./comment-thread.model";
+import { useFocusAfterChange } from "./use-focus-after-change";
 
 const PALETTE = [
-  "[--cx-bg:#ffffff] [--cx-subtle:#f6f6f7] [--cx-border:#e7e7ea] [--cx-text:#18181b] [--cx-body:#27272a] [--cx-muted:#71717a] [--cx-faint:#a1a1aa]",
+  "[--cx-bg:#ffffff] [--cx-subtle:#f6f6f7] [--cx-border:#e7e7ea] [--cx-text:#18181b] [--cx-body:#27272a] [--cx-muted:#6c6c75] [--cx-faint:#a1a1aa]",
   "[--cx-line:#dcdce0] [--cx-ink:#18181b] [--cx-mention:#2563eb] [--cx-pressed:#ffffff] [--cx-official:#18181b] [--cx-on-official:#ffffff] [--cx-scrollbar:#d4d4d8]",
   "dark:[--cx-bg:#18181b] dark:[--cx-subtle:#27272a] dark:[--cx-border:#3f3f46] dark:[--cx-text:#fafafa] dark:[--cx-body:#fafafa] dark:[--cx-muted:#d4d4d8] dark:[--cx-faint:#a1a1aa]",
   "dark:[--cx-line:#71717a] dark:[--cx-ink:#fafafa] dark:[--cx-mention:#60a5fa] dark:[--cx-pressed:#3f3f46] dark:[--cx-official:#a78bfa] dark:[--cx-on-official:#1e1b4b] dark:[--cx-scrollbar:#71717a]",
@@ -132,13 +135,15 @@ function Post({ liked, onLike, comments }: { liked: boolean; onLike: () => void;
           <HugeiconsIcon icon={FavouriteIcon} aria-hidden="true" />
           <span>{POST_LIKES + (liked ? 1 : 0)}</span>
         </button>
-        <span className={POST_ACTION} aria-label={`${comments} comments`}>
+        <span className={POST_ACTION}>
           <HugeiconsIcon icon={MessageCircleIcon} aria-hidden="true" />
           <span>{comments}</span>
+          <span className="sr-only">comments</span>
         </span>
-        <span className={POST_ACTION} aria-label={`${REPOSTS} reposts`}>
+        <span className={POST_ACTION}>
           <HugeiconsIcon icon={RepeatOne02Icon} aria-hidden="true" />
           <span>{REPOSTS}</span>
+          <span className="sr-only">reposts</span>
         </span>
         <button type="button" className={`${POST_ACTION} ${BUTTON} ml-auto`} aria-label="Save">
           <HugeiconsIcon icon={Bookmark01Icon} aria-hidden="true" />
@@ -182,6 +187,7 @@ function ReplyComposer({
   onCancel: () => void;
   onSubmit: (event: FormEvent) => void;
 }) {
+  const hint = useId();
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Escape") {
       onCancel();
@@ -203,7 +209,7 @@ function ReplyComposer({
         )}
 
         <textarea
-          className="max-h-[140px] min-h-11 resize-none border-0 bg-transparent px-3.5 pt-[11px] pb-1 text-[14px] leading-normal text-(--cx-text) [field-sizing:content] placeholder:text-(--cx-faint) focus-visible:outline-none"
+          className="max-h-[140px] min-h-11 resize-none border-0 bg-transparent px-3.5 pt-[11px] pb-1 text-[14px] leading-normal text-(--cx-text) [field-sizing:content] placeholder:text-(--cx-muted) focus-visible:outline-none"
           ref={inputRef}
           rows={1}
           value={draft}
@@ -211,12 +217,13 @@ function ReplyComposer({
           onKeyDown={onKeyDown}
           placeholder={replyTo ? "Add a reply…" : `Reply to ${author.split(" ")[0]}…`}
           aria-label={`Reply to ${author}`}
+          aria-describedby={hint}
         />
 
         <div className="flex items-center justify-between gap-2.5 pt-1 pr-1.5 pb-1.5 pl-3.5">
           <span
-            className="text-[11.5px] text-(--cx-faint) @max-[480px]:hidden [&_kbd]:rounded-[5px] [&_kbd]:border [&_kbd]:border-solid [&_kbd]:border-(--cx-border) [&_kbd]:bg-(--cx-subtle) [&_kbd]:px-[5px] [&_kbd]:py-px [&_kbd]:font-[inherit] [&_kbd]:text-[10.5px] [&_kbd]:text-(--cx-muted)"
-            aria-hidden="true"
+            id={hint}
+            className="text-[11.5px] text-(--cx-muted) @max-[480px]:hidden [&_kbd]:rounded-[5px] [&_kbd]:border [&_kbd]:border-solid [&_kbd]:border-(--cx-border) [&_kbd]:bg-(--cx-subtle) [&_kbd]:px-[5px] [&_kbd]:py-px [&_kbd]:font-[inherit] [&_kbd]:text-[10.5px] [&_kbd]:text-(--cx-muted)"
           >
             <kbd>Enter</kbd> to send · <kbd>Esc</kbd> to cancel
           </span>
@@ -249,6 +256,7 @@ function FoldedReplies({ comment, total, onOpen }: { comment: Comment; total: nu
       type="button"
       className={`${BUTTON} mt-2 inline-flex items-center gap-2 rounded-full border border-solid border-(--cx-border) py-[3px] pr-2.5 pl-1 text-[12.5px] text-(--cx-muted) hover:bg-(--cx-subtle)`}
       aria-expanded={false}
+      data-fold={comment.key}
       data-rm-anchor={`folded-${comment.key}`}
       data-rm-link={comment.key}
       onClick={onOpen}
@@ -281,6 +289,7 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
   const [liked, setLiked] = useState(false);
   const [folded, setFolded] = useState<Set<string>>(() => new Set());
   const [hover, setHover] = useState<string | null>(null);
+  const [focused, setFocused] = useState<string | null>(null);
   const [replying, setReplying] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [live, setLive] = useState(playing ?? false);
@@ -289,9 +298,15 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
   const visible = useInView(frame, 0.3);
   const connectorRoot = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
+  const returnTo = useRef<string | null>(null);
   const connectorMotion = useConnectorMotion(connectorRoot);
   const shown = useMemo(() => sortComments(comments, sort), [comments, sort]);
-  const lit = useMemo(() => new Set(hover ? (commentTrail(shown, hover) ?? []) : []), [hover, shown]);
+  const trail = hover ?? focused;
+  const lit = useMemo(() => new Set(trail ? (commentTrail(shown, trail) ?? []) : []), [trail, shown]);
+
+  useFocusAfterChange(frame, `${replying}|${[...folded].join("|")}`, (root) =>
+    returnTo.current ? root.querySelector<HTMLElement>(returnTo.current) : null,
+  );
 
   useEffect(() => {
     if (!live || !visible) return;
@@ -325,13 +340,20 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
     setReplying(null);
   };
 
-  const toggleFold = (key: string) =>
+  const toggleFold = (key: string) => {
+    returnTo.current = `[data-fold="${CSS.escape(key)}"]`;
     setFolded((current) => {
       const folds = new Set(current);
       if (folds.has(key)) folds.delete(key);
       else folds.add(key);
       return folds;
     });
+  };
+
+  const closeComposer = () => {
+    if (replying) returnTo.current = `[data-reply="${CSS.escape(replying)}"]`;
+    setReplying(null);
+  };
 
   const send = (event: FormEvent, parent: string, mention?: string) => {
     event.preventDefault();
@@ -351,12 +373,12 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
       return folds;
     });
     setDraft("");
-    setReplying(null);
+    closeComposer();
 
-    setTimeout(
-      () => setComments((list) => updateComment(list, key, (sent) => ({ ...sent, sending: false }))),
-      900,
-    );
+    setTimeout(() => {
+      setComments((list) => updateComment(list, key, (sent) => ({ ...sent, sending: false })));
+      announce("Reply sent");
+    }, 900);
   };
 
   const thread = (list: Comment[], parent: string, depth = 0, parentAuthor?: string): ReactNode =>
@@ -382,6 +404,13 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
           transition={{ type: "spring", duration: 0.32, bounce: 0.12 }}
           onPointerEnter={(event) => event.pointerType === "mouse" && setHover(comment.key)}
           onPointerLeave={() => setHover(parent === "top" ? null : parent)}
+          onFocus={(event) => {
+            if (event.target.closest("[data-depth]") === event.currentTarget && event.target.matches(":focus-visible"))
+              setFocused(comment.key);
+          }}
+          onBlur={(event) => {
+            if (event.target.closest("[data-depth]") === event.currentTarget) setFocused(null);
+          }}
         >
           <Avatar
             name={comment.author}
@@ -392,13 +421,12 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
           />
           {comment.typing ? (
             <div
-              className="inline-flex max-w-full gap-0.5 self-center justify-self-start py-3 [&_i]:size-1.5 [&_i]:animate-typing-dot [&_i]:rounded-full [&_i]:bg-(--cx-faint) motion-reduce:[&_i]:animate-none [&_i:nth-child(2)]:[animation-delay:0.15s] [&_i:nth-child(3)]:[animation-delay:0.3s]"
-              role="status"
-              aria-label={`${comment.author} is typing`}
+              className="inline-flex max-w-full gap-0.5 self-center justify-self-start py-3 [&_i]:size-1.5 [&_i]:animate-typing-dot [&_i]:rounded-full [&_i]:bg-(--cx-faint) motion-reduce:[&_i]:animate-none [&_i:nth-of-type(2)]:[animation-delay:0.15s] [&_i:nth-of-type(3)]:[animation-delay:0.3s]"
             >
-              <i />
-              <i />
-              <i />
+              <span className="sr-only">{`${comment.author} is typing`}</span>
+              <i aria-hidden="true" />
+              <i aria-hidden="true" />
+              <i aria-hidden="true" />
             </div>
           ) : (
             <div className="min-w-0">
@@ -413,7 +441,7 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
                       {comment.badge}
                     </span>
                   )}
-                  <span className="text-[12px] text-(--cx-faint)">{comment.sending ? "Sending…" : ago(comment.age)}</span>
+                  <span className="text-[12px] text-(--cx-muted)">{comment.sending ? "Sending…" : ago(comment.age)}</span>
                 </p>
                 <p
                   className={`m-0 leading-[1.6] text-(--cx-body) ${parent === "top" ? "text-[15px] font-medium tracking-[-0.005em]" : "text-[14.5px]"}`}
@@ -427,7 +455,7 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
                   type="button"
                   className={`${BUTTON} inline-flex h-6 items-center gap-[5px] rounded-full border border-solid border-(--cx-border) px-[9px] text-[12px] text-(--cx-muted) tabular-nums hover:bg-(--cx-subtle) aria-pressed:border-(--cx-ink) aria-pressed:text-(--cx-text) aria-pressed:[&_svg]:fill-current [&_svg]:size-[13px]`}
                   aria-pressed={comment.voted}
-                  aria-label={`Like, ${comment.votes}`}
+                  aria-label={`Like ${comment.author}’s comment, ${comment.votes}`}
                   onClick={() =>
                     setComments((current) =>
                       updateComment(current, comment.key, (liked) => ({
@@ -444,6 +472,9 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
                 <button
                   type="button"
                   className={TEXT_BUTTON}
+                  aria-label={`Reply to ${comment.author}`}
+                  aria-expanded={replying === comment.key}
+                  data-reply={comment.key}
                   onClick={() => {
                     setReplying(replying === comment.key ? null : comment.key);
                     requestAnimationFrame(() => input.current?.focus());
@@ -456,6 +487,7 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
                     type="button"
                     className={TEXT_BUTTON}
                     aria-expanded
+                    data-fold={comment.key}
                     onClick={() => toggleFold(comment.key)}
                   >
                     Hide replies
@@ -469,7 +501,7 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
                   replyTo={replyTo}
                   draft={draft}
                   onDraftChange={setDraft}
-                  onCancel={() => setReplying(null)}
+                  onCancel={closeComposer}
                   onSubmit={(event) => send(event, deep ? parent : comment.key, replyTo)}
                 />
               )}
@@ -494,72 +526,74 @@ export function CommentThreadDemo({ variant = "full", playing }: CommentThreadDe
 
   const total = countComments(comments);
   return (
-    <div
-      data-variant={isPreview ? "preview" : undefined}
-      className={`cx group not-prose @container relative my-6 w-full overflow-hidden rounded-[14px] border border-solid border-(--cx-border) bg-(--cx-bg) font-sans text-(--cx-text) shadow-[0_1px_2px_rgb(0_0_0/0.04)] @max-[480px]:m-0 @max-[480px]:rounded-xl dark:shadow-[0_12px_30px_rgb(0_0_0/0.28)] ${PALETTE}`}
-      ref={frame}
-      onPointerDown={takeOver}
-      onKeyDown={takeOver}
-    >
-      {!isPreview && (
-        <button
-          type="button"
-          data-on={live || undefined}
-          className={`${BUTTON} absolute top-3.5 right-3.5 z-2 grid size-9 place-items-center rounded-full border border-solid border-(--cx-border) bg-white text-(--cx-muted) shadow-[0_1px_2px_rgb(0_0_0/0.04)] transition-[border-color,color,box-shadow] duration-200 ease-out data-on:border-[color-mix(in_oklab,var(--cx-ink)_25%,var(--cx-border))] data-on:text-(--cx-text) data-on:shadow-[0_2px_6px_rgb(0_0_0/0.07)] [&_svg]:size-[15px]`}
-          aria-pressed={live}
-          aria-label={live ? "Pause autoplay" : "Start autoplay"}
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={() => {
-            if (!live) restart();
-            setLive((current) => !current);
-          }}
-        >
-          {live ? (
-            <HugeiconsIcon icon={PauseIcon} strokeWidth={1.5} aria-hidden="true" />
-          ) : (
-            <HugeiconsIcon icon={PlayIcon} strokeWidth={1.5} aria-hidden="true" />
-          )}
-        </button>
-      )}
-
-      <Remold.Connectors
-        ref={connectorRoot}
-        className="cx-stage h-160 overflow-y-auto overscroll-contain bg-(--cx-bg) px-5 pt-5 pb-7 [scrollbar-color:var(--cx-scrollbar)_transparent] [scrollbar-width:thin] group-data-[variant=preview]:h-auto group-data-[variant=preview]:max-h-[600px] group-data-[variant=preview]:overflow-clip group-data-[variant=preview]:[mask-image:linear-gradient(to_bottom,#000_calc(100%-72px),transparent)] @max-[480px]:h-[min(480px,60svh)] @max-[480px]:px-3 @max-[480px]:pt-4 @max-[480px]:pb-[22px] [&_.rm-connector]:stroke-(--cx-line) [&_.rm-connector]:[stroke-width:1.5] [&_.rm-connector]:transition-[stroke] [&_.rm-connector]:duration-200 [&_.rm-connector[data-line=lit]]:stroke-(--cx-ink)"
-        radius={16}
-        gap={4}
-        onPointerLeave={() => setHover(null)}
+    <MotionConfig reducedMotion="user">
+      <div
+        data-variant={isPreview ? "preview" : undefined}
+        className={`cx group not-prose @container relative my-6 w-full overflow-hidden rounded-[14px] border border-solid border-(--cx-border) bg-(--cx-bg) font-sans text-(--cx-text) shadow-[0_1px_2px_rgb(0_0_0/0.04)] @max-[480px]:m-0 @max-[480px]:rounded-xl dark:shadow-[0_12px_30px_rgb(0_0_0/0.28)] ${PALETTE}`}
+        ref={frame}
+        onPointerDown={takeOver}
+        onKeyDown={takeOver}
       >
-        <motion.div layout="position" {...connectorMotion} className="transition-opacity duration-200">
-          <Post liked={liked} onLike={() => setLiked((current) => !current)} comments={total} />
-        </motion.div>
-        <motion.div
-          layout="position"
-          {...connectorMotion}
-          className="mt-5 flex items-center justify-between gap-3.5 border-y border-solid border-(--cx-border) py-3.5 @max-[480px]:flex-col @max-[480px]:items-start @max-[480px]:gap-2.5"
-        >
-          <span className="text-[13px] text-(--cx-muted) tabular-nums">{`${total} ${total === 1 ? "comment" : "comments"}`}</span>
-          <div
-            className="inline-flex gap-0.5 rounded-[10px] bg-(--cx-subtle) p-[3px] shadow-[inset_0_0_0_1px_rgb(0_0_0/0.045)]"
-            role="group"
-            aria-label="Sort"
+        {!isPreview && (
+          <button
+            type="button"
+            data-on={live || undefined}
+            className={`${BUTTON} absolute top-3.5 right-3.5 z-2 grid size-9 place-items-center rounded-full border border-solid border-(--cx-border) bg-(--cx-bg) text-(--cx-muted) shadow-[0_1px_2px_rgb(0_0_0/0.04)] transition-[border-color,color,box-shadow] duration-200 ease-out data-on:border-[color-mix(in_oklab,var(--cx-ink)_25%,var(--cx-border))] data-on:text-(--cx-text) data-on:shadow-[0_2px_6px_rgb(0_0_0/0.07)] [&_svg]:size-[15px]`}
+            aria-pressed={live}
+            aria-label="Autoplay"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => {
+              if (!live) restart();
+              setLive((current) => !current);
+            }}
           >
-            {SORTS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={`${BUTTON} min-h-7 rounded-[7px] px-2.5 py-[3px] text-[12px] font-medium text-(--cx-muted) transition-[color,background-color,box-shadow] duration-200 ease-out hover:text-(--cx-text) aria-pressed:bg-(--cx-pressed) aria-pressed:text-(--cx-text) aria-pressed:shadow-[0_1px_2.5px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.05)]`}
-                aria-pressed={sort === option}
-                onClick={() => setSort(option)}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </motion.div>
-        <motion.div layout="position" {...connectorMotion} className="mt-[18px] grid gap-3.5 @max-[480px]:gap-3">
-          {thread(shown, "top")}
-        </motion.div>
-      </Remold.Connectors>
-    </div>
+            {live ? (
+              <HugeiconsIcon icon={PauseIcon} strokeWidth={1.5} aria-hidden="true" />
+            ) : (
+              <HugeiconsIcon icon={PlayIcon} strokeWidth={1.5} aria-hidden="true" />
+            )}
+          </button>
+        )}
+
+        <Remold.Connectors
+          ref={connectorRoot}
+          className="cx-stage h-160 overflow-y-auto overscroll-contain bg-(--cx-bg) px-5 pt-5 pb-7 [scrollbar-color:var(--cx-scrollbar)_transparent] [scrollbar-width:thin] group-data-[variant=preview]:h-auto group-data-[variant=preview]:max-h-[600px] group-data-[variant=preview]:overflow-clip group-data-[variant=preview]:[mask-image:linear-gradient(to_bottom,#000_calc(100%-72px),transparent)] @max-[480px]:h-[min(480px,60svh)] @max-[480px]:px-3 @max-[480px]:pt-4 @max-[480px]:pb-[22px] [&_.rm-connector]:stroke-(--cx-line) [&_.rm-connector]:[stroke-width:1.5] [&_.rm-connector]:transition-[stroke] [&_.rm-connector]:duration-200 [&_.rm-connector[data-line=lit]]:stroke-(--cx-ink)"
+          radius={16}
+          gap={4}
+          onPointerLeave={() => setHover(null)}
+        >
+          <motion.div layout="position" {...connectorMotion} className="transition-opacity duration-200">
+            <Post liked={liked} onLike={() => setLiked((current) => !current)} comments={total} />
+          </motion.div>
+          <motion.div
+            layout="position"
+            {...connectorMotion}
+            className="mt-5 flex items-center justify-between gap-3.5 border-y border-solid border-(--cx-border) py-3.5 @max-[480px]:flex-col @max-[480px]:items-start @max-[480px]:gap-2.5"
+          >
+            <span className="text-[13px] text-(--cx-muted) tabular-nums">{`${total} ${total === 1 ? "comment" : "comments"}`}</span>
+            <div
+              className="inline-flex gap-0.5 rounded-[10px] bg-(--cx-subtle) p-[3px] shadow-[inset_0_0_0_1px_rgb(0_0_0/0.045)]"
+              role="group"
+              aria-label="Sort"
+            >
+              {SORTS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={`${BUTTON} min-h-7 rounded-[7px] px-2.5 py-[3px] text-[12px] font-medium text-(--cx-muted) transition-[color,background-color,box-shadow] duration-200 ease-out hover:text-(--cx-text) aria-pressed:bg-(--cx-pressed) aria-pressed:text-(--cx-text) aria-pressed:shadow-[0_1px_2.5px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.05)]`}
+                  aria-pressed={sort === option}
+                  onClick={() => setSort(option)}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+          <motion.div layout="position" {...connectorMotion} className="mt-[18px] grid gap-3.5 @max-[480px]:gap-3">
+            {thread(shown, "top")}
+          </motion.div>
+        </Remold.Connectors>
+      </div>
+    </MotionConfig>
   );
 }

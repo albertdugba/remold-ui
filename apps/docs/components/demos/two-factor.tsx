@@ -3,11 +3,13 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CheckIcon } from "@hugeicons/core-free-icons";
 import { Switch as BaseSwitch } from "@base-ui/react/switch";
+import { announce } from "@remold-ui/dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useLayoutEffect, useRef, useState, type Ref } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type Ref } from "react";
 import { Frame } from "./frame";
 import { CodeField } from "./code-field";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useScene } from "./use-scene";
 
 const CODE = "482915";
@@ -71,6 +73,7 @@ function Qr() {
 }
 
 function Switch({ on, label, onToggle }: { on: boolean; label: string; onToggle: () => void }) {
+  const reduced = useReducedMotion();
   return (
     <BaseSwitch.Root
       className="flex h-[22px] w-9 flex-none cursor-pointer rounded-full border-0 bg-(--tf-track) p-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--tf-ink) data-checked:bg-(--tf-on) transition-colors duration-200"
@@ -80,7 +83,7 @@ function Switch({ on, label, onToggle }: { on: boolean; label: string; onToggle:
     >
       <BaseSwitch.Thumb
         className="size-[18px] rounded-full bg-white dark:data-checked:bg-zinc-900"
-        render={<motion.span initial={false} animate={{ x: on ? 14 : 0 }} transition={SETTLE} />}
+        render={<motion.span initial={false} animate={{ x: on ? 14 : 0 }} transition={reduced ? { duration: 0 } : SETTLE} />}
       />
     </BaseSwitch.Root>
   );
@@ -103,6 +106,7 @@ export function TwoFactor({
 }: TwoFactorProps) {
   const [setup, setSetup] = useControllableState({ value, defaultValue, onValueChange });
   const input = useRef<HTMLInputElement>(null);
+  const hint = useId();
   const accepting = useRef<ReturnType<typeof setTimeout>>(undefined);
   const reduced = useReducedMotion();
   const swap = reduced
@@ -140,17 +144,20 @@ export function TwoFactor({
     setSetup((current) => ({ ...current, code }));
     clearTimeout(accepting.current);
     if (code.length === LENGTH)
-      accepting.current = setTimeout(
-        () => setSetup((current) => ({ ...current, phase: "on" }), "timer"),
-        ACCEPT,
-      );
+      accepting.current = setTimeout(() => {
+        if (document.activeElement === input.current) input.current?.blur();
+        setSetup((current) => ({ ...current, phase: "on" }), "timer");
+        announce("Two-factor authentication is on");
+      }, ACCEPT);
   };
+
+  useFocusAfterChange(card, setup.phase, (root) => root.querySelector<HTMLElement>('[role="switch"]'));
 
   return (
     <section
       ref={ref}
       style={{ minHeight: Math.max(OPEN, tallest) }}
-      className="grid w-[min(100%,360px)] content-start font-sans text-(--tf-ink) [--tf-faint:#a1a1aa] [--tf-fill:#f4f4f5] [--tf-good:#15803d] [--tf-ink:#18181b] [--tf-line:rgb(24_24_27/0.07)] [--tf-muted:#71717a] [--tf-on:#18181b] [--tf-surface:#ffffff] [--tf-track:#e4e4e7] dark:[--tf-faint:#71717a] dark:[--tf-fill:#2c2c31] dark:[--tf-good:#4ade80] dark:[--tf-ink:#fafafa] dark:[--tf-line:rgb(255_255_255/0.07)] dark:[--tf-muted:#a1a1aa] dark:[--tf-on:#fafafa] dark:[--tf-surface:#232327] dark:[--tf-track:#3a3a40]"
+      className="grid w-[min(100%,360px)] content-start font-sans text-(--tf-ink) [--tf-faint:#a1a1aa] [--tf-fill:#f4f4f5] [--tf-good:#15803d] [--tf-ink:#18181b] [--tf-line:rgb(24_24_27/0.07)] [--tf-muted:#6c6c75] [--tf-on:#18181b] [--tf-surface:#ffffff] [--tf-track:#e4e4e7] dark:[--tf-faint:#71717a] dark:[--tf-fill:#2c2c31] dark:[--tf-good:#4ade80] dark:[--tf-ink:#fafafa] dark:[--tf-line:rgb(255_255_255/0.07)] dark:[--tf-muted:#a1a1aa] dark:[--tf-on:#fafafa] dark:[--tf-surface:#232327] dark:[--tf-track:#3a3a40]"
       data-phase={setup.phase}
       aria-label="Two-factor settings"
     >
@@ -236,7 +243,7 @@ export function TwoFactor({
                   <span className="grid size-[76px] flex-none place-items-center rounded-xl bg-(--tf-fill) dark:bg-white">
                     <Qr />
                   </span>
-                  <span className="text-[12.5px] leading-[1.45] text-pretty text-(--tf-muted)" id="tf-hint">
+                  <span className="text-[12.5px] leading-[1.45] text-pretty text-(--tf-muted)" id={hint}>
                     Scan with your authenticator app, then enter the 6-digit code it shows.
                   </span>
                 </div>
@@ -245,7 +252,7 @@ export function TwoFactor({
                   value={setup.code}
                   onChange={enter}
                   inputRef={input}
-                  describedBy="tf-hint"
+                  describedBy={hint}
                 />
               </motion.div>
             </motion.div>

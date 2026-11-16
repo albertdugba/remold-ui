@@ -118,6 +118,10 @@ export interface Scene {
   anchor(id: string, port?: AnchorPort): { x: number; y: number } | null;
   /** The frontmost interactive object at a canvas point (CSS pixels), or null. */
   pick(x: number, y: number): string | null;
+  /** Where a floor point (in floor units, `z` up) lands on the canvas, in CSS pixels. */
+  project(x: number, y: number, z?: number): { x: number; y: number };
+  /** Add or replace a layout; springs to it at once if it's the one on screen. */
+  set(name: string, layout: SceneLayout): void;
   /** Redraw now. */
   render(): void;
   /** Stop animating, remove listeners and the description element. */

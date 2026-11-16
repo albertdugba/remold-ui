@@ -19,11 +19,13 @@ import {
   type Table,
   type Updater,
 } from "@tanstack/react-table";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
   type MouseEvent,
   type Ref,
@@ -32,6 +34,7 @@ import {
   useControllableState,
   type ChangeDetails,
 } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useScene } from "./use-scene";
 
 interface File {
@@ -111,7 +114,7 @@ const REST: BulkSelectValue = {
 const SPRING = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
 
 const PALETTE = [
-  "[--bk-surface:#ffffff] [--bk-ink:#18181b] [--bk-muted:#71717a] [--bk-quiet:#a1a1aa] [--bk-line:rgb(24_24_27/0.07)] [--bk-hover:rgb(24_24_27/0.035)]",
+  "[--bk-surface:#ffffff] [--bk-ink:#18181b] [--bk-muted:#6c6c75] [--bk-quiet:#a1a1aa] [--bk-line:rgb(24_24_27/0.07)] [--bk-hover:rgb(24_24_27/0.035)]",
   "[--bk-accent:#4f46e5] [--bk-band:rgb(79_70_229/0.07)] [--bk-box:rgb(24_24_27/0.22)]",
   "[--bk-bar:#18181b] [--bk-bar-ink:#fafafa] [--bk-bar-muted:#a1a1aa] [--bk-bar-hover:rgb(255_255_255/0.09)] [--bk-danger:#f87171]",
   "dark:[--bk-surface:#1f1f23] dark:[--bk-ink:#fafafa] dark:[--bk-muted:#a1a1aa] dark:[--bk-quiet:#71717a] dark:[--bk-line:rgb(255_255_255/0.07)] dark:[--bk-hover:rgb(255_255_255/0.04)]",
@@ -125,7 +128,7 @@ const FIGURE = "ml-auto text-right text-[12px] whitespace-nowrap text-(--bk-mute
 const CHECK =
   "grid size-4 cursor-pointer place-items-center rounded-[5px] border-0 bg-transparent p-0 text-white shadow-[inset_0_0_0_1.5px_var(--bk-box)] transition-[background-color,box-shadow] duration-150 group-hover/inner:not-data-checked:not-data-indeterminate:shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,var(--bk-ink)_45%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--bk-accent) data-checked:bg-(--bk-accent) data-checked:shadow-none data-indeterminate:bg-(--bk-accent) data-indeterminate:shadow-none";
 const TICK =
-  "grid place-items-center [transition:scale_0.18s_cubic-bezier(0.3,1.5,0.5,1),opacity_0.12s] data-ending-style:scale-50 data-ending-style:opacity-0 data-starting-style:scale-50 data-starting-style:opacity-0 [&_svg]:size-[11px] [&_svg]:[stroke-width:3.2]";
+  "grid place-items-center [transition:scale_0.18s_cubic-bezier(0.3,1.5,0.5,1),opacity_0.12s] data-ending-style:scale-50 data-ending-style:opacity-0 data-starting-style:scale-50 data-starting-style:opacity-0 motion-reduce:transition-none [&_svg]:size-[11px] [&_svg]:[stroke-width:3.2]";
 const BAR_BUTTON =
   "inline-flex h-[34px] flex-none cursor-pointer items-center justify-center gap-1.5 rounded-[9px] border-0 bg-transparent text-[13px] font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--bk-accent) [&_svg]:size-4";
 const BAR_ROW_CLASS = "flex h-full items-center gap-0.5 px-1.5 [grid-area:1/1]";
@@ -137,7 +140,7 @@ const DATA_COLUMNS = [
   column.accessor("name", {
     header: ({ table }) => (
       <span className="text-[13px] font-semibold text-(--bk-ink)">
-        Files <span className="ml-1 font-medium text-(--bk-quiet) tabular-nums">{table.getRowCount()}</span>
+        Files <span className="ml-1 font-medium text-(--bk-muted) tabular-nums">{table.getRowCount()}</span>
       </span>
     ),
     cell: ({ row }) => {
@@ -169,6 +172,7 @@ export interface BulkSelectProps {
   value?: BulkSelectValue;
   defaultValue?: BulkSelectValue;
   onValueChange?: (value: BulkSelectValue, details: ChangeDetails) => void;
+  announcements?: boolean;
   ref?: Ref<HTMLElement>;
 }
 
@@ -228,7 +232,10 @@ function RowCheckbox({
 
 function RollingCount({ count }: { count: number }) {
   return (
-    <span className="relative grid h-[18px] overflow-hidden leading-[18px] font-semibold text-(--bk-bar-ink) tabular-nums [&>span]:[grid-area:1/1]">
+    <span
+      className="relative grid h-[18px] overflow-hidden leading-[18px] font-semibold text-(--bk-bar-ink) tabular-nums [&>span]:[grid-area:1/1]"
+      aria-hidden="true"
+    >
       <AnimatePresence initial={false}>
         <motion.span
           key={count}
@@ -266,6 +273,7 @@ function SelectionBar({
         <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
       </button>
       <span className={COUNT}>
+        <span className="sr-only">{count}</span>
         <RollingCount count={count} />
         selected
       </span>
@@ -285,14 +293,26 @@ function SelectionBar({
 function UndoBar({
   deleted,
   onUndo,
+  onHold,
   ref,
 }: {
   deleted: number;
   onUndo: () => void;
+  onHold: (held: boolean) => void;
   ref?: Ref<HTMLDivElement>;
 }) {
   return (
-    <motion.div ref={ref} className={BAR_ROW_CLASS} {...BAR_ROW}>
+    <motion.div
+      ref={ref}
+      className={BAR_ROW_CLASS}
+      {...BAR_ROW}
+      onPointerEnter={() => onHold(true)}
+      onPointerLeave={() => onHold(false)}
+      onFocus={(event) => {
+        if (event.target.matches(":focus-visible")) onHold(true);
+      }}
+      onBlur={() => onHold(false)}
+    >
       <span className={COUNT}>
         {deleted} {deleted === 1 ? "file" : "files"} deleted
       </span>
@@ -300,6 +320,7 @@ function UndoBar({
       <button
         type="button"
         className={`${BAR_BUTTON} px-3 font-semibold! text-(--bk-bar-ink) hover:bg-(--bk-bar-hover)`}
+        data-undo=""
         onClick={onUndo}
       >
         Undo
@@ -314,22 +335,26 @@ function Dock({
   onClear,
   onDelete,
   onUndo,
+  onHold,
+  onSettle,
 }: {
   count: number;
   undo: string[] | null;
   onClear: () => void;
   onDelete: () => void;
   onUndo: () => void;
+  onHold: (held: boolean) => void;
+  onSettle: () => void;
 }) {
   const bar = count > 0 ? "select" : undo ? "undo" : null;
 
   return (
-    <div className="relative mt-2 grid h-12 [&>*]:[grid-area:1/1]" aria-live="polite">
+    <div className="relative mt-2 grid h-12 [&>*]:[grid-area:1/1]">
       <AnimatePresence initial={false}>
         {!bar && (
           <motion.p
             key="hint"
-            className="m-0 flex items-center gap-1.5 px-2.5 text-[12px] text-(--bk-quiet)"
+            className="m-0 flex items-center gap-1.5 px-2.5 text-[12px] text-(--bk-muted)"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { delay: 0.15 } }}
             exit={{ opacity: 0, transition: { duration: 0.1 } }}
@@ -341,7 +366,7 @@ function Dock({
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onSettle}>
         {bar && (
           <motion.div
             key="bar"
@@ -356,7 +381,7 @@ function Dock({
             }}
             transition={SPRING}
           >
-            <AnimatePresence initial={false} mode="popLayout">
+            <AnimatePresence initial={false} mode="popLayout" onExitComplete={onSettle}>
               {bar === "select" ? (
                 <SelectionBar
                   key="select"
@@ -365,7 +390,7 @@ function Dock({
                   onDelete={onDelete}
                 />
               ) : (
-                <UndoBar key="undo" deleted={undo!.length} onUndo={onUndo} />
+                <UndoBar key="undo" deleted={undo!.length} onUndo={onUndo} onHold={onHold} />
               )}
             </AnimatePresence>
           </motion.div>
@@ -412,6 +437,7 @@ export function BulkSelect({
   value,
   defaultValue = REST,
   onValueChange,
+  announcements = true,
   ref,
 }: BulkSelectProps) {
   const [files, setFiles] = useControllableState({
@@ -420,15 +446,37 @@ export function BulkSelect({
     onValueChange,
   });
   const shift = useRef(false);
+  const root = useRef<HTMLElement | null>(null);
+  const [held, setHeld] = useState(false);
+  const [settled, setSettled] = useState(0);
+
+  if (held && !files.undo) setHeld(false);
+
+  const attach = useCallback(
+    (element: HTMLElement | null) => {
+      root.current = element;
+      if (typeof ref === "function") ref(element);
+      else if (ref) ref.current = element;
+    },
+    [ref],
+  );
+
+  useFocusAfterChange(
+    root,
+    settled,
+    (section) =>
+      section.querySelector<HTMLElement>("[data-undo]") ??
+      section.querySelector<HTMLElement>('[role="checkbox"]'),
+  );
 
   useEffect(() => {
-    if (!files.undo) return;
+    if (!files.undo || held) return;
     const timer = setTimeout(
       () => setFiles((current) => ({ ...current, undo: null }), "timer"),
-      4500,
+      10000,
     );
     return () => clearTimeout(timer);
-  }, [files.undo, setFiles]);
+  }, [files.undo, held, setFiles]);
 
   const rows = useMemo(
     () => FILES.filter((file) => !files.gone.includes(file.id)),
@@ -439,8 +487,11 @@ export function BulkSelect({
     [files.selected],
   );
 
-  const tick = (id: string, on: boolean) =>
-    setFiles((current) => selectionWithShift(current, id, on, shift.current));
+  const tick = useCallback(
+    (id: string, on: boolean) =>
+      setFiles((current) => selectionWithShift(current, id, on, shift.current)),
+    [setFiles],
+  );
 
   const remove = () =>
     setFiles((current) => ({
@@ -471,20 +522,23 @@ export function BulkSelect({
       };
     });
 
-  const columns = [
-    column.display({
-      id: "select",
-      header: ({ table }) => <SelectAllCheckbox table={table} />,
-      cell: ({ row }) => (
-        <RowCheckbox
-          name={row.original.name}
-          checked={row.getIsSelected()}
-          onChange={(on) => tick(row.id, on)}
-        />
-      ),
-    }),
-    ...DATA_COLUMNS,
-  ];
+  const columns = useMemo(
+    () => [
+      column.display({
+        id: "select",
+        header: ({ table }) => <SelectAllCheckbox table={table} />,
+        cell: ({ row }) => (
+          <RowCheckbox
+            name={row.original.name}
+            checked={row.getIsSelected()}
+            onChange={(on) => tick(row.id, on)}
+          />
+        ),
+      }),
+      ...DATA_COLUMNS,
+    ],
+    [tick],
+  );
 
   const table = useReactTable({
     data: rows,
@@ -496,88 +550,101 @@ export function BulkSelect({
     enableRowSelection: true,
   });
   const tableRows = table.getRowModel().rows;
+  const deleted = files.undo?.length ?? 0;
+  const status = files.selected.length
+    ? `${files.selected.length} selected`
+    : deleted
+      ? `${deleted} ${deleted === 1 ? "file" : "files"} deleted`
+      : "";
 
   return (
-    <section
-      ref={ref}
-      className={`not-prose grid w-[min(100%,440px)] rounded-[20px] bg-(--bk-surface) px-2.5 pt-2.5 pb-3 font-sans text-(--bk-ink) ${PALETTE}`}
-      aria-label="Files"
-    >
-      <div role="table" aria-label="Files" aria-rowcount={tableRows.length}>
-        {table.getHeaderGroups().map((group) => (
-          <div key={group.id} role="row" className={`${GRID} mb-0.5 h-9 text-[11.5px] font-medium text-(--bk-quiet)`}>
-            {group.headers.map((header) => (
-              <span key={header.id} role="columnheader" className={CELL}>
-                {flexRender(
-                  header.column.columnDef.header,
-                  header.getContext(),
-                )}
-              </span>
-            ))}
+    <MotionConfig reducedMotion="user">
+      <section
+        ref={attach}
+        className={`not-prose grid w-[min(100%,440px)] rounded-[20px] bg-(--bk-surface) px-2.5 pt-2.5 pb-3 font-sans text-(--bk-ink) ${PALETTE}`}
+        aria-label="Files"
+      >
+        <div role="table" aria-label="Files">
+          {table.getHeaderGroups().map((group) => (
+            <div key={group.id} role="row" className={`${GRID} mb-0.5 h-9 text-[11.5px] font-medium text-(--bk-muted)`}>
+              {group.headers.map((header) => (
+                <span key={header.id} role="columnheader" className={CELL}>
+                  {flexRender(
+                    header.column.columnDef.header,
+                    header.getContext(),
+                  )}
+                </span>
+              ))}
+            </div>
+          ))}
+
+          <div role="rowgroup" className="m-0 grid p-0">
+            <AnimatePresence initial={false}>
+              {tableRows.map((row, index) => {
+                const on = row.getIsSelected();
+                const order = files.undo?.indexOf(row.id) ?? -1;
+
+                return (
+                  <motion.div
+                    key={row.id}
+                    role="row"
+                    aria-selected={on}
+                    layout="position"
+                    className="relative overflow-hidden rounded-[10px] transition-[background-color,border-radius] duration-[180ms] not-first:before:absolute not-first:before:top-0 not-first:before:right-2.5 not-first:before:left-[38px] not-first:before:h-px not-first:before:bg-(--bk-line) not-first:before:transition-opacity not-first:before:duration-[180ms] not-first:before:content-[''] hover:bg-(--bk-hover) data-joins-down:rounded-b-none data-joins-up:rounded-t-none data-selected:bg-(--bk-band)! data-selected:before:opacity-0 [[data-selected]+&]:before:opacity-0"
+                    data-selected={on || undefined}
+                    data-joins-up={
+                      (on && tableRows[index - 1]?.getIsSelected()) || undefined
+                    }
+                    data-joins-down={
+                      (on && tableRows[index + 1]?.getIsSelected()) || undefined
+                    }
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{
+                      opacity: 0,
+                      height: 0,
+                      transition: {
+                        duration: 0.28,
+                        delay: Math.max(0, order) * 0.06,
+                        ease: [0.4, 0, 0.2, 1],
+                      },
+                    }}
+                    transition={SPRING}
+                    onClickCapture={(event: MouseEvent) => {
+                      shift.current = event.shiftKey;
+                    }}
+                  >
+                    <label className={`group/inner ${GRID} h-11 cursor-pointer`}>
+                      {row.getVisibleCells().map((cell) => (
+                        <span key={cell.id} role="cell" className={CELL}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </span>
+                      ))}
+                    </label>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
-        ))}
+        </div>
 
-        <ul role="rowgroup" className="m-0 grid list-none p-0">
-          <AnimatePresence initial={false}>
-            {tableRows.map((row, index) => {
-              const on = row.getIsSelected();
-              const order = files.undo?.indexOf(row.id) ?? -1;
-
-              return (
-                <motion.li
-                  key={row.id}
-                  role="row"
-                  aria-selected={on}
-                  layout="position"
-                  className="relative overflow-hidden rounded-[10px] transition-[background-color,border-radius] duration-[180ms] not-first:before:absolute not-first:before:top-0 not-first:before:right-2.5 not-first:before:left-[38px] not-first:before:h-px not-first:before:bg-(--bk-line) not-first:before:transition-opacity not-first:before:duration-[180ms] not-first:before:content-[''] hover:bg-(--bk-hover) data-joins-down:rounded-b-none data-joins-up:rounded-t-none data-selected:bg-(--bk-band)! data-selected:before:opacity-0 [[data-selected]+&]:before:opacity-0"
-                  data-selected={on || undefined}
-                  data-joins-up={
-                    (on && tableRows[index - 1]?.getIsSelected()) || undefined
-                  }
-                  data-joins-down={
-                    (on && tableRows[index + 1]?.getIsSelected()) || undefined
-                  }
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{
-                    opacity: 0,
-                    height: 0,
-                    transition: {
-                      duration: 0.28,
-                      delay: Math.max(0, order) * 0.06,
-                      ease: [0.4, 0, 0.2, 1],
-                    },
-                  }}
-                  transition={SPRING}
-                  onClickCapture={(event: MouseEvent) => {
-                    shift.current = event.shiftKey;
-                  }}
-                >
-                  <label className={`group/inner ${GRID} h-11 cursor-pointer`}>
-                    {row.getVisibleCells().map((cell) => (
-                      <span key={cell.id} role="cell" className={CELL}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </span>
-                    ))}
-                  </label>
-                </motion.li>
-              );
-            })}
-          </AnimatePresence>
-        </ul>
-      </div>
-
-      <Dock
-        count={files.selected.length}
-        undo={files.undo}
-        onClear={() => setFiles((current) => ({ ...current, selected: [] }))}
-        onDelete={remove}
-        onUndo={restore}
-      />
-    </section>
+        <Dock
+          count={files.selected.length}
+          undo={files.undo}
+          onClear={() => setFiles((current) => ({ ...current, selected: [] }))}
+          onDelete={remove}
+          onUndo={restore}
+          onHold={setHeld}
+          onSettle={() => setSettled((count) => count + 1)}
+        />
+        <p className="sr-only" role="status">
+          {announcements ? status : ""}
+        </p>
+      </section>
+    </MotionConfig>
   );
 }
 
@@ -606,6 +673,7 @@ export function BulkSelectDemo({ playing }: BulkSelectDemoProps = {}) {
       ref={scene.ref}
       value={scene.state}
       onValueChange={scene.onValueChange}
+      announcements={!scene.live}
     />
   );
 }

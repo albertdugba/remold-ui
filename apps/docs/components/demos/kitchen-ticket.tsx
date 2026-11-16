@@ -2,7 +2,7 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useRef, type Ref } from "react";
 import { Picker } from "./picker";
 import { useControllableState } from "./use-controllable-state";
@@ -22,7 +22,7 @@ const of = (id: Status) => STATUSES.find((status) => status.id === id)!;
 const SPRING = { type: "spring" as const, duration: 0.4, bounce: 0.15 };
 
 const TOKENS = [
-  "[--kt-fill:#f4f4f5] [--kt-line:rgb(24_24_27/0.08)] [--kt-ink:#18181b] [--kt-muted:#71717a] [--kt-quiet:#a1a1aa]",
+  "[--kt-fill:#f4f4f5] [--kt-line:rgb(24_24_27/0.08)] [--kt-ink:#18181b] [--kt-muted:#6c6c75] [--kt-quiet:#a1a1aa]",
   "[--kt-preparing:#e07a2f] [--kt-ready:#10b981] [--kt-picked:#6366f1]",
   "dark:[--kt-fill:#2e2e33] dark:[--kt-line:rgb(255_255_255/0.08)] dark:[--kt-ink:#fafafa] dark:[--kt-muted:#a1a1aa] dark:[--kt-quiet:#71717a]",
   "dark:[--kt-preparing:#fb923c] dark:[--kt-ready:#34d399] dark:[--kt-picked:#818cf8]",
@@ -163,79 +163,81 @@ export function KitchenTicket({
     });
 
   return (
-    <section
-      ref={ref}
-      className={`not-prose grid w-[min(100%,380px)] rounded-3xl bg-(--kt-surface) px-[18px] pt-[18px] pb-3.5 font-sans text-(--kt-ink) ${CARD_TOKENS}`}
-      aria-label="Kitchen ticket"
-    >
-      <header className="flex items-center justify-between">
-        <span className="text-[12px] font-medium text-(--kt-muted) tabular-nums">#148</span>
-        <img
-          className="size-6 rounded-full bg-[#ffedd5]"
-          src="https://api.dicebear.com/9.x/notionists/svg?seed=Ama%20Mensah&backgroundColor=ffedd5"
-          alt="Ordered by Ama Mensah"
-          width={24}
-          height={24}
-          draggable={false}
-        />
-      </header>
-      <h4 className="m-0 mt-2 text-[16px] leading-[1.35] font-semibold tracking-[-0.01em]">Brisket sandwich, extra pickles and a cold lime soda</h4>
-
-      <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
-        <Picker
-          label="Ticket"
-          heading="Update the ticket…"
-          options={STATUS_OPTIONS}
-          value={ticket.status}
-          onValueChange={choose}
-          icon={(status) => <StatusIcon status={status} size={15} />}
-          open={ticket.open}
-          onOpenChange={(open) => setTicket((current) => ({ ...current, open }))}
-          preview={ticket.open ? highlighted : null}
-          layerClassName={LAYER_TOKENS}
-        />
-        <Picker
-          label="Service"
-          heading="For here or to-go…"
-          options={SERVICE}
-          value={ticket.service}
-          onValueChange={(service) => setTicket((current) => ({ ...current, service }))}
-          icon={(service) => <ServiceIcon service={service} />}
-          layerClassName={LAYER_TOKENS}
-        />
-        <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-solid border-(--kt-line) bg-(--kt-surface) pr-2.5 pl-2 text-[12.5px] font-medium text-(--kt-muted)">
-          <i className="size-2 rounded-full bg-(--kt-preparing)" aria-hidden="true" />
-          Table 4
-        </span>
-      </div>
-
-      <ol
-        className="m-0 mt-4 grid list-none border-t border-solid border-(--kt-line) px-0 pt-2.5 pb-0 [&>li]:overflow-hidden"
-        aria-label="The line"
+    <MotionConfig reducedMotion="user">
+      <section
+        ref={ref}
+        className={`not-prose grid w-[min(100%,380px)] rounded-3xl bg-(--kt-surface) px-[18px] pt-[18px] pb-3.5 font-sans text-(--kt-ink) ${CARD_TOKENS}`}
+        aria-label="Kitchen ticket"
       >
-        <AnimatePresence initial={false}>
-          {ticket.log.map((entry) => (
-            <motion.li
-              key={entry.key}
-              layout="position"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={SPRING}
-            >
-              <span className="flex items-center gap-2 py-[5px] text-[12.5px] text-(--kt-muted)">
-                <StatusIcon status={entry.to} size={14} />
-                <span className="min-w-0 flex-1">
-                  <b className="font-medium text-(--kt-ink)">{entry.author}</b>
-                  {` · ${entry.line}`}
+        <header className="flex items-center justify-between">
+          <span className="text-[12px] font-medium text-(--kt-muted) tabular-nums">#148</span>
+          <img
+            className="size-6 rounded-full bg-[#ffedd5]"
+            src="https://api.dicebear.com/9.x/notionists/svg?seed=Ama%20Mensah&backgroundColor=ffedd5"
+            alt="Ordered by Ama Mensah"
+            width={24}
+            height={24}
+            draggable={false}
+          />
+        </header>
+        <h4 className="m-0 mt-2 text-[16px] leading-[1.35] font-semibold tracking-[-0.01em]">Brisket sandwich, extra pickles and a cold lime soda</h4>
+
+        <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
+          <Picker
+            label="Ticket"
+            heading="Update the ticket…"
+            options={STATUS_OPTIONS}
+            value={ticket.status}
+            onValueChange={choose}
+            icon={(status) => <StatusIcon status={status} size={15} />}
+            open={ticket.open}
+            onOpenChange={(open) => setTicket((current) => ({ ...current, open }))}
+            preview={ticket.open ? highlighted : null}
+            layerClassName={LAYER_TOKENS}
+          />
+          <Picker
+            label="Service"
+            heading="For here or to-go…"
+            options={SERVICE}
+            value={ticket.service}
+            onValueChange={(service) => setTicket((current) => ({ ...current, service }))}
+            icon={(service) => <ServiceIcon service={service} />}
+            layerClassName={LAYER_TOKENS}
+          />
+          <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-solid border-(--kt-line) bg-(--kt-surface) pr-2.5 pl-2 text-[12.5px] font-medium text-(--kt-muted)">
+            <i className="size-2 rounded-full bg-(--kt-preparing)" aria-hidden="true" />
+            Table 4
+          </span>
+        </div>
+
+        <ol
+          className="m-0 mt-4 grid list-none border-t border-solid border-(--kt-line) px-0 pt-2.5 pb-0 [&>li]:overflow-hidden"
+          aria-label="The line"
+        >
+          <AnimatePresence initial={false}>
+            {ticket.log.map((entry) => (
+              <motion.li
+                key={entry.key}
+                layout="position"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={SPRING}
+              >
+                <span className="flex items-center gap-2 py-[5px] text-[12.5px] text-(--kt-muted)">
+                  <StatusIcon status={entry.to} size={14} />
+                  <span className="min-w-0 flex-1">
+                    <b className="font-medium text-(--kt-ink)">{entry.author}</b>
+                    {` · ${entry.line}`}
+                  </span>
+                  <time className="text-[11.5px] text-(--kt-muted)">{entry.ago}</time>
                 </span>
-                <time className="text-[11.5px] text-(--kt-quiet)">{entry.ago}</time>
-              </span>
-            </motion.li>
-          ))}
-        </AnimatePresence>
-      </ol>
-    </section>
+              </motion.li>
+            ))}
+          </AnimatePresence>
+        </ol>
+      </section>
+    </MotionConfig>
   );
 }
 

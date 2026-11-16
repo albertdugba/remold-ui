@@ -3,6 +3,7 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeftRightIcon } from "@hugeicons/core-free-icons";
 import type { PainterFrame } from "@remold-ui/canvas";
+import { announce } from "@remold-ui/dom";
 import { Remold, useAutoplay } from "@remold-ui/react/canvas";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
@@ -249,6 +250,10 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
   const speech = useSpeechRecognition();
   const [turn, setTurn] = useState<Turn | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const tell = (message: string | null) => {
+    setNote(message);
+    if (message && message !== note) announce(message);
+  };
   const translator = useRef<Translator | null>(null);
   const translation = useRef<Promise<string>>(Promise.resolve(""));
 
@@ -282,7 +287,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
     wasListening.current = speech.listening;
     if (!stopped || !turn) return;
     if (!speech.isMicrophoneAvailable)
-      setNote("Microphone access was refused. Allow it for this site and tap the orb again.");
+      tell("Microphone access was refused. Allow it for this site and tap the orb again.");
     if (!speech.transcript) return update({ phase: "idle" });
     update({ phase: "translating" });
     void translation.current
@@ -317,7 +322,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
       setTurn(null);
       auto.setStep(0);
       auto.setPlaying(true);
-      return setNote("Live listening needs speech recognition, which this browser doesn't have. Try Chrome.");
+      return tell("Live listening needs speech recognition, which this browser doesn't have. Try Chrome.");
     }
     setTurn({ from: line.from, said: "", phase: "idle" });
     void SpeechRecognition.startListening({
@@ -328,7 +333,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
     translator.current =
       (await api?.create({ sourceLanguage: source.code, targetLanguage: target.code }).catch(() => null)) ??
       null;
-    setNote(
+    tell(
       translator.current
         ? null
         : "Translation runs on Chrome's built-in translator, which isn't available here. You'll see what you said.",
@@ -338,7 +343,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
   return (
     <div
       ref={auto.ref}
-      className="not-prose grid w-[min(100%,400px)] justify-items-center gap-[22px] py-2 font-sans text-(--vo-ink) [--vo-faint:#a1a1aa] [--vo-fill:rgb(24_24_27/0.05)] [--vo-ink:#18181b] [--vo-muted:#71717a] [--vo-ring:rgb(24_24_27/0.1)] dark:[--vo-faint:#71717a] dark:[--vo-fill:rgb(255_255_255/0.07)] dark:[--vo-ink:#fafafa] dark:[--vo-muted:#a1a1aa] dark:[--vo-ring:rgb(255_255_255/0.12)]"
+      className="not-prose grid w-[min(100%,400px)] justify-items-center gap-[22px] py-2 font-sans text-(--vo-ink) [--vo-faint:#a1a1aa] [--vo-fill:rgb(24_24_27/0.05)] [--vo-ink:#18181b] [--vo-muted:#6c6c75] [--vo-ring:rgb(24_24_27/0.1)] dark:[--vo-faint:#71717a] dark:[--vo-fill:rgb(255_255_255/0.07)] dark:[--vo-ink:#fafafa] dark:[--vo-muted:#a1a1aa] dark:[--vo-ring:rgb(255_255_255/0.12)]"
     >
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 text-[14px] font-medium">
         <span className="text-right">{source.name}</span>
@@ -355,7 +360,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
 
       <button
         type="button"
-        className="block cursor-pointer rounded-full border-0 bg-transparent p-0 transition-[scale] duration-200 ease-[cubic-bezier(0.2,0,0,1)] [-webkit-tap-highlight-color:transparent] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--vo-ring) active:scale-[0.97]"
+        className="block cursor-pointer rounded-full border-0 bg-transparent p-0 transition-[scale] duration-200 ease-[cubic-bezier(0.2,0,0,1)] [-webkit-tap-highlight-color:transparent] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--vo-ink) active:scale-[0.97]"
         onClick={tap}
         aria-label={
           speech.listening
@@ -367,7 +372,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
       >
         <VoiceOrb state={ORB[line.phase]} level={line.phase === "listening" ? 0.04 : undefined} size={220} />
       </button>
-      <p className="m-0 -mt-3.5 text-[13px] text-(--vo-faint)" aria-live="polite">
+      <p className="m-0 -mt-3.5 text-[13px] text-(--vo-muted)" aria-live="polite">
         {STATUS[line.phase]}
       </p>
 
@@ -380,7 +385,7 @@ export function VoiceOrbDemo({ index }: { index?: number } = {}) {
         </Remold.Text>
       </div>
       {note && (
-        <p className="m-0 -mt-2 max-w-[300px] text-center text-[12px] leading-normal text-(--vo-faint)">{note}</p>
+        <p className="m-0 -mt-2 max-w-[300px] text-center text-[12px] leading-normal text-(--vo-muted)">{note}</p>
       )}
     </div>
   );

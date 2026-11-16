@@ -4,7 +4,8 @@ import { Popover } from "@base-ui/react/popover";
 import { Tooltip } from "@base-ui/react/tooltip";
 import { ArrowUp01Icon, AtIcon, FileAttachmentIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { announce } from "@remold-ui/dom";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
 import {
   Fragment,
   useEffect,
@@ -47,7 +48,7 @@ const firstName = (personId: string) => personById(personId).name.split(" ")[0]!
 
 const TOKENS = [
   "[--em-surface:#ffffff] [--em-raised:#ffffff] [--em-field:#f6f6f7] [--em-line:rgb(24_24_27/0.08)] [--em-ink:#18181b] [--em-on-ink:#fafafa]",
-  "[--em-muted:#71717a] [--em-quiet:#a1a1aa] [--em-accent:#4f46e5] [--em-accent-soft:#eef2ff] [--em-chip:rgb(79_70_229/0.09)] [--em-chip-ink:#3f37c9]",
+  "[--em-muted:#6c6c75] [--em-quiet:#a1a1aa] [--em-accent:#4f46e5] [--em-accent-soft:#eef2ff] [--em-chip:rgb(79_70_229/0.09)] [--em-chip-ink:#3f37c9]",
   "[--em-query:rgb(79_70_229/0.08)] [--em-lift:0_1px_2px_rgb(24_24_27/0.04),0_8px_24px_-10px_rgb(24_24_27/0.18)] [--em-online:#22c55e]",
   "dark:[--em-surface:#1f1f23] dark:[--em-raised:#1c1c1f] dark:[--em-field:#26262b] dark:[--em-line:rgb(255_255_255/0.08)] dark:[--em-ink:#fafafa] dark:[--em-on-ink:#18181b]",
   "dark:[--em-muted:#a1a1aa] dark:[--em-quiet:#71717a] dark:[--em-accent:#818cf8] dark:[--em-accent-soft:rgb(129_140_248/0.16)] dark:[--em-chip:rgb(129_140_248/0.16)] dark:[--em-chip-ink:#c7d2fe]",
@@ -110,7 +111,7 @@ function Thread({ posts }: { posts: MentionPost[] }) {
             <div>
               <p className="m-0 flex items-baseline gap-2 text-[13px]">
                 <b>{post.who}</b>
-                <time className="text-[11.5px] text-(--em-quiet)">{post.when}</time>
+                <time className="text-[11.5px] text-(--em-muted)">{post.when}</time>
               </p>
               <p className="m-0 mt-0.5 text-[13.5px] leading-[1.6] text-(--em-ink)">
                 <Segments segs={post.segs} />
@@ -168,7 +169,7 @@ function SendButton({ disabled, onSend }: { disabled: boolean; onSend: () => voi
   return (
     <Tooltip.Root>
       <Tooltip.Trigger
-        className="grid size-[30px] flex-none cursor-pointer place-items-center rounded-full border-0 bg-(--em-ink) text-white transition-opacity duration-200 focus-visible:outline-none disabled:cursor-default disabled:opacity-20"
+        className="grid size-[30px] flex-none cursor-pointer place-items-center rounded-full border-0 bg-(--em-ink) text-(--em-on-ink) transition-opacity duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--em-accent) disabled:cursor-default disabled:opacity-20"
         onClick={onSend}
         disabled={disabled}
         aria-label="Send comment"
@@ -178,7 +179,7 @@ function SendButton({ disabled, onSend }: { disabled: boolean; onSend: () => voi
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Positioner className={TOKENS} sideOffset={8}>
-          <Tooltip.Popup className="inline-flex origin-(--transform-origin) items-center gap-1 rounded-[7px] bg-(--em-ink) px-2 py-[5px] text-[12px] font-medium text-(--em-on-ink) [transition:opacity_0.14s,transform_0.18s] data-ending-style:[transform:scale(0.9)] data-ending-style:opacity-0 data-starting-style:[transform:scale(0.9)] data-starting-style:opacity-0">
+          <Tooltip.Popup className="inline-flex origin-(--transform-origin) items-center gap-1 rounded-[7px] bg-(--em-ink) px-2 py-[5px] text-[12px] font-medium text-(--em-on-ink) [transition:opacity_0.14s,transform_0.18s] data-ending-style:[transform:scale(0.9)] data-ending-style:opacity-0 data-starting-style:[transform:scale(0.9)] data-starting-style:opacity-0 motion-reduce:transition-none">
             Send <kbd className={TIP_KEY}>⌘</kbd>
             <kbd className={TIP_KEY}>↵</kbd>
           </Tooltip.Popup>
@@ -225,11 +226,11 @@ function PeoplePicker({
           collisionPadding={12}
         >
           <Popover.Popup
-            className="w-[248px] origin-(--transform-origin) rounded-2xl border border-solid border-black/6 bg-(--em-raised) p-1 text-(--em-ink) shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] outline-none [transition:opacity_0.16s,transform_0.24s_cubic-bezier(0.2,0.9,0.3,1.25)] data-ending-style:[transform:scale(0.9)_translateY(-6px)] data-ending-style:opacity-0 data-starting-style:[transform:scale(0.9)_translateY(-6px)] data-starting-style:opacity-0 dark:border-white/7 dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)]"
+            className="w-[248px] origin-(--transform-origin) rounded-2xl border border-solid border-black/6 bg-(--em-raised) p-1 text-(--em-ink) shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] outline-none [transition:opacity_0.16s,transform_0.24s_cubic-bezier(0.2,0.9,0.3,1.25)] data-ending-style:[transform:scale(0.9)_translateY(-6px)] data-ending-style:opacity-0 data-starting-style:[transform:scale(0.9)_translateY(-6px)] data-starting-style:opacity-0 motion-reduce:transition-none dark:border-white/7 dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)]"
             initialFocus={false}
             finalFocus={false}
           >
-            <p className="m-0 px-2.5 pt-[7px] pb-[5px] text-[11px] font-medium text-(--em-quiet)">{query ? `People matching “${query}”` : "Mention someone"}</p>
+            <p className="m-0 px-2.5 pt-[7px] pb-[5px] text-[11px] font-medium text-(--em-muted)">{query ? `People matching “${query}”` : "Mention someone"}</p>
 
             <ul id={listId} role="listbox" aria-label="People" className="m-0 grid list-none p-0">
               <AnimatePresence initial={false} mode="popLayout">
@@ -274,7 +275,7 @@ function PeoplePicker({
                       {person.online && (
                         <i
                           className="absolute -right-px -bottom-px size-2 rounded-full bg-(--em-online) shadow-[0_0_0_2px_var(--em-raised)]"
-                          aria-label="Online"
+                          aria-hidden="true"
                         />
                       )}
                     </span>
@@ -284,11 +285,13 @@ function PeoplePicker({
                         <Matched name={person.name} query={query} />
                       </span>
                       <span className="text-[11.5px] text-(--em-muted)">{person.role}</span>
+                      {person.online && <span className="sr-only">Online</span>}
                     </span>
 
                     {index === active && (
                       <kbd
                         className={`${KEY} h-[18px] min-w-[18px] rounded-[5px] bg-transparent text-(--em-quiet) shadow-[inset_0_0_0_1px_var(--em-line),0_1px_0_var(--em-line)]`}
+                        aria-hidden="true"
                       >
                         ↵
                       </kbd>
@@ -296,9 +299,13 @@ function PeoplePicker({
                   </motion.li>
                 ))}
               </AnimatePresence>
-
-              {!people.length && <li className="cursor-default px-2 py-2.5 text-[12.5px] text-(--em-muted)">No one called “{query}”</li>}
             </ul>
+            <p
+              className={people.length ? "sr-only" : "m-0 cursor-default px-2 py-2.5 text-[12.5px] text-(--em-muted)"}
+              role="status"
+            >
+              {people.length ? "" : `No one called “${query}”`}
+            </p>
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>
@@ -341,7 +348,11 @@ export function EditorMentions({
 
   const dispatch = (action: MentionsAction) => {
     onInteraction?.();
-    setState(reduceMentions(state, action));
+    const next = reduceMentions(state, action);
+    const picked = next.made > state.made ? next.segs.at(-2) : undefined;
+    if (picked?.kind === "mention") announce(`${firstName(picked.id)} will be notified`);
+    if (next.posts !== state.posts) announce("Comment posted");
+    setState(next);
   };
 
   const setActive = (active: number) => {
@@ -382,95 +393,106 @@ export function EditorMentions({
   };
 
   return (
-    <Tooltip.Provider delay={400}>
-      <LayoutGroup id={id}>
-        <section
-          className={`not-prose grid w-[min(100%,420px)] rounded-[22px] bg-(--em-surface) p-4 text-(--em-ink) ${TOKENS}`}
-          aria-label="Comments"
-        >
-          <header className="flex items-center gap-2.5 border-b border-solid border-(--em-line) pb-3">
-            <span className="grid size-8 place-items-center rounded-[9px] bg-(--em-accent-soft) text-(--em-accent)">
-              <HugeiconsIcon icon={FileAttachmentIcon} className="size-4" aria-hidden="true" />
-            </span>
-            <span className="grid text-[14px] leading-[1.25]">
-              <b>Pricing page v3</b>
-              <span className="text-[12px] text-(--em-muted)">Comments</span>
-            </span>
-          </header>
-
-          <Thread posts={state.posts} />
-
-          <div
-            data-focused={focused || undefined}
-            className="grid rounded-2xl bg-(--em-field) shadow-[inset_0_0_0_1px_transparent] transition-[box-shadow,background-color] duration-250 data-focused:bg-(--em-surface) data-focused:shadow-[inset_0_0_0_1px_var(--em-line),var(--em-lift)]"
+    <MotionConfig reducedMotion="user">
+      <Tooltip.Provider delay={400}>
+        <LayoutGroup id={id}>
+          <section
+            className={`not-prose grid w-[min(100%,420px)] rounded-[22px] bg-(--em-surface) p-4 text-(--em-ink) ${TOKENS}`}
+            aria-label="Comments"
           >
+            <header className="flex items-center gap-2.5 border-b border-solid border-(--em-line) pb-3">
+              <span className="grid size-8 place-items-center rounded-[9px] bg-(--em-accent-soft) text-(--em-accent)">
+                <HugeiconsIcon icon={FileAttachmentIcon} className="size-4" aria-hidden="true" />
+              </span>
+              <span className="grid text-[14px] leading-[1.25]">
+                <b>Pricing page v3</b>
+                <span className="text-[12px] text-(--em-muted)">Comments</span>
+              </span>
+            </header>
+
+            <Thread posts={state.posts} />
+
             <div
-              ref={editor}
-              className="relative min-h-[52px] cursor-text px-3.5 pt-3 pb-1 text-[14px] leading-[1.75] break-words whitespace-pre-wrap caret-transparent outline-none focus-visible:outline-none"
-              role="combobox"
-              contentEditable
-              suppressContentEditableWarning
-              spellCheck={false}
-              aria-label="Write a comment. Type @ to mention someone."
-              aria-expanded={pickerOpen}
-              aria-controls={pickerOpen ? listId : undefined}
-              aria-activedescendant={
-                pickerOpen && people.length ? `${listId}-${people[state.active]?.id}` : undefined
-              }
-              onDrop={(event) => event.preventDefault()}
-              onKeyDown={onKeyDown}
-              onPaste={onPaste}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
+              data-focused={focused || undefined}
+              className="grid rounded-2xl bg-(--em-field) shadow-[inset_0_0_0_1px_transparent] transition-[box-shadow,background-color] duration-250 data-focused:bg-(--em-surface) data-focused:shadow-[inset_0_0_0_1px_var(--em-line),var(--em-lift)]"
             >
-              {!state.segs.length && !pickerOpen && (
-                <span className="pointer-events-none absolute text-(--em-quiet)">Reply, or type @ to mention someone</span>
-              )}
+              <div
+                ref={editor}
+                className="relative min-h-[52px] cursor-text px-3.5 pt-3 pb-1 text-[14px] leading-[1.75] break-words whitespace-pre-wrap caret-transparent outline-none focus-visible:outline-none"
+                role="combobox"
+                contentEditable
+                suppressContentEditableWarning
+                spellCheck={false}
+                aria-label="Write a comment. Type @ to mention someone."
+                aria-expanded={pickerOpen}
+                aria-controls={pickerOpen ? listId : undefined}
+                aria-activedescendant={
+                  pickerOpen && people.length ? `${listId}-${people[state.active]?.id}` : undefined
+                }
+                onDrop={(event) => event.preventDefault()}
+                onKeyDown={onKeyDown}
+                onPaste={onPaste}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+              >
+                {!state.segs.length && !pickerOpen && (
+                  <span className="pointer-events-none absolute text-(--em-muted)" aria-hidden="true">
+                    Reply, or type @ to mention someone
+                  </span>
+                )}
 
-              <Segments segs={state.segs} id={id} interactive />
+                <Segments segs={state.segs} id={id} interactive />
 
-              {pickerOpen && (
-                <motion.span
-                  ref={token}
-                  className="-mx-0.5 inline-block rounded-md bg-(--em-query) px-[3px] leading-normal font-medium text-(--em-chip-ink)"
-                  initial={{ opacity: 0, y: 3 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.12 }}
-                >
-                  @{state.query}
-                </motion.span>
-              )}
+                {pickerOpen && (
+                  <motion.span
+                    ref={token}
+                    className="-mx-0.5 inline-block rounded-md bg-(--em-query) px-[3px] leading-normal font-medium text-(--em-chip-ink)"
+                    initial={{ opacity: 0, y: 3 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.12 }}
+                  >
+                    @{state.query}
+                  </motion.span>
+                )}
 
-              {focused && (
-                <span
-                  className="ml-px inline-block h-[1.1em] w-[1.5px] animate-caret-blink rounded-[1px] bg-(--em-ink) align-[-0.18em] motion-reduce:animate-none"
-                  aria-hidden="true"
+                {focused && (
+                  <span
+                    className="ml-px inline-block h-[1.1em] w-[1.5px] animate-caret-blink rounded-[1px] bg-(--em-ink) align-[-0.18em] motion-reduce:animate-none"
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
+
+              <div className="flex items-center justify-between gap-2.5 pt-1 pr-2 pb-2 pl-3.5">
+                <NotifyLine notified={notified} />
+                <SendButton
+                  disabled={!state.segs.length}
+                  onSend={() => {
+                    const keyboard = document.activeElement?.matches(":focus-visible");
+                    dispatch({ type: "send" });
+                    if (keyboard) editor.current?.focus();
+                  }}
                 />
-              )}
+              </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2.5 pt-1 pr-2 pb-2 pl-3.5">
-              <NotifyLine notified={notified} />
-              <SendButton disabled={!state.segs.length} onSend={() => dispatch({ type: "send" })} />
-            </div>
-          </div>
-
-          <PeoplePicker
-            open={pickerOpen}
-            anchor={token}
-            query={state.query ?? ""}
-            people={people}
-            active={state.active}
-            listId={listId}
-            layoutPrefix={id}
-            avatarLayoutKey={`m${state.made}`}
-            onDismiss={() => dispatch({ type: "dismiss" })}
-            onHighlight={setActive}
-            onPick={(personId) => dispatch({ type: "pick", id: personId })}
-          />
-        </section>
-      </LayoutGroup>
-    </Tooltip.Provider>
+            <PeoplePicker
+              open={pickerOpen}
+              anchor={token}
+              query={state.query ?? ""}
+              people={people}
+              active={state.active}
+              listId={listId}
+              layoutPrefix={id}
+              avatarLayoutKey={`m${state.made}`}
+              onDismiss={() => dispatch({ type: "dismiss" })}
+              onHighlight={setActive}
+              onPick={(personId) => dispatch({ type: "pick", id: personId })}
+            />
+          </section>
+        </LayoutGroup>
+      </Tooltip.Provider>
+    </MotionConfig>
   );
 }
 

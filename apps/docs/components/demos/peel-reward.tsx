@@ -3,6 +3,7 @@
 import { Button } from "@base-ui/react/button";
 import { Copy01Icon, GiftIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { announce } from "@remold-ui/dom";
 import { Remold, useAutoplay } from "@remold-ui/react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform, type MotionValue } from "motion/react";
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type PointerEvent, type Ref, type RefObject } from "react";
@@ -14,7 +15,7 @@ const LIFT = 22;
 const OFF_AT = 0.5;
 
 const PALETTE = [
-  "[--prw-ink:#0a0a0b] [--prw-muted:#6e6e76] [--prw-quiet:#a1a1aa] [--prw-surface:#ffffff] [--prw-fill:#f2f2f4] [--prw-good:#16a34a] [--prw-festive:#c8202f] [--prw-frame:#8a1c24]",
+  "[--prw-ink:#0a0a0b] [--prw-muted:#6e6e76] [--prw-quiet:#a1a1aa] [--prw-surface:#ffffff] [--prw-fill:#f2f2f4] [--prw-good:#15803d] [--prw-festive:#c8202f] [--prw-frame:#8a1c24]",
   "[--prw-sticker:#0a0a0b] [--prw-sticker-ink:#ffffff] [--prw-sticker-muted:rgb(255_255_255/0.55)]",
   "[--prw-back:#ecebe8] [--prw-back-light:#fbfaf8] [--prw-back-crease:#cfccc6]",
   "dark:[--prw-ink:#fafafa] dark:[--prw-muted:#a1a1aa] dark:[--prw-quiet:#71717a] dark:[--prw-surface:#161618] dark:[--prw-fill:#232327] dark:[--prw-good:#4ade80] dark:[--prw-festive:#ef4b57] dark:[--prw-frame:#9e2b33]",
@@ -133,12 +134,16 @@ export function PeelReward({ code = "XMAS-25", prize = "A free hot chocolate", i
     [pullX, pullY],
   );
 
-  const peelOff = useCallback(async () => {
-    if (!width) return;
-    await pullTo(-width * 2.4, -height * 2.4, still ? { duration: 0 } : FLY_OFF);
-    setRevealed(true);
-    latestOnReveal.current?.();
-  }, [pullTo, width, height, still]);
+  const peelOff = useCallback(
+    async (announced = false) => {
+      if (!width) return;
+      await pullTo(-width * 2.4, -height * 2.4, still ? { duration: 0 } : FLY_OFF);
+      setRevealed(true);
+      if (announced) announce(`${prize}. Your code is ${code}`);
+      latestOnReveal.current?.();
+    },
+    [pullTo, width, height, still, prize, code],
+  );
 
   const reset = useCallback(() => {
     setRevealed(false);
@@ -149,7 +154,7 @@ export function PeelReward({ code = "XMAS-25", prize = "A free hot chocolate", i
 
   useImperativeHandle(
     actionsRef,
-    () => ({ pullTo: (x, y) => pullTo(x, y, { type: "spring", duration: 0.9, bounce: 0.1 }), peelOff, reset, showCopied: () => setCopied(true) }),
+    () => ({ pullTo: (x, y) => pullTo(x, y, { type: "spring", duration: 0.9, bounce: 0.1 }), peelOff: () => peelOff(), reset, showCopied: () => setCopied(true) }),
     [pullTo, peelOff, reset],
   );
 
@@ -169,13 +174,19 @@ export function PeelReward({ code = "XMAS-25", prize = "A free hot chocolate", i
     if (!drag.current) return;
     drag.current = null;
     const pulled = Math.hypot(pullX.get(), pullY.get());
-    if (pulled > Math.hypot(width, height) * OFF_AT) void peelOff();
+    if (pulled > Math.hypot(width, height) * OFF_AT) void peelOff(true);
     else void pullTo(-LIFT, -LIFT);
   };
 
   const copy = async () => {
-    await navigator.clipboard?.writeText(code).catch(() => undefined);
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      announce("Couldn't copy the code");
+      return;
+    }
     setCopied(true);
+    announce("Code copied");
   };
 
   useEffect(() => {
@@ -197,12 +208,12 @@ export function PeelReward({ code = "XMAS-25", prize = "A free hot chocolate", i
             <HugeiconsIcon icon={GiftIcon} strokeWidth={1.8} />
           </span>
           <span className="grid gap-px leading-[1.3] [&_b]:text-[15px] [&_b]:font-[650] [&_b]:tracking-[-0.01em] [&>span]:text-[12.5px] [&>span]:text-(--prw-muted)">
-            <b>Northwind Coffee</b>
+            <b>Remold Coffee</b>
             <span>Christmas card · 10 of 10 visits</span>
           </span>
         </header>
 
-        <ol className="m-0 grid list-none grid-cols-10 gap-1 p-0" aria-label="10 of 10 visits">
+        <ol className="m-0 grid list-none grid-cols-10 gap-1 p-0" aria-hidden="true">
           {Array.from({ length: 10 }, (_, index) => (
             <li key={index} className="h-1 rounded-full bg-(--prw-festive)" />
           ))}
@@ -222,7 +233,7 @@ export function PeelReward({ code = "XMAS-25", prize = "A free hot chocolate", i
                 <span key={index} className="bg-(--prw-ink)" style={{ width }} />
               ))}
             </span>
-            <span className="text-[12px] text-(--prw-quiet)">Show at the counter · valid until 24 Dec</span>
+            <span className="text-[12px] text-(--prw-muted)">Show at the counter · valid until 24 Dec</span>
           </div>
 
           {!revealed && (
@@ -271,13 +282,13 @@ export function PeelReward({ code = "XMAS-25", prize = "A free hot chocolate", i
               className={`${FOOT_BUTTON} animate-rise-in bg-(--prw-ink) text-(--prw-surface) transition-colors duration-300 data-copied:bg-(--prw-good) data-copied:text-white motion-reduce:animate-none [&_svg]:size-[17px]`}
               onClick={copy}
             >
-              <Remold.Icon icon={<HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} />} strokeWidth={2} />
+              <Remold.Icon icon={<HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} />} strokeWidth={2} aria-hidden="true" />
               <Remold.Text>{copied ? "Copied" : "Copy code"}</Remold.Text>
             </Button>
           ) : (
             <Button
               className={`${FOOT_BUTTON} bg-(--prw-fill) text-(--prw-ink) transition-colors duration-150 hover:bg-[color-mix(in_oklab,var(--prw-ink)_7%,var(--prw-fill))]`}
-              onClick={() => void peelOff()}
+              onClick={() => void peelOff(true)}
             >
               Peel it for me
             </Button>
@@ -298,12 +309,18 @@ const STEPS = [
   { ms: 500, action: "reset" },
 ] as const;
 
-export function PeelRewardDemo({ playing = true }: { playing?: boolean } = {}) {
+export function PeelRewardDemo({ playing }: { playing?: boolean } = {}) {
   const actions = useRef<PeelRewardActions | null>(null);
-  const autoplay = useAutoplay(STEPS.length, { every: (step) => STEPS[step]!.ms, autoStart: playing });
+  const autoplay = useAutoplay(STEPS.length, {
+    every: (step) => STEPS[step]!.ms,
+    autoStart: playing ?? true,
+    stopOnInteraction: playing === undefined,
+  });
   const { step, active, setPlaying } = autoplay;
 
-  useEffect(() => setPlaying(playing), [playing, setPlaying]);
+  useEffect(() => {
+    if (playing !== undefined) setPlaying(playing);
+  }, [playing, setPlaying]);
 
   useEffect(() => {
     if (!active) return;

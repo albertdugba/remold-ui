@@ -117,10 +117,10 @@ export function ReturnDemo() {
     if (manual) {
       setManual(null);
       autoplay.setStep(0);
-      autoplay.setPlaying(true);
+      autoplay.play();
       return;
     }
-    autoplay.setPlaying(!autoplay.playing);
+    autoplay.toggleProps.onClick();
   }
 
   return (

@@ -4,7 +4,7 @@ import { ArrowDown02Icon, ArrowUp02Icon } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
 import { useId, useRef, type KeyboardEvent, type PointerEvent, type Ref } from "react";
 import { useMorphPath } from "./use-morph-path";
 import { Odometer } from "./odometer";
@@ -111,8 +111,8 @@ export interface RevenueCardProps {
 }
 
 const PALETTE = [
-  "[--rv-surface:#ffffff] [--rv-field:#f4f4f5] [--rv-line:rgb(24_24_27/0.08)] [--rv-ink:#18181b] [--rv-muted:#71717a] [--rv-quiet:#a1a1aa]",
-  "[--rv-up:#059669] [--rv-down:#dc2626] [--rv-chart:#4f46e5]",
+  "[--rv-surface:#ffffff] [--rv-field:#f4f4f5] [--rv-line:rgb(24_24_27/0.08)] [--rv-ink:#18181b] [--rv-muted:#6c6c75] [--rv-quiet:#a1a1aa]",
+  "[--rv-up:#047857] [--rv-down:#dc2626] [--rv-chart:#4f46e5]",
   "dark:[--rv-surface:#1f1f23] dark:[--rv-field:#2a2a2f] dark:[--rv-line:rgb(255_255_255/0.08)] dark:[--rv-ink:#fafafa] dark:[--rv-muted:#a1a1aa] dark:[--rv-quiet:#71717a]",
   "dark:[--rv-up:#34d399] dark:[--rv-down:#f87171] dark:[--rv-chart:#818cf8]",
 ].join(" ");
@@ -142,6 +142,11 @@ export function RevenueCard({
   const change = (amount - series.values[0]!) / series.values[0]!;
   const up = change >= 0;
   const [x, y] = pts[at]!;
+  const percent = Math.abs(change * 100).toFixed(1);
+  const reading =
+    view.hover === null
+      ? `Today, ${money(amount)}, ${up ? "up" : "down"} ${percent} percent over ${series.label}`
+      : `${dateOf(series, at)}, ${money(amount)}, ${series.signups[at]} new customers`;
 
   const scrub = (event: PointerEvent<HTMLDivElement>) => {
     const box = chartRef.current!.getBoundingClientRect();
@@ -151,154 +156,165 @@ export function RevenueCard({
   };
 
   const onKey = (event: KeyboardEvent) => {
-    const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
-    if (!step) return;
+    const { key } = event;
+    const step = key === "ArrowRight" || key === "ArrowUp" ? 1 : key === "ArrowLeft" || key === "ArrowDown" ? -1 : 0;
+    if (!step && key !== "Home" && key !== "End") return;
     event.preventDefault();
     setView((current) => ({
       ...current,
-      hover: Math.min(last, Math.max(0, (current.hover ?? last) + step)),
+      hover:
+        key === "Home" ? 0 : key === "End" ? last : Math.min(last, Math.max(0, (current.hover ?? last) + step)),
     }));
   };
 
   return (
-    <section
-      ref={ref}
-      className={`not-prose grid w-[min(100%,420px)] rounded-[22px] bg-(--rv-surface) px-[18px] pt-[18px] pb-4 font-sans text-(--rv-ink) ${PALETTE}`}
-      aria-label="Monthly recurring revenue"
-    >
-      <header className="flex items-center justify-between gap-2.5">
-        <span className="text-[13px] font-medium text-(--rv-muted)">Monthly recurring revenue</span>
-        <LayoutGroup id={id}>
-          <ToggleGroup
-            className="flex rounded-[9px] bg-(--rv-field) p-[3px]"
-            value={[view.range]}
-            onValueChange={(values) =>
-              values.length && setView(() => ({ range: values[0] as Range, hover: null }))
-            }
-            aria-label="Range"
-          >
-            {RANGES.map((option) => (
-              <Toggle
-                key={option}
-                value={option}
-                className={`relative h-6 cursor-pointer rounded-[7px] border-0 bg-transparent px-[9px] text-[11.5px] font-semibold text-(--rv-muted) transition-colors duration-200 data-pressed:text-(--rv-ink) ${FOCUS}`}
-              >
-                {option === view.range && (
-                  <motion.span
-                    layoutId="range"
-                    className="absolute inset-0 rounded-[inherit] bg-(--rv-surface) shadow-[0_1px_2px_rgb(0_0_0/0.1)]"
-                    transition={FOLLOW}
-                  />
-                )}
-                <span className="relative">{option.toUpperCase()}</span>
-              </Toggle>
-            ))}
-          </ToggleGroup>
-        </LayoutGroup>
-      </header>
-
-      <div className="mt-2.5 flex items-center gap-2.5">
-        <Odometer value={money(amount)} className="text-[34px] font-bold tracking-[-0.03em]" />
-        <span
-          data-down={up ? undefined : ""}
-          className="inline-flex h-6 items-center gap-[3px] rounded-full bg-[color-mix(in_oklab,var(--rv-up)_13%,transparent)] pr-2 pl-1.5 text-[12.5px] font-bold text-(--rv-up) transition-colors duration-300 data-down:bg-[color-mix(in_oklab,var(--rv-down)_12%,transparent)] data-down:text-(--rv-down) [&_svg]:size-[13px]"
-        >
-          <Remold.Icon
-            icon={<HugeiconsIcon icon={up ? ArrowUp02Icon : ArrowDown02Icon} />}
-            strokeWidth={2.6}
-          />
-          <Odometer value={`${Math.abs(change * 100).toFixed(1)}%`} />
-        </span>
-      </div>
-      <p className="m-0 mt-0.5 grid min-h-5 text-[12.5px] text-(--rv-muted)">
-        <AnimatePresence initial={false} mode="popLayout">
-          <motion.span
-            key={view.hover === null ? `vs-${view.range}` : `on-${at}`}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15 }}
-          >
-            {view.hover === null
-              ? `vs ${series.label} ago`
-              : `${dateOf(series, at)} · ${series.signups[at]} new customers`}
-          </motion.span>
-        </AnimatePresence>
-      </p>
-
-      <div
-        ref={chartRef}
-        className={`relative mt-3 h-32 cursor-crosshair touch-none [--rv-tone:var(--rv-chart)] data-down:[--rv-tone:var(--rv-down)] [&_svg]:block [&_svg]:size-full [&_svg]:overflow-visible ${FOCUS}`}
-        role="img"
-        tabIndex={0}
-        aria-label={`Revenue over ${series.label}, ${up ? "up" : "down"} ${Math.abs(change * 100).toFixed(1)} percent`}
-        onPointerMove={scrub}
-        onPointerDown={scrub}
-        onPointerLeave={() => view.hover !== null && setView((current) => ({ ...current, hover: null }))}
-        onKeyDown={onKey}
-        onBlur={() => view.hover !== null && setView((current) => ({ ...current, hover: null }))}
-        data-down={up ? undefined : ""}
+    <MotionConfig reducedMotion="user">
+      <section
+        ref={ref}
+        className={`not-prose grid w-[min(100%,420px)] rounded-[22px] bg-(--rv-surface) px-[18px] pt-[18px] pb-4 font-sans text-(--rv-ink) ${PALETTE}`}
+        aria-label="Monthly recurring revenue"
       >
-        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <linearGradient id={`${id}-fill`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" className="[stop-color:var(--rv-tone)] [stop-opacity:0.22] [transition:stop-color_0.4s]" />
-              <stop offset="100%" className="[stop-color:var(--rv-tone)] [stop-opacity:0]" />
-            </linearGradient>
-          </defs>
-          <motion.path d={areaPath} fill={`url(#${id}-fill)`} />
-          <motion.path
-            d={linePath}
-            className="fill-none stroke-(--rv-tone) stroke-2 [stroke-linecap:round] [vector-effect:non-scaling-stroke] [transition:stroke_0.4s]"
-          />
-        </svg>
-
-        <AnimatePresence>
-          {view.hover !== null && (
-            <motion.div
-              key="scrub"
-              className="pointer-events-none absolute inset-y-0 w-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, left: `${(x / W) * 100}%` }}
-              exit={{ opacity: 0 }}
-              transition={FOLLOW}
+        <header className="flex items-center justify-between gap-2.5">
+          <span className="text-[13px] font-medium text-(--rv-muted)">Monthly recurring revenue</span>
+          <LayoutGroup id={id}>
+            <ToggleGroup
+              className="flex rounded-[9px] bg-(--rv-field) p-[3px]"
+              value={[view.range]}
+              onValueChange={(values) =>
+                values.length && setView(() => ({ range: values[0] as Range, hover: null }))
+              }
+              aria-label="Range"
             >
-              <span className="absolute inset-y-0 -left-[0.5px] w-px bg-[linear-gradient(to_bottom,transparent,var(--rv-quiet)_20%,var(--rv-quiet)_80%,transparent)] opacity-60" />
-              <motion.span
-                className="absolute -left-1.5 -mt-1.5 size-3 rounded-full bg-(--rv-surface) shadow-[0_0_0_3px_var(--rv-tone),0_2px_6px_rgb(0_0_0/0.2)]"
-                animate={{ top: `${(y / H) * 100}%` }}
-                transition={FOLLOW}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      <div className="mt-2 flex justify-between text-[11px] text-(--rv-quiet)" aria-hidden="true">
-        <span>{dateOf(series, 0)}</span>
-        <span>Today</span>
-      </div>
+              {RANGES.map((option) => (
+                <Toggle
+                  key={option}
+                  value={option}
+                  className={`relative h-6 cursor-pointer rounded-[7px] border-0 bg-transparent px-[9px] text-[11.5px] font-semibold text-(--rv-muted) transition-colors duration-200 data-pressed:text-(--rv-ink) ${FOCUS}`}
+                >
+                  {option === view.range && (
+                    <motion.span
+                      layoutId="range"
+                      className="absolute inset-0 rounded-[inherit] bg-(--rv-surface) shadow-[0_1px_2px_rgb(0_0_0/0.1)]"
+                      transition={FOLLOW}
+                    />
+                  )}
+                  <span className="relative">{option.toUpperCase()}</span>
+                </Toggle>
+              ))}
+            </ToggleGroup>
+          </LayoutGroup>
+        </header>
 
-      <dl className="m-0 mt-3.5 grid grid-cols-3 border-t border-solid border-(--rv-line) pt-3 [&>div]:grid [&>div]:gap-[3px] [&>div+div]:border-l [&>div+div]:border-solid [&>div+div]:border-(--rv-line) [&>div+div]:pl-3 [&_dt]:text-[11.5px] [&_dt]:text-(--rv-muted)">
-        <div>
-          <dt>New MRR</dt>
-          <dd className={`${FIGURE} text-(--rv-up)`}>
-            <Odometer value={`+${money(series.stats.added)}`} />
-          </dd>
+        <div className="mt-2.5 flex items-center gap-2.5">
+          <Odometer value={money(amount)} className="text-[34px] font-bold tracking-[-0.03em]" />
+          <span
+            data-down={up ? undefined : ""}
+            className="inline-flex h-6 items-center gap-[3px] rounded-full bg-[color-mix(in_oklab,var(--rv-up)_13%,transparent)] pr-2 pl-1.5 text-[12.5px] font-bold text-(--rv-up) transition-colors duration-300 data-down:bg-[color-mix(in_oklab,var(--rv-down)_12%,transparent)] data-down:text-(--rv-down) [&_svg]:size-[13px]"
+          >
+            <Remold.Icon
+              icon={<HugeiconsIcon icon={up ? ArrowUp02Icon : ArrowDown02Icon} />}
+              strokeWidth={2.6}
+              aria-hidden="true"
+            />
+            <span className="sr-only">{up ? "Up " : "Down "}</span>
+            <Odometer value={`${percent}%`} />
+          </span>
         </div>
-        <div>
-          <dt>Churned</dt>
-          <dd className={`${FIGURE} text-(--rv-down)`}>
-            <Odometer value={`−${money(series.stats.churned)}`} />
-          </dd>
+        <p className="m-0 mt-0.5 grid min-h-5 text-[12.5px] text-(--rv-muted)">
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.span
+              key={view.hover === null ? `vs-${view.range}` : `on-${at}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.15 }}
+            >
+              {view.hover === null
+                ? `vs ${series.label} ago`
+                : `${dateOf(series, at)} · ${series.signups[at]} new customers`}
+            </motion.span>
+          </AnimatePresence>
+        </p>
+
+        <div
+          ref={chartRef}
+          className={`relative mt-3 h-32 cursor-crosshair touch-none [--rv-tone:var(--rv-chart)] data-down:[--rv-tone:var(--rv-down)] [&_svg]:block [&_svg]:size-full [&_svg]:overflow-visible ${FOCUS}`}
+          role="slider"
+          tabIndex={0}
+          aria-label={`Revenue over ${series.label}`}
+          aria-orientation="horizontal"
+          aria-valuemin={0}
+          aria-valuemax={last}
+          aria-valuenow={at}
+          aria-valuetext={reading}
+          onPointerMove={scrub}
+          onPointerDown={scrub}
+          onPointerLeave={() => view.hover !== null && setView((current) => ({ ...current, hover: null }))}
+          onKeyDown={onKey}
+          onBlur={() => view.hover !== null && setView((current) => ({ ...current, hover: null }))}
+          data-down={up ? undefined : ""}
+        >
+          <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id={`${id}-fill`} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" className="[stop-color:var(--rv-tone)] [stop-opacity:0.22] [transition:stop-color_0.4s]" />
+                <stop offset="100%" className="[stop-color:var(--rv-tone)] [stop-opacity:0]" />
+              </linearGradient>
+            </defs>
+            <motion.path d={areaPath} fill={`url(#${id}-fill)`} />
+            <motion.path
+              d={linePath}
+              className="fill-none stroke-(--rv-tone) stroke-2 [stroke-linecap:round] [vector-effect:non-scaling-stroke] [transition:stroke_0.4s]"
+            />
+          </svg>
+
+          <AnimatePresence>
+            {view.hover !== null && (
+              <motion.div
+                key="scrub"
+                className="pointer-events-none absolute inset-y-0 w-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, left: `${(x / W) * 100}%` }}
+                exit={{ opacity: 0 }}
+                transition={FOLLOW}
+              >
+                <span className="absolute inset-y-0 -left-[0.5px] w-px bg-[linear-gradient(to_bottom,transparent,var(--rv-quiet)_20%,var(--rv-quiet)_80%,transparent)] opacity-60" />
+                <motion.span
+                  className="absolute -left-1.5 -mt-1.5 size-3 rounded-full bg-(--rv-surface) shadow-[0_0_0_3px_var(--rv-tone),0_2px_6px_rgb(0_0_0/0.2)]"
+                  animate={{ top: `${(y / H) * 100}%` }}
+                  transition={FOLLOW}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <div>
-          <dt>Customers</dt>
-          <dd className={`${FIGURE} text-(--rv-ink)`}>
-            <Odometer value={series.stats.customers.toLocaleString("en-US")} />
-          </dd>
+        <div className="mt-2 flex justify-between text-[11px] text-(--rv-muted)" aria-hidden="true">
+          <span>{dateOf(series, 0)}</span>
+          <span>Today</span>
         </div>
-      </dl>
-    </section>
+
+        <dl className="m-0 mt-3.5 grid grid-cols-3 border-t border-solid border-(--rv-line) pt-3 [&>div]:grid [&>div]:gap-[3px] [&>div+div]:border-l [&>div+div]:border-solid [&>div+div]:border-(--rv-line) [&>div+div]:pl-3 [&_dt]:text-[11.5px] [&_dt]:text-(--rv-muted)">
+          <div>
+            <dt>New MRR</dt>
+            <dd className={`${FIGURE} text-(--rv-up)`}>
+              <Odometer value={`+${money(series.stats.added)}`} />
+            </dd>
+          </div>
+          <div>
+            <dt>Churned</dt>
+            <dd className={`${FIGURE} text-(--rv-down)`}>
+              <Odometer value={`−${money(series.stats.churned)}`} />
+            </dd>
+          </div>
+          <div>
+            <dt>Customers</dt>
+            <dd className={`${FIGURE} text-(--rv-ink)`}>
+              <Odometer value={series.stats.customers.toLocaleString("en-US")} />
+            </dd>
+          </div>
+        </dl>
+      </section>
+    </MotionConfig>
   );
 }
 

@@ -70,7 +70,7 @@ export function UnitChart({ value, defaultValue = "plan", onValueChange, ref }: 
     <MotionConfig reducedMotion="user">
       <section
         ref={ref}
-        className="not-prose grid w-[min(100%,440px)] gap-5 rounded-3xl bg-(--uc-surface) p-7 font-sans text-(--uc-ink) [--uc-free:#a5b4fc] [--uc-ink:#18181b] [--uc-muted:#71717a] [--uc-pro:#4f46e5] [--uc-soft:#f4f4f5] [--uc-surface:#ffffff] [--uc-team:#db2777] dark:[--uc-free:#4c4f8f] dark:[--uc-ink:#fafafa] dark:[--uc-muted:#a1a1aa] dark:[--uc-pro:#818cf8] dark:[--uc-soft:#27272a] dark:[--uc-surface:#1c1c1f] dark:[--uc-team:#f472b6]"
+        className="not-prose grid w-[min(100%,440px)] gap-5 rounded-3xl bg-(--uc-surface) p-7 font-sans text-(--uc-ink) [--uc-free:#7a85f5] [--uc-ink:#18181b] [--uc-muted:#6c6c75] [--uc-pro:#4f46e5] [--uc-soft:#f4f4f5] [--uc-surface:#ffffff] [--uc-team:#db2777] dark:[--uc-free:#4c4f8f] dark:[--uc-ink:#fafafa] dark:[--uc-muted:#a1a1aa] dark:[--uc-pro:#818cf8] dark:[--uc-soft:#27272a] dark:[--uc-surface:#1c1c1f] dark:[--uc-team:#f472b6]"
         aria-label="Customers"
       >
         <header className="flex items-start justify-between gap-4">

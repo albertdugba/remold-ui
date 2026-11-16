@@ -8,6 +8,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Copy01Icon, Link01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useMeasuredSize } from "./use-measured-size";
 import { Frame } from "./frame";
 import { useScript } from "./use-script";
@@ -80,7 +81,7 @@ const FOCUS =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 dark:focus-visible:outline-zinc-50";
 
 const FACE =
-  "grid size-8 place-items-center rounded-full text-[10.5px] font-semibold tracking-[0.02em] shadow-[0_0_0_2px_#ffffff] outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:shadow-[0_0_0_2px_#232327] dark:focus-visible:ring-zinc-50";
+  "grid size-8 place-items-center rounded-full border-0 p-0 text-[10.5px] font-semibold tracking-[0.02em] shadow-[0_0_0_2px_#ffffff] outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:shadow-[0_0_0_2px_#232327] dark:focus-visible:ring-zinc-50";
 
 const TOOLTIP = [
   "origin-(--transform-origin) rounded-md bg-zinc-900 px-2 py-1 font-sans text-[12px] font-medium whitespace-nowrap text-white",
@@ -96,11 +97,12 @@ const ACCESS_OPTION = [
 
 const COPY_BUTTON = [
   "flex h-9 cursor-pointer items-center gap-1.5 rounded-full bg-zinc-900 pr-4 pl-3.5 text-[13px] font-medium whitespace-nowrap text-white",
-  "transition-colors duration-200 data-[copied]:bg-green-600 dark:bg-zinc-50 dark:text-[#232327] dark:data-[copied]:bg-green-500",
+  "transition-colors duration-200 data-[copied]:bg-green-700 dark:bg-zinc-50 dark:text-[#232327] dark:data-[copied]:bg-green-500",
   FOCUS,
 ].join(" ");
 
-const SHARE_BUTTON = `flex h-12 cursor-pointer items-center gap-2 rounded-full pr-5 pl-3 text-[14px] font-medium whitespace-nowrap text-zinc-800 dark:text-zinc-100 ${FOCUS}`;
+const SHARE_BUTTON =
+  "flex h-12 cursor-pointer items-center gap-2 rounded-full pr-5 pl-3 text-[14px] font-medium whitespace-nowrap text-zinc-800 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-900 dark:text-zinc-100 dark:focus-visible:outline-zinc-50";
 
 function Faces({ tight }: { tight: boolean }) {
   return (
@@ -117,9 +119,9 @@ function Faces({ tight }: { tight: boolean }) {
         >
           <Tooltip.Root>
             <Tooltip.Trigger
-              render={<span tabIndex={0} />}
+              render={<button type="button" />}
               className={`${FACE} ${person.face}`}
-              aria-label={`${person.name}, ${person.role.toLowerCase()}`}
+              aria-label={`${person.initials}: ${person.name}, ${person.role.toLowerCase()}`}
             >
               {person.initials}
             </Tooltip.Trigger>
@@ -172,6 +174,7 @@ function CopyButton({ copied, onCopy }: { copied: boolean; onCopy: () => void })
     <Button
       className={COPY_BUTTON}
       data-copied={copied || undefined}
+      data-share-copy=""
       onClick={onCopy}
       render={<motion.button {...part(0.14)} whileTap={{ scale: 0.95 }} />}
     >
@@ -199,6 +202,7 @@ function ShareButton({
       ref={ref}
       className={SHARE_BUTTON}
       aria-expanded="false"
+      data-share-open=""
       onClick={onShare}
       render={<motion.button {...part(0.06)} whileTap={{ scale: 0.97 }} />}
     >
@@ -218,6 +222,11 @@ export function ShareLinkDemo({ framed = true, playing }: { framed?: boolean; pl
   const pill = useRef<HTMLDivElement>(null);
   const [inner, innerSize] = useMeasuredSize<HTMLDivElement>();
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [swaps, setSwaps] = useState(0);
+
+  useFocusAfterChange(pill, swaps, (row) =>
+    row.querySelector<HTMLElement>(open ? "[data-share-copy]" : "[data-share-open]"),
+  );
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -255,7 +264,7 @@ export function ShareLinkDemo({ framed = true, playing }: { framed?: boolean; pl
     later(COPIED_FOR + NOTICE_FOR, () => setNotice(false));
   };
 
-  useScript(pill, playing, [
+  const scripted = useScript(pill, playing, [
     [1300, share],
     [800, () => setAccess("edit")],
     [700, copy],
@@ -277,7 +286,11 @@ export function ShareLinkDemo({ framed = true, playing }: { framed?: boolean; pl
             <div ref={inner} className="relative flex h-full w-max items-center">
               <Faces tight={open} />
 
-              <AnimatePresence mode="popLayout" initial={false}>
+              <AnimatePresence
+                mode="popLayout"
+                initial={false}
+                onExitComplete={() => setSwaps((count) => count + 1)}
+              >
                 {open ? (
                   <motion.div key="open" className="flex h-full items-center gap-1.5 pr-1.5 pl-3">
                     <motion.span
@@ -307,7 +320,7 @@ export function ShareLinkDemo({ framed = true, playing }: { framed?: boolean; pl
             </div>
           </motion.div>
 
-          <p className="sr-only" aria-live="polite">
+          <p className="sr-only" aria-live={scripted ? "off" : "polite"}>
             {notice ? `Link copied. Anyone with it ${access === "edit" ? "can edit" : "can view"}.` : ""}
           </p>
         </section>

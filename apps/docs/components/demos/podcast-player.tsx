@@ -9,9 +9,10 @@ import {
   PlayIcon,
 } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
-import { animate, AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
+import { animate, AnimatePresence, LayoutGroup, MotionConfig, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { formatClock, usePodcastPlayer, type Episode } from "./podcast-player.model";
+import { useFocusAfterChange } from "./use-focus-after-change";
 
 const BARS = 56;
 
@@ -164,6 +165,7 @@ function PlayButton({
       whileTap={{ scale: 0.94 }}
       onClick={onClick}
       aria-label={playing ? "Pause" : "Play"}
+      data-podcast-play=""
       className={className}
     >
       <Remold.Icon
@@ -198,14 +200,28 @@ export function PodcastPlayer({
     time,
   } = usePodcastPlayer({ episodes: given, source, scene });
 
+  const root = useRef<HTMLDivElement>(null);
+  const openedByPlay = useRef(false);
+
+  useFocusAfterChange(root, open, (player) =>
+    player.querySelector<HTMLElement>(
+      open ? (openedByPlay.current ? "[data-podcast-play]" : "[data-podcast-close]") : "[data-podcast-open]",
+    ),
+  );
+
   const focus =
     "outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-100 dark:focus-visible:ring-offset-zinc-900";
+  const insetFocus =
+    "outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-100";
 
   const playButton = (opens = false) => (
     <PlayButton
       playing={playing}
       onClick={() => {
-        if (opens && !playing) setOpen(true);
+        if (opens && !playing) {
+          openedByPlay.current = true;
+          setOpen(true);
+        }
         setPlaying((current) => !current);
       }}
       className={`relative z-10 grid shrink-0 place-items-center rounded-full bg-zinc-900 text-white transition-colors dark:bg-white dark:text-zinc-900 size-[52px] ${focus}`}
@@ -215,6 +231,7 @@ export function PodcastPlayer({
 
   return (
     <div
+      ref={root}
       data-keep-frame
       className="not-prose relative w-full overflow-hidden rounded-[28px] bg-zinc-100 font-sans text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100"
       style={{ height }}
@@ -233,171 +250,179 @@ export function PodcastPlayer({
         <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/55 to-white/80 dark:from-zinc-950/25 dark:via-zinc-950/55 dark:to-zinc-950/85" />
       </div>
 
-      <LayoutGroup id="podcast-player">
-        <motion.div
-          layout
-          transition={SPRING}
-          className="absolute inset-0 flex flex-col items-center justify-center p-4"
-        >
-          <AnimatePresence initial={false} mode="popLayout">
-            {open ? (
-              <motion.section
-                layout
-                transition={SPRING}
-                aria-label={`Now playing: ${episode.title}`}
-                className={`flex w-full max-w-[440px] flex-col rounded-[26px] bg-white/80 backdrop-blur-xl dark:bg-zinc-800/75 ${compact ? "h-[380px] max-h-full px-5 pt-2 pb-4" : "h-full px-6 pt-3 pb-7"}`}
-              >
-                <div className="flex items-center justify-between">
+      <MotionConfig reducedMotion="user">
+        <LayoutGroup id="podcast-player">
+          <motion.div
+            layout
+            transition={SPRING}
+            className="absolute inset-0 flex flex-col items-center justify-center p-4"
+          >
+            <AnimatePresence initial={false} mode="popLayout">
+              {open ? (
+                <motion.section
+                  layout
+                  transition={SPRING}
+                  aria-label={`Now playing: ${episode.title}`}
+                  className={`flex w-full max-w-[440px] flex-col rounded-[26px] bg-white/80 backdrop-blur-xl dark:bg-zinc-800/75 ${compact ? "h-[380px] max-h-full px-5 pt-2 pb-4" : "h-full px-6 pt-3 pb-7"}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      aria-label="Close player"
+                      data-podcast-close=""
+                      className={`grid size-9 place-items-center rounded-full text-zinc-500 hover:bg-black/5 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white ${focus}`}
+                    >
+                      <HugeiconsIcon icon={ArrowDown01Icon} className="size-5" aria-hidden="true" />
+                    </button>
+                    <span className="text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
+                      Now playing
+                    </span>
+                    <span className="size-9" aria-hidden="true" />
+                  </div>
+
+                  <div
+                    className={`flex min-h-0 flex-1 items-center justify-center ${compact ? "py-2" : "py-4"}`}
+                  >
+                    <motion.div
+                      layoutId="podcast-art"
+                      transition={SPRING}
+                      className={`aspect-square h-full max-w-full overflow-hidden rounded-[20px] ${compact ? "max-h-[138px]" : "max-h-[260px]"}`}
+                    >
+                      <Art episode={episode} className="size-full" />
+                    </motion.div>
+                  </div>
+
+                  <div className="min-w-0">
+                    <motion.h4
+                      layoutId="podcast-title"
+                      transition={SPRING}
+                      className={`m-0 line-clamp-2 leading-snug font-semibold tracking-[-0.015em] ${compact ? "text-[17px]" : "text-[19px]"}`}
+                    >
+                      {episode.title}
+                    </motion.h4>
+                    <motion.p
+                      layoutId="podcast-show"
+                      transition={SPRING}
+                      className={`m-0 text-zinc-500 dark:text-zinc-400 ${compact ? "mt-0.5 text-[12.5px]" : "mt-1 text-[14px]"}`}
+                    >
+                      {episode.show}
+                    </motion.p>
+                  </div>
+
+                  <div className={compact ? "mt-3" : "mt-5"}>
+                    <Waves playing={playing} progress={progress} compact={compact} />
+                    <input
+                      type="range"
+                      min={0}
+                      max={Math.max(1, episode.seconds)}
+                      value={Math.min(time, episode.seconds)}
+                      onChange={(event) => seek(Number(event.target.value))}
+                      aria-label="Position"
+                      aria-valuetext={`${formatClock(Math.min(time, episode.seconds))} of ${formatClock(episode.seconds)}`}
+                      style={{ "--p": `${progress * 100}%` } as CSSProperties}
+                      className="h-4 w-full cursor-pointer appearance-none bg-transparent [&::-webkit-slider-runnable-track]:h-[4px] [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#18181b_var(--p),rgb(24_24_27/0.14)_var(--p))] dark:[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#fafafa_var(--p),rgb(250_250_250/0.2)_var(--p))] [&::-webkit-slider-thumb]:-mt-[4px] [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-900 dark:[&::-webkit-slider-thumb]:bg-white [&::-moz-range-progress]:h-[4px] [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-zinc-900 dark:[&::-moz-range-progress]:bg-white [&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-zinc-900 dark:[&::-moz-range-thumb]:bg-white [&::-moz-range-track]:h-[4px] [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-zinc-900/15 dark:[&::-moz-range-track]:bg-white/20"
+                    />
+                    <div className="mt-1 flex justify-between text-[12px] text-zinc-500 tabular-nums dark:text-zinc-400">
+                      <span>{formatClock(time)}</span>
+                      <span>{`−${formatClock(Math.max(0, episode.seconds - time))}`}</span>
+                    </div>
+                  </div>
+
+                  <div className={`flex items-center justify-center ${compact ? "mt-3 gap-6" : "mt-4 gap-9"}`}>
+                    <button
+                      type="button"
+                      onClick={() => seek(time - 15)}
+                      aria-label="Back 15 seconds"
+                      className={`relative grid size-12 place-items-center rounded-full text-zinc-900 hover:bg-black/5 dark:text-zinc-100 dark:hover:bg-white/10 ${focus}`}
+                    >
+                      <HugeiconsIcon
+                        icon={GoBackward15SecIcon}
+                        className="size-[30px]"
+                        strokeWidth={1.4}
+                        aria-hidden="true"
+                      />
+                    </button>
+                    {playButton()}
+                    <button
+                      type="button"
+                      onClick={() => seek(time + 30)}
+                      aria-label="Forward 30 seconds"
+                      className={`relative grid size-12 place-items-center rounded-full text-zinc-900 hover:bg-black/5 dark:text-zinc-100 dark:hover:bg-white/10 ${focus}`}
+                    >
+                      <HugeiconsIcon
+                        icon={GoForward30SecIcon}
+                        className="size-[30px]"
+                        strokeWidth={1.4}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
+                </motion.section>
+              ) : (
+                <motion.section
+                  layout
+                  transition={SPRING}
+                  aria-label={`Now playing: ${episode.title}`}
+                  className="relative flex w-full max-w-[440px] items-center gap-3 overflow-hidden rounded-[20px] bg-white/80 py-2.5 pr-3 pl-2.5 backdrop-blur-xl dark:bg-zinc-800/75"
+                >
                   <button
                     type="button"
-                    onClick={() => setOpen(false)}
-                    aria-label="Close player"
-                    className={`grid size-9 place-items-center rounded-full text-zinc-500 hover:bg-black/5 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white ${focus}`}
-                  >
-                    <HugeiconsIcon icon={ArrowDown01Icon} className="size-5" aria-hidden="true" />
-                  </button>
-                  <span className="text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
-                    Now playing
-                  </span>
-                  <span className="size-9" aria-hidden="true" />
-                </div>
-
-                <div
-                  className={`flex min-h-0 flex-1 items-center justify-center ${compact ? "py-2" : "py-4"}`}
-                >
+                    onClick={() => {
+                      openedByPlay.current = false;
+                      setOpen(true);
+                    }}
+                    aria-label="Open player"
+                    data-podcast-open=""
+                    className={`absolute inset-0 rounded-[20px] ${insetFocus}`}
+                  />
                   <motion.div
                     layoutId="podcast-art"
                     transition={SPRING}
-                    className={`aspect-square h-full max-w-full overflow-hidden rounded-[20px] ${compact ? "max-h-[138px]" : "max-h-[260px]"}`}
+                    className="size-12 shrink-0 overflow-hidden rounded-[12px]"
                   >
                     <Art episode={episode} className="size-full" />
                   </motion.div>
-                </div>
-
-                <div className="min-w-0">
-                  <motion.h4
-                    layoutId="podcast-title"
-                    transition={SPRING}
-                    className={`m-0 line-clamp-2 leading-snug font-semibold tracking-[-0.015em] ${compact ? "text-[17px]" : "text-[19px]"}`}
-                  >
-                    {episode.title}
-                  </motion.h4>
-                  <motion.p
-                    layoutId="podcast-show"
-                    transition={SPRING}
-                    className={`m-0 text-zinc-500 dark:text-zinc-400 ${compact ? "mt-0.5 text-[12.5px]" : "mt-1 text-[14px]"}`}
-                  >
-                    {episode.show}
-                  </motion.p>
-                </div>
-
-                <div className={compact ? "mt-3" : "mt-5"}>
-                  <Waves playing={playing} progress={progress} compact={compact} />
-                  <input
-                    type="range"
-                    min={0}
-                    max={Math.max(1, episode.seconds)}
-                    value={Math.min(time, episode.seconds)}
-                    onChange={(event) => seek(Number(event.target.value))}
-                    aria-label="Position"
-                    style={{ "--p": `${progress * 100}%` } as CSSProperties}
-                    className="h-4 w-full cursor-pointer appearance-none bg-transparent [&::-webkit-slider-runnable-track]:h-[4px] [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#18181b_var(--p),rgb(24_24_27/0.14)_var(--p))] dark:[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,#fafafa_var(--p),rgb(250_250_250/0.2)_var(--p))] [&::-webkit-slider-thumb]:-mt-[4px] [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-900 dark:[&::-webkit-slider-thumb]:bg-white [&::-moz-range-progress]:h-[4px] [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-zinc-900 dark:[&::-moz-range-progress]:bg-white [&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-zinc-900 dark:[&::-moz-range-thumb]:bg-white [&::-moz-range-track]:h-[4px] [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-zinc-900/15 dark:[&::-moz-range-track]:bg-white/20"
-                  />
-                  <div className="mt-1 flex justify-between text-[12px] text-zinc-500 tabular-nums dark:text-zinc-400">
-                    <span>{formatClock(time)}</span>
-                    <span>{`−${formatClock(Math.max(0, episode.seconds - time))}`}</span>
+                  <div className="pointer-events-none min-w-0 flex-1">
+                    <motion.h4
+                      layoutId="podcast-title"
+                      transition={SPRING}
+                      className="m-0 flex items-center gap-2 text-[14px] leading-snug font-semibold"
+                    >
+                      <span className="truncate">{episode.title}</span>
+                      <AnimatePresence initial={false}>
+                        {playing && (
+                          <motion.span
+                            key="eq"
+                            className="inline-flex"
+                            initial={{ opacity: 0, scale: 0.6 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.6 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <Equalizer />
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.h4>
+                    <motion.p
+                      layoutId="podcast-show"
+                      transition={SPRING}
+                      className="m-0 truncate text-[12.5px] text-zinc-500 dark:text-zinc-400"
+                    >
+                      {episode.show}
+                    </motion.p>
                   </div>
-                </div>
-
-                <div className={`flex items-center justify-center ${compact ? "mt-3 gap-6" : "mt-4 gap-9"}`}>
-                  <button
-                    type="button"
-                    onClick={() => seek(time - 15)}
-                    aria-label="Back 15 seconds"
-                    className={`relative grid size-12 place-items-center rounded-full text-zinc-900 hover:bg-black/5 dark:text-zinc-100 dark:hover:bg-white/10 ${focus}`}
-                  >
-                    <HugeiconsIcon
-                      icon={GoBackward15SecIcon}
-                      className="size-[30px]"
-                      strokeWidth={1.4}
-                      aria-hidden="true"
-                    />
-                  </button>
-                  {playButton()}
-                  <button
-                    type="button"
-                    onClick={() => seek(time + 30)}
-                    aria-label="Forward 30 seconds"
-                    className={`relative grid size-12 place-items-center rounded-full text-zinc-900 hover:bg-black/5 dark:text-zinc-100 dark:hover:bg-white/10 ${focus}`}
-                  >
-                    <HugeiconsIcon
-                      icon={GoForward30SecIcon}
-                      className="size-[30px]"
-                      strokeWidth={1.4}
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
-              </motion.section>
-            ) : (
-              <motion.section
-                layout
-                transition={SPRING}
-                aria-label={`Now playing: ${episode.title}`}
-                className="relative flex w-full max-w-[440px] items-center gap-3 overflow-hidden rounded-[20px] bg-white/80 py-2.5 pr-3 pl-2.5 backdrop-blur-xl dark:bg-zinc-800/75"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpen(true)}
-                  aria-label="Open player"
-                  className={`absolute inset-0 rounded-[20px] ${focus}`}
-                />
-                <motion.div
-                  layoutId="podcast-art"
-                  transition={SPRING}
-                  className="size-12 shrink-0 overflow-hidden rounded-[12px]"
-                >
-                  <Art episode={episode} className="size-full" />
-                </motion.div>
-                <div className="pointer-events-none min-w-0 flex-1">
-                  <motion.h4
-                    layoutId="podcast-title"
-                    transition={SPRING}
-                    className="m-0 flex items-center gap-2 text-[14px] leading-snug font-semibold"
-                  >
-                    <span className="truncate">{episode.title}</span>
-                    <AnimatePresence initial={false}>
-                      {playing && (
-                        <motion.span
-                          key="eq"
-                          className="inline-flex"
-                          initial={{ opacity: 0, scale: 0.6 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.6 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Equalizer />
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </motion.h4>
-                  <motion.p
-                    layoutId="podcast-show"
-                    transition={SPRING}
-                    className="m-0 truncate text-[12.5px] text-zinc-500 dark:text-zinc-400"
-                  >
-                    {episode.show}
-                  </motion.p>
-                </div>
-                {playButton(true)}
-              </motion.section>
+                  {playButton(true)}
+                </motion.section>
+              )}
+            </AnimatePresence>
+            {credit && hasRemoteEpisodes && !given && !open && (
+              <div className="m-0 mt-3 flex justify-center text-[11px] text-zinc-500">{credit}</div>
             )}
-          </AnimatePresence>
-          {credit && hasRemoteEpisodes && !given && !open && (
-            <div className="m-0 mt-3 flex justify-center text-[11px] text-zinc-500">{credit}</div>
-          )}
-        </motion.div>
-      </LayoutGroup>
+          </motion.div>
+        </LayoutGroup>
+      </MotionConfig>
     </div>
   );
 }

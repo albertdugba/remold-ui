@@ -201,6 +201,14 @@ const PREVIEWS: Record<string, Preview> = {
     maxZoom: FORM_ZOOM,
   },
 
+  "sign-in": {
+    Component: load(() => import("./demos/sign-in").then((m) => m.SignInDemo)),
+    width: 420,
+    surface: true,
+    props: { preview: true },
+    maxZoom: FORM_ZOOM,
+  },
+
   "phone-input": {
     Component: load(() => import("./demos/phone-input").then((m) => m.PhoneInputDemo)),
     width: 380,

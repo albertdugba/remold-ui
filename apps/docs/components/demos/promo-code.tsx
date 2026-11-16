@@ -3,10 +3,11 @@
 import { Field } from "@base-ui/react/field";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, Loading03Icon, Ticket01Icon } from "@hugeicons/core-free-icons";
-import { AnimatePresence, MotionConfig, motion, useAnimate } from "motion/react";
+import { AnimatePresence, MotionConfig, motion, useAnimate, useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState, type Ref, type RefObject } from "react";
 import { Odometer } from "./odometer";
 import { FK_ERROR, FK_STAGE, FORM_KIT } from "./form-kit";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { typing, useScene } from "./use-scene";
 
 const CODES: Record<string, { off: number; label: string } | { expired: true }> = {
@@ -186,6 +187,7 @@ function AppliedChip({
         whileTap={{ scale: 0.88 }}
         className="size-7 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-inherit hover:bg-[color-mix(in_oklab,var(--fk-good)_16%,transparent)] focus-visible:-outline-offset-2! focus-visible:outline-current! [&_svg]:size-3.5"
         aria-label={`Remove ${code}`}
+        data-promo-remove=""
         onClick={onRemove}
       >
         <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.2} aria-hidden="true" />
@@ -225,6 +227,7 @@ function ApplyButton({
               icon={Loading03Icon}
               className="size-4 animate-spin motion-reduce:animate-none"
               strokeWidth={2.2}
+              role="img"
               aria-label="Checking"
             />
           ) : (
@@ -264,7 +267,7 @@ function CodeEntry({
           if (node && focusOnMount.current) node.focus({ preventScroll: true });
           focusOnMount.current = false;
         }}
-        className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-[14px] font-semibold tracking-[0.08em] text-(--fk-ink) outline-none placeholder:font-[450] placeholder:tracking-normal placeholder:text-(--fk-faint)"
+        className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-[14px] font-semibold tracking-[0.08em] text-(--fk-ink) outline-none placeholder:font-[450] placeholder:tracking-normal placeholder:text-(--fk-muted)"
         placeholder="Promo code"
         aria-label="Promo code"
         autoComplete="off"
@@ -300,9 +303,11 @@ function Total({ discount }: { discount: number }) {
       </span>
       <span className="inline-flex items-baseline gap-2">
         <s
+          aria-hidden={!saved}
           data-shown={saved || undefined}
           className="relative translate-x-1.5 text-[13px] font-[450] text-(--fk-muted) no-underline opacity-0 [transition:opacity_0.25s,translate_0.4s_cubic-bezier(0.32,0.72,0,1)] after:absolute after:inset-x-[-1px] after:top-[55%] after:h-[1.5px] after:origin-left after:scale-x-0 after:bg-current after:transition-[scale] after:duration-300 after:ease-[cubic-bezier(0.32,0.72,0,1)] after:content-[''] data-shown:translate-x-0 data-shown:opacity-100 data-shown:after:scale-x-100 data-shown:after:delay-180 motion-reduce:transition-none motion-reduce:after:transition-none"
         >
+          <span className="sr-only">Was </span>
           {money(SUBTOTAL + FEE)}
         </s>
         <b className="text-[26px] font-[650] tracking-[-0.025em]">
@@ -330,6 +335,9 @@ export function PromoCode({
   const [shaker, animate] = useAnimate<HTMLDivElement>();
   const [checking, setChecking] = useState(false);
   const [totalOn, setTotalOn] = useState(false);
+  const [status, setStatus] = useState("");
+  const [swaps, setSwaps] = useState(0);
+  const reduced = useReducedMotion();
   const refocus = useRef(false);
   const box = useRef<HTMLDivElement>(null);
   const chip = useRef<HTMLDivElement>(null);
@@ -352,20 +360,30 @@ export function PromoCode({
   }, [on, animate, shaker]);
 
   useEffect(() => {
-    if (error) void animate(shaker.current, { x: [0, -6, 5, -3, 1, 0] }, { duration: 0.36 });
-  }, [error, animate, shaker]);
+    if (error && !reduced) void animate(shaker.current, { x: [0, -6, 5, -3, 1, 0] }, { duration: 0.36 });
+  }, [error, reduced, animate, shaker]);
+
+  useFocusAfterChange(box, swaps, (field) => field.querySelector<HTMLElement>("[data-promo-remove]"));
 
   const apply = () => {
     const code = draft.trim();
     if (!code || checking) return;
 
     onErrorChange(null);
+    setStatus("");
     setChecking(true);
     setTimeout(() => {
       setChecking(false);
-      const problem = errorFor(code, CODES[code]);
-      if (problem) onErrorChange(problem);
-      else onAppliedChange(code);
+      const found = CODES[code];
+      const problem = errorFor(code, found);
+      if (problem) {
+        setStatus(problem);
+        onErrorChange(problem);
+      } else {
+        if (found && "off" in found)
+          setStatus(`${code} applied, ${found.label}. Total ${money(SUBTOTAL + FEE - SUBTOTAL * found.off)}.`);
+        onAppliedChange(code);
+      }
     }, CHECKING_FOR);
   };
 
@@ -376,6 +394,7 @@ export function PromoCode({
 
   const remove = () => {
     refocus.current = true;
+    setStatus(`${applied} removed. Total ${money(SUBTOTAL + FEE)}.`);
     onAppliedChange(null);
   };
 
@@ -395,7 +414,11 @@ export function PromoCode({
               data-tone={on ? "applied" : error ? "invalid" : undefined}
               className="group/box relative flex h-12 w-full items-center overflow-clip rounded-[14px] bg-(--fk-well) shadow-[inset_0_0_0_1px_transparent] transition-[background-color,box-shadow] duration-300 focus-within:bg-(--fk-surface) focus-within:shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,var(--fk-ink)_85%,transparent),0_0_0_4px_color-mix(in_oklab,var(--fk-ink)_7%,transparent)] data-[tone=applied]:bg-[color-mix(in_oklab,var(--fk-good)_12%,var(--fk-surface))]! data-[tone=applied]:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--fk-good)_30%,transparent)]! data-[tone=invalid]:bg-[color-mix(in_oklab,var(--fk-bad)_8%,var(--fk-surface))]! data-[tone=invalid]:shadow-none!"
             >
-              <AnimatePresence initial={false} mode="popLayout">
+              <AnimatePresence
+                initial={false}
+                mode="popLayout"
+                onExitComplete={() => setSwaps((count) => count + 1)}
+              >
                 {on ? (
                   <AppliedChip key="chip" ref={chip} code={applied} offer={offer} onRemove={remove} />
                 ) : (
@@ -430,6 +453,10 @@ export function PromoCode({
         </Field.Root>
 
         <Total discount={totalOn && on ? discount : 0} />
+
+        <p className="sr-only" role="status">
+          {status}
+        </p>
       </section>
     </MotionConfig>
   );

@@ -9,11 +9,13 @@ import {
   HelpCircleIcon,
   Video01Icon,
 } from "@hugeicons/core-free-icons";
+import { announce } from "@remold-ui/dom";
 import { Remold, useConnectorMotion } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
-import { motion } from "motion/react";
+import { MotionConfig, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useFocusAfterChange } from "./use-focus-after-change";
 
 type Kind = "video" | "reading" | "quiz";
 
@@ -146,8 +148,27 @@ function visibleRows(open: Set<string>, done: Set<string>, show: Show) {
   return rows;
 }
 
-const BUTTON =
-  "cursor-pointer border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--co-ink)";
+const ORDER = COURSE.flatMap((courseModule) => [courseModule.id, ...courseModule.lessons.map((lesson) => lesson.id)]);
+
+function tabStopFor(rows: Row[], focus: string, open: Set<string>) {
+  const visible = new Set(rows.map((row) => row.id));
+  if (visible.has(focus)) return focus;
+
+  const parent = COURSE.find((courseModule) => courseModule.lessons.some((lesson) => lesson.id === focus));
+  if (parent && visible.has(parent.id) && !open.has(parent.id)) return parent.id;
+
+  const at = ORDER.indexOf(focus);
+  return (
+    ORDER.slice(at + 1).find((id) => visible.has(id)) ??
+    ORDER.slice(0, Math.max(at, 0))
+      .reverse()
+      .find((id) => visible.has(id)) ??
+    rows[0]?.id
+  );
+}
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--co-ink)";
+const BUTTON = `cursor-pointer border-0 bg-transparent p-0 ${FOCUS}`;
 const ROW =
   "grid min-h-[38px] items-center gap-2.5 rounded-lg px-2.5 text-left hover:bg-(--co-subtle) @max-[620px]:gap-2 @max-[620px]:px-2";
 
@@ -158,10 +179,7 @@ function CourseHeader({ finished, total }: { finished: number; total: number }) 
         <p className="m-0 text-[12px] text-(--co-muted)">Course</p>
         <h4 className="m-0 mt-0.5 text-[17px] font-semibold tracking-[-0.01em]">Product Design Foundations</h4>
       </div>
-      <div
-        className="grid min-w-[180px] justify-items-end gap-1.5 @max-[620px]:w-[140px] @max-[620px]:min-w-0 @max-[420px]:hidden"
-        aria-label={`${finished} of ${total} lessons done`}
-      >
+      <div className="grid min-w-[180px] justify-items-end gap-1.5 @max-[620px]:w-[140px] @max-[620px]:min-w-0 @max-[420px]:hidden">
         <span className="text-[12.5px] text-(--co-muted) tabular-nums">{`${finished} of ${total} lessons`}</span>
         <span
           className="block h-1 w-[180px] overflow-hidden rounded-[2px] bg-(--co-subtle) @max-[620px]:w-[140px] @max-[620px]:min-w-0"
@@ -250,7 +268,7 @@ function ModuleRow({
       onKeyDown={onKeyDown}
     >
       <span
-        className="grid place-items-center text-(--co-faint) [&_svg]:size-3.5 [&_svg]:transition-[rotate] [&_svg]:duration-200 [&_svg]:ease-out [&_svg[data-open]]:rotate-90"
+        className="grid place-items-center text-(--co-faint) [&_svg]:size-3.5 [&_svg]:transition-[rotate] [&_svg]:duration-200 [&_svg]:ease-out motion-reduce:[&_svg]:transition-none [&_svg[data-open]]:rotate-90"
         aria-hidden="true"
       >
         <HugeiconsIcon
@@ -301,33 +319,40 @@ function LessonRow({
       transition={LAYOUT_SPRING}
       role="treeitem"
       aria-level={2}
-      aria-selected={focused}
+      aria-checked={done}
       data-next={next || undefined}
-      className={`group/lesson ${ROW} ml-[52px] grid-cols-[22px_minmax(0,1fr)_18px_52px] text-[13.5px] data-next:bg-(--co-subtle) @max-[620px]:grid-cols-[22px_minmax(0,1fr)_max-content] @max-[420px]:ml-12`}
+      data-co-row={lesson.id}
+      tabIndex={focused ? 0 : -1}
+      className={`group/lesson ${ROW} ${FOCUS} ml-[52px] grid-cols-[22px_minmax(0,1fr)_18px_52px] text-[13.5px] data-next:bg-(--co-subtle) @max-[620px]:grid-cols-[22px_minmax(0,1fr)_max-content] @max-[420px]:ml-12`}
+      onClick={(event) => {
+        if (event.target instanceof Element && event.target.closest("[data-co-toggle]")) onToggle();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === " " || event.key === "Enter") {
+          event.preventDefault();
+          onToggle();
+        } else onKeyDown(event);
+      }}
     >
-      <button
-        type="button"
-        className={`${BUTTON} grid size-[22px] place-items-center rounded-full text-(--co-faint) aria-pressed:text-(--co-done) [&_svg]:size-5`}
-        data-co-row={lesson.id}
-        tabIndex={focused ? 0 : -1}
-        aria-label={done ? `Mark "${lesson.title}" not done` : `Mark "${lesson.title}" done`}
-        aria-pressed={done}
+      <span
+        className="grid size-[22px] cursor-pointer place-items-center rounded-full text-(--co-muted) data-done:text-(--co-done) [&_svg]:size-5"
+        data-co-toggle=""
+        data-done={done || undefined}
         data-rm-anchor={lesson.id}
         data-rm-link={parent}
-        onClick={onToggle}
-        onKeyDown={onKeyDown}
       >
         <Remold.Icon
           icon={<HugeiconsIcon icon={done ? CheckmarkCircle01Icon : CircleIcon} />}
           strokeWidth={1.8}
           aria-hidden="true"
         />
-      </button>
-      <span className="truncate group-data-next/lesson:font-semibold [[aria-pressed=true]+&]:text-(--co-muted)">
+      </span>
+      <span className="truncate group-data-next/lesson:font-semibold [[data-done]+&]:text-(--co-muted)">
         {lesson.title}
       </span>
       <span
-        className="grid place-items-center text-(--co-faint) @max-[620px]:hidden [&_svg]:size-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round] [&_svg]:[stroke-width:1.6]"
+        className="grid place-items-center text-(--co-muted) @max-[620px]:hidden [&_svg]:size-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round] [&_svg]:[stroke-width:1.6]"
+        role="img"
         aria-label={lesson.kind}
       >
         <HugeiconsIcon icon={KindIcon} aria-hidden="true" />
@@ -338,6 +363,7 @@ function LessonRow({
 }
 
 export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
+  const root = useRef<HTMLDivElement>(null);
   const connectorRoot = useRef<HTMLDivElement>(null);
   const connectorMotion = useConnectorMotion(connectorRoot);
   const [open, setOpen] = useState<Set<string>>(() => new Set(["research", "interface"]));
@@ -358,8 +384,17 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
   const finished = lessons.filter((lesson) => done.has(lesson.id)).length;
   const rows = useMemo(() => visibleRows(open, done, show), [open, done, show]);
 
+  const tabStop = tabStopFor(rows, focus, open);
+
+  useFocusAfterChange(root, rows.map((row) => row.id).join("|"), (element) =>
+    tabStop ? element.querySelector<HTMLElement>(`[data-co-row="${CSS.escape(tabStop)}"]`) : null,
+  );
+
   const toggleOpen = (id: string) => setOpen((current) => withToggled(current, id));
-  const toggleDone = (id: string) => setDone((current) => withToggled(current, id));
+  const toggleDone = (id: string) => {
+    announce(`${finished + (done.has(id) ? -1 : 1)} of ${lessons.length} lessons done`);
+    setDone((current) => withToggled(current, id));
+  };
 
   const moveFocus = (id: string) => {
     setFocus(id);
@@ -382,53 +417,55 @@ export function CourseOutlineDemo({ scene }: { scene?: number } = {}) {
   };
 
   return (
-    <div className="co not-prose @container my-6 w-full overflow-hidden rounded-[14px] border border-solid border-(--co-border) bg-white font-sans text-(--co-text) [--co-border:#e7e7ea] [--co-done:#16a34a] [--co-faint:#a1a1aa] [--co-ink:#18181b] [--co-muted:#71717a] [--co-subtle:#f6f6f7] [--co-text:#18181b]">
-      <CourseHeader finished={finished} total={lessons.length} />
-      <ShowFilter show={show} upNext={upNext} onChange={setShow} />
+    <MotionConfig reducedMotion="user">
+      <div ref={root} className="co not-prose @container my-6 w-full overflow-hidden rounded-[14px] border border-solid border-(--co-border) bg-white font-sans text-(--co-text) [--co-border:#e7e7ea] [--co-done:#15803d] [--co-faint:#a1a1aa] [--co-ink:#18181b] [--co-muted:#6c6c75] [--co-subtle:#f6f6f7] [--co-text:#18181b]">
+        <CourseHeader finished={finished} total={lessons.length} />
+        <ShowFilter show={show} upNext={upNext} onChange={setShow} />
 
-      <Remold.Connectors ref={connectorRoot} className="min-h-[470px] px-2 pt-2 pb-3 @max-[620px]:px-1 [&_.rm-connector]:stroke-[#dcdce0] [&_.rm-connector]:[stroke-width:1.4]" radius={10} gap={3}>
-        <motion.div
-          layout
-          {...connectorMotion}
-          transition={LAYOUT_SPRING}
-          role="tree"
-          aria-label="Course outline"
-          className="grid"
-        >
-          {rows.map((row) =>
-            row.module ? (
-              <ModuleRow
-                key={row.id}
-                courseModule={row.module}
-                done={done}
-                open={open.has(row.id)}
-                focused={focus === row.id}
-                connectorMotion={connectorMotion}
-                onToggle={() => {
-                  setFocus(row.id);
-                  toggleOpen(row.id);
-                }}
-                onKeyDown={(event) => onKey(event, row)}
-              />
-            ) : (
-              <LessonRow
-                key={row.id}
-                lesson={row.lesson!}
-                parent={row.parent!}
-                done={done.has(row.id)}
-                next={upNext?.id === row.id}
-                focused={focus === row.id}
-                connectorMotion={connectorMotion}
-                onToggle={() => {
-                  setFocus(row.id);
-                  toggleDone(row.id);
-                }}
-                onKeyDown={(event) => onKey(event, row)}
-              />
-            ),
-          )}
-        </motion.div>
-      </Remold.Connectors>
-    </div>
+        <Remold.Connectors ref={connectorRoot} className="min-h-[470px] px-2 pt-2 pb-3 @max-[620px]:px-1 [&_.rm-connector]:stroke-[#dcdce0] [&_.rm-connector]:[stroke-width:1.4]" radius={10} gap={3}>
+          <motion.div
+            layout
+            {...connectorMotion}
+            transition={LAYOUT_SPRING}
+            role="tree"
+            aria-label="Course outline"
+            className="grid"
+          >
+            {rows.map((row) =>
+              row.module ? (
+                <ModuleRow
+                  key={row.id}
+                  courseModule={row.module}
+                  done={done}
+                  open={open.has(row.id)}
+                  focused={tabStop === row.id}
+                  connectorMotion={connectorMotion}
+                  onToggle={() => {
+                    setFocus(row.id);
+                    toggleOpen(row.id);
+                  }}
+                  onKeyDown={(event) => onKey(event, row)}
+                />
+              ) : (
+                <LessonRow
+                  key={row.id}
+                  lesson={row.lesson!}
+                  parent={row.parent!}
+                  done={done.has(row.id)}
+                  next={upNext?.id === row.id}
+                  focused={tabStop === row.id}
+                  connectorMotion={connectorMotion}
+                  onToggle={() => {
+                    setFocus(row.id);
+                    toggleDone(row.id);
+                  }}
+                  onKeyDown={(event) => onKey(event, row)}
+                />
+              ),
+            )}
+          </motion.div>
+        </Remold.Connectors>
+      </div>
+    </MotionConfig>
   );
 }

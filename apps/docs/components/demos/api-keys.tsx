@@ -1,10 +1,11 @@
 "use client";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { announce } from "@remold-ui/dom";
 import { Remold } from "@remold-ui/react";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
-import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion, useReducedMotion } from "motion/react";
 import {
   useEffect,
   useLayoutEffect,
@@ -15,6 +16,7 @@ import {
   type Ref,
 } from "react";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { typing, useScene } from "./use-scene";
 import { useScramble } from "./use-scramble";
 
@@ -75,7 +77,7 @@ const REST: ApiKeysValue = {
 };
 
 const SUBTITLES: Record<Stage, string> = {
-  list: "For calling the Northwind API",
+  list: "For calling the Remold API",
   naming: "Name it after what will use it",
   secret: "Copy it now. You won’t see it again.",
 };
@@ -86,7 +88,7 @@ const QUICK = { duration: 0.14 };
 const CARD_PADDING = 18;
 
 const PALETTE = [
-  "[--ak-surface:#ffffff] [--ak-field:#f4f4f5] [--ak-line:rgb(24_24_27/0.07)] [--ak-ink:#18181b] [--ak-muted:#71717a] [--ak-quiet:#a1a1aa]",
+  "[--ak-surface:#ffffff] [--ak-field:#f4f4f5] [--ak-line:rgb(24_24_27/0.07)] [--ak-ink:#18181b] [--ak-muted:#6c6c75] [--ak-quiet:#a1a1aa]",
   "[--ak-live:#22c55e] [--ak-test:#f59e0b] [--ak-vault:#111113] [--ak-vault-ink:#f4f4f5] [--ak-vault-muted:#8b8b93] [--ak-vault-line:rgb(255_255_255/0.08)]",
   "[--ak-danger:#dc2626] [--ak-on-danger:#ffffff] [--ak-danger-tint:color-mix(in_oklab,#dc2626_7%,transparent)]",
   "dark:[--ak-surface:#1f1f23] dark:[--ak-field:#2a2a2f] dark:[--ak-line:rgb(255_255_255/0.07)] dark:[--ak-ink:#fafafa] dark:[--ak-muted:#a1a1aa] dark:[--ak-quiet:#71717a] dark:[--ak-vault:#0b0b0d]",
@@ -105,6 +107,7 @@ function Dot({ env, small, label }: { env: Env; small?: boolean; label?: string 
       data-env={env}
       data-small={small || undefined}
       className="size-[7px] flex-none rounded-full bg-(--ak-live) shadow-[0_0_0_3px_color-mix(in_oklab,var(--ak-live)_18%,transparent)] data-[env=test]:bg-(--ak-test) data-[env=test]:shadow-[0_0_0_3px_color-mix(in_oklab,var(--ak-test)_18%,transparent)] data-small:size-1.5 data-small:shadow-none!"
+      role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
     />
@@ -133,7 +136,8 @@ function KeyRow({ apiKey, index, landed, confirming, onRevoke, onCancel }: KeyRo
     const timer = setTimeout(() => setMasked(true), 700);
     return () => clearTimeout(timer);
   }, [landed]);
-  const shown = useScramble(masked ? mask(apiKey.value) : apiKey.value, { duration: 0.8 });
+  const reduced = useReducedMotion();
+  const shown = useScramble(masked ? mask(apiKey.value) : apiKey.value, { duration: reduced ? 0 : 0.8 });
 
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === "Escape" && confirming) {
@@ -165,11 +169,12 @@ function KeyRow({ apiKey, index, landed, confirming, onRevoke, onCancel }: KeyRo
             {shown}
           </motion.code>
         </span>
-        <span className="flex-none text-[12px] text-(--ak-quiet) group-data-confirming/row:hidden">{apiKey.used}</span>
+        <span className="flex-none text-[12px] text-(--ak-muted) group-data-confirming/row:hidden">{apiKey.used}</span>
         <button
           type="button"
-          className="h-7 flex-none cursor-pointer rounded-lg border-0 bg-transparent px-2.5 text-[12.5px] font-semibold whitespace-nowrap text-(--ak-muted) opacity-0 transition-[opacity,background-color,color] duration-150 group-hover/row:opacity-100 hover:text-(--ak-danger) focus-visible:opacity-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--ak-ink) group-data-confirming/row:bg-(--ak-danger) group-data-confirming/row:text-(--ak-on-danger) group-data-confirming/row:opacity-100 motion-reduce:transition-none [@media(hover:none)]:opacity-100"
+          className="h-7 flex-none cursor-pointer rounded-lg border-0 bg-transparent px-2.5 text-[12.5px] font-semibold whitespace-nowrap text-(--ak-muted) opacity-0 transition-[opacity,background-color,color] duration-150 group-hover/row:opacity-100 hover:text-(--ak-danger) focus-visible:opacity-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--ak-ink) group-data-confirming/row:bg-(--ak-danger) group-data-confirming/row:text-(--ak-on-danger) group-data-confirming/row:opacity-100 group-data-confirming/row:hover:text-(--ak-on-danger) motion-reduce:transition-none [@media(hover:none)]:opacity-100"
           aria-label={confirming ? `Confirm revoking ${apiKey.name}` : `Revoke ${apiKey.name}`}
+          data-revoke=""
           onClick={onRevoke}
           onBlur={confirming ? onCancel : undefined}
           onKeyDown={handleKeyDown}
@@ -187,8 +192,9 @@ function Secret({ apiKey }: { apiKey: ApiKey }) {
     const timer = setTimeout(() => setOpen(true), 260);
     return () => clearTimeout(timer);
   }, []);
+  const reduced = useReducedMotion();
   const shown = useScramble(open ? apiKey.value : "•".repeat(apiKey.value.length), {
-    duration: 0.9,
+    duration: reduced ? 0 : 0.9,
     steady: "",
   });
   return (
@@ -205,16 +211,19 @@ function Secret({ apiKey }: { apiKey: ApiKey }) {
 function CreateButton({
   type = "button",
   disabled,
+  focusTarget,
   onClick,
 }: {
   type?: "button" | "submit";
   disabled?: boolean;
+  focusTarget?: boolean;
   onClick?: () => void;
 }) {
   return (
     <motion.button
       layoutId="ak-create"
       type={type}
+      data-autofocus={focusTarget ? "" : undefined}
       className={`${BUTTON} bg-(--ak-ink) text-(--ak-surface) disabled:cursor-default disabled:opacity-30`}
       disabled={disabled}
       whileTap={{ scale: 0.96 }}
@@ -239,6 +248,9 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
   const input = useRef<HTMLInputElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const springUntil = useRef(0);
+  const revokedAt = useRef<number | null>(null);
+  const [settled, setSettled] = useState(0);
+  const settle = () => setSettled((count) => count + 1);
   const [height, setHeight] = useState<{ value: number; spring: boolean } | null>(null);
   const { stage, made } = card;
 
@@ -259,6 +271,14 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
   useEffect(() => {
     if (stage === "naming" && autoFocus) input.current?.focus({ preventScroll: true });
   }, [stage, autoFocus]);
+
+  useFocusAfterChange(content, settled, (root) => {
+    const index = revokedAt.current;
+    revokedAt.current = null;
+    const rows = root.querySelectorAll<HTMLElement>("[data-revoke]");
+    if (index !== null && rows.length) return rows[Math.min(index, rows.length - 1)];
+    return root.querySelector<HTMLElement>("[data-autofocus]");
+  });
 
   useEffect(() => {
     if (!card.note) return;
@@ -291,6 +311,7 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
   const copy = () => {
     if (made) void navigator.clipboard?.writeText(made.value).catch(() => {});
     setCard((current) => ({ ...current, copied: true }));
+    announce("Key copied");
   };
 
   const done = () =>
@@ -298,7 +319,9 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
       current.made ? { ...REST, keys: [current.made, ...current.keys], landed: current.made.id } : current,
     );
 
-  const revoke = (key: ApiKey) =>
+  const revoke = (key: ApiKey) => {
+    if (card.revoking === key.id) revokedAt.current = card.keys.findIndex((other) => other.id === key.id);
+    else announce(`Press again to confirm revoking ${key.name}`);
     setCard((current) =>
       current.revoking === key.id
         ? {
@@ -310,6 +333,7 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
           }
         : { ...current, revoking: key.id },
     );
+  };
 
   return (
     <MotionConfig transition={SPRING} reducedMotion="user">
@@ -332,6 +356,7 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
               </span>
               {stage === "list" && (
                 <CreateButton
+                  focusTarget
                   onClick={() =>
                     setCard((current) => ({ ...current, stage: "naming", draft: "", landed: null }))
                   }
@@ -339,13 +364,13 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
               )}
             </header>
 
-            <AnimatePresence mode="popLayout" initial={false}>
+            <AnimatePresence mode="popLayout" initial={false} onExitComplete={settle}>
               {stage === "naming" && (
                 <motion.form key="naming" className={VIEW} onSubmit={create}>
                   <motion.label className="grid gap-[5px]" {...part(0.04)}>
                     <span className="text-[11.5px] font-medium text-(--ak-muted)">Name</span>
                     <input
-                      className="h-[42px] rounded-xl border-0 bg-(--ak-field) px-3 text-[14px] text-(--ak-ink) outline-none transition-shadow duration-150 placeholder:text-(--ak-quiet) focus:shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,var(--ak-ink)_20%,transparent)]"
+                      className="h-[42px] rounded-xl border-0 bg-(--ak-field) px-3 text-[14px] text-(--ak-ink) outline-none transition-shadow duration-150 placeholder:text-(--ak-muted) focus:shadow-[inset_0_0_0_1.5px_var(--ak-ink)]"
                       ref={input}
                       value={card.draft}
                       placeholder="What will use this key?"
@@ -410,12 +435,14 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
                       <button
                         type="button"
                         data-copied={card.copied || undefined}
+                        data-autofocus=""
                         className={`inline-flex h-8 flex-none cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-(--ak-vault-ink) pr-[11px] pl-[9px] text-[12.5px] font-semibold text-(--ak-vault) transition-colors duration-250 @max-[520px]:h-[30px] @max-[520px]:gap-[5px] @max-[520px]:pr-[9px] @max-[520px]:pl-2 [&_svg]:size-[15px] ${FOCUS}`}
                         onClick={copy}
                       >
                         <Remold.Icon
                           icon={<HugeiconsIcon icon={card.copied ? Tick02Icon : Copy01Icon} />}
                           strokeWidth={2}
+                          aria-hidden="true"
                         />
                         <Remold.Text>{card.copied ? "Copied" : "Copy"}</Remold.Text>
                       </button>
@@ -434,7 +461,7 @@ export function ApiKeys({ value, defaultValue = REST, onValueChange, autoFocus =
 
               {stage === "list" && (
                 <motion.ul key="list" className="m-0 grid min-w-0 list-none gap-0 p-0">
-                  <AnimatePresence>
+                  <AnimatePresence onExitComplete={settle}>
                     {card.keys.map((apiKey, index) => (
                       <KeyRow
                         key={apiKey.id}

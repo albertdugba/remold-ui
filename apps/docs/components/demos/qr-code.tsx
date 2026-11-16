@@ -70,7 +70,7 @@ export function QrCode({ value, title, logo = REMOLD_MARK, open, defaultOpen = f
   return (
     <section
       ref={ref}
-      className="not-prose grid w-[296px] max-w-full gap-4 rounded-[28px] bg-(--qr-surface) p-4 font-sans text-(--qr-ink) antialiased [--qr-ink:#0a0a0b] [--qr-muted:#71717a] [--qr-paper:#f4f4f5] [--qr-surface:#ffffff] [--qr-well:#f4f4f5] dark:[--qr-ink:#fafafa] dark:[--qr-muted:#a1a1aa] dark:[--qr-paper:#ffffff] dark:[--qr-surface:#18181b] dark:[--qr-well:#26262b]"
+      className="not-prose grid w-[296px] max-w-full gap-4 rounded-[28px] bg-(--qr-surface) p-4 font-sans text-(--qr-ink) antialiased [--qr-ink:#0a0a0b] [--qr-muted:#6c6c75] [--qr-paper:#f4f4f5] [--qr-surface:#ffffff] [--qr-well:#f4f4f5] dark:[--qr-ink:#fafafa] dark:[--qr-muted:#a1a1aa] dark:[--qr-paper:#ffffff] dark:[--qr-surface:#18181b] dark:[--qr-well:#26262b]"
       aria-label={title}
     >
       <div className="grid place-items-center rounded-[20px] bg-(--qr-paper) p-8">
@@ -94,7 +94,6 @@ export function QrCode({ value, title, logo = REMOLD_MARK, open, defaultOpen = f
       </div>
       <button
         type="button"
-        aria-pressed={shown}
         onClick={() => setShown(!shown)}
         className={`h-10 cursor-pointer rounded-full border-0 text-[14px] font-semibold outline-none transition-[background-color,color,scale] duration-150 ease-out focus-visible:shadow-[0_0_0_2px_var(--qr-surface),0_0_0_4px_var(--qr-ink)] active:scale-[0.97] motion-reduce:transition-none ${
           shown ? "bg-(--qr-well) text-(--qr-ink)" : "bg-(--qr-ink) text-(--qr-surface)"

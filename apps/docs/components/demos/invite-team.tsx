@@ -2,10 +2,12 @@
 
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { announce } from "@remold-ui/dom";
 import { Remold } from "@remold-ui/react";
 import {
   AnimatePresence,
   LayoutGroup,
+  MotionConfig,
   animate,
   motion,
   useAnimate,
@@ -13,7 +15,9 @@ import {
   useReducedMotion,
 } from "motion/react";
 import {
+  useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -26,6 +30,7 @@ import {
 
 import { Frame } from "./frame";
 import { useControllableState, type ChangeDetails } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useMeasuredSize } from "./use-measured-size";
 import { typing, useScene } from "./use-scene";
 
@@ -104,8 +109,8 @@ const TEAM: readonly Person[] = [
 const EMPTY: InviteTeamValue = { draft: "", chips: [], pending: [], team: TEAM };
 
 const PALETTE = [
-  "[--iv-surface:#ffffff] [--iv-well:#f4f4f5] [--iv-token:#e8e8eb] [--iv-ink:#18181b] [--iv-muted:#71717a] [--iv-faint:#a1a1aa]",
-  "[--iv-line:rgb(24_24_27/0.08)] [--iv-border:rgb(24_24_27/0.12)] [--iv-good:#16a34a] [--iv-on-good:#ffffff] [--iv-bad:#e5484d]",
+  "[--iv-surface:#ffffff] [--iv-well:#f4f4f5] [--iv-token:#e8e8eb] [--iv-ink:#18181b] [--iv-muted:#6c6c75] [--iv-faint:#a1a1aa]",
+  "[--iv-line:rgb(24_24_27/0.08)] [--iv-border:rgb(24_24_27/0.12)] [--iv-good:#15803d] [--iv-on-good:#ffffff] [--iv-bad:#c8323a]",
   "dark:[--iv-surface:#1c1c1f] dark:[--iv-well:#26262b] dark:[--iv-token:#313137] dark:[--iv-ink:#fafafa] dark:[--iv-muted:#a1a1aa] dark:[--iv-faint:#63636b]",
   "dark:[--iv-line:rgb(255_255_255/0.07)] dark:[--iv-border:rgb(255_255_255/0.14)] dark:[--iv-good:#4ade80] dark:[--iv-on-good:#0a0a0b] dark:[--iv-bad:#ff6369]",
 ].join(" ");
@@ -219,7 +224,7 @@ function Chip({
       <span className="truncate text-[13px] font-medium">{person.email}</span>
       <button
         type="button"
-        className={`grid size-5 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--iv-muted) hover:bg-[color-mix(in_oklab,var(--iv-ink)_8%,transparent)] hover:text-(--iv-ink) [&_svg]:size-[11px] ${FOCUS}`}
+        className={`relative grid size-5 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--iv-muted) before:absolute before:-inset-0.5 before:content-[''] hover:bg-[color-mix(in_oklab,var(--iv-ink)_8%,transparent)] hover:text-(--iv-ink) [&_svg]:size-[11px] ${FOCUS}`}
         aria-label={`Remove ${person.email}`}
         onClick={onRemove}
       >
@@ -267,14 +272,14 @@ function PersonRow({
         )}
       </span>
 
-      <span className="flex-none text-[13px] text-(--iv-muted) transition-colors duration-300 group-data-invited/person:text-(--iv-faint) group-data-joined/person:font-semibold group-data-joined/person:text-(--iv-good)">
+      <span className="flex-none text-[13px] text-(--iv-muted) transition-colors duration-300 group-data-joined/person:font-semibold group-data-joined/person:text-(--iv-good)">
         <Remold.Text>{role}</Remold.Text>
       </span>
 
       {invited && (
         <motion.button
           type="button"
-          className={`-ml-1 grid size-6 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--iv-faint) transition-[opacity,background-color,color] duration-150 group-hover/person:opacity-100! hover:bg-[color-mix(in_oklab,var(--iv-bad)_12%,transparent)] hover:text-(--iv-bad) focus-visible:opacity-100! [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [&_svg]:size-[11px] ${FOCUS}`}
+          className={`-ml-1 grid size-6 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--iv-muted) transition-[opacity,background-color,color] duration-150 group-hover/person:opacity-100! hover:bg-[color-mix(in_oklab,var(--iv-bad)_12%,transparent)] hover:text-(--iv-bad) focus-visible:opacity-100! [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [&_svg]:size-[11px] ${FOCUS}`}
           aria-label={`Revoke the invite to ${person.email}`}
           onClick={onRevoke}
           {...FRESH}
@@ -302,6 +307,21 @@ export interface InviteTeamProps {
 export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: InviteTeamProps) {
   const [invites, setInvites] = useControllableState({ value, defaultValue, onValueChange });
   const inputRef = useRef<HTMLInputElement>(null);
+  const root = useRef<HTMLElement | null>(null);
+  const errorId = useId();
+  const [exits, setExits] = useState(0);
+  const onExitComplete = () => setExits((count) => count + 1);
+
+  const setRoot = useCallback(
+    (node: HTMLElement | null) => {
+      root.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+
+  useFocusAfterChange(root, exits, () => inputRef.current);
 
   const sentCount = useSentCount(invites.pending);
   const joinedEmail = useJustJoined(invites.team);
@@ -316,7 +336,7 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
     ? `${memberCount} members · ${invites.pending.length} invited`
     : `${memberCount} members`;
 
-  const addChips = (text: string) => {
+  const addChips = (text: string, announced = true) => {
     const emails = parseEmails(text);
     if (!emails.length) return true;
 
@@ -328,6 +348,10 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
     }
 
     if (emails.some((email) => emailsIn(invites).has(email))) shake();
+
+    const taken = emailsIn(invites);
+    const added = [...new Set(emails)].filter((email) => !taken.has(email));
+    if (announced && added.length) announce(added.length === 1 ? `${added[0]} added` : `${added.length} people added`);
 
     setInvites((current) => {
       const taken = emailsIn(current);
@@ -350,7 +374,7 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
   const send = (event: FormEvent) => {
     event.preventDefault();
     if (sentCount && nothingToSend) return;
-    if (!addChips(invites.draft)) return;
+    if (!addChips(invites.draft, false)) return;
     if (nothingToSend) shake();
 
     setInvites((current) => {
@@ -365,8 +389,10 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
     inputRef.current?.focus();
   };
 
-  const removeChip = (chip: Person) =>
+  const removeChip = (chip: Person) => {
     setInvites((current) => ({ ...current, chips: current.chips.filter((other) => other !== chip) }));
+    announce(`${chip.email} removed`);
+  };
 
   const revoke = (invitee: Person) =>
     setInvites((current) => ({
@@ -386,6 +412,7 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
       event.preventDefault();
       addChips(invites.draft);
     } else if (event.key === "Backspace" && !invites.draft && invites.chips.length) {
+      announce(`${invites.chips[invites.chips.length - 1]!.email} removed`);
       setInvites((current) => ({ ...current, chips: current.chips.slice(0, -1) }));
     }
   };
@@ -404,113 +431,115 @@ export function InviteTeam({ value, defaultValue = EMPTY, onValueChange, ref }: 
   ];
 
   return (
-    <section
-      ref={ref}
-      className={`grid min-h-[470px] w-[420px] max-w-full content-start font-sans tracking-[-0.01em] text-(--iv-ink) antialiased ${PALETTE}`}
-      aria-label="Team members"
-    >
-      <LayoutGroup>
-        <motion.div className="overflow-clip rounded-[22px] bg-(--iv-surface)" style={{ height }}>
-          <div ref={contentRef} className="grid gap-4 px-4 pt-[18px] pb-4">
-            <header className="flex items-center justify-between gap-3 px-0.5">
-              <span className="grid gap-px">
-                <strong className="text-[17px] font-[650] tracking-[-0.02em]">Design team</strong>
-                <span className="text-[12.5px] text-(--iv-muted)">
-                  <Remold.Text>{count}</Remold.Text>
+    <MotionConfig reducedMotion="user">
+      <section
+        ref={setRoot}
+        className={`grid min-h-[470px] w-[420px] max-w-full content-start font-sans tracking-[-0.01em] text-(--iv-ink) antialiased ${PALETTE}`}
+        aria-label="Team members"
+      >
+        <LayoutGroup>
+          <motion.div className="overflow-clip rounded-[22px] bg-(--iv-surface)" style={{ height }}>
+            <div ref={contentRef} className="grid gap-4 px-4 pt-[18px] pb-4">
+              <header className="flex items-center justify-between gap-3 px-0.5">
+                <span className="grid gap-px">
+                  <strong className="text-[17px] font-[650] tracking-[-0.02em]">Design team</strong>
+                  <span className="text-[12.5px] text-(--iv-muted)">
+                    <Remold.Text>{count}</Remold.Text>
+                  </span>
                 </span>
-              </span>
-            </header>
+              </header>
 
-            <form className="grid" onSubmit={send} noValidate>
-              <div ref={shakeRef} className="grid">
-                <div
-                  data-invalid={error ? "" : undefined}
-                  className="flex min-h-12 min-w-0 cursor-text flex-wrap items-center gap-[5px] rounded-[14px] border-[1.8px] border-solid border-(--iv-border) bg-(--iv-surface) py-1.5 pr-1.5 pl-3 text-[14px] transition-[border-color] duration-[180ms] focus-within:border-(--iv-ink) data-invalid:border-(--iv-bad)!"
-                  onPointerDown={(event) => event.target === event.currentTarget && inputRef.current?.focus()}
-                >
-                  <span className="mr-[3px] text-[13px] font-medium text-(--iv-faint)" aria-hidden="true">
-                    To
-                  </span>
-
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {invites.chips.map((chip) => (
-                      <Chip key={chip.email} person={chip} onRemove={() => removeChip(chip)} />
-                    ))}
-                  </AnimatePresence>
-
-                  <span className="flex min-w-0 flex-[1_1_180px] items-center gap-1.5">
-                    <input
-                      ref={inputRef}
-                      className="h-8 min-w-0 flex-1 border-0 bg-transparent px-0.5 text-ellipsis text-inherit outline-0 placeholder:text-(--iv-faint)"
-                      type="email"
-                      value={invites.draft}
-                      placeholder={invites.chips.length ? "" : "name@company.com"}
-                      aria-label="Email addresses"
-                      aria-invalid={error ? true : undefined}
-                      aria-describedby={error ? "iv-error" : undefined}
-                      autoComplete="off"
-                      spellCheck={false}
-                      onChange={(event) => onDraftChange(event.target.value)}
-                      onKeyDown={onKeyDown}
-                      onPaste={onPaste}
-                    />
-
-                    <motion.button
-                      layout="position"
-                      transition={SPRING}
-                      type="submit"
-                      className={`grid h-[34px] flex-none cursor-pointer place-items-center rounded-[10px] border-0 bg-(--iv-ink) px-[15px] font-[inherit] text-[13.5px] font-semibold text-(--iv-surface) transition-colors duration-250 disabled:cursor-default disabled:bg-[color-mix(in_oklab,var(--iv-ink)_8%,transparent)] disabled:text-(--iv-faint) data-sent:bg-(--iv-good) data-sent:text-(--iv-on-good) motion-reduce:transition-none ${FOCUS}`}
-                      data-sent={sentCount > 0 || undefined}
-                      disabled={!sentCount && nothingToSend}
-                      whileTap={{ scale: 0.96 }}
-                    >
-                      <Remold.Text>{sendLabel(sentCount)}</Remold.Text>
-                    </motion.button>
-                  </span>
-                </div>
-              </div>
-
-              <AnimatePresence initial={false}>
-                {error && (
-                  <motion.p
-                    key="error"
-                    className="overflow-clip text-[12.5px] font-medium text-(--iv-bad) [&>span]:block [&>span]:px-1 [&>span]:pt-2"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={SPRING}
+              <form className="grid" onSubmit={send} noValidate>
+                <div ref={shakeRef} className="grid">
+                  <div
+                    data-invalid={error ? "" : undefined}
+                    className="flex min-h-12 min-w-0 cursor-text flex-wrap items-center gap-[5px] rounded-[14px] border-[1.8px] border-solid border-(--iv-border) bg-(--iv-surface) py-1.5 pr-1.5 pl-3 text-[14px] transition-[border-color] duration-[180ms] focus-within:border-(--iv-ink) data-invalid:border-(--iv-bad)!"
+                    onPointerDown={(event) => event.target === event.currentTarget && inputRef.current?.focus()}
                   >
-                    <span id="iv-error" role="alert">
-                      <Remold.Text>{error}</Remold.Text>
+                    <span className="mr-[3px] text-[13px] font-medium text-(--iv-muted)" aria-hidden="true">
+                      To
                     </span>
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </form>
 
-            <ul className="relative -mx-2 grid list-none p-0" aria-label="People">
-              <AnimatePresence initial={false} mode="popLayout">
-                {rows.map(({ person, invited }) => (
-                  <PersonRow
-                    key={person.email}
-                    person={person}
-                    invited={invited}
-                    joined={person.email === joinedEmail}
-                    onRevoke={() => revoke(person)}
-                  />
-                ))}
-              </AnimatePresence>
-            </ul>
+                    <AnimatePresence initial={false} mode="popLayout" onExitComplete={onExitComplete}>
+                      {invites.chips.map((chip) => (
+                        <Chip key={chip.email} person={chip} onRemove={() => removeChip(chip)} />
+                      ))}
+                    </AnimatePresence>
 
-            <p
-              className="min-h-4 overflow-hidden px-3 text-[12px] whitespace-nowrap text-(--iv-muted) transition-colors duration-300 data-[tone=good]:text-(--iv-good) motion-reduce:transition-none"
-              data-tone={error ? undefined : invites.tone} aria-live="polite">
-              <Remold.Text>{(!error && invites.note) || "Invites expire after 7 days."}</Remold.Text>
-            </p>
-          </div>
-        </motion.div>
-      </LayoutGroup>
-    </section>
+                    <span className="flex min-w-0 flex-[1_1_180px] items-center gap-1.5">
+                      <input
+                        ref={inputRef}
+                        className="h-8 min-w-0 flex-1 border-0 bg-transparent px-0.5 text-ellipsis text-inherit outline-0 placeholder:text-(--iv-muted)"
+                        type="email"
+                        value={invites.draft}
+                        placeholder={invites.chips.length ? "" : "name@company.com"}
+                        aria-label="Email addresses"
+                        aria-invalid={error ? true : undefined}
+                        aria-describedby={error ? errorId : undefined}
+                        autoComplete="off"
+                        spellCheck={false}
+                        onChange={(event) => onDraftChange(event.target.value)}
+                        onKeyDown={onKeyDown}
+                        onPaste={onPaste}
+                      />
+
+                      <motion.button
+                        layout="position"
+                        transition={SPRING}
+                        type="submit"
+                        className={`grid h-[34px] flex-none cursor-pointer place-items-center rounded-[10px] border-0 bg-(--iv-ink) px-[15px] font-[inherit] text-[13.5px] font-semibold text-(--iv-surface) transition-colors duration-250 disabled:cursor-default disabled:bg-[color-mix(in_oklab,var(--iv-ink)_8%,transparent)] disabled:text-(--iv-faint) data-sent:bg-(--iv-good) data-sent:text-(--iv-on-good) motion-reduce:transition-none ${FOCUS}`}
+                        data-sent={sentCount > 0 || undefined}
+                        disabled={!sentCount && nothingToSend}
+                        whileTap={{ scale: 0.96 }}
+                      >
+                        <Remold.Text>{sendLabel(sentCount)}</Remold.Text>
+                      </motion.button>
+                    </span>
+                  </div>
+                </div>
+
+                <AnimatePresence initial={false}>
+                  {error && (
+                    <motion.p
+                      key="error"
+                      className="overflow-clip text-[12.5px] font-medium text-(--iv-bad) [&>span]:block [&>span]:px-1 [&>span]:pt-2"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={SPRING}
+                    >
+                      <span id={errorId} role="alert">
+                        <Remold.Text>{error}</Remold.Text>
+                      </span>
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </form>
+
+              <ul className="relative -mx-2 grid list-none p-0" aria-label="People">
+                <AnimatePresence initial={false} mode="popLayout" onExitComplete={onExitComplete}>
+                  {rows.map(({ person, invited }) => (
+                    <PersonRow
+                      key={person.email}
+                      person={person}
+                      invited={invited}
+                      joined={person.email === joinedEmail}
+                      onRevoke={() => revoke(person)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </ul>
+
+              <p
+                className="min-h-4 overflow-hidden px-3 text-[12px] whitespace-nowrap text-(--iv-muted) transition-colors duration-300 data-[tone=good]:text-(--iv-good) motion-reduce:transition-none"
+                data-tone={error ? undefined : invites.tone} aria-live="polite">
+                <Remold.Text>{(!error && invites.note) || "Invites expire after 7 days."}</Remold.Text>
+              </p>
+            </div>
+          </motion.div>
+        </LayoutGroup>
+      </section>
+    </MotionConfig>
   );
 }
 

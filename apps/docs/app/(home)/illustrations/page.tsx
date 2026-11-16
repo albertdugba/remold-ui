@@ -1,14 +1,19 @@
 import {
+  CardPaymentScroll,
   CareJourneyDemo,
   CenterFlow,
   DataPrivacyBoundary,
   DomainConnection,
+  ExplodedStack,
   RealtimeCollaboration,
+  RolloutGrid,
   SubscriptionUpgrade,
   TeamWorkspace,
+  TokenBucket,
   TransactionRouteDemo,
-  UptimeRouting,
+  UptimeReroute,
   WalletSecurityMapDemo,
+  WebhookDelivery,
 } from "@/components/demos";
 import type { Metadata } from "next";
 
@@ -29,16 +34,21 @@ export default function IllustrationsPage() {
         </p>
       </header>
       <section className="ip-grid" aria-label="Interactive product illustrations">
+        <CardPaymentScroll />
+        <TokenBucket />
+        <WebhookDelivery />
+        <UptimeReroute />
+        <DomainConnection />
+        <DataPrivacyBoundary />
+        <SubscriptionUpgrade />
+        <RealtimeCollaboration />
+        <TeamWorkspace />
+        <ExplodedStack />
+        <RolloutGrid />
         <CenterFlow />
         <TransactionRouteDemo />
         <WalletSecurityMapDemo />
         <CareJourneyDemo />
-        <DomainConnection />
-        <DataPrivacyBoundary />
-        <SubscriptionUpgrade />
-        <UptimeRouting />
-        <RealtimeCollaboration />
-        <TeamWorkspace />
       </section>
     </main>
   );

@@ -21,6 +21,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { Fragment, useEffect, useRef, useState } from "react";
 
 import { Odometer } from "./odometer";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useMeasuredSize } from "./use-measured-size";
 import { useScript } from "./use-script";
 
@@ -89,7 +90,7 @@ const QUICK = { duration: 0.14 };
 const ROUND = { borderRadius: 999 };
 
 const PALETTE = [
-  "[--rsvp-surface:#ffffff] [--rsvp-well:#f4f4f5] [--rsvp-line:rgb(24_24_27/0.08)] [--rsvp-ink:#18181b] [--rsvp-muted:#71717a] [--rsvp-good:#16a34a]",
+  "[--rsvp-surface:#ffffff] [--rsvp-well:#f4f4f5] [--rsvp-line:rgb(24_24_27/0.08)] [--rsvp-ink:#18181b] [--rsvp-muted:#6c6c75] [--rsvp-good:#15803d]",
   "dark:[--rsvp-surface:#1f1f23] dark:[--rsvp-well:#2a2a2f] dark:[--rsvp-line:rgb(255_255_255/0.08)] dark:[--rsvp-ink:#fafafa] dark:[--rsvp-muted:#a1a1aa] dark:[--rsvp-good:#22c55e]",
 ].join(" ");
 
@@ -116,6 +117,8 @@ function MainButton({ face, wide, onClick }: { face: Face; wide?: boolean; onCli
       data-wide={wide || undefined}
       className={`relative grid h-[52px] cursor-pointer place-items-center overflow-clip border-0 bg-(--rsvp-ink) px-[26px] text-[15px] font-semibold whitespace-nowrap text-(--rsvp-surface) transition-[background-color] duration-300 data-disabled:cursor-default data-wide:w-full data-[face=done]:bg-(--rsvp-well) data-[face=done]:text-(--rsvp-ink) ${FOCUS}`}
       disabled={face === "saving"}
+      focusableWhenDisabled
+      data-autofocus=""
       onClick={onClick}
       render={
         <motion.button
@@ -173,7 +176,7 @@ function SpotsLeft() {
         {SPOTS - GOING} spots left
         <Tooltip.Root>
           <Tooltip.Trigger
-            className={`grid cursor-help place-items-center border-0 bg-transparent p-0 text-inherit ${FOCUS}`}
+            className={`-m-[5px] grid size-6 cursor-help place-items-center border-0 bg-transparent p-0 text-inherit ${FOCUS}`}
             aria-label="About this event"
           >
             <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} className="size-3.5" aria-hidden="true" />
@@ -322,6 +325,15 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
   const tray = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [content, size] = useMeasuredSize<HTMLDivElement>();
+  const [settled, setSettled] = useState(0);
+
+  useFocusAfterChange(
+    tray,
+    settled,
+    (root) =>
+      root.querySelector<HTMLElement>('[role="radio"][data-checked]') ??
+      root.querySelector<HTMLElement>("[data-autofocus]"),
+  );
 
   const open = face === "sheet" || face === "saving";
   const saving = face === "saving";
@@ -361,6 +373,13 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
     ],
   ]);
 
+  const notice =
+    face === "saving"
+      ? "Saving your answer"
+      : face === "done"
+        ? `${RESULTS[answer].title}. ${RESULTS[answer].line}`
+        : "";
+
   return (
     <MotionConfig transition={SPRING} reducedMotion="user">
       <Tooltip.Provider delay={250}>
@@ -377,7 +396,7 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
             }
           >
             <div ref={content} className="relative w-max">
-              <AnimatePresence mode="popLayout" initial={false}>
+              <AnimatePresence mode="popLayout" initial={false} onExitComplete={() => setSettled((count) => count + 1)}>
                 {open && (
                   <motion.div
                     key="sheet"
@@ -399,7 +418,7 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
                 )}
 
                 {face === "done" && (
-                  <motion.div key="done" className={`${PANEL} justify-items-center text-center`} role="status">
+                  <motion.div key="done" className={`${PANEL} justify-items-center text-center`}>
                     <Summary answer={answer} going={going} reminder={remind && answer !== "no"} />
                     <MainButton face={face} wide onClick={press} />
                   </motion.div>
@@ -413,6 +432,9 @@ export function EventRsvpDemo({ playing }: { playing?: boolean } = {}) {
               </AnimatePresence>
             </div>
           </motion.div>
+          <p className="sr-only" role="status">
+            {live ? "" : notice}
+          </p>
         </div>
       </Tooltip.Provider>
     </MotionConfig>

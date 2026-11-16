@@ -232,6 +232,7 @@ export function LogoMorph({
             <button
               type="button"
               {...autoplay.toggleProps}
+              aria-pressed={undefined}
               className="ml-auto rounded-full px-3 py-1 text-[12.5px] text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white dark:focus-visible:outline-white"
             >
               {autoplay.playing ? "Pause" : "Play"}

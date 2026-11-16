@@ -7,12 +7,14 @@ export function useScene<S>(
   beats: readonly { ms: number }[],
   beatState: (step: number) => S,
   playing?: boolean,
+  defaultPlaying = false,
+  still?: S,
 ) {
   const standalone = playing === undefined;
   const autoplay = useAutoplay(beats.length, {
     every: (index) => beats[index]!.ms,
     stopOnInteraction: standalone,
-    autoStart: Boolean(playing),
+    autoStart: playing ?? defaultPlaying,
   });
   const { setPlaying } = autoplay;
   const [userState, setUserState] = useState<S | null>(null);
@@ -23,17 +25,18 @@ export function useScene<S>(
     if (playing) setUserState(null);
   }, [standalone, playing, setPlaying]);
 
-  const state = userState ?? beatState(autoplay.step);
+  const resting = still !== undefined && !autoplay.active;
+  const state = userState ?? (resting ? still : undefined) ?? beatState(autoplay.step);
 
   const takeOver = useCallback(
     (update: S | ((current: S) => S)) => {
       setPlaying(false);
       setUserState((current) => {
-        const base = current ?? beatState(autoplay.step);
+        const base = current ?? (resting ? still : undefined) ?? beatState(autoplay.step);
         return typeof update === "function" ? (update as (current: S) => S)(base) : update;
       });
     },
-    [setPlaying, beatState, autoplay.step],
+    [setPlaying, beatState, autoplay.step, resting, still],
   );
 
   const live = userState === null && autoplay.active;
@@ -46,7 +49,7 @@ export function useScene<S>(
     [live, takeOver],
   );
 
-  return { ref: autoplay.ref, step: autoplay.step, state, takeOver, onValueChange, live };
+  return { ref: autoplay.ref, step: autoplay.step, state, takeOver, onValueChange, live, taken: userState !== null };
 }
 
 export function typing<S>(

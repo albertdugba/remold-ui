@@ -761,6 +761,19 @@ describe("useAutoplay", () => {
     await tick(5000);
     expect(text()).toBe("step 0");
   });
+
+  it("stops when someone tabs into the element", async () => {
+    await render(<Demo />);
+    await act(async () => visible!(true));
+    const button = container.querySelector("button")!;
+    // Tabbing onto the play button is not taking over; tabbing onto the demo is.
+    await act(async () => void button.dispatchEvent(new KeyboardEvent("keyup", { key: "Tab", bubbles: true })));
+    expect(button.textContent).toBe("Pause");
+    await act(async () => void container.querySelector("input")!.dispatchEvent(new KeyboardEvent("keyup", { key: "Tab", bubbles: true })));
+    expect(button.textContent).toBe("Play");
+    await tick(5000);
+    expect(text()).toBe("step 0");
+  });
 });
 
 describe("Remold.Particles", () => {

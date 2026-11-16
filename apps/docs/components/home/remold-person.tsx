@@ -17,7 +17,7 @@ const face = (name: string) =>
 const ME = {
   name: "Akosua Boateng",
   role: "Product designer",
-  team: "Northwind",
+  team: "Remold",
 };
 const STATS = [
   ["48", "Projects"],

@@ -2,7 +2,8 @@
 import { Combobox } from "@base-ui/react/combobox";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
-import { AnimatePresence, motion } from "motion/react";
+import { announce } from "@remold-ui/dom";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useId, useRef, useState, type CSSProperties } from "react";
 import { Odometer } from "./odometer";
 import { usePortalContainer } from "./portal-container";
@@ -66,7 +67,7 @@ const CHIP = [
 const DOT =
   "h-[7px] w-[calc(var(--tag-fill,1)*7px)] flex-none rounded-full bg-(--tag-hue) [scale:var(--tag-fill,1)] group-focus-within/chip:bg-white group-data-highlighted/chip:bg-white";
 const REMOVE =
-  "grid h-[22px] w-[22px] max-w-[calc(var(--tag-fill,1)*22px)] cursor-pointer place-items-center overflow-hidden rounded-md border-0 bg-transparent p-0 text-inherit opacity-[calc(var(--tag-fill,1)*0.6)] transition-[opacity,background-color] duration-150 hover:bg-[color-mix(in_oklab,var(--tag-hue)_16%,transparent)] hover:opacity-100 group-data-flown/chip:animate-grow-in [&_svg]:size-3";
+  "grid h-[22px] w-[22px] max-w-[calc(var(--tag-fill,1)*22px)] cursor-pointer place-items-center overflow-hidden rounded-md border-0 bg-transparent p-0 text-inherit opacity-[calc(var(--tag-fill,1)*0.6)] transition-[opacity,background-color] duration-150 hover:bg-[color-mix(in_oklab,var(--tag-hue)_16%,transparent)] hover:opacity-100 group-data-flown/chip:animate-grow-in motion-reduce:group-data-flown/chip:animate-none [&_svg]:size-3";
 const POPUP = [
   "[--fk-surface:#ffffff] [--fk-well:#f5f5f1] [--fk-ink:#1f1f1d] [--fk-muted:#817f77]",
   "dark:[--fk-surface:#1c1c1f] dark:[--fk-well:#2a2a2f] dark:[--fk-ink:#fafafa] dark:[--fk-muted:#a1a1aa]",
@@ -90,11 +91,13 @@ export function TagInput({
 }: TagInputProps) {
   const id = useId();
   const hint = useId();
+  const count = useId();
   const portal = usePortalContainer();
   const box = useRef<HTMLDivElement>(null);
   const [opened, setOpen] = useState(false);
   const open = held ?? opened;
   const [highlighted, setHighlighted] = useState<string | undefined>();
+  const [keyed, setKeyed] = useState(false);
   const seen = useRef<ReadonlySet<string>>(new Set(value));
   const flown = useRef(new Set<string>()).current;
   for (const tag of value) if (!seen.current.has(tag) && open && KNOWN.has(tag)) flown.add(tag);
@@ -107,6 +110,15 @@ export function TagInput({
     ...SUGGESTIONS.map((suggestion) => suggestion.tag).filter((tag) => !value.includes(tag)),
   ];
 
+  const change = (next: string[]) => {
+    const added = next.filter((tag) => !value.includes(tag));
+    const removed = value.filter((tag) => !next.includes(tag));
+    if (added.length) announce(`${added.join(", ")} added, ${next.length} of ${MAX} tags`);
+    else if (removed.length) announce(`${removed.join(", ")} removed, ${next.length} of ${MAX} tags`);
+    else if (full) announce(`No more than ${MAX} tags`);
+    onValueChange(next);
+  };
+
   const type = (next: string) => {
     if (!next.includes(",")) return onInputValueChange(next);
     const parts = next.split(",");
@@ -114,151 +126,160 @@ export function TagInput({
     const added = parts
       .map((part) => part.trim().toLowerCase())
       .filter((part) => part && !value.includes(part));
-    if (added.length) onValueChange([...value, ...new Set(added)].slice(0, MAX));
+    if (added.length) change([...value, ...new Set(added)].slice(0, MAX));
     onInputValueChange(rest.trimStart());
   };
 
   return (
-    <div data-open={open || undefined} className={`group grid w-[min(100%,380px)] gap-2 ${FORM_KIT}`}>
-      <Combobox.Root
-        items={items}
-        multiple
-        autoHighlight
-        value={value}
-        onValueChange={(next) => {
-          onValueChange((next as string[]).slice(0, MAX));
-        }}
-        open={held}
-        onOpenChange={(next) => {
-          setOpen(next);
-          onOpenChange?.(next);
-        }}
-        onItemHighlighted={(item) => setHighlighted((item as string | undefined) ?? undefined)}
-        inputValue={inputValue}
-        onInputValueChange={type}
-      >
-        <Combobox.InputGroup
-          ref={box}
-          className="group/box relative flex min-h-14 cursor-text rounded-[14px] bg-(--fk-surface) px-2.5 pt-[11px] pb-2.5"
+    <MotionConfig reducedMotion="user">
+      <div data-open={open || undefined} className={`group grid w-[min(100%,380px)] gap-2 ${FORM_KIT}`}>
+        <Combobox.Root
+          items={items}
+          multiple
+          autoHighlight
+          value={value}
+          onValueChange={(next) => {
+            change((next as string[]).slice(0, MAX));
+          }}
+          open={held}
+          onOpenChange={(next) => {
+            setOpen(next);
+            onOpenChange?.(next);
+          }}
+          onItemHighlighted={(item, details) => {
+            setHighlighted((item as string | undefined) ?? undefined);
+            if (details.reason === "pointer") setKeyed(false);
+          }}
+          inputValue={inputValue}
+          onInputValueChange={type}
         >
-          <fieldset
-            className="pointer-events-none absolute inset-x-0 -top-1.5 bottom-0 m-0 min-w-0 rounded-[inherit] border-[1.8px] border-solid border-(--fk-line) py-0 pr-0 pl-2.5 transition-[border-color] duration-[180ms] group-focus-within/box:border-(--fk-ink)"
+          <Combobox.InputGroup
+            ref={box}
+            className="group/box relative flex min-h-14 cursor-text rounded-[14px] bg-(--fk-surface) px-2.5 pt-[11px] pb-2.5"
+          >
+            <fieldset
+              className="pointer-events-none absolute inset-x-0 -top-1.5 bottom-0 m-0 min-w-0 rounded-[inherit] border-[1.8px] border-solid border-(--fk-line) py-0 pr-0 pl-2.5 transition-[border-color] duration-[180ms] group-focus-within/box:border-(--fk-ink)"
+              aria-hidden="true"
+            >
+              <legend className="invisible block h-[11px] w-auto p-0 text-[12px] leading-[11px] font-[550] whitespace-nowrap">
+                <span className="inline-block px-[5px]">{label}</span>
+              </legend>
+            </fieldset>
+            <label
+              htmlFor={id}
+              className="absolute top-0 left-[15px] -translate-y-1/2 text-[12px] leading-none font-[550] text-(--fk-muted) transition-colors duration-[180ms] group-focus-within/box:text-(--fk-ink)"
+            >
+              {label}
+            </label>
+            <Combobox.Chips className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5" aria-label={value.length ? label : undefined}>
+              <AnimatePresence initial={false} mode="popLayout">
+                {value.map((tag) => (
+                  <Combobox.Chip
+                    key={tag}
+                    className={CHIP}
+                    style={hueStyle(tag)}
+                    data-flown={flown.has(tag) || undefined}
+                    role="group"
+                    aria-label={tag}
+                    aria-description="Press Backspace or Delete to remove"
+                    render={
+                      <motion.span
+                        layout="position"
+                        layoutId={KNOWN.has(tag) ? `${id}-${tag}` : undefined}
+                        initial={flown.has(tag) ? false : { paddingLeft: 0, ["--tag-fill" as string]: 0 }}
+                        animate={{ paddingLeft: 8, ["--tag-fill" as string]: 1 }}
+                        exit={{ opacity: 0, scale: 0.8, filter: "blur(3px)", transition: { duration: 0.15 } }}
+                        transition={{ ...FORM, layout: FLY }}
+                      />
+                    }
+                  >
+                    <span className={DOT} aria-hidden="true" />
+                    {tag}
+                    <Combobox.ChipRemove className={REMOVE} aria-label={`Remove ${tag}`}>
+                      <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.4} aria-hidden="true" />
+                    </Combobox.ChipRemove>
+                  </Combobox.Chip>
+                ))}
+              </AnimatePresence>
+              <Combobox.Input
+                id={id}
+                className="h-[30px] min-w-0 flex-[1_0_96px] border-0 bg-transparent p-0 pl-1 text-[14px] text-(--fk-ink) outline-none placeholder:text-(--fk-muted) read-only:basis-0"
+                placeholder={full ? "" : value.length ? "Add another…" : "Add a tag…"}
+                readOnly={full}
+                aria-label={label}
+                aria-describedby={`${hint} ${count}`}
+                onKeyDown={() => setKeyed(true)}
+              />
+            </Combobox.Chips>
+          </Combobox.InputGroup>
+
+          <Combobox.Portal container={portal}>
+            <Combobox.Positioner
+              anchor={box}
+              side="bottom"
+              sideOffset={8}
+              align="start"
+              collisionAvoidance={{ side: "none", fallbackAxisSide: "none" }}
+            >
+              <Combobox.Popup className={POPUP}>
+                <Combobox.Empty className="text-[14px] text-(--fk-muted) not-empty:px-4 not-empty:py-3.5">No tags match</Combobox.Empty>
+                <Combobox.List className="min-h-0 overflow-y-auto overscroll-contain p-[5px] [mask-image:linear-gradient(to_bottom,transparent,#000_6px,#000_calc(100%-10px),transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {(item: string) => {
+                    const known = KNOWN.has(item);
+                    return (
+                      <Combobox.Item
+                        key={item}
+                        value={item}
+                        className="relative flex h-[42px] cursor-pointer items-center rounded-xl px-1.5 outline-none select-none"
+                        style={hueStyle(item)}
+                      >
+                        {highlighted === item && (
+                          <motion.span
+                            layoutId={`${id}-highlight`}
+                            data-keyed={keyed || undefined}
+                            className="pointer-events-none absolute inset-0 rounded-[inherit] bg-(--fk-well) data-keyed:shadow-[inset_0_0_0_1.5px_var(--fk-muted)]"
+                            transition={FLY}
+                          />
+                        )}
+                        {known ? (
+                          <motion.span
+                            className="relative inline-flex h-[30px] flex-none items-center gap-2.5 rounded-[9px] pr-[3px] pl-2 text-[15px] font-medium tracking-[-0.01em] whitespace-nowrap text-(--fk-ink)"
+                            layout="position"
+                            layoutId={`${id}-${item}`}
+                            transition={FLY}
+                          >
+                            <span className={DOT} aria-hidden="true" />
+                            {item}
+                          </motion.span>
+                        ) : (
+                          <span className="relative flex items-center gap-2.5 px-2 text-[15px] font-medium tracking-[-0.01em] text-(--fk-muted)">
+                            <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.2} aria-hidden="true" className="size-3.5" />
+                            Create “{item}”
+                          </span>
+                        )}
+                      </Combobox.Item>
+                    );
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+        <p className="m-0 flex justify-between px-1 text-[12px] text-(--fk-muted) transition-opacity duration-150 group-data-open:opacity-0">
+          <span id={hint}>Comma or Enter adds a tag</span>
+          <span
+            data-full={full || undefined}
+            className="inline-flex items-baseline tabular-nums transition-colors duration-200 data-full:font-semibold data-full:text-(--fk-warn)"
             aria-hidden="true"
           >
-            <legend className="invisible block h-[11px] w-auto p-0 text-[12px] leading-[11px] font-[550] whitespace-nowrap">
-              <span className="inline-block px-[5px]">{label}</span>
-            </legend>
-          </fieldset>
-          <label
-            htmlFor={id}
-            className="absolute top-0 left-[15px] -translate-y-1/2 text-[12px] leading-none font-[550] text-(--fk-muted) transition-colors duration-[180ms] group-focus-within/box:text-(--fk-ink)"
-          >
-            {label}
-          </label>
-          <Combobox.Chips className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5" aria-label={value.length ? label : undefined}>
-            <AnimatePresence initial={false} mode="popLayout">
-              {value.map((tag) => (
-                <Combobox.Chip
-                  key={tag}
-                  className={CHIP}
-                  style={hueStyle(tag)}
-                  data-flown={flown.has(tag) || undefined}
-                  aria-label={tag}
-                  aria-description="Press Backspace or Delete to remove"
-                  render={
-                    <motion.span
-                      layout="position"
-                      layoutId={KNOWN.has(tag) ? `${id}-${tag}` : undefined}
-                      initial={flown.has(tag) ? false : { paddingLeft: 0, ["--tag-fill" as string]: 0 }}
-                      animate={{ paddingLeft: 8, ["--tag-fill" as string]: 1 }}
-                      exit={{ opacity: 0, scale: 0.8, filter: "blur(3px)", transition: { duration: 0.15 } }}
-                      transition={{ ...FORM, layout: FLY }}
-                    />
-                  }
-                >
-                  <span className={DOT} aria-hidden="true" />
-                  {tag}
-                  <Combobox.ChipRemove className={REMOVE} aria-label={`Remove ${tag}`}>
-                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.4} />
-                  </Combobox.ChipRemove>
-                </Combobox.Chip>
-              ))}
-            </AnimatePresence>
-            <Combobox.Input
-              id={id}
-              className="h-[30px] min-w-0 flex-[1_0_96px] border-0 bg-transparent p-0 pl-1 text-[14px] text-(--fk-ink) outline-none placeholder:text-(--fk-faint) read-only:basis-0"
-              placeholder={full ? "" : value.length ? "Add another…" : "Add a tag…"}
-              readOnly={full}
-              aria-describedby={hint}
-            />
-          </Combobox.Chips>
-        </Combobox.InputGroup>
-
-        <Combobox.Portal container={portal}>
-          <Combobox.Positioner
-            anchor={box}
-            side="bottom"
-            sideOffset={8}
-            align="start"
-            collisionAvoidance={{ side: "none", fallbackAxisSide: "none" }}
-          >
-            <Combobox.Popup className={POPUP}>
-              <Combobox.Empty className="text-[14px] text-(--fk-muted) not-empty:px-4 not-empty:py-3.5">No tags match</Combobox.Empty>
-              <Combobox.List className="min-h-0 overflow-y-auto overscroll-contain p-[5px] [mask-image:linear-gradient(to_bottom,transparent,#000_6px,#000_calc(100%-10px),transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {(item: string) => {
-                  const known = KNOWN.has(item);
-                  return (
-                    <Combobox.Item
-                      key={item}
-                      value={item}
-                      className="relative flex h-[42px] cursor-pointer items-center rounded-xl px-1.5 outline-none select-none"
-                      style={hueStyle(item)}
-                    >
-                      {highlighted === item && (
-                        <motion.span
-                          layoutId={`${id}-highlight`}
-                          className="pointer-events-none absolute inset-0 rounded-[inherit] bg-(--fk-well)"
-                          transition={FLY}
-                        />
-                      )}
-                      {known ? (
-                        <motion.span
-                          className="relative inline-flex h-[30px] flex-none items-center gap-2.5 rounded-[9px] pr-[3px] pl-2 text-[15px] font-medium tracking-[-0.01em] whitespace-nowrap text-(--fk-ink)"
-                          layout="position"
-                          layoutId={`${id}-${item}`}
-                          transition={FLY}
-                        >
-                          <span className={DOT} aria-hidden="true" />
-                          {item}
-                        </motion.span>
-                      ) : (
-                        <span className="relative flex items-center gap-2.5 px-2 text-[15px] font-medium tracking-[-0.01em] text-(--fk-muted)">
-                          <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2.2} aria-hidden="true" className="size-3.5" />
-                          Create “{item}”
-                        </span>
-                      )}
-                    </Combobox.Item>
-                  );
-                }}
-              </Combobox.List>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>
-      <p className="m-0 flex justify-between px-1 text-[12px] text-(--fk-muted) transition-opacity duration-150 group-data-open:opacity-0">
-        <span id={hint}>Comma or Enter adds a tag</span>
-        <span
-          data-full={full || undefined}
-          className="inline-flex items-baseline tabular-nums transition-colors duration-200 data-full:font-semibold data-full:text-(--fk-warn)"
-          aria-hidden="true"
-        >
-          <Odometer value={String(value.length)} />/{MAX}
-        </span>
-        <span className="sr-only">
-          {value.length} of {MAX} tags
-        </span>
-      </p>
-    </div>
+            <Odometer value={String(value.length)} />/{MAX}
+          </span>
+          <span id={count} className="sr-only">
+            {`${value.length} of ${MAX} tags${full ? ", limit reached" : ""}`}
+          </span>
+        </p>
+      </div>
+    </MotionConfig>
   );
 }
 

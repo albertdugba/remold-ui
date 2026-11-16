@@ -6,7 +6,8 @@ import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, RepeatIcon, Cancel01Icon, Loading03Icon } from "@hugeicons/core-free-icons";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
+import { announce } from "@remold-ui/dom";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion, useReducedMotion } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { typing, useScene } from "./use-scene";
 
@@ -25,7 +26,7 @@ const SURFACE_CLASS = "pointer-events-none absolute inset-0";
 const FIELD = "grid gap-[7px]";
 const LABEL = "text-[13px] font-medium text-(--mdg-ink)";
 const BUTTON =
-  "grid h-9 cursor-pointer place-items-center rounded-full border-0 px-4 text-[13.5px] font-semibold whitespace-nowrap outline-none transition-[background-color,opacity,scale] duration-150 not-disabled:active:scale-[0.97] focus-visible:shadow-[0_0_0_2px_var(--mdg-surface),0_0_0_4px_var(--mdg-ink)] disabled:cursor-default disabled:opacity-40";
+  "grid h-9 cursor-pointer place-items-center rounded-full border-0 px-4 text-[13.5px] font-semibold whitespace-nowrap focus-visible:outline-hidden transition-[background-color,opacity,scale] duration-150 not-disabled:active:scale-[0.97] focus-visible:shadow-[0_0_0_2px_var(--mdg-surface),0_0_0_4px_var(--mdg-ink)] disabled:cursor-default disabled:opacity-40";
 
 function useColours() {
   const [dark, setDark] = useState(false);
@@ -95,7 +96,7 @@ export function MorphingDialog({
     <Dialog.Root open={open} onOpenChange={(next) => onOpenChange(next)} modal={modal}>
       <Dialog.Trigger
         data-open={open || undefined}
-        className="relative inline-grid h-9 cursor-pointer rounded-full border-0 bg-transparent pr-[15px] pl-3 text-[13.5px] font-semibold text-white outline-none focus-visible:shadow-[0_0_0_2px_var(--mdg-surface),0_0_0_4px_var(--mdg-ink)] dark:text-[#0a0a0b]"
+        className="relative inline-grid h-9 cursor-pointer rounded-full border-0 bg-transparent pr-[15px] pl-3 text-[13.5px] font-semibold text-white focus-visible:outline-hidden focus-visible:shadow-[0_0_0_2px_var(--mdg-surface),0_0_0_4px_var(--mdg-ink)] dark:text-[#0a0a0b]"
       >
         {!open && (
           <motion.span
@@ -112,7 +113,7 @@ export function MorphingDialog({
           animate={{ opacity: open ? 0 : 1 }}
           transition={{ duration: open ? 0.08 : 0.2, delay: open ? 0 : 0.18 }}
         >
-          <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} />
+          <HugeiconsIcon icon={Add01Icon} strokeWidth={2.2} aria-hidden="true" />
           New habit
         </motion.span>
       </Dialog.Trigger>
@@ -155,11 +156,11 @@ export function MorphingDialog({
                 </Dialog.Description>
               </span>
               <Dialog.Close
-                className="-mt-1 -mr-1 grid size-[30px] flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--mdg-muted) outline-none transition-colors duration-150 hover:bg-(--mdg-well) hover:text-(--mdg-ink) focus-visible:shadow-[0_0_0_2px_var(--mdg-ink)] [&_svg]:size-[15px]"
+                className="-mt-1 -mr-1 grid size-[30px] flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--mdg-muted) focus-visible:outline-hidden transition-colors duration-150 hover:bg-(--mdg-well) hover:text-(--mdg-ink) focus-visible:shadow-[0_0_0_2px_var(--mdg-ink)] [&_svg]:size-[15px]"
                 aria-label="Close"
                 disabled={creating}
               >
-                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} aria-hidden="true" />
               </Dialog.Close>
             </motion.div>
 
@@ -196,7 +197,7 @@ export function MorphingDialog({
                   <Toggle
                     key={option}
                     value={option}
-                    className="relative h-[34px] cursor-pointer rounded-[13px] border-0 bg-transparent p-0 text-[13px] font-medium text-(--mdg-muted) outline-none transition-colors duration-[180ms] focus-visible:shadow-[inset_0_0_0_2px_var(--mdg-ink)] data-pressed:text-(--mdg-ink)"
+                    className="relative h-[34px] cursor-pointer rounded-[13px] border-0 bg-transparent p-0 text-[13px] font-medium text-(--mdg-muted) focus-visible:outline-hidden transition-colors duration-[180ms] focus-visible:shadow-[inset_0_0_0_2px_var(--mdg-ink)] data-pressed:text-(--mdg-ink)"
                   >
                     {frequency === option && (
                       <motion.span
@@ -235,7 +236,7 @@ export function MorphingDialog({
                       exit={{ opacity: 0 }}
                       transition={SETTLE}
                     >
-                      <HugeiconsIcon icon={Loading03Icon} strokeWidth={2.2} />
+                      <HugeiconsIcon icon={Loading03Icon} strokeWidth={2.2} aria-hidden="true" />
                       <span className="sr-only">Adding</span>
                     </motion.span>
                   ) : (
@@ -333,78 +334,85 @@ interface MorphingDialogDemoProps {
   preview?: boolean;
 }
 
-export function MorphingDialogDemo({ playing, preview }: MorphingDialogDemoProps = {}) {
-  const scene = useScene(BEATS, fromBeat, playing);
+export function MorphingDialogDemo({ playing, preview: previewing }: MorphingDialogDemoProps = {}) {
+  const scene = useScene(BEATS, fromBeat, playing, false, previewing ? STILL : undefined);
+  const preview = previewing && !scene.taken;
   const { ref, takeOver, live } = scene;
-  const state = preview && !playing ? STILL : scene.state;
+  const state = scene.state;
   const [stage, setStage] = useState<HTMLDivElement | null>(null);
   const [modal, setModal] = useState(false);
 
   useEffect(() => {
     if (live || preview || !state.creating) return;
-    const timer = setTimeout(
-      () =>
-        takeOver((current) => ({
-          ...CLOSED,
-          frequency: current.frequency,
-          made: [
-            { name: current.name.trim(), frequency: current.frequency, surface: current.made.length },
-            ...current.made,
-          ],
-        })),
-      REQUEST,
-    );
+    const name = state.name.trim();
+    const timer = setTimeout(() => {
+      takeOver((current) => ({
+        ...CLOSED,
+        frequency: current.frequency,
+        made: [
+          { name: current.name.trim(), frequency: current.frequency, surface: current.made.length },
+          ...current.made,
+        ],
+      }));
+      announce(`${name} added to habits`);
+    }, REQUEST);
     return () => clearTimeout(timer);
-  }, [state.creating, live, preview, takeOver]);
+  }, [state.creating, state.name, live, preview, takeOver]);
 
   const habits = [...state.made, ...STARTING];
 
   return (
-    <div ref={ref} className="not-prose grid w-full place-items-center font-sans antialiased">
-      <div
-        ref={setStage}
-        data-mdg-stage=""
-        className="grid min-h-[460px] w-full place-items-center text-[14px] text-(--mdg-ink) [--mdg-ink:#0a0a0b] [--mdg-input-line:rgb(10_10_11/0.12)] [--mdg-line:rgb(10_10_11/0.08)] [--mdg-muted:#71717a] [--mdg-surface:#ffffff] [--mdg-well:#f4f4f5] dark:[--mdg-ink:#fafafa] dark:[--mdg-input-line:rgb(255_255_255/0.14)] dark:[--mdg-line:rgb(255_255_255/0.1)] dark:[--mdg-muted:#a1a1aa] dark:[--mdg-surface:#1f1f23] dark:[--mdg-well:#2a2a2f]"
-      >
-        <LayoutGroup>
-          <section className="w-[min(100%,380px)] rounded-[22px] bg-(--mdg-surface) p-2" aria-label="Habits">
-            <header className="flex items-center justify-between gap-3 pt-1.5 pr-1.5 pb-2.5 pl-2.5">
-              <span className="inline-flex items-center gap-2 text-[15px] font-semibold tracking-[-0.01em]">
-                Habits{" "}
-                <span className="inline-grid h-5 min-w-[22px] place-items-center rounded-full bg-(--mdg-well) px-1.5 text-[12px] font-semibold text-(--mdg-muted) tabular-nums">
-                  {habits.length}
+    <MotionConfig reducedMotion="user">
+      <div ref={ref} className="not-prose grid w-full place-items-center font-sans antialiased">
+        <div
+          ref={setStage}
+          data-mdg-stage=""
+          className="grid min-h-[460px] w-full place-items-center text-[14px] text-(--mdg-ink) [--mdg-ink:#0a0a0b] [--mdg-input-line:rgb(10_10_11/0.12)] [--mdg-line:rgb(10_10_11/0.08)] [--mdg-muted:#6c6c75] [--mdg-surface:#ffffff] [--mdg-well:#f4f4f5] dark:[--mdg-ink:#fafafa] dark:[--mdg-input-line:rgb(255_255_255/0.14)] dark:[--mdg-line:rgb(255_255_255/0.1)] dark:[--mdg-muted:#a1a1aa] dark:[--mdg-surface:#1f1f23] dark:[--mdg-well:#2a2a2f]"
+        >
+          <LayoutGroup>
+            <section className="w-[min(100%,380px)] rounded-[22px] bg-(--mdg-surface) p-2" aria-label="Habits">
+              <header className="flex items-center justify-between gap-3 pt-1.5 pr-1.5 pb-2.5 pl-2.5">
+                <span className="inline-flex items-center gap-2 text-[15px] font-semibold tracking-[-0.01em]">
+                  Habits{" "}
+                  <span className="inline-grid h-5 min-w-[22px] place-items-center rounded-full bg-(--mdg-well) px-1.5 text-[12px] font-semibold text-(--mdg-muted) tabular-nums">
+                    {habits.length}
+                  </span>
                 </span>
-              </span>
-              <span onPointerDownCapture={() => setModal(true)} onKeyDownCapture={() => setModal(true)}>
-                <MorphingDialog
-                  open={state.open}
-                  onOpenChange={(open) => takeOver((current) => ({ ...current, open, creating: false }))}
-                  name={state.name}
-                  onNameChange={(name) => takeOver((current) => ({ ...current, name }))}
-                  frequency={state.frequency}
-                  onFrequencyChange={(frequency) => takeOver((current) => ({ ...current, frequency }))}
-                  creating={state.creating}
-                  onCreate={() => takeOver((current) => ({ ...current, creating: true }))}
-                  surface={state.made.length}
-                  container={stage}
-                  modal={modal}
-                />
-              </span>
-            </header>
-            <ul className="m-0 grid list-none gap-1 p-0">
-              <AnimatePresence initial={false}>
-                {habits.map((habit, index) => (
-                  <HabitRow
-                    key={habit.name + (habit.surface ?? "")}
-                    habit={habit}
-                    fresh={habit.surface !== undefined && index === 0}
+                <span
+                  onPointerDownCapture={() => setModal(true)}
+                  onKeyDownCapture={() => setModal(true)}
+                  onClickCapture={() => setModal(true)}
+                >
+                  <MorphingDialog
+                    open={state.open}
+                    onOpenChange={(open) => takeOver((current) => ({ ...current, open, creating: false }))}
+                    name={state.name}
+                    onNameChange={(name) => takeOver((current) => ({ ...current, name }))}
+                    frequency={state.frequency}
+                    onFrequencyChange={(frequency) => takeOver((current) => ({ ...current, frequency }))}
+                    creating={state.creating}
+                    onCreate={() => takeOver((current) => ({ ...current, creating: true }))}
+                    surface={state.made.length}
+                    container={stage}
+                    modal={modal}
                   />
-                ))}
-              </AnimatePresence>
-            </ul>
-          </section>
-        </LayoutGroup>
+                </span>
+              </header>
+              <ul className="m-0 grid list-none gap-1 p-0">
+                <AnimatePresence initial={false}>
+                  {habits.map((habit, index) => (
+                    <HabitRow
+                      key={habit.name + (habit.surface ?? "")}
+                      habit={habit}
+                      fresh={habit.surface !== undefined && index === 0}
+                    />
+                  ))}
+                </AnimatePresence>
+              </ul>
+            </section>
+          </LayoutGroup>
+        </div>
       </div>
-    </div>
+    </MotionConfig>
   );
 }

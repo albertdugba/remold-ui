@@ -10,10 +10,12 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Meter } from "@base-ui/react/meter";
 import { Tooltip } from "@base-ui/react/tooltip";
-import { AnimatePresence, motion } from "motion/react";
+import { announce } from "@remold-ui/dom";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { Odometer } from "./odometer";
-import type { Ref } from "react";
+import { useId, useRef, type Ref } from "react";
 import { useControllableState } from "./use-controllable-state";
+import { useFocusAfterChange } from "./use-focus-after-change";
 import { useScene } from "./use-scene";
 import { usePortalContainer } from "./portal-container";
 
@@ -85,10 +87,10 @@ export interface UsageMeterProps {
 }
 
 const TOKENS = [
-  "[--um-surface:#ffffff] [--um-panel:#f7f7f8] [--um-track:#efeff1] [--um-line:rgb(24_24_27/0.08)] [--um-ink:#18181b] [--um-on-ink:#fafafa] [--um-muted:#71717a] [--um-quiet:#a1a1aa]",
-  "[--um-fill:#4f46e5] [--um-low:#d97706] [--um-over:#dc2626] [--um-good:#059669]",
+  "[--um-surface:#ffffff] [--um-panel:#f7f7f8] [--um-track:#efeff1] [--um-line:rgb(24_24_27/0.08)] [--um-ink:#18181b] [--um-on-ink:#fafafa] [--um-muted:#6c6c75] [--um-quiet:#a1a1aa]",
+  "[--um-fill:#4f46e5] [--um-low:#d97706] [--um-low-ink:#92400e] [--um-over:#dc2626] [--um-good:#047857]",
   "dark:[--um-surface:#1f1f23] dark:[--um-panel:#26262b] dark:[--um-track:#2e2e33] dark:[--um-line:rgb(255_255_255/0.08)] dark:[--um-ink:#fafafa] dark:[--um-on-ink:#18181b] dark:[--um-muted:#a1a1aa] dark:[--um-quiet:#71717a]",
-  "dark:[--um-fill:#818cf8] dark:[--um-low:#fbbf24] dark:[--um-over:#f87171] dark:[--um-good:#34d399]",
+  "dark:[--um-fill:#a5b4fc] dark:[--um-low:#fbbf24] dark:[--um-low-ink:#fbbf24] dark:[--um-over:#f87171] dark:[--um-good:#34d399]",
   "font-sans",
 ].join(" ");
 
@@ -105,6 +107,8 @@ export function UsageMeter({
 }: UsageMeterProps) {
   const [usage, setUsage] = useControllableState({ value, defaultValue, onValueChange });
   const portal = usePortalContainer();
+  const root = useRef<HTMLElement>(null);
+  const uid = useId();
 
   const plan = PLANS[usage.plan];
   const used = usedBy(usage.day);
@@ -114,66 +118,84 @@ export function UsageMeter({
   const over = used.api >= plan.limits.api;
   const upgraded = usage.plan === "scale";
 
-  return (
-    <Tooltip.Provider delay={250}>
-      <section
-        ref={ref}
-        className={`not-prose @container grid w-[min(100%,420px)] rounded-[22px] bg-(--um-surface) p-[18px] text-(--um-ink) @max-[400px]:p-3.5 ${TOKENS}`}
-        aria-label="Usage this month"
-      >
-        <header className={`flex items-center justify-between gap-2.5 ${WRAP}`}>
-          <span className="flex items-center gap-2 text-[15px]">
-            <b>Usage</b>
-            <span
-              data-plan={usage.plan}
-              className="inline-grid rounded-md bg-[color-mix(in_oklab,var(--um-fill)_14%,transparent)] px-2 py-0.5 text-[11.5px] font-bold text-(--um-fill) transition-colors duration-300 data-[plan=scale]:bg-[color-mix(in_oklab,var(--um-good)_15%,transparent)] data-[plan=scale]:text-(--um-good)"
-            >
-              <AnimatePresence initial={false} mode="popLayout">
-                <motion.span
-                  key={plan.name}
-                  initial={{ opacity: 0, y: 8, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.9 }}
-                  transition={POP}
-                >
-                  {plan.name}
-                </motion.span>
-              </AnimatePresence>
-            </span>
-          </span>
-          <span className={`inline-flex items-baseline gap-1 text-[12px] text-(--um-muted) ${PUSH_RIGHT}`}>
-            Resets in <Odometer value={String(DAYS - usage.day)} /> days
-          </span>
-        </header>
-        <div className="mt-2.5 h-[3px] overflow-hidden rounded-[2px] bg-(--um-track)" aria-hidden="true">
-          <motion.span
-            className="block h-full origin-left bg-(--um-quiet)"
-            initial={false} animate={{ scaleX: usage.day / DAYS }} transition={SPRING} />
-        </div>
+  const switchPlan = (next: Plan, message: string) => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && root.current?.contains(active)) active.blur();
+    announce(message);
+    setUsage((current) => ({ ...current, plan: next }));
+  };
 
-        <ul className="m-0 mt-4 grid list-none gap-3.5 p-0">
-          {METRICS.map(({ id, label, unit, icon: Icon, tip }) => {
-            const limit = plan.limits[id];
-            const value = used[id];
-            const ratio = value / limit;
-            const status = tone(ratio);
-            return (
-              <li key={id} className="group/row" data-tone={status}>
-                <Meter.Root
-                  value={Math.min(value, limit)}
-                  max={limit}
-                  className="grid gap-[7px]"
-                  getAriaValueText={() => `${format(value)}${unit} of ${format(limit)}${unit}`}
-                >
+  useFocusAfterChange(
+    root,
+    usage.plan,
+    (section) =>
+      section.querySelector<HTMLElement>(`[data-plan-action="${usage.plan}"]`) ??
+      section.querySelector<HTMLElement>("button"),
+  );
+
+  return (
+    <MotionConfig reducedMotion="user">
+      <Tooltip.Provider delay={250}>
+        <section
+          ref={(element: HTMLElement | null) => {
+            root.current = element;
+            if (typeof ref === "function") ref(element);
+            else if (ref) ref.current = element;
+          }}
+          className={`not-prose @container grid w-[min(100%,420px)] rounded-[22px] bg-(--um-surface) p-[18px] text-(--um-ink) @max-[400px]:p-3.5 ${TOKENS}`}
+          aria-label="Usage this month"
+        >
+          <header className={`flex items-center justify-between gap-2.5 ${WRAP}`}>
+            <span className="flex items-center gap-2 text-[15px]">
+              <b>Usage</b>
+              <span
+                data-plan={usage.plan}
+                className="inline-grid rounded-md bg-[color-mix(in_oklab,var(--um-fill)_14%,transparent)] px-2 py-0.5 text-[11.5px] font-bold text-(--um-fill) transition-colors duration-300 data-[plan=scale]:bg-[color-mix(in_oklab,var(--um-good)_15%,transparent)] data-[plan=scale]:text-(--um-good)"
+              >
+                <AnimatePresence initial={false} mode="popLayout">
+                  <motion.span
+                    key={plan.name}
+                    initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.9 }}
+                    transition={POP}
+                  >
+                    {plan.name}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </span>
+            <span className={`inline-flex items-baseline gap-1 text-[12px] text-(--um-muted) ${PUSH_RIGHT}`}>
+              Resets in <Odometer value={String(DAYS - usage.day)} /> days
+            </span>
+          </header>
+          <div className="mt-2.5 h-[3px] overflow-hidden rounded-[2px] bg-(--um-track)" aria-hidden="true">
+            <motion.span
+              className="block h-full origin-left bg-(--um-quiet)"
+              initial={false} animate={{ scaleX: usage.day / DAYS }} transition={SPRING} />
+          </div>
+
+          <ul className="m-0 mt-4 grid list-none gap-3.5 p-0">
+            {METRICS.map(({ id, label, unit, icon: Icon, tip }) => {
+              const limit = plan.limits[id];
+              const value = used[id];
+              const ratio = value / limit;
+              const status = tone(ratio);
+              return (
+                <li key={id} className="group/row grid gap-[7px]" data-tone={status}>
                   <div className={`flex min-h-5 items-center gap-1.5 ${WRAP}`}>
-                    <Meter.Label className="inline-flex items-center gap-[7px] text-[13px] font-medium whitespace-nowrap">
+                    <span
+                      id={`${uid}-${id}`}
+                      className="inline-flex items-center gap-[7px] text-[13px] font-medium whitespace-nowrap"
+                    >
                       <HugeiconsIcon icon={Icon} className="size-3.5 text-(--um-muted)" aria-hidden="true" />
                       {label}
-                    </Meter.Label>
+                    </span>
                     <Tooltip.Root>
                       <Tooltip.Trigger
-                        className={`grid size-[18px] cursor-help place-items-center rounded-full border-0 bg-transparent p-0 text-(--um-quiet) ${FOCUS}`}
+                        className={`-m-[3px] grid size-6 cursor-help place-items-center rounded-full border-0 bg-transparent p-0 text-(--um-muted) ${FOCUS}`}
                         aria-label={`About ${label}`}
+                        aria-describedby={`${uid}-${id}-tip`}
                       >
                         <HugeiconsIcon icon={InformationCircleIcon} className="size-[13px]" aria-hidden="true" />
                       </Tooltip.Trigger>
@@ -185,11 +207,14 @@ export function UsageMeter({
                         </Tooltip.Positioner>
                       </Tooltip.Portal>
                     </Tooltip.Root>
+                    <span id={`${uid}-${id}-tip`} className="sr-only">
+                      {tip}
+                    </span>
                     <AnimatePresence initial={false}>
                       {status && (
                         <motion.span
                           key={status}
-                          className="h-[18px] rounded-[5px] bg-[color-mix(in_oklab,var(--um-low)_15%,transparent)] px-1.5 text-[10.5px] leading-[18px] font-bold whitespace-nowrap text-(--um-low) group-data-[tone=over]/row:bg-[color-mix(in_oklab,var(--um-over)_14%,transparent)] group-data-[tone=over]/row:text-(--um-over)"
+                          className="h-[18px] rounded-[5px] bg-[color-mix(in_oklab,var(--um-low)_15%,transparent)] px-1.5 text-[10.5px] leading-[18px] font-bold whitespace-nowrap text-(--um-low-ink) group-data-[tone=over]/row:bg-[color-mix(in_oklab,var(--um-over)_14%,transparent)] group-data-[tone=over]/row:text-(--um-over)"
                           initial={{ opacity: 0, scale: 0.6 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.15 } }}
@@ -201,112 +226,121 @@ export function UsageMeter({
                     </AnimatePresence>
                     <span className={`ml-auto inline-flex items-baseline text-[12.5px] font-semibold whitespace-nowrap ${PUSH_RIGHT}`}>
                       <Odometer value={format(value)} />
-                      <span className="font-medium text-(--um-quiet)">
+                      <span className="font-medium text-(--um-muted)">
                         {unit} / {format(limit)}
                         {unit}
                       </span>
                     </span>
                   </div>
-                  <Meter.Track className="relative h-1.5 overflow-hidden rounded-[3px] bg-(--um-track)">
-                    <Meter.Indicator className="h-full rounded-[inherit] bg-(--um-fill) [transition:width_0.7s_cubic-bezier(0.25,1.1,0.4,1),background-color_0.3s] group-data-[tone=low]/row:bg-(--um-low) group-data-[tone=over]/row:bg-[repeating-linear-gradient(-45deg,var(--um-over)_0_6px,color-mix(in_oklab,var(--um-over)_75%,#fff)_6px_12px)] group-data-[tone=over]/row:bg-size-[17px_17px] motion-safe:group-data-[tone=over]/row:animate-march" />
-                  </Meter.Track>
-                </Meter.Root>
-              </li>
-            );
-          })}
-        </ul>
+                  <Meter.Root
+                    value={Math.min(value, limit)}
+                    max={limit}
+                    aria-labelledby={`${uid}-${id}`}
+                    getAriaValueText={() => `${format(value)}${unit} of ${format(limit)}${unit}`}
+                  >
+                    <Meter.Track className="relative h-1.5 overflow-hidden rounded-[3px] bg-(--um-track)">
+                      <Meter.Indicator className="h-full rounded-[inherit] bg-(--um-fill) [transition:width_0.7s_cubic-bezier(0.25,1.1,0.4,1),background-color_0.3s] motion-reduce:transition-none group-data-[tone=low]/row:bg-(--um-low) group-data-[tone=over]/row:bg-[repeating-linear-gradient(-45deg,var(--um-over)_0_6px,color-mix(in_oklab,var(--um-over)_75%,#fff)_6px_12px)] group-data-[tone=over]/row:bg-size-[17px_17px] motion-safe:group-data-[tone=over]/row:animate-march" />
+                    </Meter.Track>
+                  </Meter.Root>
+                </li>
+              );
+            })}
+          </ul>
 
-        <AnimatePresence initial={false}>
-          {(over || upgraded) && (
-            <motion.div
-              key="banner"
-              className="overflow-hidden"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={SPRING}
-            >
-              <AnimatePresence initial={false} mode="popLayout">
-                {upgraded ? (
-                  <motion.div
-                    key="done"
-                    className={`${BANNER} bg-[color-mix(in_oklab,var(--um-good)_11%,transparent)]`}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
+          <AnimatePresence initial={false}>
+            {(over || upgraded) && (
+              <motion.div
+                key="banner"
+                className="overflow-hidden"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={SPRING}
+              >
+                <AnimatePresence initial={false} mode="popLayout">
+                  {upgraded ? (
+                    <motion.div
+                      key="done"
+                      className={`${BANNER} bg-[color-mix(in_oklab,var(--um-good)_11%,transparent)]`}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={SPRING}
+                    >
+                      <span>
+                        <b>You're on Scale.</b> The new limits apply straight away.
+                      </span>
+                      <button
+                        type="button"
+                        className={`flex-none cursor-pointer border-0 bg-transparent p-1 text-[12.5px] font-semibold text-(--um-ink) underline decoration-(--um-line) underline-offset-[3px] ${FOCUS}`}
+                        data-plan-action="scale"
+                        onClick={() => switchPlan("pro", "Back on Pro")}
+                      >
+                        Undo
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="over"
+                      className={`${BANNER} bg-[color-mix(in_oklab,var(--um-over)_9%,transparent)]`}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={SPRING}
+                    >
+                      <span>
+                        <b>You've used all your API requests.</b> Extra ones are billed at £2 per 1,000.
+                      </span>
+                      <motion.button
+                        type="button"
+                        className={`inline-flex h-[30px] flex-none cursor-pointer items-center gap-1 rounded-[9px] border-0 bg-(--um-ink) px-[11px] text-[12.5px] font-semibold text-(--um-on-ink) [&_svg]:size-3.5 ${FOCUS}`}
+                        data-plan-action="pro"
+                        onClick={() => switchPlan("scale", "You're on Scale. The new limits apply straight away.")}
+                        whileTap={{ scale: 0.96 }}
+                      >
+                        Upgrade
+                        <HugeiconsIcon icon={ArrowUpRight01Icon} aria-hidden="true" />
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <footer className="mt-3.5 rounded-[14px] bg-(--um-panel) px-3.5 py-3">
+            <div className="flex items-baseline justify-between text-[12.5px] font-medium text-(--um-muted)">
+              <span>Projected bill</span>
+              <Odometer
+                value={`£${Math.round(bill)}`}
+                className="text-[24px] font-bold tracking-[-0.02em] text-(--um-ink)"
+              />
+            </div>
+            <ul className="m-0 mt-1.5 grid list-none p-0 [&>li]:flex [&>li]:justify-between [&>li]:overflow-hidden [&>li]:text-[12px] [&>li]:leading-[22px] [&>li]:text-(--um-muted) [&>li[data-tone=over]]:text-(--um-over) @max-[400px]:[&>li]:h-auto @max-[400px]:[&>li]:flex-wrap @max-[400px]:[&>li]:gap-y-0.5 @max-[400px]:[&>li]:overflow-visible @max-[400px]:[&>li]:py-0.5 @max-[400px]:[&>li]:leading-[1.4]">
+              <li>
+                <span>{plan.name} plan</span>
+                <Odometer value={`£${plan.price}`} />
+              </li>
+              <AnimatePresence initial={false}>
+                {overage > 0 && (
+                  <motion.li
+                    key="overage"
+                    data-tone="over"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
                     transition={SPRING}
                   >
-                    <span>
-                      <b>You're on Scale.</b> The new limits apply straight away.
-                    </span>
-                    <button
-                      type="button"
-                      className={`flex-none cursor-pointer border-0 bg-transparent p-1 text-[12.5px] font-semibold text-(--um-ink) underline decoration-(--um-line) underline-offset-[3px] ${FOCUS}`}
-                      onClick={() => setUsage((current) => ({ ...current, plan: "pro" }))}
-                    >
-                      Undo
-                    </button>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="over"
-                    className={`${BANNER} bg-[color-mix(in_oklab,var(--um-over)_9%,transparent)]`}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={SPRING}
-                  >
-                    <span>
-                      <b>You've used all your API requests.</b> Extra ones are billed at £2 per 1,000.
-                    </span>
-                    <motion.button
-                      type="button"
-                      className={`inline-flex h-[30px] flex-none cursor-pointer items-center gap-1 rounded-[9px] border-0 bg-(--um-ink) px-[11px] text-[12.5px] font-semibold text-(--um-on-ink) [&_svg]:size-3.5 ${FOCUS}`}
-                      onClick={() => setUsage((current) => ({ ...current, plan: "scale" }))}
-                      whileTap={{ scale: 0.96 }}
-                    >
-                      Upgrade
-                      <HugeiconsIcon icon={ArrowUpRight01Icon} aria-hidden="true" />
-                    </motion.button>
-                  </motion.div>
+                    <span>API overage · {format(projectedApi - plan.limits.api)} requests</span>
+                    <Odometer value={`+£${Math.round(overage)}`} />
+                  </motion.li>
                 )}
               </AnimatePresence>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <footer className="mt-3.5 rounded-[14px] bg-(--um-panel) px-3.5 py-3">
-          <div className="flex items-baseline justify-between text-[12.5px] font-medium text-(--um-muted)">
-            <span>Projected bill</span>
-            <Odometer
-              value={`£${Math.round(bill)}`}
-              className="text-[24px] font-bold tracking-[-0.02em] text-(--um-ink)"
-            />
-          </div>
-          <ul className="m-0 mt-1.5 grid list-none p-0 [&>li]:flex [&>li]:justify-between [&>li]:overflow-hidden [&>li]:text-[12px] [&>li]:leading-[22px] [&>li]:text-(--um-muted) [&>li[data-tone=over]]:text-(--um-over) @max-[400px]:[&>li]:h-auto @max-[400px]:[&>li]:flex-wrap @max-[400px]:[&>li]:gap-y-0.5 @max-[400px]:[&>li]:overflow-visible @max-[400px]:[&>li]:py-0.5 @max-[400px]:[&>li]:leading-[1.4]">
-            <li>
-              <span>{plan.name} plan</span>
-              <Odometer value={`£${plan.price}`} />
-            </li>
-            <AnimatePresence initial={false}>
-              {overage > 0 && (
-                <motion.li
-                  key="overage"
-                  data-tone="over"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={SPRING}
-                >
-                  <span>API overage · {format(projectedApi - plan.limits.api)} requests</span>
-                  <Odometer value={`+£${Math.round(overage)}`} />
-                </motion.li>
-              )}
-            </AnimatePresence>
-          </ul>
-        </footer>
-      </section>
-    </Tooltip.Provider>
+            </ul>
+          </footer>
+        </section>
+      </Tooltip.Provider>
+    </MotionConfig>
   );
 }
 

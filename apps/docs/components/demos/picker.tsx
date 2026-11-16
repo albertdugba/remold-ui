@@ -2,7 +2,7 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { Select } from "@base-ui/react/select";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { usePortalContainer } from "./portal-container";
 
@@ -28,7 +28,7 @@ export interface PickerProps<V extends string> {
 }
 
 const PALETTE = [
-  "[--pk-surface:#ffffff] [--pk-raised:#ffffff] [--pk-fill:#f4f4f5] [--pk-line:rgb(24_24_27/0.08)] [--pk-ink:#18181b] [--pk-muted:#71717a] [--pk-quiet:#a1a1aa] [--pk-focus:#6366f1]",
+  "[--pk-surface:#ffffff] [--pk-raised:#ffffff] [--pk-fill:#f4f4f5] [--pk-line:rgb(24_24_27/0.08)] [--pk-ink:#18181b] [--pk-muted:#6c6c75] [--pk-quiet:#a1a1aa] [--pk-focus:#6366f1]",
   "dark:[--pk-surface:#232327] dark:[--pk-raised:#2a2a2f] dark:[--pk-fill:#34343a] dark:[--pk-line:rgb(255_255_255/0.09)] dark:[--pk-ink:#fafafa] dark:[--pk-muted:#a1a1aa] dark:[--pk-quiet:#71717a] dark:[--pk-focus:#818cf8]",
 ].join(" ");
 
@@ -67,99 +67,109 @@ export function Picker<V extends string>({
     if (!option) return;
     event.preventDefault();
     onValueChange(option.value);
+    setOwnOpen(false);
     onOpenChange?.(false);
   };
 
   return (
-    <Select.Root
-      items={options}
-      value={value}
-      onValueChange={(next) => next !== null && onValueChange(next as V)}
-      open={open}
-      onOpenChange={(next) => {
-        setOwnOpen(next);
-        onOpenChange?.(next);
-      }}
-      modal={false}
-    >
-      <Select.Trigger
-        className={`${TRIGGER} ${className ?? ""}`}
-        aria-label={`${label}: ${current.label}`}
+    <MotionConfig reducedMotion="user">
+      <Select.Root
+        items={options}
+        value={value}
+        onValueChange={(next) => next !== null && onValueChange(next as V)}
+        open={isOpen}
+        onOpenChange={(next) => {
+          setOwnOpen(next);
+          onOpenChange?.(next);
+        }}
+        modal={false}
       >
-        {icon?.(value)}
-        <span className="inline-grid overflow-hidden whitespace-nowrap">
-          <AnimatePresence initial={false} mode="popLayout">
-            <motion.span
-              key={value}
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -10, opacity: 0 }}
-              transition={LABEL}
-            >
-              {current.label}
-            </motion.span>
-          </AnimatePresence>
-        </span>
-        <HugeiconsIcon
-          icon={ArrowDown01Icon}
-          className="size-[13px] flex-none text-(--pk-muted) transition-transform duration-250 ease-[cubic-bezier(0.3,0.9,0.3,1)] group-data-popup-open/trigger:rotate-180"
-          aria-hidden="true"
-        />
-      </Select.Trigger>
-
-      <Select.Portal container={portal}>
-        <Select.Positioner
-          className={`z-60 font-sans outline-none ${PALETTE} ${layerClassName ?? ""}`}
-          sideOffset={6}
-          align="start"
-          alignItemWithTrigger={false}
+        <Select.Trigger
+          className={`${TRIGGER} ${className ?? ""}`}
+          aria-label={`${label}: ${current.label}`}
         >
-          <Select.Popup className={POPUP} aria-label={heading ?? label} onKeyDown={onKeyDown}>
-            {heading && (
-              <p
-                className="m-0 mb-1 border-b border-solid border-(--pk-line) px-2 pt-1.5 pb-[7px] text-[12px] text-(--pk-quiet)"
-                aria-hidden="true"
+          {icon?.(value)}
+          <span className="inline-grid overflow-hidden whitespace-nowrap">
+            <AnimatePresence initial={false} mode="popLayout">
+              <motion.span
+                key={value}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                transition={LABEL}
               >
-                {heading}
-              </p>
-            )}
-            <LayoutGroup id={id}>
-              {options.map((option, index) => (
-                <Select.Item
-                  key={option.value}
-                  value={option.value}
-                  className="relative flex h-8 cursor-pointer items-center gap-[9px] rounded-[9px] px-2 text-[13px] outline-none select-none [&>*:not([data-highlight])]:relative"
-                  render={(props, state) => {
-                    const live = preview != null ? preview === option.value : state.highlighted;
-                    if (isOpen && live) lastLit.current = option.value;
-                    const lit = isOpen ? live : lastLit.current === option.value;
-                    return (
-                      <div {...props}>
-                        {lit && (
-                          <motion.span
-                            layoutId="pk-highlight"
-                            data-highlight=""
-                            className="absolute inset-0 rounded-[inherit] bg-(--pk-fill)"
-                            transition={GLIDE}
-                          />
-                        )}
-                        {props.children}
-                      </div>
-                    );
-                  }}
+                {current.label}
+              </motion.span>
+            </AnimatePresence>
+          </span>
+          <HugeiconsIcon
+            icon={ArrowDown01Icon}
+            className="size-[13px] flex-none text-(--pk-muted) transition-transform duration-250 ease-[cubic-bezier(0.3,0.9,0.3,1)] group-data-popup-open/trigger:rotate-180"
+            aria-hidden="true"
+          />
+        </Select.Trigger>
+
+        <Select.Portal container={portal}>
+          <Select.Positioner
+            className={`z-60 font-sans outline-none ${PALETTE} ${layerClassName ?? ""}`}
+            sideOffset={6}
+            align="start"
+            alignItemWithTrigger={false}
+          >
+            <Select.Popup className={POPUP} aria-label={heading ?? label} onKeyDown={onKeyDown}>
+              {heading && (
+                <p
+                  className="m-0 mb-1 border-b border-solid border-(--pk-line) px-2 pt-1.5 pb-[7px] text-[12px] text-(--pk-muted)"
+                  aria-hidden="true"
                 >
-                  {icon?.(option.value)}
-                  <Select.ItemText className="flex-1">{option.label}</Select.ItemText>
-                  {option.value === value && <span className="text-[11px] text-(--pk-quiet)">{currentLabel}</span>}
-                  {shortcuts && index < 9 && (
-                    <kbd className="font-[inherit] text-[11px] text-(--pk-quiet) tabular-nums">{index + 1}</kbd>
-                  )}
-                </Select.Item>
-              ))}
-            </LayoutGroup>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
+                  {heading}
+                </p>
+              )}
+              <LayoutGroup id={id}>
+                {options.map((option, index) => (
+                  <Select.Item
+                    key={option.value}
+                    value={option.value}
+                    aria-keyshortcuts={shortcuts && index < 9 ? String(index + 1) : undefined}
+                    className="relative flex h-8 cursor-pointer items-center gap-[9px] rounded-[9px] px-2 text-[13px] outline-none select-none [&>*:not([data-highlight])]:relative"
+                    render={(props, state) => {
+                      const live = preview != null ? preview === option.value : state.highlighted;
+                      if (isOpen && live) lastLit.current = option.value;
+                      const lit = isOpen ? live : lastLit.current === option.value;
+                      return (
+                        <div {...props}>
+                          {lit && (
+                            <motion.span
+                              layoutId="pk-highlight"
+                              data-highlight=""
+                              className="absolute inset-0 rounded-[inherit] bg-(--pk-fill)"
+                              transition={GLIDE}
+                            />
+                          )}
+                          {props.children}
+                        </div>
+                      );
+                    }}
+                  >
+                    {icon?.(option.value)}
+                    <Select.ItemText className="flex-1">{option.label}</Select.ItemText>
+                    {option.value === value && (
+                      <span className="text-[11px] text-(--pk-muted)" aria-hidden="true">
+                        {currentLabel}
+                      </span>
+                    )}
+                    {shortcuts && index < 9 && (
+                      <kbd className="font-[inherit] text-[11px] text-(--pk-muted) tabular-nums" aria-hidden="true">
+                        {index + 1}
+                      </kbd>
+                    )}
+                  </Select.Item>
+                ))}
+              </LayoutGroup>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    </MotionConfig>
   );
 }

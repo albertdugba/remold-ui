@@ -1,0 +1,38 @@
+---
+title: "Sign in"
+description: "A sign-in card that works in steps. Your email shrinks into a chip you can tap to go back, the password step takes its place, errors shake the field that's wrong, and the button becomes a check before the card greets you by name."
+status: "new"
+tags: ["Base UI", "Motion"]
+---
+
+<Stage name="sign-in" code={<Source demo="sign-in" />} minHeight={540}>
+  <SignInDemo />
+</Stage>
+
+## Things to try
+
+- **Enter an email and press Continue.** The field shrinks into a chip with your face on it, the title re-letters, and the password field arrives underneath.
+- **Tap the chip.** It grows back into the email field so you can change it.
+- **Leave the email half-typed.** The field shakes and says what's missing.
+- **Type a short password.** Anything under eight characters is refused: the password field shakes and turns red.
+- **Show the password.** The eye turns into a struck-through eye.
+- **Sign in.** The button spins, becomes a check, and then your face travels up from the chip as the card greets you by name.
+- **Use Google, GitHub or a passkey.** That button spins and takes you straight in.
+
+Any email works, and any password of eight characters or more. Nothing is sent anywhere.
+
+## Install
+
+<AddCommand name="sign-in" />
+
+## Dependencies
+
+<Dependencies demo="sign-in" />
+
+## How it works
+
+- **The email becomes the chip.** The field's fill and the chip's fill share a Motion layout id, so the fill travels up and rounds into the chip instead of fading. Your face does the same, from the chip to the top of the card.
+- **Steps arrive on a spring.** Each step's own pieces (the provider buttons, the password field) rise in on a Motion spring while the old step fades out, and `AnimatePresence` keeps the swap interruptible. The button stays put and only its label re-letters with Remold.
+- **The card follows its content.** The content is measured and the card's height springs to it, so nothing jumps between steps.
+- **Errors point at the field.** The message appears under the field that's wrong, which shakes once and takes a red outline. Typing clears it.
+- **Focus follows the step.** Continue puts focus in the password field, the chip puts it back in the email field, and signing in moves it to Sign out.

@@ -8,7 +8,7 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
 import { Remold } from "@remold-ui/react";
-import { AnimatePresence, motion, useAnimate } from "motion/react";
+import { AnimatePresence, MotionConfig, motion, useAnimate, useReducedMotion } from "motion/react";
 import {
   useEffect,
   useLayoutEffect,
@@ -88,6 +88,7 @@ export interface SendMoneyProps {
   defaultValue?: SendMoneyValue;
   onValueChange?: (value: SendMoneyValue, details: ChangeDetails) => void;
   showCaret?: boolean;
+  announce?: boolean;
   ref?: Ref<HTMLElement>;
 }
 
@@ -110,7 +111,7 @@ function sendLabel(phase: SendMoneyValue["phase"], total: number) {
 }
 
 const PALETTE = [
-  "[--sm-surface:#ffffff] [--sm-key:#f4f4f5] [--sm-key-press:#e4e4e7] [--sm-ink:#18181b] [--sm-on-ink:#fafafa] [--sm-muted:#71717a] [--sm-faint:#d4d4d8] [--sm-good:#059669] [--sm-bad:#dc2626]",
+  "[--sm-surface:#ffffff] [--sm-key:#f4f4f5] [--sm-key-press:#e4e4e7] [--sm-ink:#18181b] [--sm-on-ink:#fafafa] [--sm-muted:#6c6c75] [--sm-faint:#d4d4d8] [--sm-good:#047857] [--sm-bad:#dc2626]",
   "dark:[--sm-surface:#232327] dark:[--sm-key:#2e2e33] dark:[--sm-key-press:#3a3a40] dark:[--sm-ink:#fafafa] dark:[--sm-on-ink:#18181b] dark:[--sm-muted:#a1a1aa] dark:[--sm-faint:#52525b] dark:[--sm-good:#34d399] dark:[--sm-bad:#f87171]",
 ].join(" ");
 
@@ -135,11 +136,15 @@ function Recipient() {
   );
 }
 
-function Hint({ transfer }: { transfer: SendMoneyValue }) {
+function Hint({ transfer, announce }: { transfer: SendMoneyValue; announce: boolean }) {
   const hint = hintFor(transfer);
 
   return (
-    <div className="mt-1 grid h-5 justify-items-center text-[13px] text-(--sm-muted) [&_[data-tone=bad]]:text-(--sm-bad) [&_[data-tone=good]]:font-medium [&_[data-tone=good]]:text-(--sm-good)">
+    <div
+      role="status"
+      aria-live={announce ? undefined : "off"}
+      className="mt-1 grid h-5 justify-items-center text-[13px] text-(--sm-muted) [&_[data-tone=bad]]:text-(--sm-bad) [&_[data-tone=good]]:font-medium [&_[data-tone=good]]:text-(--sm-good)"
+    >
       <AnimatePresence initial={false} mode="wait">
         <motion.span
           key={hint.key}
@@ -237,7 +242,7 @@ function SendButton({
         data-spinning={phase === "sending" || undefined}
         className="grid size-5 [&_svg]:size-5 [&_svg]:[stroke-width:2.25] data-spinning:[&_svg]:animate-spin motion-reduce:data-spinning:[&_svg]:[animation-duration:2.4s]"
       >
-        <Remold.Icon icon={<HugeiconsIcon icon={icon} />} strokeWidth={2} />
+        <Remold.Icon icon={<HugeiconsIcon icon={icon} />} strokeWidth={2} aria-hidden="true" />
       </span>
     </motion.button>
   );
@@ -248,6 +253,7 @@ export function SendMoney({
   defaultValue = { raw: "", phase: "edit", refused: 0 },
   onValueChange,
   showCaret = false,
+  announce = true,
   ref,
 }: SendMoneyProps) {
   const [transfer, setTransfer] = useControllableState({ value, defaultValue, onValueChange });
@@ -255,14 +261,15 @@ export function SendMoney({
   const fit = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [typing, setTyping] = useState(false);
+  const reduced = useReducedMotion();
 
   const total = Number(transfer.raw || 0);
   const busy = transfer.phase !== "edit";
 
   useEffect(() => {
-    if (!transfer.refused || !amount.current) return;
+    if (!transfer.refused || !amount.current || reduced) return;
     shake(amount.current, { x: [0, -9, 8, -6, 4, 0] }, { duration: 0.42, ease: "easeOut" });
-  }, [transfer.refused, amount, shake]);
+  }, [transfer.refused, reduced, amount, shake]);
 
   useLayoutEffect(() => {
     const inner = amount.current;
@@ -301,75 +308,79 @@ export function SendMoney({
   };
 
   return (
-    <section
-      ref={ref}
-      data-phase={transfer.phase}
-      className={`group not-prose grid w-[min(100%,352px)] rounded-[30px] bg-(--sm-surface) p-[18px] font-sans text-(--sm-ink) ${PALETTE}`}
-      aria-label="Send money"
-    >
-      <Recipient />
+    <MotionConfig reducedMotion="user">
+      <section
+        ref={ref}
+        data-phase={transfer.phase}
+        className={`group not-prose grid w-[min(100%,352px)] rounded-[30px] bg-(--sm-surface) p-[18px] font-sans text-(--sm-ink) ${PALETTE}`}
+        aria-label="Send money"
+      >
+        <Recipient />
 
-      <div ref={fit} className="relative mt-[26px] grid justify-items-center overflow-visible">
-        <input
-          className="absolute inset-0 z-1 w-full cursor-text border-0 bg-transparent text-[16px] text-transparent caret-transparent outline-0 read-only:cursor-default"
-          inputMode="decimal"
-          aria-label={`Amount to send to ${TO.name}, in pounds`}
-          value={transfer.raw}
-          readOnly={busy}
-          onChange={(event: ChangeEvent<HTMLInputElement>) => apply(() => readAmount(event.target.value))}
-          onKeyDown={onKeyDown}
-          onFocus={() => setTyping(true)}
-          onBlur={() => setTyping(false)}
-        />
+        <div ref={fit} className="relative mt-[26px] grid justify-items-center overflow-visible">
+          <input
+            className="absolute inset-0 z-1 w-full cursor-text border-0 bg-transparent text-[16px] text-transparent caret-transparent outline-0 read-only:cursor-default"
+            inputMode="decimal"
+            aria-label={`Amount to send to ${TO.name}, in pounds`}
+            value={transfer.raw}
+            readOnly={busy}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => apply(() => readAmount(event.target.value))}
+            onKeyDown={onKeyDown}
+            onFocus={() => setTyping(true)}
+            onBlur={() => setTyping(false)}
+          />
+          <span className="sr-only" role="status" aria-live={announce ? undefined : "off"}>
+            {`${CURRENCY}${money(total)}`}
+          </span>
 
-        <div style={{ transform: `scale(${scale})` }} className="origin-center">
-          <div
-            ref={amount}
-            className="inline-flex h-[58px] items-baseline text-[48px] leading-[58px] font-[650] tracking-[-0.04em] whitespace-nowrap tabular-nums group-data-[phase=sent]:text-(--sm-good) group-data-[phase=sent]:transition-colors group-data-[phase=sent]:duration-300"
-            aria-live="polite"
-            aria-label={`${CURRENCY}${money(total)}`}
-          >
-            <span className="mr-1 -translate-y-4 text-[22px] font-semibold tracking-[-0.01em] text-(--sm-muted)">{CURRENCY}</span>
-            <AnimatePresence initial={false} mode="popLayout">
-              {characters(transfer.raw).map(({ key, char, muted }) => (
-                <motion.span
-                  key={key}
-                  layout="position"
-                  className="inline-block data-muted:text-(--sm-faint)"
-                  data-muted={muted || undefined}
-                  initial={{ opacity: 0, y: "38%", filter: "blur(2px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: "-24%", filter: "blur(2px)", transition: { duration: 0.13 } }}
-                  transition={ROLL}
-                >
-                  {char}
-                </motion.span>
-              ))}
-            </AnimatePresence>
-            {!busy && (typing || showCaret) && (
-              <span
-                className="ml-1 inline-block h-[46px] w-[3px] animate-caret-blink self-center rounded-[2px] bg-(--sm-ink) motion-reduce:animate-none"
-                aria-hidden="true"
-              />
-            )}
+          <div style={{ transform: `scale(${scale})` }} className="origin-center">
+            <div
+              ref={amount}
+              className="inline-flex h-[58px] items-baseline text-[48px] leading-[58px] font-[650] tracking-[-0.04em] whitespace-nowrap tabular-nums group-data-[phase=sent]:text-(--sm-good) group-data-[phase=sent]:transition-colors group-data-[phase=sent]:duration-300"
+              aria-hidden="true"
+            >
+              <span className="mr-1 -translate-y-4 text-[22px] font-semibold tracking-[-0.01em] text-(--sm-muted)">{CURRENCY}</span>
+              <AnimatePresence initial={false} mode="popLayout">
+                {characters(transfer.raw).map(({ key, char, muted }) => (
+                  <motion.span
+                    key={key}
+                    layout="position"
+                    className="inline-block data-muted:text-(--sm-faint)"
+                    data-muted={muted || undefined}
+                    initial={{ opacity: 0, y: "38%", filter: "blur(2px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: "-24%", filter: "blur(2px)", transition: { duration: 0.13 } }}
+                    transition={ROLL}
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </AnimatePresence>
+              {!busy && (typing || showCaret) && (
+                <span
+                  className="ml-1 inline-block h-[46px] w-[3px] animate-caret-blink self-center rounded-[2px] bg-(--sm-ink) motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <Hint transfer={transfer} />
+        <Hint transfer={transfer} announce={announce} />
 
-      <div className="mt-[18px] grid min-h-[218px] [&>*]:[grid-area:1/1]">
-        <AnimatePresence initial={false}>
-          {transfer.phase === "sent" ? (
-            <Sent key="success" />
-          ) : (
-            <Keypad key="keys" disabled={busy} onKey={(key) => apply((raw) => press(raw, key))} />
-          )}
-        </AnimatePresence>
-      </div>
+        <div className="mt-[18px] grid min-h-[218px] [&>*]:[grid-area:1/1]">
+          <AnimatePresence initial={false}>
+            {transfer.phase === "sent" ? (
+              <Sent key="success" />
+            ) : (
+              <Keypad key="keys" disabled={busy} onKey={(key) => apply((raw) => press(raw, key))} />
+            )}
+          </AnimatePresence>
+        </div>
 
-      <SendButton phase={transfer.phase} total={total} onSend={onSend} />
-    </section>
+        <SendButton phase={transfer.phase} total={total} onSend={onSend} />
+      </section>
+    </MotionConfig>
   );
 }
 
@@ -401,6 +412,7 @@ export function SendMoneyDemo({ playing }: SendMoneyDemoProps = {}) {
       value={scene.state}
       onValueChange={scene.onValueChange}
       showCaret={scene.live}
+      announce={!scene.live}
     />
   );
 }

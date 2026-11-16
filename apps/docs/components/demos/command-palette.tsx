@@ -153,7 +153,7 @@ const LEAVE = { duration: 0.1 };
 const FOLD_AFTER = 0.09;
 
 const KEY_HINT =
-  "flex-none rounded-[5px] bg-zinc-100 px-1.5 py-0.5 font-mono text-[11px] leading-[1.4] text-zinc-500 dark:bg-[#2c2c31] dark:text-zinc-400";
+  "flex-none rounded-[5px] bg-zinc-100 px-1.5 py-0.5 font-mono text-[11px] leading-[1.4] text-zinc-600 dark:bg-[#2c2c31] dark:text-zinc-400";
 const SEARCH_ICON = "size-4 flex-none text-zinc-500 dark:text-zinc-400";
 
 export interface CommandPaletteProps {
@@ -259,12 +259,16 @@ export function CommandPalette({
             height: contentHeight === null ? "auto" : contentHeight + 2,
             borderRadius: palette.open ? 16 : 20,
           }}
-          transition={{
-            ...SHELL_SPRING,
-            height: { ...SETTLE, delay: foldDelay },
-            borderRadius: { ...SETTLE, delay: foldDelay },
-            delay: foldDelay,
-          }}
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : {
+                  ...SHELL_SPRING,
+                  height: { ...SETTLE, delay: foldDelay },
+                  borderRadius: { ...SETTLE, delay: foldDelay },
+                  delay: foldDelay,
+                }
+          }
           className="relative max-w-full overflow-hidden bg-white has-[button[aria-haspopup]:focus-visible]:outline-2 has-[button[aria-haspopup]:focus-visible]:outline-offset-2 has-[button[aria-haspopup]:focus-visible]:outline-zinc-900 dark:has-[button[aria-haspopup]:focus-visible]:outline-zinc-50 border border-black/[0.06] shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] dark:border-white/[0.07] dark:bg-[#1c1c1f] dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)]"
           data-open={palette.open || undefined}
           onBlur={closeWhenFocusLeaves}
@@ -274,6 +278,8 @@ export function CommandPalette({
               {palette.open ? (
                 <motion.div
                   key="palette"
+                  role="dialog"
+                  aria-label="Command palette"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={
@@ -316,7 +322,7 @@ export function CommandPalette({
                         )}
                         <Autocomplete.Input
                           autoFocus={moveFocus}
-                          className="h-full min-w-0 flex-1 bg-transparent text-[14px] text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-50 dark:placeholder:text-zinc-500"
+                          className="h-full min-w-0 flex-1 bg-transparent text-[14px] text-zinc-900 outline-none placeholder:text-zinc-500 dark:text-zinc-50 dark:placeholder:text-zinc-400"
                           aria-label={
                             palette.scope
                               ? `Search ${SCOPE_LABELS[palette.scope].toLowerCase()}`
@@ -347,7 +353,7 @@ export function CommandPalette({
                       <Autocomplete.List className="grid max-h-[300px] gap-1 overflow-auto p-1.5 empty:hidden">
                         {(group: CommandGroup) => (
                           <Autocomplete.Group key={group.label} items={group.items} className="grid">
-                            <Autocomplete.GroupLabel className="px-2.5 pt-2 pb-1 text-[11.5px] font-medium text-zinc-400 dark:text-zinc-500">
+                            <Autocomplete.GroupLabel className="px-2.5 pt-2 pb-1 text-[11.5px] font-medium text-zinc-500 dark:text-zinc-400">
                               {group.label}
                             </Autocomplete.GroupLabel>
                             <Autocomplete.Collection>

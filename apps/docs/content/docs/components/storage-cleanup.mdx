@@ -1,6 +1,6 @@
 ---
 title: "Free up space"
-description: "A phone's storage clean-up: the photos and videos you delete break into dust that pours into the free space, and the storage bar rolls down, with an undo toast."
+description: "A phone's storage clean-up: the photos and videos you delete break into dust that pours into a trash bin, the lid snaps shut, and the storage bar rolls down, with an undo toast."
 status: "new"
 kind: particles
 tags: ["Particles", "Base UI", "Motion"]
@@ -13,8 +13,8 @@ tags: ["Particles", "Base UI", "Motion"]
 ## Things to try
 
 - **Pick a few.** Tap the photos and videos you don't need. The count and the space they take add up as you go.
-- **Delete them.** Each one breaks into dust, in its own colours, that pours into the free end of the storage bar. Once it lands, the bar gives the space back and the gigabytes roll down.
-- **Undo.** The toast counts down for five seconds, and pauses while you hover it. Undo pours the dust back out of the free space into the photos.
+- **Delete them.** A black metal bin rises with its lid open, and each photo breaks into dust, in its own colours, that pours inside. The lid snaps shut, the bin dips away, and the bar gives the space back as the gigabytes roll down.
+- **Undo.** The toast counts down for ten seconds, and pauses while you hover it. Undo brings the bin back, opens it, and pours the dust back out into the photos.
 - **Clear the lot.** With nothing left to review, a tick draws itself in dots.
 
 ## Install
@@ -29,7 +29,8 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **`useDust` does the pouring.** `trail.away(tiles, freeSpace)` samples the tiles as they look, photos included, pours the dots into the free end of the bar, and resolves once they land. Undo is `trail.back(tiles, freeSpace)`.
+- **`useDust` does the pouring.** `trail.away(tiles, binMouth)` samples the tiles as they look, photos included, pours the dots into a point inside the bin, and resolves once they land. Undo is `trail.back(tiles, binMouth)`.
+- **The dust really goes inside.** The bin is two layers: the back wall and lid sit under the dust canvas, and the front sits above it, so the dots disappear behind the front as they land. The lid is a Motion spring, so it snaps shut with a little bounce.
 - **State is what's been deleted.** Deleting just adds ids to a list. An effect compares that with what's drawn: tiles that left pour out, tiles that came back pour in, and the grid closes up and the storage changes once the dust lands.
 - **The bar is real sizes.** Each segment springs its share of the total, so the free space grows by exactly what you deleted.
 - **Base UI for the parts.** Checkbox for each tile, Button for Delete, and Toast for undo. The finished state is particles on their own.

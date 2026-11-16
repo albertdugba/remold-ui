@@ -3,7 +3,7 @@ import { Remold } from "@remold-ui/react";
 import { useState } from "react";
 
 const THEME =
-  "[--tx-ink:#0a0a0b] [--tx-muted:#71717a] [--tx-surface:#ffffff] [--tx-well:#f4f4f5] dark:[--tx-ink:#fafafa] dark:[--tx-muted:#a1a1aa] dark:[--tx-surface:#18181b] dark:[--tx-well:#26262b]";
+  "[--tx-ink:#0a0a0b] [--tx-muted:#6c6c75] [--tx-surface:#ffffff] [--tx-well:#f4f4f5] dark:[--tx-ink:#fafafa] dark:[--tx-muted:#a1a1aa] dark:[--tx-surface:#18181b] dark:[--tx-well:#26262b]";
 
 const BUTTON =
   "h-9 w-[104px] flex-none cursor-pointer rounded-full border-0 text-[13.5px] font-semibold outline-none transition-[background-color,color,scale] duration-150 ease-out focus-visible:shadow-[0_0_0_2px_var(--tx-surface),0_0_0_4px_var(--tx-ink)] active:scale-[0.97] motion-reduce:transition-none";

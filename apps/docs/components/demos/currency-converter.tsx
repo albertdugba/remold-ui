@@ -11,7 +11,7 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
 import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
-import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 
 import { useInPreview } from "./portal-container";
 import { useMeasuredSize } from "./use-measured-size";
@@ -83,7 +83,7 @@ const SENDING_FOR = 1100;
 const SENT_FOR = 2400;
 
 const PALETTE = [
-  "[--fx-surface:#f3f3f5] [--fx-well:#ffffff] [--fx-line:rgb(24_24_27/0.08)] [--fx-ink:#18181b] [--fx-muted:#71717a] [--fx-quiet:#a1a1aa]",
+  "[--fx-surface:#f3f3f5] [--fx-well:#ffffff] [--fx-line:rgb(24_24_27/0.08)] [--fx-ink:#18181b] [--fx-muted:#6c6c75] [--fx-quiet:#a1a1aa]",
   "dark:[--fx-surface:#1c1c1f] dark:[--fx-well:#2c2c31] dark:[--fx-line:rgb(255_255_255/0.1)] dark:[--fx-ink:#fafafa] dark:[--fx-muted:#a1a1aa] dark:[--fx-quiet:#71717a]",
 ].join(" ");
 
@@ -97,7 +97,8 @@ const AMOUNT =
 function Digits({ text }: { text: string }) {
   const characters = [...text];
   return (
-    <span className="inline-flex [&>*]:inline-block" aria-label={text}>
+    <span className="inline-flex [&>*]:inline-block">
+      <span className="sr-only">{text}</span>
       <AnimatePresence initial={false} mode="popLayout">
         {characters.map((character, index) => (
           <motion.span
@@ -149,21 +150,22 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
   const visible = shown.slice(0, typed ? 36 : 24);
   const [highlighted, setHighlighted] = useState<string | undefined>();
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === "Escape") onClose();
   };
 
   return (
     <div role="dialog" aria-label={`Choose the currency ${side === "send" ? "you send" : "they get"}`}>
       <div className="flex h-12 items-center justify-between pr-1.5 pl-4">
-        <motion.span layoutId={`fx-label-${side}`} className={LABEL} {...TRAVEL}>
-          {LABELS[side]}
+        <motion.span layoutId={`fx-label-${side}`} layout="position" className={LABEL} {...TRAVEL}>
+          Select currency
         </motion.span>
         <motion.button
           layoutId={`fx-pill-${side}`}
           type="button"
           className={TRIGGER}
           onClick={onClose}
+          onKeyDown={handleKeyDown}
           aria-label={`Keep ${code}`}
           {...TRAVEL}
         >
@@ -186,7 +188,7 @@ function CurrencyList({ side, code, codes, query, onQueryChange, focus, onPick, 
         }
       >
         <motion.label
-          className="mb-1.5 flex h-11 items-center gap-2 rounded-full bg-(--fx-surface) px-3 text-(--fx-muted)"
+          className="mb-1.5 flex h-11 items-center gap-2 rounded-full bg-(--fx-surface) px-3 text-(--fx-muted) has-[input:focus-visible]:outline-2 has-[input:focus-visible]:-outline-offset-2 has-[input:focus-visible]:outline-(--fx-ink)"
           {...PART}
           transition={{ ...SPRING, delay: 0.04 }}
         >
@@ -261,6 +263,7 @@ function cleanAmount(typed: string, code: string) {
 }
 
 function Well({
+  id,
   side,
   code,
   amount,
@@ -269,9 +272,11 @@ function Well({
   busy,
   canPick,
   chars,
+  quiet,
   onAmountChange,
   onPick,
 }: {
+  id: string;
   side: Side;
   code: string;
   amount: string;
@@ -280,23 +285,26 @@ function Well({
   busy: boolean;
   canPick: boolean;
   chars: number;
+  quiet: boolean;
   onAmountChange: (amount: string) => void;
   onPick: () => void;
 }) {
   const sending = side === "send";
+  const field = `${id}-${side}`;
 
   return (
     <motion.div
       data-well=""
       data-side={side}
-      className="@container relative grid gap-1.5 rounded-[20px] bg-(--fx-well) pt-[18px] pr-32 pb-5 pl-5 shadow-[0_1px_2px_rgb(24_24_27/0.04)]"
+      className="@container relative grid gap-1.5 rounded-[20px] bg-(--fx-well) pt-[18px] pr-32 pb-5 pl-5 shadow-[0_1px_2px_rgb(24_24_27/0.04)] has-[input:focus-visible]:outline-2 has-[input:focus-visible]:-outline-offset-2 has-[input:focus-visible]:outline-(--fx-ink)"
       style={{ "--fx-chars": chars } as CSSProperties}
       {...PART}
     >
       <motion.label
         layoutId={`fx-label-${side}`}
+        layout="position"
         className={LABEL}
-        htmlFor={sending ? "fx-amount" : undefined}
+        htmlFor={field}
         {...TRAVEL}
       >
         {LABELS[side]}
@@ -304,7 +312,7 @@ function Well({
 
       {sending ? (
         <input
-          id="fx-amount"
+          id={field}
           className={AMOUNT}
           data-own-size
           inputMode="decimal"
@@ -314,13 +322,13 @@ function Well({
           onChange={(event) => onAmountChange(cleanAmount(event.target.value, code))}
         />
       ) : (
-        <span className={AMOUNT} aria-live="polite">
+        <output id={field} className={AMOUNT} aria-live={quiet ? "off" : "polite"}>
           {gets === null ? (
             <span className="text-(--fx-quiet)">{failed ? "—" : "…"}</span>
           ) : (
             <Digits text={format(gets, code)} />
           )}
-        </span>
+        </output>
       )}
 
       <motion.button
@@ -413,7 +421,7 @@ function SendButton({
     <motion.button
       type="button"
       data-status={status}
-      className={`mt-3.5 grid h-[52px] cursor-pointer rounded-full border-0 bg-(--fx-ink) text-[15px] font-semibold text-(--fx-surface) transition-[background-color] duration-250 disabled:cursor-default disabled:opacity-35 data-[status=sent]:bg-[#16a34a] data-[status=sent]:text-white ${FOCUS}`}
+      className={`mt-3.5 grid h-[52px] cursor-pointer rounded-full border-0 bg-(--fx-ink) text-[15px] font-semibold text-(--fx-surface) transition-[background-color] duration-250 disabled:cursor-default disabled:opacity-35 data-[status=sent]:bg-[#15803d] data-[status=sent]:text-white ${FOCUS}`}
       disabled={disabled}
       aria-busy={status === "sending" || undefined}
       whileTap={{ scale: 1.03 }}
@@ -446,7 +454,7 @@ function Credit({ updated }: { updated: Date }) {
 
   return (
     <motion.p
-      className="mt-2.5 mb-0.5 text-center text-[11.5px] text-(--fx-quiet) [&_a]:text-inherit"
+      className="mt-2.5 mb-0.5 text-center text-[11.5px] text-(--fx-muted) [&_a]:text-inherit [&_a]:underline"
       {...PART}
     >
       {inPreview ? (
@@ -470,6 +478,7 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [turns, setTurns] = useState(0);
+  const id = useId();
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const returnFocus = useRef<Side | null>(null);
@@ -546,10 +555,21 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
     [1400, reset],
   ]);
 
+  const notice =
+    status === "sending"
+      ? "Sending"
+      : status === "sent"
+        ? `Sent ${format(sent, from)} ${from}`
+        : failed
+          ? "Couldn't load today's rates"
+          : "";
+
   const chars = Math.max(amount.length, gets === null ? 1 : format(gets, to).length, 1);
   const well = (side: Side) => (
     <Well
+      id={id}
       chars={chars}
+      quiet={live}
       side={side}
       code={side === "send" ? from : to}
       amount={amount}
@@ -621,6 +641,9 @@ export function CurrencyConverterDemo({ playing }: { playing?: boolean }) {
               )}
             </AnimatePresence>
           </div>
+          <p className="sr-only" role="status">
+            {live ? "" : notice}
+          </p>
         </motion.section>
       </LayoutGroup>
     </MotionConfig>

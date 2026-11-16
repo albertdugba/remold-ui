@@ -10,14 +10,15 @@ import {
   CheckIcon,
 } from "@hugeicons/core-free-icons";
 import { Remold, useAutoplay } from "@remold-ui/react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { CodeField } from "./code-field";
+import { useFocusAfterChange } from "./use-focus-after-change";
 
 const LENGTH = 6;
 const CODE = "482915";
 const ERROR_CODE = "482910";
-const EMAIL = "ama.mensah@northwind.app";
+const EMAIL = "ama.mensah@remold.app";
 
 const SETTLE = 280;
 
@@ -54,6 +55,8 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
   const [code, setCode] = useState("");
   const [phase, setPhase] = useState<Phase>("entry");
   const input = useRef<HTMLInputElement>(null);
+  const field = useRef<HTMLDivElement>(null);
+  const copyId = useId();
   const autoplay = useAutoplay(STEPS.length, {
     every: (index) => STEPS[index]!.ms,
     stopOnInteraction: playing === undefined,
@@ -100,101 +103,110 @@ export function OtpInputDemo({ playing }: OtpInputDemoProps = {}) {
   const editable = entering || failed;
   const pill = phase === "verifying" || verified;
 
+  useFocusAfterChange(field, phase, () => (failed ? input.current : null));
+
   return (
-    <section
-      ref={autoplay.ref}
-      data-phase={phase}
-      data-pill={pill || undefined}
-      className="otp group not-prose @container relative grid w-[min(100%,360px)] justify-items-center rounded-[28px] border-0 bg-(--otp-surface) px-6 pt-[34px] pb-[22px] text-center font-sans text-(--otp-ink) [--otp-accent:#7c3aed] [--otp-bad:#dc2626] [--otp-good:#16a34a] [--otp-ink:#18181b] [--otp-muted:#71717a] [--otp-on-ink:#fafafa] [--otp-surface:#ffffff] @max-[360px]:px-4 dark:[--otp-accent:#a78bfa] dark:[--otp-bad:#f87171] dark:[--otp-good:#22c55e] dark:[--otp-ink:#fafafa] dark:[--otp-muted:#a1a1aa] dark:[--otp-on-ink:#18181b] dark:[--otp-surface:#232327]"
-      aria-label="Verify your email"
-    >
-      <span
-        className="grid place-items-center text-(--otp-accent) transition-colors duration-350 group-data-[phase=error]:text-(--otp-bad) group-data-[phase=verified]:text-(--otp-good) [&_svg]:size-10 [&_svg]:[stroke-width:1.75]"
-        aria-hidden="true"
+    <MotionConfig reducedMotion="user">
+      <section
+        ref={autoplay.ref}
+        data-phase={phase}
+        data-pill={pill || undefined}
+        className="otp group not-prose @container relative grid w-[min(100%,360px)] justify-items-center rounded-[28px] border-0 bg-(--otp-surface) px-6 pt-[34px] pb-[22px] text-center font-sans text-(--otp-ink) [--otp-accent:#7c3aed] [--otp-bad:#dc2626] [--otp-good:#15803d] [--otp-ink:#18181b] [--otp-muted:#6c6c75] [--otp-on-ink:#fafafa] [--otp-surface:#ffffff] @max-[360px]:px-4 dark:[--otp-accent:#a78bfa] dark:[--otp-bad:#f87171] dark:[--otp-good:#22c55e] dark:[--otp-ink:#fafafa] dark:[--otp-muted:#a1a1aa] dark:[--otp-on-ink:#18181b] dark:[--otp-surface:#232327]"
+        aria-label="Verify your email"
       >
-        <Remold.Icon
-          icon={
-            <HugeiconsIcon
-              icon={verified ? MailValidation01Icon : failed ? MailRemove01Icon : MailOpen01Icon}
-            />
-          }
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.75}
-          spring={{ duration: 0.45, bounce: 0.16 }}
-        />
-      </span>
-
-      <p className="mt-[18px] mb-6 grid gap-1 text-[15px] leading-[1.4] text-(--otp-muted)" id="otp-copy">
-        Enter the code we sent to
-        <strong className="text-[16px] font-semibold wrap-anywhere text-(--otp-ink)">{EMAIL}</strong>
-      </p>
-
-      <motion.div
-        layout
-        transition={SPRING}
-        className="flex h-[58px] items-center justify-center motion-safe:group-data-[phase=error]:animate-shake"
-      >
-        <motion.div
-          layout
-          className="relative flex items-center justify-center bg-(--otp-surface) whitespace-nowrap transition-colors duration-350 group-data-pill:h-[52px] group-data-pill:bg-(--otp-ink) group-data-pill:pr-[26px] group-data-pill:pl-[22px] group-data-pill:text-(--otp-on-ink) group-data-[phase=verified]:bg-(--otp-good)! group-data-[phase=verified]:text-white!"
-          initial={false}
-          animate={{ borderRadius: pill ? 26 : 14 }}
-          transition={SPRING}
+        <span
+          className="grid place-items-center text-(--otp-accent) transition-colors duration-350 group-data-[phase=error]:text-(--otp-bad) group-data-[phase=verified]:text-(--otp-good) [&_svg]:size-10 [&_svg]:[stroke-width:1.75]"
+          aria-hidden="true"
         >
-          <CodeField
-            className="bg-(--otp-surface) transition-opacity duration-200 group-data-pill:w-0 group-data-pill:overflow-hidden group-data-pill:opacity-0 @max-[360px]:[&_.cf-cell]:h-[50px] @max-[360px]:[&_.cf-cell]:w-10 @max-[360px]:[&_.cf-cell]:flex-none @max-[360px]:[&_.cf-cell]:text-[20px] @max-[360px]:[&_.cf-cell:first-of-type]:w-11 @max-[360px]:[&_.cf-cell:first-of-type]:rounded-[25px_16px_16px_25px] @max-[360px]:[&_.cf-cell:last-of-type]:w-11 @max-[360px]:[&_.cf-cell:last-of-type]:rounded-[16px_25px_25px_16px]"
-            value={code}
-            onChange={(next) => {
-              setCode(next);
-              if (failed) setPhase("entry");
-            }}
-            disabled={!editable}
-            invalid={failed}
-            inputRef={input}
-            describedBy="otp-copy"
-            onFocus={(event) => failed && event.currentTarget.select()}
+          <Remold.Icon
+            icon={
+              <HugeiconsIcon
+                icon={verified ? MailValidation01Icon : failed ? MailRemove01Icon : MailOpen01Icon}
+              />
+            }
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.75}
+            spring={{ duration: 0.45, bounce: 0.16 }}
           />
-          <motion.span
+        </span>
+
+        <p className="mt-[18px] mb-6 grid gap-1 text-[15px] leading-[1.4] text-(--otp-muted)" id={copyId}>
+          <span className="transition-colors duration-350 group-data-[phase=error]:text-(--otp-bad)">
+            {failed ? "Wrong code. Try the one we sent to" : "Enter the code we sent to"}
+          </span>
+          <strong className="text-[16px] font-semibold wrap-anywhere text-(--otp-ink)">{EMAIL}</strong>
+        </p>
+
+        <motion.div
+          ref={field}
+          layout
+          transition={SPRING}
+          className="flex h-[58px] items-center justify-center motion-safe:group-data-[phase=error]:animate-shake"
+        >
+          <motion.div
             layout
-            className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-1/2 items-center gap-2 whitespace-nowrap opacity-0 group-data-pill:static group-data-pill:translate-none group-data-pill:opacity-100 group-data-pill:[transition:opacity_0.25s_0.1s]"
-            role="status"
-            aria-live="polite"
+            className="relative flex items-center justify-center bg-(--otp-surface) whitespace-nowrap transition-colors duration-350 group-data-pill:h-[52px] group-data-pill:bg-(--otp-ink) group-data-pill:pr-[26px] group-data-pill:pl-[22px] group-data-pill:text-(--otp-on-ink) group-data-[phase=verified]:bg-(--otp-good)! group-data-[phase=verified]:text-white!"
+            initial={false}
+            animate={{ borderRadius: pill ? 26 : 14 }}
             transition={SPRING}
           >
-            {verified ? (
-              <HugeiconsIcon icon={CheckIcon} className={ICON} aria-hidden="true" />
-            ) : failed ? (
-              <HugeiconsIcon icon={CancelCircleIcon} className={ICON} aria-hidden="true" />
-            ) : (
-              <HugeiconsIcon icon={Loading03Icon} className={ICON} aria-hidden="true" />
-            )}
-            <AnimatePresence mode="popLayout" initial={false}>
-              {!entering && (
-                <motion.span
-                  key={phase}
-                  className="text-[15px] font-semibold"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={SPRING}
-                >
-                  {verified ? "Verified" : failed ? "Try again" : "Verifying"}
-                </motion.span>
+            <CodeField
+              className="bg-(--otp-surface) transition-opacity duration-200 group-data-pill:w-0 group-data-pill:overflow-hidden group-data-pill:opacity-0 @max-[360px]:[&_.cf-cell]:h-[50px] @max-[360px]:[&_.cf-cell]:w-10 @max-[360px]:[&_.cf-cell]:flex-none @max-[360px]:[&_.cf-cell]:text-[20px] @max-[360px]:[&_.cf-cell:first-of-type]:w-11 @max-[360px]:[&_.cf-cell:first-of-type]:rounded-[25px_16px_16px_25px] @max-[360px]:[&_.cf-cell:last-of-type]:w-11 @max-[360px]:[&_.cf-cell:last-of-type]:rounded-[16px_25px_25px_16px]"
+              value={code}
+              onChange={(next) => {
+                setCode(next);
+                if (failed) setPhase("entry");
+              }}
+              disabled={!editable}
+              invalid={failed}
+              inputRef={input}
+              describedBy={copyId}
+              onFocus={(event) => failed && event.currentTarget.select()}
+            />
+            <motion.span
+              layout
+              className="pointer-events-none absolute top-1/2 left-1/2 flex -translate-1/2 items-center gap-2 whitespace-nowrap opacity-0 group-data-pill:static group-data-pill:translate-none group-data-pill:opacity-100 group-data-pill:[transition:opacity_0.25s_0.1s]"
+              role="status"
+              aria-live="polite"
+              transition={SPRING}
+            >
+              {verified ? (
+                <HugeiconsIcon icon={CheckIcon} className={ICON} aria-hidden="true" />
+              ) : failed ? (
+                <HugeiconsIcon icon={CancelCircleIcon} className={ICON} aria-hidden="true" />
+              ) : (
+                <HugeiconsIcon icon={Loading03Icon} className={ICON} aria-hidden="true" />
               )}
-            </AnimatePresence>
-          </motion.span>
+              <AnimatePresence mode="popLayout" initial={false}>
+                {!entering && (
+                  <motion.span
+                    key={phase}
+                    className="text-[15px] font-semibold"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={SPRING}
+                  >
+                    {verified ? "Verified" : failed ? "Try again" : "Verifying"}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.span>
+          </motion.div>
         </motion.div>
-      </motion.div>
 
-      <button
-        type="button"
-        className="mt-[22px] cursor-pointer rounded-lg border-0 bg-transparent px-2 py-1 text-[13px] text-(--otp-muted) transition-opacity duration-200 enabled:hover:text-(--otp-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--otp-ink) disabled:cursor-default disabled:opacity-40"
-        disabled={phase === "verifying"}
-        onClick={startOver}
-      >
-        <span>{verified ? "Use another code" : failed ? "Try another code" : "Resend code"}</span>
-      </button>
-    </section>
+        <button
+          type="button"
+          className="mt-[22px] cursor-pointer rounded-lg border-0 bg-transparent px-2 py-1 text-[13px] text-(--otp-muted) transition-[opacity,visibility] duration-200 enabled:hover:text-(--otp-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--otp-ink) disabled:cursor-default disabled:opacity-40 data-gone:invisible data-gone:opacity-0"
+          disabled={phase === "verifying" || verified}
+          data-gone={verified || undefined}
+          aria-hidden={verified || undefined}
+          onClick={startOver}
+        >
+          <span>{failed ? "Try another code" : "Resend code"}</span>
+        </button>
+      </section>
+    </MotionConfig>
   );
 }

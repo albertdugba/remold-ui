@@ -101,7 +101,7 @@ export function ChartSwitch({ title, period, segments, value, defaultValue = "do
   return (
     <section
       ref={ref}
-      className="not-prose grid w-[340px] max-w-full gap-5 rounded-[24px] bg-(--cs-surface) p-5 font-sans text-(--cs-ink) antialiased [--cs-ink:#0a0a0b] [--cs-muted:#71717a] [--cs-surface:#ffffff] [--cs-well:#f4f4f5] dark:[--cs-ink:#fafafa] dark:[--cs-muted:#a1a1aa] dark:[--cs-surface:#18181b] dark:[--cs-well:#26262b]"
+      className="not-prose grid w-[340px] max-w-full gap-5 rounded-[24px] bg-(--cs-surface) p-5 font-sans text-(--cs-ink) antialiased [--cs-ink:#0a0a0b] [--cs-muted:#6c6c75] [--cs-surface:#ffffff] [--cs-well:#f4f4f5] dark:[--cs-ink:#fafafa] dark:[--cs-muted:#a1a1aa] dark:[--cs-surface:#18181b] dark:[--cs-well:#26262b]"
       aria-label={title}
     >
       <header className="flex items-center justify-between gap-3">
@@ -119,7 +119,7 @@ export function ChartSwitch({ title, period, segments, value, defaultValue = "do
             <Toggle
               key={option}
               value={option}
-              className="h-7 cursor-pointer rounded-full border-0 bg-transparent px-3 text-[13px] font-medium text-(--cs-muted) capitalize outline-none transition-[background-color,color,box-shadow] duration-150 ease-out focus-visible:shadow-[0_0_0_2px_var(--cs-ink)] data-pressed:bg-(--cs-surface) data-pressed:text-(--cs-ink) data-pressed:shadow-[0_1px_2px_rgb(0_0_0/0.08)] motion-reduce:transition-none"
+              className="h-7 cursor-pointer rounded-full border-0 bg-transparent px-3 text-[13px] font-medium text-(--cs-muted) capitalize transition-[background-color,color,box-shadow] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-(--cs-ink) data-pressed:bg-(--cs-surface) data-pressed:text-(--cs-ink) data-pressed:shadow-[0_1px_2px_rgb(0_0_0/0.08)] motion-reduce:transition-none"
             >
               {option}
             </Toggle>

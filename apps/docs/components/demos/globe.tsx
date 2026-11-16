@@ -49,7 +49,7 @@ type Look = GlobeLook;
 const SURFACES: Record<Look, string> = {
   night: "bg-[#070d1f] text-[#e6ecff] [--gb-muted:#8693b8] [--gb-soft:#121b36] [--gb-surface:#070d1f]",
   paper: "bg-[#fffaf0] text-[#3b3427] [--gb-muted:#8a7f6a] [--gb-soft:#f1e9d6] [--gb-surface:#fffaf0]",
-  ink: "bg-white text-[#18181b] [--gb-muted:#71717a] [--gb-soft:#f4f4f5] [--gb-surface:#fff] dark:bg-[#1c1c1f] dark:text-[#fafafa] dark:[--gb-muted:#a1a1aa] dark:[--gb-soft:#27272a] dark:[--gb-surface:#1c1c1f]",
+  ink: "bg-white text-[#18181b] [--gb-muted:#6c6c75] [--gb-soft:#f4f4f5] [--gb-surface:#fff] dark:bg-[#1c1c1f] dark:text-[#fafafa] dark:[--gb-muted:#a1a1aa] dark:[--gb-soft:#27272a] dark:[--gb-surface:#1c1c1f]",
 };
 
 const MARKERS = CITIES.slice(0, 6).map((city) => ({ ...city, size: 2 }));
