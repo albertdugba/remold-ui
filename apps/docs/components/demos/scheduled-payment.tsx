@@ -655,7 +655,7 @@ export function ScheduledPayment({ value, onValueChange }: { value: ScheduleValu
         <SettingRow setting="ends" index={2} label="Ends" value={value.ends} icon={StopCircleIcon} disabled={busy} onOpen={() => open("ends")} />
       </Reveal>
       <motion.p className="m-0 border-0 border-t border-solid border-(--sp-line) px-3.5 pt-3 pb-1.5 text-[13px] leading-[1.5] text-(--sp-muted)" {...rise(0.06)}>
-        Kofi gets <b className="font-semibold text-(--sp-ink)">{pounds(total)}</b> on{" "}
+        Bentil gets <b className="font-semibold text-(--sp-ink)">{pounds(total)}</b> on{" "}
         <b className="font-semibold text-(--sp-ink)">
           <SwapText>{shortDate(value.date)}</SwapText>
         </b>
@@ -677,12 +677,12 @@ export function ScheduledPayment({ value, onValueChange }: { value: ScheduleValu
             <header className="flex items-center gap-3 px-5 pt-5">
               <img
                 className="size-9 rounded-full bg-[#e7e4dc]"
-                src="https://api.dicebear.com/9.x/notionists/svg?seed=Kofi%20Asante&backgroundColor=e7e4dc"
+                src="https://api.dicebear.com/9.x/notionists/svg?seed=Bentil%20Andoh&backgroundColor=e7e4dc"
                 alt=""
                 draggable={false}
               />
               <span className="grid flex-1 gap-px">
-                <span className="text-[14.5px] font-semibold">Pay Kofi Asante</span>
+                <span className="text-[14.5px] font-semibold">Pay Bentil Andoh</span>
                 <span className="text-[12.5px] text-(--sp-muted)">Rent · Current account •• 4410</span>
               </span>
               <button
@@ -777,7 +777,7 @@ export function ScheduledPayment({ value, onValueChange }: { value: ScheduleValu
 
               <Reveal show={!value.scheduled}>
                 <p className="m-0 px-1 pt-3 text-[13px] leading-[1.5] text-(--sp-muted)">
-                  Kofi gets <b className="font-semibold text-(--sp-ink)">{pounds(total)}</b> in a few seconds.
+                  Bentil gets <b className="font-semibold text-(--sp-ink)">{pounds(total)}</b> in a few seconds.
                 </p>
               </Reveal>
             </div>
