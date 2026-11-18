@@ -1,5 +1,15 @@
 # @remold-ui/react
 
+## 0.2.3
+
+### Patch Changes
+
+- 18f768c: `useAutoplay` now also stops when someone tabs into the element or it is clicked by assistive technology. It no longer starts by itself when the system asks for reduced motion: it waits for the play/pause control or the new `play()`, and the new `reducedMotion` option changes that.
+  - @remold-ui/core@0.2.3
+  - @remold-ui/dom@0.2.3
+  - @remold-ui/canvas@0.2.3
+  - @remold-ui/morph@0.2.3
+
 ## 0.2.2
 
 ### Patch Changes
