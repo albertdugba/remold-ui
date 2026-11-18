@@ -240,14 +240,6 @@ const PREVIEWS: Record<string, Preview> = {
     maxZoom: FORM_ZOOM,
   },
 
-  "payment-trailer": {
-    Component: load(() => import("./demos/payment-trailer").then((m) => m.PaymentTrailerDemo)),
-    width: 420,
-    surface: true,
-    props: { preview: true },
-    maxZoom: FORM_ZOOM,
-  },
-
   "sign-in": {
     Component: load(() => import("./demos/sign-in").then((m) => m.SignInDemo)),
     width: 420,

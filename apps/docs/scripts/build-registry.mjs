@@ -46,11 +46,6 @@ const ITEMS = [
     "A welcome scene for onboarding in pure SVG: an envelope opens, its note folds into a paper plane that loops round, then lands as a bell that rings.",
   ],
   [
-    "payment-trailer",
-    "Payment trailer",
-    "A payment told as a short film in pure SVG: a phone becomes a card that taps, the card becomes a bank as coins rain in, and the bank turns into a smiling receipt.",
-  ],
-  [
     "split-amount",
     "Split amount",
     "A bill splitter: tap the people at the table and your share rolls to the new amount while the bar re-divides. Built on Base UI's ToggleGroup.",

@@ -96,4 +96,3 @@ export { UnsavedChangesDemo, EditProfile } from "./unsaved-changes";
 export { ScheduledPaymentDemo, ScheduledPayment } from "./scheduled-payment";
 export { CardRevealDemo, FlipCard } from "./card-reveal";
 export { WelcomeTrailerDemo, WelcomeTrailer } from "./welcome-trailer";
-export { PaymentTrailerDemo, PaymentTrailer } from "./payment-trailer";

@@ -157,10 +157,6 @@ const WelcomeTrailerDemo = dynamic(
   () => import("../demos/welcome-trailer").then((m) => m.WelcomeTrailerDemo),
   { ssr: false },
 );
-const PaymentTrailerDemo = dynamic(
-  () => import("../demos/payment-trailer").then((m) => m.PaymentTrailerDemo),
-  { ssr: false },
-);
 const PopoverMenuDemo = dynamic(
   () => import("../demos/popover-menu").then((m) => m.PopoverMenuDemo),
   { ssr: false },
@@ -838,17 +834,6 @@ function allCards() {
         minHeight={540}
       >
         {(_, playing) => <ContextMenuDemo playing={playing} preview />}
-      </PartCard>
-      <PartCard
-        kicker="SVG · Remold"
-        category="illustrations"
-        title="Payment trailer"
-        isNew
-        docs="/docs/components/payment-trailer"
-        states={["Play"]}
-        minHeight={560}
-      >
-        {(_, playing) => <PaymentTrailerDemo playing={playing} preview />}
       </PartCard>
       <PartCard
         kicker="SVG · Remold"
