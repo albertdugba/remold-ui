@@ -9,6 +9,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "cf:deploy": "wrangler deploy",
     "cf:preview": "wrangler dev",
+    "usage": "node scripts/usage.mjs",
     "clean": "rm -rf .next .source .turbo",
     "registry": "node scripts/build-registry.mjs"
   },

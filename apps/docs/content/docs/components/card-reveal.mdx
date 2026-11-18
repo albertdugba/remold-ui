@@ -1,0 +1,33 @@
+---
+title: "Virtual card"
+description: "A virtual card you can turn over. It tilts toward your pointer with a moving sheen, and a tap flips it in 3D to the back, where the full number, expiry and CVC sit with their own copy buttons. A hairline counts down and the card turns back on its own."
+status: "new"
+tags: ["Motion", "Remold"]
+---
+
+<Stage name="card-reveal" code={<Source demo="card-reveal" />} minHeight={560}>
+  <CardRevealDemo />
+</Stage>
+
+## Things to try
+
+- **Move your pointer over the card.** It tilts toward you in 3D and a soft sheen follows the pointer across it.
+- **Tap the card, or Show details.** It flips over on a spring to its back: magnetic stripe, full number, expiry and CVC.
+- **Copy a detail.** Each one has its own copy button, which reshapes into a green tick, and a line under the card says what was copied.
+- **Wait.** A thin line along the bottom of the back shrinks over 15 seconds, then the card flips back to hide the details.
+
+## Install
+
+<AddCommand name="card-reveal" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="card-reveal" />
+
+## How it works
+
+- **Two faces, one turn.** The front and back are stacked with `backface-visibility: hidden`, the back pre-turned 180 degrees. Flipping springs the pair's `rotateY` from 0 to 180 inside a `perspective`, so it turns like a real card.
+- **The tilt follows the pointer.** Pointer position feeds Motion springs for `rotateX`, `rotateY` and the sheen's position, so the card leans and settles smoothly and stops when the pointer leaves. It only tilts for a mouse, and not with reduced motion.
+- **Icons reshape.** The eye and copy icons are `Remold.Icon`, and the button label re-letters with `Remold.Text`.

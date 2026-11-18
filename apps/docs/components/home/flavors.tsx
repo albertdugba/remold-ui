@@ -7,6 +7,7 @@ import { Remold } from "@remold-ui/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { FLAVOR_NAMES as NAMES, FLAVORS, type Flavor } from "./flavors-code";
+import { track } from "@/lib/analytics";
 
 const COPIED_FOR = 1500;
 
@@ -18,6 +19,7 @@ function CopyButton({ code }: { code: string }) {
 
   const copy = async () => {
     await navigator.clipboard.writeText(code);
+    track("Copy code", { source: "home" });
     setCopied(true);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setCopied(false), COPIED_FOR);

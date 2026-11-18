@@ -1,6 +1,6 @@
 ---
 title: "Send money"
-description: "Sending money from a keypad, the way mobile-money and wallet apps do it: digits roll in, the commas make room, an amount over your balance is refused with a shake, and Send becomes a spinner and then a check."
+description: "Sending money from a keypad, the way mobile-money and wallet apps do it: digits roll in, the commas make room, an amount over your balance is refused with a shake, and Send swaps the keypad for a confirmation. A hairline ring draws round the person you're paying while it sends, then closes in green with a tick."
 status: "new"
 tags: ["Morph", "Motion"]
 ---
@@ -13,7 +13,7 @@ tags: ["Morph", "Motion"]
 
 - **Tap in an amount.** Each digit rolls in from below and the commas make room as the number grows. A long amount shrinks to fit. On a computer you can also click the amount and type.
 - **Go over your balance.** The digit that would take you past it is refused with a shake, rather than accepted and flagged later.
-- **Send.** The arrow turns into a spinner, then a check.
+- **Send.** The keypad gives way to Kwame's avatar with a hairline ring drawing round it while the arrow becomes a spinner. When the money lands, the ring closes in green, his avatar gives a small bump, a tick pops onto its corner, and the button says Done.
 
 ## Install
 
@@ -28,6 +28,7 @@ The install command adds these for you. If you copy the code by hand, install th
 ## How it works
 
 - **Arrow, spinner, check.** The Send button's icon is one `Remold.Icon` reshaped from icon to icon, so each state grows out of the last.
-- The rolling digits, the shake and the fit-to-width are Motion.
+- **The ring is real progress.** It's an SVG circle whose `pathLength` eases most of the way round while the transfer runs and springs closed when it lands, so it never claims to be done before it is.
+- The rolling digits, the shake, the fit-to-width and the tick that pops in are Motion.
 
-<Callout>The people are made up. The avatar is an illustration from [DiceBear](https://www.dicebear.com).</Callout>
+<Callout>The people are made up. The avatars are illustrations from [DiceBear](https://www.dicebear.com).</Callout>

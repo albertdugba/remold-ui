@@ -5,6 +5,7 @@
  */
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Code } from "./code";
+import { type EventProps, track, type UsageEvent } from "@/lib/analytics";
 
 export const MANAGERS = ["npm", "pnpm", "yarn", "bun"] as const;
 export type Manager = (typeof MANAGERS)[number];
@@ -42,9 +43,11 @@ const subscribe = (listener: () => void) => {
 export function PackageTabs({
   commands,
   label = "Package manager",
+  event,
 }: {
   commands: Record<Manager, string>;
   label?: string;
+  event?: { name: UsageEvent; props?: EventProps };
 }) {
   const manager = useSyncExternalStore(subscribe, read, () => "npm" as Manager);
   const [copied, setCopied] = useState(false);
@@ -66,6 +69,7 @@ export function PackageTabs({
           onClick={async () => {
             try {
               await navigator.clipboard.writeText(command);
+              if (event) track(event.name, { ...event.props, detail: manager });
               setCopied(true);
               setTimeout(() => setCopied(false), 1500);
             } catch {
@@ -91,6 +95,7 @@ export function Install({ packages }: { packages: string }) {
         yarn: `yarn add ${packages}`,
         bun: `bun add ${packages}`,
       }}
+      event={{ name: "Copy dependencies", props: { component: packages, source: "dependencies" } }}
     />
   );
 }
@@ -108,6 +113,7 @@ export function AddCommand({ name }: { name: string }) {
         yarn: `yarn dlx shadcn@latest add ${url}`,
         bun: `bunx --bun shadcn@latest add ${url}`,
       }}
+      event={{ name: "Copy install", props: { component: name, source: "install" } }}
     />
   );
 }

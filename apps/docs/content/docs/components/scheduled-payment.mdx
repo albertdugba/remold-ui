@@ -1,0 +1,35 @@
+---
+title: "Scheduled payment"
+description: "A web payment panel with one switch: schedule it or not. Turn it on and Start date and Repeats appear as a list, a plain sentence says exactly what will happen, and each field opens its choices inline as a stacked card."
+status: "new"
+tags: ["Motion", "Base UI"]
+---
+
+<Stage name="scheduled-payment" code={<Source demo="scheduled-payment" />} minHeight={640}>
+  <ScheduledPaymentDemo />
+</Stage>
+
+## Things to try
+
+- **Type an amount.** Click the big number and type. Each digit rolls up into place with a short blur, the commas slide in as the number grows, it groups thousands as you go, keeps two decimal places at most, and the field grows to fit. Balance after updates live; go over what you have and it turns red, says Not enough funds, and the button switches off.
+- **Flip Schedule for later.** Click the switch or anywhere on its row. The thumb stretches while you press, the line under the title re-words itself, and Start date and Repeats open beneath it as a list, starting tomorrow.
+- **Read the sentence.** Under the fields it spells out what will happen, such as "Kofi gets £1,200 on Thu 19 Nov, then every month for 6 payments", and updates as you change anything.
+- **Open a row.** Start date or Repeats stacks a card of choices in place, its label gliding up to become the card's title. Pick a date deeper in the calendar, or a custom interval, and another card stacks on top.
+- **Make it repeat.** An Ends row appears for how many payments to make.
+- **Go back.** The back arrow or Escape lifts the top card off.
+
+## Install
+
+<AddCommand name="scheduled-payment" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="scheduled-payment" />
+
+## How it works
+
+- **A stack, not a sheet.** The schedule card and every card opened from it share one slot. The one on top sits flat; each one beneath it scales down a little, moves up so its edge peeks out, dims, and hides its content, so the stack reads as cards piled on each other.
+- **The slot fits the top card.** Each card measures its content, and the slot's height springs to the top card's height plus room for the edges peeking out, so nothing around it jumps.
+- **One surface reshaping, with a little spring.** Swapping views springs the card to its new height in about a third of a second with a touch of bounce, while the old content blurs out and the new content sharpens in with a slight scale, rippling quickly down the list.

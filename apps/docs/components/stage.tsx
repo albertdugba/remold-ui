@@ -8,6 +8,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { track } from "@/lib/analytics";
 
 export interface StageProps {
   children: ReactNode;
@@ -96,6 +97,7 @@ export function Stage({
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(install);
+                  track("Copy install", { component: name, source: "toolbar" });
                   setCopied(true);
                   setTimeout(() => setCopied(false), 1500);
                 } catch {

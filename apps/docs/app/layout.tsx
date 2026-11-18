@@ -2,6 +2,7 @@ import { Provider } from "@/components/provider";
 import type { Metadata } from "next";
 import { absoluteUrl, siteDescription, siteUrl, socialImage, socialImageAlt } from "@/lib/seo";
 import "./global.css";
+import { Analytics } from "@/components/analytics";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -70,6 +71,7 @@ export default function Layout({ children }: LayoutProps<"/">) {
     <html lang="en" suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
         <Provider>{children}</Provider>
+        <Analytics />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </body>
     </html>

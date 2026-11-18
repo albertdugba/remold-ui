@@ -17,6 +17,7 @@ import { toJSON, toReact } from "./export";
 import { TEMPLATES } from "./templates";
 import { useHistory } from "./use-history";
 import "./studio.css";
+import { track } from "@/lib/analytics";
 
 const STORAGE_KEY = "remold-studio:document";
 
@@ -114,6 +115,7 @@ export function Studio() {
   const copy = async (text: string, what: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      track("Copy code", { source: "studio", detail: what });
       setNotice(`${what} copied`);
     } catch {
       setNotice("Couldn't reach the clipboard");

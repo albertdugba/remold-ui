@@ -2,7 +2,6 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowRight02Icon,
-  CheckIcon,
   Eraser01Icon,
   Loading03Icon,
   Tick02Icon,
@@ -97,6 +96,8 @@ const keepFocus = (event: PointerEvent) => {
 };
 
 function hintFor(transfer: SendMoneyValue) {
+  if (transfer.phase === "sending")
+    return { key: "sending", text: `Sending to ${TO.name.split(" ")[0]}`, tone: undefined };
   if (transfer.phase === "sent")
     return { key: "sent", text: `Sent to ${TO.name.split(" ")[0]}`, tone: "good" };
   if (transfer.note === "over") return { key: "over", text: "That's more than your balance", tone: "bad" };
@@ -111,8 +112,8 @@ function sendLabel(phase: SendMoneyValue["phase"], total: number) {
 }
 
 const PALETTE = [
-  "[--sm-surface:#ffffff] [--sm-key:#f4f4f5] [--sm-key-press:#e4e4e7] [--sm-ink:#18181b] [--sm-on-ink:#fafafa] [--sm-muted:#6c6c75] [--sm-faint:#d4d4d8] [--sm-good:#047857] [--sm-bad:#dc2626]",
-  "dark:[--sm-surface:#232327] dark:[--sm-key:#2e2e33] dark:[--sm-key-press:#3a3a40] dark:[--sm-ink:#fafafa] dark:[--sm-on-ink:#18181b] dark:[--sm-muted:#a1a1aa] dark:[--sm-faint:#52525b] dark:[--sm-good:#34d399] dark:[--sm-bad:#f87171]",
+  "[--sm-surface:#ffffff] [--sm-send:#2563eb] [--sm-key:#f4f4f5] [--sm-key-press:#e4e4e7] [--sm-ink:#18181b] [--sm-on-ink:#fafafa] [--sm-muted:#6c6c75] [--sm-faint:#d4d4d8] [--sm-good:#047857] [--sm-bad:#dc2626]",
+  "dark:[--sm-surface:#232327] dark:[--sm-send:#60a5fa] dark:[--sm-key:#2e2e33] dark:[--sm-key-press:#3a3a40] dark:[--sm-ink:#fafafa] dark:[--sm-on-ink:#18181b] dark:[--sm-muted:#a1a1aa] dark:[--sm-faint:#52525b] dark:[--sm-good:#34d399] dark:[--sm-bad:#f87171]",
 ].join(" ");
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--sm-ink)";
@@ -122,7 +123,7 @@ function Recipient() {
     <header className="flex items-center gap-[11px] px-1 pt-1">
       <img
         className="size-10 flex-none rounded-full bg-[#d1fae5]"
-        src={`https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(TO.name)}&backgroundColor=d1fae5`}
+        src={avatar(TO.name, "d1fae5")}
         alt=""
         width={40}
         height={40}
@@ -188,18 +189,69 @@ function Keypad({ disabled, onKey }: { disabled: boolean; onKey: (key: Key) => v
   );
 }
 
-function Sent() {
+const avatar = (seed: string, background: string) =>
+  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${background}`;
+
+const ENTER = {
+  initial: { opacity: 0, scale: 0.9, filter: "blur(4px)" },
+  animate: { opacity: 1, scale: 1, filter: "blur(0px)" },
+  exit: { opacity: 0, scale: 0.94, filter: "blur(4px)", transition: { duration: 0.18 } },
+  transition: { type: "spring" as const, duration: 0.5, bounce: 0.2 },
+};
+
+const LAND = { type: "spring" as const, duration: 0.5, bounce: 0.45 };
+const SEND_MS = 1700;
+
+function Tick({ className = "" }: { className?: string }) {
   return (
-    <motion.div
-      className="grid place-items-center"
-      initial={{ opacity: 0, scale: 0.72 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.92 }}
-      transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
+    <motion.span
+      className={`grid place-items-center rounded-full bg-(--sm-good) text-white ring-[3px] ring-(--sm-surface) ${className}`}
+      initial={{ scale: 0.3, opacity: 0, rotate: -40 }}
+      animate={{ scale: 1, opacity: 1, rotate: 0 }}
+      exit={{ scale: 0.3, opacity: 0 }}
+      transition={LAND}
+      aria-hidden="true"
     >
-      <span className="grid size-[84px] place-items-center rounded-full bg-[color-mix(in_oklab,var(--sm-good)_14%,transparent)] text-(--sm-good) [&_svg]:size-9">
-        <HugeiconsIcon icon={CheckIcon} strokeWidth={2.25} aria-hidden="true" />
-      </span>
+      <HugeiconsIcon icon={Tick02Icon} strokeWidth={2.8} className="size-[60%]" />
+    </motion.span>
+  );
+}
+
+/** Kwame's avatar with a hairline ring that draws round it while the money moves, then closes in green. */
+function RingConfirmation({ phase }: { phase: "sending" | "sent" }) {
+  const sent = phase === "sent";
+
+  return (
+    <motion.div className="grid content-center justify-items-center gap-3.5" {...ENTER}>
+      <div className="relative size-[124px]">
+        <svg className="absolute inset-0 size-full -rotate-90" viewBox="0 0 124 124" aria-hidden="true">
+          <circle cx="62" cy="62" r="60" fill="none" strokeWidth="2.5" className="stroke-(--sm-key)" />
+          <motion.circle
+            cx="62"
+            cy="62"
+            r="60"
+            fill="none"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            className="stroke-(--sm-ink) transition-[stroke] duration-300 ease-out group-data-[phase=sent]:stroke-(--sm-good)"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: sent ? 1 : 0.88 }}
+            transition={sent ? { type: "spring", duration: 0.45, bounce: 0 } : { duration: SEND_MS / 1000, ease: [0.32, 0.72, 0, 1] }}
+          />
+        </svg>
+        <motion.img
+          className="absolute inset-[10px] size-[104px] rounded-full bg-[#d1fae5]"
+          src={avatar(TO.name, "d1fae5")}
+          alt=""
+          draggable={false}
+          animate={sent ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+        />
+        <AnimatePresence>{sent && <Tick key="tick" className="absolute right-0.5 bottom-0.5 size-[34px]" />}</AnimatePresence>
+      </div>
+      <p className="m-0 text-[13px] text-(--sm-muted)">
+        <Remold.Text>{sent ? "Arrived just now" : "Usually arrives instantly"}</Remold.Text>
+      </p>
     </motion.div>
   );
 }
@@ -282,7 +334,7 @@ export function SendMoney({
 
   useEffect(() => {
     if (transfer.phase !== "sending") return;
-    const timer = setTimeout(() => setTransfer((current) => ({ ...current, phase: "sent" }), "timer"), 1100);
+    const timer = setTimeout(() => setTransfer((current) => ({ ...current, phase: "sent" }), "timer"), SEND_MS);
     return () => clearTimeout(timer);
   }, [transfer.phase, setTransfer]);
 
@@ -370,8 +422,8 @@ export function SendMoney({
 
         <div className="mt-[18px] grid min-h-[218px] [&>*]:[grid-area:1/1]">
           <AnimatePresence initial={false}>
-            {transfer.phase === "sent" ? (
-              <Sent key="success" />
+            {transfer.phase !== "edit" ? (
+              <RingConfirmation key="art" phase={transfer.phase} />
             ) : (
               <Keypad key="keys" disabled={busy} onKey={(key) => apply((raw) => press(raw, key))} />
             )}
@@ -391,8 +443,8 @@ const BEATS: readonly (SendMoneyValue & { ms: number })[] = [
   { raw: "125", phase: "edit", refused: 0, ms: 360 },
   { raw: "1250", phase: "edit", refused: 0, ms: 1000 },
   { raw: "1250", phase: "edit", refused: 1, note: "over", ms: 1500 },
-  { raw: "1250", phase: "sending", refused: 1, ms: 1200 },
-  { raw: "1250", phase: "sent", refused: 1, ms: 2400 },
+  { raw: "1250", phase: "sending", refused: 1, ms: 1800 },
+  { raw: "1250", phase: "sent", refused: 1, ms: 2800 },
 ];
 
 const fromBeat = (step: number): SendMoneyValue => {
