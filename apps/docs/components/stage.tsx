@@ -141,8 +141,8 @@ export function Stage({
 
       {view === "preview" ? (
         <div
-          className="rm-stage-preview relative grid place-items-center px-4 py-10 sm:px-8 sm:py-16"
-          style={{ minHeight } as CSSProperties}
+          className="rm-stage-preview relative grid min-h-(--stage-min) place-items-center px-4 py-10 sm:px-8 sm:py-16 lg:min-h-[calc(var(--stage-min)+120px)]"
+          style={{ "--stage-min": `${minHeight}px` } as CSSProperties}
         >
           <div
             key={run}

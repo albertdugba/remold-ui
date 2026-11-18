@@ -27,7 +27,7 @@ const panel = (file: SourceFile) => (
   <ServerCodeBlock
     code={file.code}
     lang={file.lang}
-    codeblock={{ allowCopy: false, "data-line-numbers": true, viewportProps: { className: "max-h-[760px]" } }}
+    codeblock={{ allowCopy: false, "data-line-numbers": true, viewportProps: { className: "max-h-[560px] lg:max-h-[760px]" } }}
   />
 );
 
