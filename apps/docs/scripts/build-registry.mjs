@@ -41,6 +41,16 @@ const ITEMS = [
     "A virtual card that tilts toward the pointer and flips over in 3D to show its full details, each with a copy button, then turns back on its own.",
   ],
   [
+    "welcome-trailer",
+    "Welcome trailer",
+    "A welcome scene for onboarding in pure SVG: an envelope opens, its note folds into a paper plane that loops round, then lands as a bell that rings.",
+  ],
+  [
+    "payment-trailer",
+    "Payment trailer",
+    "A payment told as a short film in pure SVG: a phone becomes a card that taps, the card becomes a bank as coins rain in, and the bank turns into a smiling receipt.",
+  ],
+  [
     "split-amount",
     "Split amount",
     "A bill splitter: tap the people at the table and your share rolls to the new amount while the bar re-divides. Built on Base UI's ToggleGroup.",
@@ -208,7 +218,7 @@ const ITEMS = [
   [
     "voice-orb",
     "Voice orb",
-    "A soft cloud-filled voice orb that breathes, listens, thinks and speaks, with a live translation demo whose translated line morphs as it revises itself.",
+    "A voice orb made of dots: a ball at rest, a chasing arc as it connects, rings as it listens, three lifting dots as it thinks, a magnifying glass as it searches and a ball with a rippling edge as it speaks, with a status line that says which and a live translation demo whose translated line morphs as it revises itself.",
   ],
   [
     "editor-mentions",
@@ -243,7 +253,7 @@ const ITEMS = [
   [
     "order-tracker",
     "Order tracker",
-    "A food order told like a short film: each stage plays live, then its illustration reshapes into the next, from the pot to the bag, the scooter and your front door.",
+    "A waakye card with a quantity stepper and an Order button; when you order, the button reshapes into a cooking pot and the order plays out as one drawing: pot, bag, scooter and front door.",
   ],
   [
     "particle-shapes",
@@ -258,7 +268,7 @@ const ITEMS = [
   [
     "payment-status",
     "Payment status",
-    "A payment's status as one drawing: the card becomes a lock while the bank confirms, then a receipt when it's paid, or the card again with a warning when it's declined.",
+    "A payment's status as one little character: the card blinks while it waits, the lock glances about while the bank confirms, it scrunches its eyes when declined and becomes a smiling receipt once paid, with a glow for each state.",
   ],
   [
     "send-money",

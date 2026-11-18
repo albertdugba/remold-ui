@@ -1,7 +1,7 @@
-import { CodeBlockTab, CodeBlockTabs, CodeBlockTabsList, CodeBlockTabsTrigger } from "fumadocs-ui/components/codeblock";
 import { ServerCodeBlock } from "fumadocs-ui/components/codeblock.rsc";
 import { demoSources } from "./generated/demo-sources";
 import { Install } from "./package-tabs";
+import { SourceTabs } from "./source-tabs";
 
 interface SourceFile {
   name: string;
@@ -23,43 +23,24 @@ function getSource(demo: string): DemoSource {
   return source;
 }
 
+const panel = (file: SourceFile) => (
+  <ServerCodeBlock
+    code={file.code}
+    lang={file.lang}
+    codeblock={{ allowCopy: false, "data-line-numbers": true, viewportProps: { className: "max-h-[560px]" } }}
+  />
+);
+
 export function Source({ demo }: { demo: string }) {
   const { usage, files } = getSource(demo);
 
   return (
-    <CodeBlockTabs defaultValue="usage">
-      <CodeBlockTabsList>
-        <CodeBlockTabsTrigger value="usage">Usage</CodeBlockTabsTrigger>
-        <CodeBlockTabsTrigger value="source">Full source</CodeBlockTabsTrigger>
-      </CodeBlockTabsList>
-      <CodeBlockTab value="usage">
-        <ServerCodeBlock code={usage.code} lang={usage.lang} codeblock={{ "data-line-numbers": true }} />
-      </CodeBlockTab>
-      <CodeBlockTab value="source">
-        <SourceFiles files={files} />
-      </CodeBlockTab>
-    </CodeBlockTabs>
-  );
-}
-
-function SourceFiles({ files }: { files: readonly SourceFile[] }) {
-  const firstFile = files[0]!.name;
-
-  return (
-    <CodeBlockTabs defaultValue={firstFile}>
-      <CodeBlockTabsList>
-        {files.map((file) => (
-          <CodeBlockTabsTrigger key={file.name} value={file.name}>
-            {file.name}
-          </CodeBlockTabsTrigger>
-        ))}
-      </CodeBlockTabsList>
-      {files.map((file) => (
-        <CodeBlockTab key={file.name} value={file.name}>
-          <ServerCodeBlock code={file.code} lang={file.lang} codeblock={{ "data-line-numbers": true }} />
-        </CodeBlockTab>
-      ))}
-    </CodeBlockTabs>
+    <SourceTabs
+      tabs={[
+        { label: "Usage", code: usage.code, panel: panel(usage), apart: true },
+        ...files.map((file) => ({ label: file.name, code: file.code, panel: panel(file) })),
+      ]}
+    />
   );
 }
 

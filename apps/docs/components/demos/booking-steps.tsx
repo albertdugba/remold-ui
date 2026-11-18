@@ -55,9 +55,9 @@ type Slot = (typeof SLOTS)[number]["key"];
 const TITLES = ["What's the visit for?", "Which day suits you?", "Pick a time", "Look it over"];
 
 const DOCTOR = {
-  name: "Dr. Efua Asante",
+  name: "Dr. Yaw Berima",
   role: "General practitioner",
-  seed: "Efua%20Asante",
+  seed: "Yaw%20Berima",
   tint: "bae6fd",
 };
 const PLACE = "Ridge Hospital, Accra";

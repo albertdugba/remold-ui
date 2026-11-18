@@ -208,7 +208,7 @@ function ApplyButton({
   return (
     <motion.button
       type="button"
-      className="grid h-9 min-w-[72px] flex-none cursor-pointer place-items-center rounded-[9px] border-0 bg-(--fk-ink) px-4 text-[13px] font-semibold text-(--fk-surface) shadow-[0_1px_2px_rgb(0_0_0/0.12)] transition-[background-color,color,box-shadow] duration-200 disabled:cursor-default disabled:bg-(--fk-well-strong) disabled:text-(--fk-muted) disabled:shadow-none group-focus-within/box:disabled:bg-(--fk-well)!"
+      className="grid h-9 min-w-[72px] flex-none cursor-pointer place-items-center rounded-[9px] border-0 bg-(--fk-ink) px-4 text-[13px] font-semibold text-(--fk-surface) shadow-[0_1px_2px_rgb(0_0_0/0.12)] transition-[background-color,color,box-shadow] duration-200 disabled:cursor-default disabled:bg-(--fk-well-strong) disabled:text-(--fk-muted) disabled:shadow-none"
       disabled={disabled}
       aria-busy={checking || undefined}
       whileTap={{ scale: 0.96 }}
@@ -412,7 +412,7 @@ export function PromoCode({
             <div
               ref={box}
               data-tone={on ? "applied" : error ? "invalid" : undefined}
-              className="group/box relative flex h-12 w-full items-center overflow-clip rounded-[14px] bg-(--fk-well) shadow-[inset_0_0_0_1px_transparent] transition-[background-color,box-shadow] duration-300 focus-within:bg-(--fk-surface) focus-within:shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,var(--fk-ink)_85%,transparent),0_0_0_4px_color-mix(in_oklab,var(--fk-ink)_7%,transparent)] data-[tone=applied]:bg-[color-mix(in_oklab,var(--fk-good)_12%,var(--fk-surface))]! data-[tone=applied]:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--fk-good)_30%,transparent)]! data-[tone=invalid]:bg-[color-mix(in_oklab,var(--fk-bad)_8%,var(--fk-surface))]! data-[tone=invalid]:shadow-none!"
+              className="group/box relative flex h-12 w-full items-center overflow-clip rounded-[14px] bg-(--fk-well) shadow-[inset_0_0_0_1px_transparent] transition-[background-color,box-shadow] duration-300 data-[tone=applied]:bg-[color-mix(in_oklab,var(--fk-good)_12%,var(--fk-surface))]! data-[tone=applied]:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--fk-good)_30%,transparent)]! data-[tone=invalid]:bg-[color-mix(in_oklab,var(--fk-bad)_8%,var(--fk-surface))]! data-[tone=invalid]:shadow-none!"
             >
               <AnimatePresence
                 initial={false}

@@ -153,7 +153,7 @@ export function Stage({
           </div>
         </div>
       ) : (
-        <div className="rm-stage-code max-h-[640px] overflow-auto">{code}</div>
+        <div className="rm-stage-code">{code}</div>
       )}
     </div>
   );

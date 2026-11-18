@@ -3,6 +3,8 @@
  * One command, shown for npm, pnpm, yarn or bun, with a copy button. The chosen package manager
  * is shared by every block on the page and remembered for next time.
  */
+import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Code } from "./code";
 import { type EventProps, track, type UsageEvent } from "@/lib/analytics";
@@ -77,6 +79,7 @@ export function PackageTabs({
             }
           }}
         >
+          <HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} strokeWidth={copied ? 2.4 : 1.8} aria-hidden="true" />
           {copied ? "Copied" : "Copy"}
         </button>
       </div>

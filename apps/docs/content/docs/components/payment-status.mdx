@@ -1,6 +1,6 @@
 ---
 title: "Payment status"
-description: "A payment's status as one drawing: the card becomes a lock while the bank confirms, then a receipt when it's paid, or the card again with a warning when it's declined."
+description: "A payment's status as one little character: the card blinks while it waits, becomes a lock that glances about while the bank confirms, scrunches its eyes when it's declined, and turns into a smiling receipt in a pool of green once it's paid."
 status: "new"
 tags: ["Remold", "SVG"]
 ---
@@ -11,8 +11,8 @@ tags: ["Remold", "SVG"]
 
 ## Things to try
 
-- **Watch it play.** The card floats, becomes a lock whose shackle clicks shut, comes back with a warning when the bank says no, then goes through and becomes a receipt.
-- **Pick a status.** It stops playing and jumps there. Go from Card to Paid and the card reshapes straight into the receipt.
+- **Watch it play.** The card floats and blinks, becomes a lock that looks left and right while its shackle clicks shut, comes back scrunching its eyes when the bank says no, then goes through and becomes a smiling receipt.
+- **Pick a status.** It stops playing and jumps there. Go from Card to Paid and the card, its eyes and the light under it all reshape straight into the receipt.
 
 ## Install
 
@@ -28,6 +28,8 @@ The install command adds these for you. If you copy the code by hand, install th
 
 - **Status in, drawing out.** Pass `status` as `card`, `processing`, `declined` or `paid`, straight from your payment's state, along with the `amount`, the `card` and the receipt `email`.
 - **Layers that reshape.** The card, the lock and the receipt are the same `Remold.Icon` layers drawn differently, so each change morphs instead of swapping. The accent turns red for a refusal and green once it's paid.
-- **Motion that says what's happening.** The shackle clicks while the bank confirms, and the card shakes its head when it's declined. Both are plain CSS and hold still while the drawing reshapes.
+- **Eyes that reshape too.** Both eyes are one `Remold.Icon` path drawn per status: round while it waits, `> <` when it's declined, happy arcs once it's paid. They morph with the drawing, so the face moves to wherever the drawing puts it.
+- **Light for the state.** A soft glow rises from under the drawing: indigo and breathing while the bank confirms, red for a refusal, green once it's paid. It cross-fades, so a change of mind mid-way never flashes.
+- **Motion that says what's happening.** The card blinks while it waits, the lock glances about while the bank confirms, and the card shakes its head when it's declined. All of it is plain CSS, holds still while the drawing reshapes, and stops for anyone who prefers reduced motion.
 
 <Callout>The amount, the card and the email are made up.</Callout>

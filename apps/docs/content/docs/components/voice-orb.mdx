@@ -1,12 +1,20 @@
 ---
 title: "Voice orb"
-description: "A soft sphere of drifting cloud for voice interfaces: it breathes when idle, swells with your voice, gathers while thinking and flows while speaking. The demo is live translation, and the translated line morphs as it revises itself."
+description: "An orb of dots for voice interfaces: a ball that breathes when idle, an arc that chases its tail as it connects, rings of latitude that ripple as it listens, three dots that lift in turn as it thinks, a magnifying glass as it searches, and a ball whose edge ripples with the voice as it speaks, with a line under it that says which. The demo is live translation, and the translated line morphs as it revises itself."
 kind: canvas
 status: "new"
-tags: ["Canvas", "Text", "audio"]
+tags: ["Particles", "Text", "audio"]
 ---
 
 <Stage name="voice-orb" code={<Source demo="voice-orb" />}>
+  <VoiceOrbStates />
+</Stage>
+
+The orb plays through its states by itself, with a line under it saying what it is doing. Pick a tab to hold one: *Idle*, *Connecting*, *Listening*, *Thinking*, *Searching*, *Reading* or *Speaking*. Searching and Reading share the magnifying glass, so only the words change between them.
+
+## Live translation
+
+<Stage>
   <VoiceOrbDemo />
 </Stage>
 
@@ -14,8 +22,9 @@ Tap the orb to translate your own voice between Spanish and English.
 
 ## Things to try
 
-- **Tap the orb and speak.** It goes through each state in turn: *listening* (the microphone is open and the orb waits), *hearing you* (it moves like a voice as your words appear), *translating* (the clouds gather while the last words are finished) and *speaking* (the translation is read aloud). Tap again to finish early or stop it talking.
+- **Tap the orb and speak.** It goes through each state in turn, and the line under it names each one: *connecting* (the ball unwinds into one arc chasing its tail while the microphone and translator start), *listening for Spanish* (the arc opens into rings and waits), *hearing you* (a ripple as tall as your voice runs down the rings as your words appear), *translating* (the rings gather into three balls that lift one after another, like someone typing, while the last words are finished) and *speaking* (the dots crowd the rim of a ball, which ripples and frays with the voice as the translation is read aloud). Tap again to finish early or stop it talking.
 - **Watch the translation correct itself.** Mid-sentence, "la estación" can read as *season*; once the sentence ends it becomes *train station*. `Remold.Text` changes only the words that changed, so the line settles instead of flickering.
+- **Read the line under the orb.** It says what is happening in plain words, with the language in it: *Listening for Spanish*, *Translating to English*, *Speaking English*. Whenever something is going on the words shimmer: they sit back in grey while a band of light sweeps along them. At rest, *Tap to speak* holds still.
 - **Swap languages** with the arrows between them.
 
 Live mode uses [react-speech-recognition](https://www.npmjs.com/package/react-speech-recognition) for captions, the on-device [Translator API](https://developer.chrome.com/docs/ai/translator-api) in recent Chrome, and the browser's speech synthesis. Where translation isn't available it still captions what you said, and says so.
@@ -25,9 +34,15 @@ Live mode uses [react-speech-recognition](https://www.npmjs.com/package/react-sp
 ```tsx
 // Feed a 0–1 level from your own audio or agent:
 <VoiceOrb state="speaking" level={amplitude} />
+
+// Say what it's doing under it, in its own words or yours:
+<VoiceOrb state="connecting" status />
+<VoiceOrb state="searching" status="Searching the web" />
 ```
 
-Without a `level`, it simulates a believable voice while listening or speaking. `state` is `idle | listening | thinking | speaking`; `theme` is `aurora | ember | mono`; `size` sets the square size.
+Without a `level`, it makes up a believable voice while listening or speaking. `state` is `idle | connecting | listening | thinking | searching | speaking`; `theme` is `aurora | ember | mono`; `size` sets the square size.
+
+`status` adds a line of text under the orb, so nobody has to learn what each shape means. `status` alone uses the state's own word: *Ready*, *Connecting*, *Listening*, *Thinking*, *Searching* or *Speaking*. Better, pass what your agent is really doing, such as *Searching the web* or *Reading 6 sources*: the glass keeps looking about and only the line changes. It sits in a `role="status"` element, so screen readers hear each change.
 
 ## Install
 
@@ -39,10 +54,13 @@ Without a `level`, it simulates a believable voice while listening or speaking. 
 
 ## How it works
 
-- The sphere is a clipped circle filled with a sky gradient, a few soft cloud blobs drifting on their own orbits, a deep current along the bottom, a highlight on the top left and a gentle shade at the edge. No outline, no rings.
-- It's a [`Remold.Canvas`](/docs/primitives/canvas). Each state is a set of `values` (size, drift speed, breathing, how tightly the clouds gather), so the orb springs from wherever it is into the next state. The canvas handles sizing, the frame loop and reduced motion; the component is the paint function.
-- The voice level, from your `level` prop or the simulation, rises fast and falls slowly, so the orb leaps to a word and eases back. It also speeds the clouds up.
-- It's `continuous`, so it keeps drifting between state changes. It pauses off screen, and reduced motion holds it still.
+- **Every state is a shape.** Each one is built by chaining Remold's [`shapes`](/docs/primitives/particles#3d-shapes): the idle ball is `shapes.sphere()`, the listening rings are tori stacked with `shapes.compose`, the three thinking dots are three small spheres, and the glass is a torus for the rim with a curve each for the handle and the glint. `scale`, `rotate`, `at`, `warp` and `fuzz` do the moving: the ball breathes with `scale`, the arc chases its tail with `rotate`, and the speaking edge is a ring pushed in and out with `warp` and shaken loose with `fuzz`.
+- **It's a [`Remold.Particles`](/docs/primitives/particles).** Ten times a second the orb builds the shape for that moment and hands it over. A shape gives the same points in the same order every time, so with `pairing="index"` each dot keeps its place from one moment to the next and springs to it. The motion stays smooth, and a state change can interrupt another halfway.
+- **The status line is a [`Remold.Text`](/docs/primitives/text).** *Connecting*, *Listening*, *Thinking* and *Speaking* share most of their letters, so the line changes with the orb instead of blinking. In every state but idle it shimmers: a CSS mask dims the words and sweeps a band of full colour along them. The mask sits on the line, not the letters, so it keeps sweeping while they morph. Reduced motion shows the plain words.
+- **Shapes you already know.** Thinking is the three dots of someone typing and searching is a magnifying glass, so neither needs explaining. Both face you while the ball and the rings turn.
+- **The voice level** comes from your `level` prop or a made-up one. It rises fast and falls slowly, so the orb leaps to a word and eases back.
+- **Light and dark.** On a dark page the dots glow by adding their light together; on a light page they are drawn in deeper colours instead.
+- It pauses off screen, and reduced motion holds it still.
 
 <Callout>
   The orb never touches the microphone. Live translation hands your voice to the browser's speech recognition, which in Chrome is processed by Google's servers; translation itself runs on the device. The component sends nothing anywhere itself.

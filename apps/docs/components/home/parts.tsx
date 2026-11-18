@@ -16,6 +16,7 @@ import { motion } from "motion/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AppleMusicBadge } from "../demos/apple-music-badge";
+import { ORB_STEPS } from "../demos/voice-orb-steps";
 import {
   Children,
   useEffect,
@@ -31,7 +32,7 @@ const VoiceOrb = dynamic(
   () => import("../demos/voice-orb").then((m) => m.VoiceOrb),
   { ssr: false },
 ) as ComponentType<import("../demos/voice-orb").VoiceOrbProps>;
-const ORB_STATES = ["idle", "listening", "thinking", "speaking"] as const;
+const ORB_LABELS = ORB_STEPS.map((step) => step.status);
 const EmblemDemo = dynamic(
   () => import("../demos/emblem").then((m) => m.EmblemDemo),
   { ssr: false },
@@ -152,6 +153,14 @@ const CardRevealDemo = dynamic(
   () => import("../demos/card-reveal").then((m) => m.CardRevealDemo),
   { ssr: false },
 );
+const WelcomeTrailerDemo = dynamic(
+  () => import("../demos/welcome-trailer").then((m) => m.WelcomeTrailerDemo),
+  { ssr: false },
+);
+const PaymentTrailerDemo = dynamic(
+  () => import("../demos/payment-trailer").then((m) => m.PaymentTrailerDemo),
+  { ssr: false },
+);
 const PopoverMenuDemo = dynamic(
   () => import("../demos/popover-menu").then((m) => m.PopoverMenuDemo),
   { ssr: false },
@@ -221,6 +230,7 @@ export const CATEGORIES = [
   { id: "popovers", label: "Popovers & Menus" },
   { id: "dialogs", label: "Modals & Dialogs" },
   { id: "morphing", label: "Morphing" },
+  { id: "illustrations", label: "Illustrations" },
   { id: "buttons", label: "Buttons & Toggles" },
   { id: "lists", label: "Lists & Cards" },
   { id: "charts", label: "Charts & Data" },
@@ -761,13 +771,15 @@ function allCards() {
         {(_, playing) => <TableBookingDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Base UI · Motion"
-        category="forms"
-        title="Tag input"
-        docs="/docs/components/tag-input"
-        states={["Tags"]}
+        kicker="Particles · States"
+        category="canvas"
+        title="Voice states"
+        bare
+        docs="/docs/components/voice-orb"
+        states={ORB_LABELS}
+        every={2800}
       >
-        {(_, playing) => <TagInputDemo playing={playing} />}
+        {(i) => <VoiceOrb state={ORB_STEPS[i]!.state} size={240} status={ORB_STEPS[i]!.status} />}
       </PartCard>
       <PartCard
         kicker="SVG · Branding"
@@ -788,11 +800,13 @@ function allCards() {
         )}
       </PartCard>
       <PartCard
-        kicker="SVG · Illustration"
-        category="status"
+        kicker="Motion · Remold"
+        category="illustrations"
         title="Order tracker"
+        isNew
         docs="/docs/components/order-tracker"
-        states={["Track"]}
+        states={["Order"]}
+        minHeight={600}
       >
         {(_, playing) => <OrderTrackerDemo playing={playing} />}
       </PartCard>
@@ -824,6 +838,28 @@ function allCards() {
         minHeight={540}
       >
         {(_, playing) => <ContextMenuDemo playing={playing} preview />}
+      </PartCard>
+      <PartCard
+        kicker="SVG · Remold"
+        category="illustrations"
+        title="Payment trailer"
+        isNew
+        docs="/docs/components/payment-trailer"
+        states={["Play"]}
+        minHeight={560}
+      >
+        {(_, playing) => <PaymentTrailerDemo playing={playing} preview />}
+      </PartCard>
+      <PartCard
+        kicker="SVG · Remold"
+        category="illustrations"
+        title="Welcome trailer"
+        isNew
+        docs="/docs/components/welcome-trailer"
+        states={["Play"]}
+        minHeight={560}
+      >
+        {(_, playing) => <WelcomeTrailerDemo playing={playing} preview />}
       </PartCard>
       <PartCard
         kicker="Motion · Remold"
@@ -932,7 +968,7 @@ function allCards() {
       </PartCard>
       <PartCard
         kicker="SVG · Base UI"
-        category="status"
+        category="illustrations"
         title="Payment status"
         docs="/docs/components/payment-status"
         states={["Pay"]}
@@ -1090,15 +1126,13 @@ function allCards() {
         {(_, playing) => <UsageMeterDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Canvas · States"
-        category="canvas"
-        title="Voice states"
-        bare
-        docs="/docs/components/voice-orb"
-        states={["Idle", "Listening", "Thinking", "Speaking"]}
-        every={2200}
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Tag input"
+        docs="/docs/components/tag-input"
+        states={["Tags"]}
       >
-        {(i) => <VoiceOrb state={ORB_STATES[i]!} size={240} />}
+        {(_, playing) => <TagInputDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Morph · Matching"

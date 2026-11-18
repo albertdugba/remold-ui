@@ -1,6 +1,7 @@
 "use client";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
+import { Remold } from "@remold-ui/react";
 import { IllustratedStory, STORY_STAGE, type StoryStage } from "./illustrated-story";
 import { useScene } from "./use-scene";
 
@@ -19,6 +20,80 @@ const BRAND: Record<PaymentStatusValue, string> = {
   declined: "[--ils-brand:#dc2626] dark:[--ils-brand:#f87171]",
   paid: "[--ils-brand:#15803d] dark:[--ils-brand:#4ade80]",
 };
+
+type Point = readonly [x: number, y: number];
+
+const EYES_AT: Record<PaymentStatusValue, readonly [Point, Point]> = {
+  card: [[80, 71], [96, 71]],
+  processing: [[71, 75], [89, 75]],
+  declined: [[80, 72], [96, 72]],
+  paid: [[68, 89], [82, 89]],
+};
+
+const pill = ([x, y]: Point) => `M${x - 3.5} ${y - 3}a3.5 3.5 0 0 1 7 0v6a3.5 3.5 0 0 1 -7 0Z`;
+
+const squint = ([x, y]: Point, side: 1 | -1) => {
+  const tip = x + side * 3.6;
+  const back = x - side * 3;
+  const inner = x + side * 0.6;
+  return `M${back} ${y - 4.2}L${tip} ${y}L${back} ${y + 4.2}L${back} ${y + 1.6}L${inner} ${y}L${back} ${y - 1.6}Z`;
+};
+
+const smile = ([x, y]: Point) => `M${x - 4.6} ${y + 2}a4.6 4.6 0 0 1 9.2 0h-3a1.6 1.6 0 0 0 -3.2 0Z`;
+
+const EYE_SHAPES: Record<PaymentStatusValue, (eyes: readonly [Point, Point]) => string> = {
+  card: ([left, right]) => `${pill(left)} ${pill(right)}`,
+  processing: ([left, right]) => `${pill(left)} ${pill(right)}`,
+  declined: ([left, right]) => `${squint(left, 1)} ${squint(right, -1)}`,
+  paid: ([left, right]) => `${smile(left)} ${smile(right)}`,
+};
+
+const EYE_MOTION: Record<PaymentStatusValue, string> = {
+  card: "animate-eye-blink",
+  processing: "animate-eye-look",
+  declined: "",
+  paid: "",
+};
+
+function Eyes({ status }: { status: PaymentStatusValue }) {
+  const eyes = EYES_AT[status];
+  const color = status === "paid" ? "text-(--ils-ink)" : "text-(--ils-light)";
+
+  return (
+    <div className={`absolute inset-0 ${EYE_MOTION[status]}`} style={{ transformOrigin: `50% ${(eyes[0][1] / 128) * 100}%` }}>
+      <Remold.Icon
+        className={`absolute inset-0 size-full transition-[color] duration-300 ease-out ${color}`}
+        path={EYE_SHAPES[status](eyes)}
+        viewBox="0 0 160 128"
+        fill="currentColor"
+        aria-hidden="true"
+      />
+    </div>
+  );
+}
+
+const GLOW_COLORS =
+  "[--ps-glow-processing:rgb(79_70_229/0.3)] [--ps-glow-declined:rgb(220_38_38/0.26)] [--ps-glow-paid:rgb(22_163_74/0.32)] dark:[--ps-glow-processing:rgb(129_140_248/0.4)] dark:[--ps-glow-declined:rgb(248_113_113/0.34)] dark:[--ps-glow-paid:rgb(74_222_128/0.36)]";
+
+const GLOWS: readonly { status: PaymentStatusValue; className: string }[] = [
+  { status: "processing", className: "animate-glow-breathe [--ps-glow:var(--ps-glow-processing)]" },
+  { status: "declined", className: "[--ps-glow:var(--ps-glow-declined)]" },
+  { status: "paid", className: "[--ps-glow:var(--ps-glow-paid)]" },
+];
+
+function Glow({ status }: { status: PaymentStatusValue }) {
+  return (
+    <div className={`pointer-events-none absolute -inset-x-[12%] top-[4%] bottom-[6%] ${GLOW_COLORS}`} aria-hidden="true">
+      {GLOWS.map((glow) => (
+        <div
+          key={glow.status}
+          data-on={glow.status === status || undefined}
+          className={`absolute inset-0 origin-bottom bg-[radial-gradient(48%_70%_at_50%_100%,var(--ps-glow),transparent_74%)] opacity-0 transition-[opacity] duration-500 ease-out data-on:opacity-100 ${glow.className}`}
+        />
+      ))}
+    </div>
+  );
+}
 
 function stagesFor(amount: string, card: string, email: string): readonly StoryStage[] {
   return [
@@ -47,7 +122,7 @@ function stagesFor(amount: string, card: string, email: string): readonly StoryS
         soft: "M66 20a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z M76 20a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z M86 20a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
         ink: "M56 62h48a8 8 0 0 1 8 8v30a8 8 0 0 1 -8 8H56a8 8 0 0 1 -8 -8V70a8 8 0 0 1 8 -8Z",
         sheen: "M56 66h5v38h-5a4 4 0 0 1 -4 -4V70a4 4 0 0 1 4 -4Z",
-        brand: "M80 76a6 6 0 0 1 3.5 10.9L85 96H75l1.5 -9.1A6 6 0 0 1 80 76Z",
+        brand: "M80 87a4.5 4.5 0 0 1 2.6 8.2L83.8 102h-7.6l1.2 -6.8A4.5 4.5 0 0 1 80 87Z",
         top: "M60 63V50a20 20 0 0 1 40 0v13h-8V50a12 12 0 0 0 -24 0v13Z",
       },
     },
@@ -107,6 +182,8 @@ export function PaymentStatus({
       label="Payment status"
       stages={stagesFor(amount, card, email)}
       stage={PAYMENT_STATUSES.indexOf(status)}
+      under={<Glow status={status} />}
+      extras={<Eyes status={status} />}
       steps={false}
       live={live}
     />

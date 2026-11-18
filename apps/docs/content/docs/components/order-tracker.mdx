@@ -1,19 +1,20 @@
 ---
 title: "Order tracker"
-description: "A food order told like a short film: each stage plays live (the lid lifts off the steaming pot, the bag hops, the scooter's wheels spin down the road, the front door opens), then the drawing reshapes into the next stage and that one comes alive."
+description: "A dish card with a quantity stepper and an Order button. Press it and the button itself reshapes into a cooking pot as the card falls away, and the order plays out as one drawing: the pot rattles on the stove, the bag waits for pickup, the scooter rides over and the door opens."
 status: "new"
-tags: ["Remold", "SVG"]
+tags: ["Motion", "Remold", "SVG"]
 ---
 
-<Stage name="order-tracker" code={<Source demo="order-tracker" />} minHeight={460}>
+<Stage name="order-tracker" code={<Source demo="order-tracker" />} minHeight={560}>
   <OrderTrackerDemo />
 </Stage>
 
 ## Things to try
 
-- **Watch it play.** Each stage comes alive on its own: the lid lifts off the pot and the steam puffs out, the sealed bag hops and its handle swings, the scooter's wheels spin as the road rushes past, and the front door swings open as the badge pings.
-- **Tap a step.** It stops playing and jumps there: the drawing holds still, reshapes, and that stage comes alive.
-- **Jump around.** Go from Preparing straight to Delivered and the pot reshapes into the house in one move.
+- **Change how many.** The count and the price roll to their new values, and the button's total follows.
+- **Order it.** The button says it's placing the order. Then the rest of the card blurs away while the red button bends into the pot's body, its red deepening to ink, and the lid, steam and stripe settle in around it.
+- **Watch it arrive.** The drawing reshapes from the pot to the bag, the scooter and the front door, and the line under it says what's happening. Pick any step from the bars to jump there.
+- **Order again.** Once it's delivered, the dark Order again pill grows back into the card, its ink softening to the card's white, and the dish and details settle in after it.
 
 ## Install
 
@@ -27,9 +28,9 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **Four layers, one drawing.** The illustration is four `Remold.Icon` layers on the same frame: the dark ink, the brand red, the white details and the soft peach. Each one morphs its own shapes, so every colour stays where it belongs.
-- **Live, then morph.** Each stage's motion is plain CSS on the layers: the whole object (a hop, a bump) and its moving part on top (the lid, the handle, the door), plus spokes that spin on the hubs. It holds still while the layers reshape, then the next stage's motion starts, so the two never fight.
-- **Swap in your own art.** Each stage is plain path data per layer. Draw your stages on the same viewBox and the morph pairs the shapes for you.
-- **The words follow.** The headline and the line under it are `Remold.Text`, so only the letters that change move.
+- **The button becomes the pot.** The button is redrawn as a pill-shaped path exactly where it sits, and `Remold.Icon` reshapes it into the pot's body from the tracker's first drawing, so the drawing that takes over is already in place. Everything else about the card fades with Motion.
+- **The order is one drawing.** The pot, the bag, the scooter and the door are one set of `Remold.Icon` layers that reshape from stage to stage, and each stage plays its own little loop: the lid rattles, the bag hops, the wheels spin, the door swings.
+- **Numbers that roll.** The quantity, the price and the button's total are `Remold.Text`.
+- The dish photo comes from `PHOTO` at the top of the file. Point it at your own image, and set `--fo-brand` for your brand colour.
 
-<Callout>The kitchen, the rider and the times are made up.</Callout>
+<Callout>The restaurant and the prices are made up. The install command doesn't copy the photo: add your own image to your `public` folder and set `PHOTO` to its path.</Callout>
