@@ -6,6 +6,7 @@ import { Stage } from "../stage";
 import { codeFor, defaultsOf, formatValue, type Control, type Customizable, type Values } from "./controls";
 import { CUSTOMIZABLE } from "./registry";
 import { Code } from "../code";
+import { track } from "@/lib/analytics";
 
 const row = "flex h-10 items-center justify-between gap-3 rounded-lg bg-fd-secondary px-3 text-[13px]";
 const focusWithin = "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-fd-primary";
@@ -150,6 +151,7 @@ export function Customize({ name, code, width, wide }: { name: string; code?: Re
             type="button"
             onClick={async () => {
               await navigator.clipboard.writeText(codeFor(meta, values));
+              track("Copy code", { component: name, source: "customize" });
               setCopied(true);
               setTimeout(() => setCopied(false), 1500);
             }}

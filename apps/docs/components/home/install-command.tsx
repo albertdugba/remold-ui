@@ -6,6 +6,7 @@
  */
 import { Remold } from "@remold-ui/react";
 import { useEffect, useRef, useState } from "react";
+import { track } from "@/lib/analytics";
 
 const PACKAGES = ["react", "dom", "canvas", "morph"];
 const EVERY = 2800;
@@ -29,6 +30,7 @@ export function InstallCommand() {
 
   const copy = async () => {
     await navigator.clipboard.writeText(command);
+    track("Copy install", { component: `@remold-ui/${PACKAGES[index]}`, source: "home" });
     setCopied(true);
     clearTimeout(copiedTimer.current);
     copiedTimer.current = setTimeout(() => setCopied(false), COPIED_FOR);
