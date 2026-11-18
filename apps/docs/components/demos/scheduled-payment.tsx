@@ -122,20 +122,24 @@ function amountCharacters(raw: string) {
   return characters;
 }
 
+const ScriptedHoverContext = createContext<string | null>(null);
+
 function useContentHeight() {
-  const ref = useRef<HTMLDivElement>(null);
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
   const [height, setHeight] = useState<number | null>(null);
 
   useLayoutEffect(() => {
-    const element = ref.current;
-    if (!element) return;
+    if (!element) {
+      setHeight(null);
+      return;
+    }
     const observer = new ResizeObserver(() => setHeight(element.offsetHeight));
     observer.observe(element);
     setHeight(element.offsetHeight);
     return () => observer.disconnect();
-  }, []);
+  }, [element]);
 
-  return [ref, height] as const;
+  return [setElement, height] as const;
 }
 
 function SwapText({ children, className = "" }: { children: string; className?: string }) {
@@ -294,12 +298,15 @@ function ScheduleSwitch({ checked, disabled, onCheckedChange }: { checked: boole
   return (
     <label
       htmlFor={id}
-      className="flex cursor-pointer items-center gap-3 rounded-[12px] bg-(--sp-hover)/60 py-3 pr-3.5 pl-3 transition-colors duration-150 ease-out hover:bg-(--sp-hover) has-disabled:cursor-default"
+      className={`group/switch flex cursor-pointer items-center gap-3 rounded-[20px] py-3 pr-3.5 pl-3 transition-[background-color] duration-150 ease-out has-disabled:cursor-default ${checked || disabled ? "" : "hover:bg-(--sp-hover)"}`}
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
     >
-      <span className="grid size-9 flex-none place-items-center rounded-[10px] bg-(--sp-card) shadow-[0_1px_2px_rgb(0_0_0/0.06)]" aria-hidden="true">
+      <span
+        className={`grid size-9 flex-none place-items-center rounded-[10px] transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none ${checked ? `bg-(--sp-hover) shadow-[0_1px_2px_transparent] ${disabled ? "" : "group-hover/switch:bg-[color-mix(in_oklab,var(--sp-hover),var(--sp-ink)_6%)]"}` : "bg-(--sp-card) shadow-[0_1px_2px_rgb(0_0_0/0.06)]"}`}
+        aria-hidden="true"
+      >
         <HugeiconsIcon icon={Calendar03Icon} strokeWidth={1.8} className="size-[18px]" />
       </span>
       <span className="grid min-w-0 flex-1 gap-0.5">
@@ -345,15 +352,23 @@ function SettingRow({
   disabled: boolean;
   onOpen: () => void;
 }) {
+  const scripted = useContext(ScriptedHoverContext) === setting;
+
   return (
     <motion.button
       {...rise(index * 0.025)}
       type="button"
       disabled={disabled}
       onClick={onOpen}
-      className={`group flex h-12 w-full cursor-pointer items-center gap-3 border-0 border-solid border-(--sp-line) bg-transparent px-3.5 text-left text-[14px] text-(--sp-ink) transition-colors duration-150 ease-out hover:bg-(--sp-hover)/60 disabled:cursor-default ${index > 0 ? "border-t" : ""}`}
+      data-hovered={scripted || undefined}
+      className="group flex h-12 w-full cursor-pointer items-center gap-3 border-0 border-t border-solid border-(--sp-line) bg-transparent px-3.5 text-left text-[14px] text-(--sp-ink) transition-[background-color] duration-150 ease-out hover:bg-(--sp-ink)/4 disabled:cursor-default data-hovered:bg-(--sp-ink)/4"
     >
-      <HugeiconsIcon icon={icon} strokeWidth={1.9} className="size-[17px] flex-none text-(--sp-muted) transition-colors duration-150 group-hover:text-(--sp-ink)" aria-hidden="true" />
+      <HugeiconsIcon
+        icon={icon}
+        strokeWidth={1.9}
+        className="size-[17px] flex-none text-(--sp-muted) transition-colors duration-150 group-hover:text-(--sp-ink) group-data-hovered:text-(--sp-ink)"
+        aria-hidden="true"
+      />
       <span className="flex-1">
         <motion.span layoutId={`title-${setting}`} className="inline-block text-(--sp-muted)">
           {label}
@@ -374,9 +389,10 @@ const HoverContext = createContext<{ hovered: string | null; setHovered: (key: s
 
 function HoverList({ label, children }: { label: string; children: ReactNode }) {
   const [hovered, setHovered] = useState<string | null>(null);
+  const scripted = useContext(ScriptedHoverContext);
 
   return (
-    <HoverContext.Provider value={{ hovered, setHovered }}>
+    <HoverContext.Provider value={{ hovered: hovered ?? scripted, setHovered }}>
       <div role="radiogroup" aria-label={label} className="px-1.5 pb-1.5" onPointerLeave={() => setHovered(null)}>
         {children}
       </div>
@@ -522,7 +538,7 @@ function StackEdges({ depth }: { depth: number }) {
           <motion.span
             key={`edge-${index}`}
             aria-hidden="true"
-            className="absolute h-8 rounded-t-[12px] shadow-[inset_0_0_0_1px_var(--sp-line)]"
+            className="absolute h-8 rounded-t-[14px] shadow-[inset_0_0_0_1px_var(--sp-line)]"
             style={{
               top: index * PEEK,
               left: level * 10,
@@ -638,8 +654,8 @@ export function ScheduledPayment({ value, onValueChange }: { value: ScheduleValu
       <Reveal show={value.repeat !== "Never"}>
         <SettingRow setting="ends" index={2} label="Ends" value={value.ends} icon={StopCircleIcon} disabled={busy} onOpen={() => open("ends")} />
       </Reveal>
-      <motion.p className="m-0 border-0 border-t border-solid border-(--sp-line) bg-(--sp-hover)/40 px-3.5 py-3 text-[13px] leading-[1.5] text-(--sp-muted)" {...rise(0.06)}>
-        Kofi gets <b className="font-semibold text-(--sp-ink)">{pounds(total)}</b> on{" "}
+      <motion.p className="m-0 border-0 border-t border-solid border-(--sp-line) px-3.5 pt-3 pb-1.5 text-[13px] leading-[1.5] text-(--sp-muted)" {...rise(0.06)}>
+        Bentil gets <b className="font-semibold text-(--sp-ink)">{pounds(total)}</b> on{" "}
         <b className="font-semibold text-(--sp-ink)">
           <SwapText>{shortDate(value.date)}</SwapText>
         </b>
@@ -661,12 +677,12 @@ export function ScheduledPayment({ value, onValueChange }: { value: ScheduleValu
             <header className="flex items-center gap-3 px-5 pt-5">
               <img
                 className="size-9 rounded-full bg-[#e7e4dc]"
-                src="https://api.dicebear.com/9.x/notionists/svg?seed=Kofi%20Asante&backgroundColor=e7e4dc"
+                src="https://api.dicebear.com/9.x/notionists/svg?seed=Bentil%20Andoh&backgroundColor=e7e4dc"
                 alt=""
                 draggable={false}
               />
               <span className="grid flex-1 gap-px">
-                <span className="text-[14.5px] font-semibold">Pay Kofi Asante</span>
+                <span className="text-[14.5px] font-semibold">Pay Bentil Andoh</span>
                 <span className="text-[12.5px] text-(--sp-muted)">Rent · Current account •• 4410</span>
               </span>
               <button
@@ -691,65 +707,78 @@ export function ScheduledPayment({ value, onValueChange }: { value: ScheduleValu
             </div>
 
             <div className="mx-5 mb-5 grid">
-              <ScheduleSwitch
-                checked={value.scheduled}
-                disabled={busy}
-                onCheckedChange={(scheduled) => update({ scheduled, stack: [], date: value.date <= TODAY ? daysFromToday(1) : value.date })}
-              />
+              <div
+                className={`rounded-[20px] transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none ${value.scheduled ? "bg-transparent shadow-[0_0_0_1px_var(--sp-line)]" : "bg-(--sp-hover)/60 shadow-[0_0_0_1px_transparent]"}`}
+              >
+                <ScheduleSwitch
+                  checked={value.scheduled}
+                  disabled={busy}
+                  onCheckedChange={(scheduled) => update({ scheduled, stack: [], date: value.date <= TODAY ? daysFromToday(1) : value.date })}
+                />
+
+                <AnimatePresence initial={false}>
+                  {value.scheduled && (
+                    <motion.div className="overflow-hidden" initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0, transition: SWAP }}>
+                      <motion.div
+                        className="origin-top px-1.5 pb-1.5"
+                        initial={{ opacity: 0, scale: 0.97, filter: "blur(4px)" }}
+                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)", transition: ARRIVE }}
+                        exit={{ opacity: 0, filter: "blur(4px)", transition: { duration: 0.15, ease: "easeOut" } }}
+                      >
+                        <motion.div className="relative" initial={false} animate={{ paddingTop: Math.min(value.stack.length, 2) * PEEK }} transition={SPRING}>
+                          <StackEdges depth={value.stack.length} />
+                          <motion.div
+                            className={`relative overflow-hidden rounded-[14px] transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none ${view === "settings" ? "bg-transparent shadow-[0_0_0_1px_transparent,0_1px_2px_transparent]" : "bg-(--sp-card) shadow-[0_0_0_1px_var(--sp-line),0_1px_2px_rgb(0_0_0/0.06)]"}`}
+                            initial={false}
+                            animate={{ height: height ?? "auto" }}
+                            transition={switching ? SPRING : { duration: 0 }}
+                          >
+                            <div ref={content}>
+                              <AnimatePresence initial={false} mode="popLayout">
+                                <motion.div
+                                  key={view}
+                                  role={view === "settings" ? undefined : "group"}
+                                  aria-label={view === "settings" ? undefined : TITLES[view]}
+                                  initial={false}
+                                  exit={{ opacity: 0, filter: "blur(4px)", transition: QUICK }}
+                                >
+                                  {view === "settings" ? (
+                                    settings
+                                  ) : (
+                                    <>
+                                      <div className="flex h-12 items-center gap-2 px-2.5">
+                                        <motion.button
+                                          {...rise(0.02)}
+                                          type="button"
+                                          onClick={back}
+                                          aria-label="Back"
+                                          whileTap={{ scale: 0.92 }}
+                                          className="grid size-7 cursor-pointer place-items-center rounded-[8px] border-0 bg-(--sp-hover) text-(--sp-ink)"
+                                        >
+                                          <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2.2} className="size-4" aria-hidden="true" />
+                                        </motion.button>
+                                        <motion.span layoutId={`title-${view}`} className="text-[14px] font-semibold">
+                                          {TITLES[view]}
+                                        </motion.span>
+                                      </div>
+                                      {views[view]}
+                                    </>
+                                  )}
+                                </motion.div>
+                              </AnimatePresence>
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <Reveal show={!value.scheduled}>
                 <p className="m-0 px-1 pt-3 text-[13px] leading-[1.5] text-(--sp-muted)">
-                  Kofi gets <b className="font-semibold text-(--sp-ink)">{pounds(total)}</b> in a few seconds.
+                  Bentil gets <b className="font-semibold text-(--sp-ink)">{pounds(total)}</b> in a few seconds.
                 </p>
-              </Reveal>
-
-              <Reveal show={value.scheduled}>
-                <div className="pt-2.5">
-                  <motion.div className="relative" initial={false} animate={{ paddingTop: Math.min(value.stack.length, 2) * PEEK }} transition={SPRING}>
-                    <StackEdges depth={value.stack.length} />
-                    <motion.div
-                      className="relative overflow-hidden rounded-[12px] bg-(--sp-card) shadow-[inset_0_0_0_1px_var(--sp-line)]"
-                      initial={false}
-                      animate={{ height: height ?? "auto" }}
-                      transition={switching ? SPRING : { duration: 0 }}
-                    >
-                      <div ref={content}>
-                        <AnimatePresence initial={false} mode="popLayout">
-                          <motion.div
-                            key={view}
-                            role={view === "settings" ? undefined : "group"}
-                            aria-label={view === "settings" ? undefined : TITLES[view]}
-                            initial={false}
-                            exit={{ opacity: 0, filter: "blur(4px)", transition: QUICK }}
-                          >
-                            {view === "settings" ? (
-                              settings
-                            ) : (
-                              <>
-                                <div className="flex h-12 items-center gap-2 px-2.5">
-                                  <motion.button
-                                    {...rise(0.02)}
-                                    type="button"
-                                    onClick={back}
-                                    aria-label="Back"
-                                    whileTap={{ scale: 0.92 }}
-                                    className="grid size-7 cursor-pointer place-items-center rounded-[8px] border-0 bg-(--sp-hover) text-(--sp-ink)"
-                                  >
-                                    <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2.2} className="size-4" aria-hidden="true" />
-                                  </motion.button>
-                                  <motion.span layoutId={`title-${view}`} className="text-[14px] font-semibold">
-                                    {TITLES[view]}
-                                  </motion.span>
-                                </div>
-                                {views[view]}
-                              </>
-                            )}
-                          </motion.div>
-                        </AnimatePresence>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                </div>
               </Reveal>
             </div>
           </div>
@@ -789,26 +818,40 @@ export function ScheduledPayment({ value, onValueChange }: { value: ScheduleValu
 const START: ScheduleValue = { amount: "1200", scheduled: false, stack: [], date: daysFromToday(1), repeat: "Never", ends: "Never", phase: "edit" };
 const PICKED = "2026-11-25";
 
-const BEATS: readonly (ScheduleValue & { ms: number })[] = [
+const ON: ScheduleValue = { ...START, scheduled: true };
+const DATES: ScheduleValue = { ...ON, stack: ["date"] };
+const DATED: ScheduleValue = { ...ON, date: PICKED };
+const REPEAT: ScheduleValue = { ...DATED, stack: ["repeat"] };
+const MONTHLY: ScheduleValue = { ...DATED, repeat: "Every month" };
+const PASS = 260;
+const HOLD = 500;
+
+const BEATS: readonly (ScheduleValue & { ms: number; hover?: string })[] = [
   { ...START, ms: 1400 },
-  { ...START, scheduled: true, ms: 1100 },
-  { ...START, scheduled: true, stack: ["date"], ms: 1300 },
-  { ...START, scheduled: true, stack: ["date", "calendar"], ms: 1500 },
-  { ...START, scheduled: true, date: PICKED, ms: 1000 },
-  { ...START, scheduled: true, date: PICKED, stack: ["repeat"], ms: 1300 },
-  { ...START, scheduled: true, date: PICKED, repeat: "Every month", ms: 1400 },
-  { ...START, scheduled: true, date: PICKED, repeat: "Every month", phase: "saving", ms: 800 },
-  { ...START, scheduled: true, date: PICKED, repeat: "Every month", phase: "done", ms: 2200 },
+  { ...ON, ms: 900 },
+  { ...ON, hover: "date", ms: HOLD },
+  { ...DATES, ms: 600 },
+  ...QUICK_DATES.map((option) => ({ ...DATES, hover: option.value, ms: PASS })),
+  { ...DATES, hover: "calendar", ms: HOLD },
+  { ...ON, stack: ["date", "calendar"], ms: 1500 },
+  { ...DATED, ms: 800 },
+  { ...DATED, hover: "repeat", ms: HOLD },
+  { ...REPEAT, ms: 600 },
+  ...REPEATS.map((option) => ({ ...REPEAT, hover: option, ms: option === MONTHLY.repeat ? HOLD : PASS })),
+  { ...MONTHLY, ms: 1400 },
+  { ...MONTHLY, phase: "saving", ms: 800 },
+  { ...MONTHLY, phase: "done", ms: 2200 },
 ];
 
 const beatAt = (step: number): ScheduleValue => {
-  const { ms: _ms, ...state } = BEATS[step]!;
+  const { ms: _ms, hover: _hover, ...state } = BEATS[step]!;
   return { ...state, stack: [...state.stack] };
 };
 
 export function ScheduledPaymentDemo({ playing }: { playing?: boolean; preview?: boolean } = {}) {
   const scene = useScene(BEATS, beatAt, playing);
   const { state: value, takeOver, live } = scene;
+  const hovered = live ? (BEATS[scene.step]?.hover ?? null) : null;
 
   useEffect(() => {
     if (live || value.phase === "edit") return;
@@ -821,7 +864,9 @@ export function ScheduledPaymentDemo({ playing }: { playing?: boolean; preview?:
 
   return (
     <div ref={scene.ref} className="not-prose grid w-full place-items-center py-6">
-      <ScheduledPayment value={value} onValueChange={takeOver} />
+      <ScriptedHoverContext.Provider value={hovered}>
+        <ScheduledPayment value={value} onValueChange={takeOver} />
+      </ScriptedHoverContext.Provider>
     </div>
   );
 }

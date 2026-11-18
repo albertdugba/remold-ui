@@ -1,0 +1,32 @@
+---
+title: "Welcome trailer"
+description: "A welcome scene for onboarding, drawn in pure SVG: an envelope opens, its note folds into a paper plane that loops round the frame, then lands as a bell that rings once. One drawing the whole way through, with no video and no Lottie file."
+status: "new"
+tags: ["Remold", "SVG"]
+---
+
+<Stage name="welcome-trailer" code={<Source demo="welcome-trailer" />} minHeight={520}>
+  <WelcomeTrailerDemo />
+</Stage>
+
+## Things to try
+
+- **Watch it play.** The envelope floats and blinks, the flap lifts and a note rises out, the note folds into a paper plane, the plane loops round leaving a dotted trail, and it lands as a bell that rings with a badge on it.
+- **Pick a scene.** The bars under it jump straight to any scene, and the drawing reshapes from wherever it is.
+
+## Install
+
+<AddCommand name="welcome-trailer" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="welcome-trailer" />
+
+## How it works
+
+- **One drawing, start to finish.** The envelope, the note, the plane and the bell are the same six `Remold.PathGroup` parts, matched by id. The note becomes the plane's wing and then the bell, and the eyes travel with whatever they're on, so there are no cuts.
+- **Real flight, Remold only.** The plane follows an SVG path on Remold's shared frame loop: each frame reads its point and heading from the path, and it turns and shrinks as it loops. The dotted trail is the same path, revealed up to the plane. The badge is two more parts that spring out of a dot, so there's no animation library besides Remold.
+- **Yours to rebrand.** Colours are CSS variables, so it follows dark mode and your brand, and the words are real text: pass `name`, and swap the lines for your own.
+- With reduced motion the plane skips the loop and the bell doesn't ring; the drawing still reshapes from scene to scene.

@@ -6,11 +6,12 @@ import {
   Add01Icon,
   Cancel01Icon,
   File01Icon,
+  FilePlusIcon,
   Image01Icon,
   Pdf01Icon,
   RefreshIcon,
   Tick02Icon,
-  Upload04Icon,
+  Upload01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { announce } from "@remold-ui/dom";
@@ -64,11 +65,13 @@ export const accepts = (type: string, accept?: string) =>
   });
 
 const SURFACE = { type: "spring" as const, duration: 0.5, bounce: 0.14 };
+const MORPH = { duration: SURFACE.duration, bounce: SURFACE.bounce };
+const FOLD_FIRST = 0.18;
 const SETTLE = { type: "spring" as const, duration: 0.35, bounce: 0 };
 const POP = { type: "spring" as const, duration: 0.45, bounce: 0.4 };
 const SHAKE = { duration: 0.34, ease: "easeOut" as const };
-const ZONE_OPEN = 176;
-const ZONE_FOLDED = 56;
+const ZONE_OPEN = 200;
+const ZONE_FOLDED = 52;
 
 const TOKENS =
   "[--fup-ink:#0a0a0b] [--fup-muted:#6c6c75] [--fup-surface:#ffffff] [--fup-well:#f4f4f5] [--fup-hover:#e9e9ec] [--fup-line:rgb(10_10_11/0.16)] [--fup-track:rgb(10_10_11/0.1)] [--fup-danger:#c8323a] [--fup-danger-tint:#fdeceb] [--fup-good:#16a34a] dark:[--fup-ink:#fafafa] dark:[--fup-muted:#a1a1aa] dark:[--fup-surface:#1f1f23] dark:[--fup-well:#2c2c31] dark:[--fup-hover:#37373d] dark:[--fup-line:rgb(255_255_255/0.2)] dark:[--fup-track:rgb(255_255_255/0.12)] dark:[--fup-danger:#f87171] dark:[--fup-danger-tint:#3b2023] dark:[--fup-good:#22c55e]";
@@ -82,8 +85,8 @@ export const sizeLabel = (bytes: number) =>
 
 const count = (amount: number, one: string, many: string) => `${amount} ${amount === 1 ? one : many}`;
 
-function summary(files: readonly UploadItem[], hint: string) {
-  if (!files.length) return hint;
+function summary(files: readonly UploadItem[]) {
+  if (!files.length) return "No files yet";
 
   const done = files.filter((file) => file.status === "done").length;
   const failed = files.filter((file) => file.status === "failed").length;
@@ -109,7 +112,7 @@ function Row({ file, onRemove, onRetry }: { file: UploadItem; onRemove: () => vo
   }, [failed, reduced, scope, shake]);
 
   return (
-    <div ref={scope} className="flex h-[60px] items-center gap-3 pr-1 pl-1.5">
+    <div ref={scope} className="flex h-14 items-center gap-3 pr-1 pl-1.5">
       <span
         data-failed={failed || undefined}
         className={`grid size-10 flex-none place-items-center overflow-hidden rounded-[12px] transition-[background-color,color] duration-200 ease-out data-failed:bg-(--fup-danger-tint) data-failed:text-(--fup-danger) motion-reduce:transition-none [&_svg]:size-5 ${TINT[file.kind]}`}
@@ -235,6 +238,12 @@ export function FileUpload({
   const settled = files.length > 0 && files.every((file) => file.status !== "uploading");
   const tall = empty ? ZONE_OPEN : ZONE_FOLDED;
   const sprung = useSpringHeight(height === null ? null : height + 12);
+  const wasEmpty = useRef(empty);
+  const landing = wasEmpty.current && !empty ? FOLD_FIRST : 0;
+
+  useEffect(() => {
+    wasEmpty.current = empty;
+  }, [empty]);
 
   useLayoutEffect(() => {
     const box = content.current;
@@ -323,8 +332,9 @@ export function FileUpload({
     : dragging
       ? `Let go to upload ${count(dragging, "file", "files")}`
       : empty
-        ? "Drop files here"
+        ? "Drop or paste files here"
         : "Add more files";
+  const quiet = empty && !dragging && !refusing;
 
   return (
     <MotionConfig transition={SURFACE} reducedMotion="user">
@@ -345,7 +355,7 @@ export function FileUpload({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onPaste={onPaste}
-        className={`w-[min(100%,420px)] rounded-[28px] bg-(--fup-surface) p-4 font-sans text-(--fup-ink) ${TOKENS}`}
+        className={`w-[min(100%,420px)] rounded-[24px] bg-(--fup-surface) p-4 font-sans text-(--fup-ink) ${TOKENS}`}
         aria-label="Upload files"
       >
         <motion.div className="-m-1.5 overflow-hidden p-1.5" style={{ height: sprung }}>
@@ -354,7 +364,7 @@ export function FileUpload({
               <span className="grid min-w-0 flex-1 leading-[1.3]">
                 <h2 className="m-0 text-[15.5px] font-semibold tracking-[-0.01em]">Upload files</h2>
                 <p className="m-0 truncate text-[13px] text-(--fup-muted)" role="status">
-                  <Remold.Text className="inline-block whitespace-nowrap">{summary(files, hint)}</Remold.Text>
+                  <Remold.Text className="inline-block whitespace-nowrap">{summary(files)}</Remold.Text>
                 </p>
               </span>
               <AnimatePresence initial={false}>
@@ -389,54 +399,64 @@ export function FileUpload({
               }}
             />
 
-            <Button
-              ref={zone}
-              data-fup-zone=""
-              data-dragging={dragging ? "" : undefined}
-              data-refusing={refusing || undefined}
-              onClick={() => picker.current?.click()}
-              render={<motion.button initial={false} animate={{ height: tall }} />}
-              data-empty={empty || undefined}
-              className={`group/zone relative grid w-full cursor-pointer place-items-center overflow-hidden rounded-[18px] border-0 bg-transparent p-0 font-sans text-(--fup-ink) outline-[1.5px] -outline-offset-[1.5px] outline-(--fup-line) outline-dashed transition-[background-color,outline-color] duration-150 ease-out hover:bg-(--fup-well) focus-visible:outline-2 focus-visible:outline-(--fup-ink) focus-visible:outline-solid data-empty:bg-(--fup-well) data-empty:hover:bg-(--fup-hover) data-dragging:bg-(--fup-hover) data-dragging:outline-(--fup-ink) data-refusing:cursor-not-allowed data-refusing:bg-(--fup-danger-tint) data-refusing:text-(--fup-danger) data-refusing:outline-(--fup-danger) motion-reduce:transition-none`}
-            >
-              <motion.span
-                layout
-                className="flex w-full items-center gap-3 px-3 data-empty:w-auto data-empty:flex-col data-empty:gap-3 data-empty:px-0"
+            <Remold.Morph trigger={[empty, Boolean(dragging), refusing]} spring={MORPH}>
+              <Button
+                ref={zone}
+                data-fup-zone=""
+                data-dragging={dragging ? "" : undefined}
+                data-refusing={refusing || undefined}
+                onClick={() => picker.current?.click()}
+                style={{ height: tall }}
                 data-empty={empty || undefined}
+                className={`group/zone relative grid w-full cursor-pointer place-items-center overflow-hidden rounded-[16px] border-0 p-0 font-sans outline-[1.5px] -outline-offset-[1.5px] outline-dashed transition-[background-color,color,outline-color] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-(--fup-ink) focus-visible:outline-solid motion-reduce:transition-none ${
+                  refusing
+                    ? "cursor-not-allowed bg-(--fup-danger-tint) text-(--fup-danger) outline-(--fup-danger)"
+                    : dragging
+                      ? "bg-(--fup-well) text-(--fup-ink) outline-(--fup-ink)"
+                      : empty
+                        ? "bg-transparent text-(--fup-ink) outline-transparent"
+                        : "bg-(--fup-well)/60 text-(--fup-ink) outline-transparent hover:bg-(--fup-well)"
+                }`}
               >
-                <motion.span
-                  layout
-                  data-empty={empty || undefined}
-                  className="grid size-8 flex-none place-items-center bg-(--fup-well) text-(--fup-ink) transition-[background-color] duration-150 ease-out group-hover/zone:bg-(--fup-hover) data-empty:size-11 data-empty:bg-(--fup-surface) data-empty:group-hover/zone:bg-(--fup-surface) motion-reduce:transition-none [&_svg]:size-4 data-empty:[&_svg]:size-5"
-                  style={{ borderRadius: empty ? 14 : 10 }}
-                  animate={{ y: dragging ? -3 : 0, scale: dragging ? 1.08 : 1 }}
-                  transition={POP}
-                >
-                  <Remold.Icon icon={<HugeiconsIcon icon={empty || dragging ? Upload04Icon : Add01Icon} />} strokeWidth={1.9} spring={{ duration: 0.4, bounce: 0.1 }} aria-hidden="true" />
-                </motion.span>
-                <motion.span layout="position" className="grid gap-0.5 text-left data-empty:justify-items-center data-empty:text-center" data-empty={empty || undefined}>
-                  <span className="text-[14px] font-semibold data-empty:text-[15px]" data-empty={empty || undefined}>
-                    <Remold.Text className="inline-block whitespace-nowrap">{title}</Remold.Text>
-                  </span>
-                  {empty && (
-                    <motion.span className="text-[13px] text-(--fup-muted)" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                      or <span className="font-medium text-(--fup-ink) underline decoration-(--fup-line) underline-offset-[3px]">browse</span> from your computer
-                    </motion.span>
-                  )}
-                </motion.span>
-                {!empty && (
-                  <motion.span
-                    layout="position"
-                    className="ml-auto text-[12.5px] whitespace-nowrap text-(--fup-muted)"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.2, delay: 0.1 }}
+                <span className={empty ? "grid justify-items-center gap-2.5 px-6" : "flex w-full items-center gap-3 pr-3 pl-1.5"}>
+                  <span
+                    className={`grid size-10 flex-none place-items-center rounded-[12px] transition-[background-color,box-shadow,color] duration-200 ease-out motion-reduce:transition-none ${
+                      empty
+                        ? `bg-transparent shadow-[0_0_0_1px_transparent,0_1px_2px_transparent] [&_svg]:size-7 ${quiet ? "text-(--fup-muted)" : ""}`
+                        : "bg-(--fup-surface) shadow-[0_0_0_1px_var(--fup-track),0_1px_2px_rgb(0_0_0/0.06)] [&_svg]:size-5"
+                    }`}
                   >
-                    Drop or paste
-                  </motion.span>
-                )}
-              </motion.span>
-            </Button>
+                    <span
+                      className={`grid transition-[translate,scale] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none ${dragging ? "-translate-y-[3px] scale-[1.08]" : ""}`}
+                    >
+                      <Remold.Icon
+                        icon={<HugeiconsIcon icon={dragging ? Upload01Icon : empty ? FilePlusIcon : Add01Icon} />}
+                        strokeWidth={empty ? 1.6 : 1.9}
+                        spring={{ duration: 0.4, bounce: 0.1 }}
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </span>
+                  <span className={`grid gap-0.5 ${empty ? "justify-items-center text-center" : "text-left"}`}>
+                    <span
+                      className={`transition-[color] duration-150 ease-out motion-reduce:transition-none ${empty ? "text-[13.5px]" : "text-[14px] font-semibold"} ${quiet ? "text-(--fup-muted)" : ""}`}
+                    >
+                      <Remold.Text key={empty ? "open" : "folded"} className="inline-block whitespace-nowrap">
+                        {title}
+                      </Remold.Text>
+                    </span>
+                    {quiet && <span className="text-[13.5px] text-(--fup-muted)">{hint}</span>}
+                  </span>
+                  {quiet && (
+                    <span className="mt-1.5 inline-flex h-8 items-center gap-1.5 rounded-[10px] bg-(--fup-ink) pr-3 pl-2.5 text-[13px] font-semibold text-(--fup-surface) shadow-[0_1px_2px_rgb(0_0_0/0.12)] transition-[background-color,scale] duration-150 ease-out group-hover/zone:bg-(--fup-ink)/85 group-active/zone:scale-[0.97] motion-reduce:transition-none [&_svg]:size-3.5">
+                      <HugeiconsIcon icon={Add01Icon} strokeWidth={2.4} aria-hidden="true" />
+                      <span>Add files</span>
+                    </span>
+                  )}
+                  {!empty && <span className="ml-auto text-[12.5px] whitespace-nowrap text-(--fup-muted)">Drop or paste</span>}
+                </span>
+              </Button>
+            </Remold.Morph>
 
             <ul data-empty={empty || undefined} className="m-0 grid list-none grid-cols-[minmax(0,1fr)] p-0 pt-3 data-empty:pt-0" aria-label="Files">
               <AnimatePresence initial={false} mode="popLayout">
@@ -448,7 +468,7 @@ export function FileUpload({
                     initial={reduced ? { opacity: 0 } : { opacity: 0, y: -14, scale: 0.97, filter: "blur(4px)" }}
                     animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                     exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.96, filter: "blur(4px)", transition: SETTLE }}
-                    transition={{ ...SURFACE, delay: Math.min(index, 4) * 0.04 }}
+                    transition={{ ...SURFACE, delay: landing + Math.min(index, 4) * 0.04 }}
                   >
                     <Row file={file} onRemove={() => remove(file.id)} onRetry={() => retry(file.id)} />
                   </motion.li>

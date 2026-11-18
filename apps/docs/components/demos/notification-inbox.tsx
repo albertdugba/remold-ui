@@ -166,8 +166,8 @@ const PALETTE = [
   "[--nbx-ink:#0a0a0b] [--nbx-muted:#6e6e76] [--nbx-quiet:#a1a1aa] [--nbx-surface:#ffffff]",
   "[--nbx-fill:#f2f2f4] [--nbx-fill-hover:#ebebee] [--nbx-hl:#f5f5f7]",
   "[--nbx-accent:#4f46e5] [--nbx-good:#15803d] [--nbx-badge:#c8323a]",
-  "dark:[--nbx-ink:#fafafa] dark:[--nbx-muted:#a1a1aa] dark:[--nbx-quiet:#71717a] dark:[--nbx-surface:#161618]",
-  "dark:[--nbx-fill:#232327] dark:[--nbx-fill-hover:#2b2b30] dark:[--nbx-hl:#1f1f23]",
+  "dark:[--nbx-ink:#fafafa] dark:[--nbx-muted:#a1a1aa] dark:[--nbx-quiet:#71717a] dark:[--nbx-surface:#1f1f23]",
+  "dark:[--nbx-fill:#2c2c31] dark:[--nbx-fill-hover:#35353b] dark:[--nbx-hl:#28282d]",
   "dark:[--nbx-accent:#818cf8] dark:[--nbx-good:#4ade80] dark:[--nbx-badge:#ff6369]",
   "font-sans text-[14px] text-(--nbx-ink)",
 ].join(" ");

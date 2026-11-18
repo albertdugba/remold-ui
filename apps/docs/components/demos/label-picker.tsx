@@ -51,9 +51,9 @@ const ROW_EXIT = { opacity: 0, transition: { duration: 0.1 } };
 
 const TOKENS = [
   "[--lp-surface:#ffffff] [--lp-raised:#ffffff] [--lp-field:#f4f4f5] [--lp-line:rgb(24_24_27/0.08)] [--lp-ink:#18181b] [--lp-muted:#6c6c75] [--lp-quiet:#a1a1aa] [--lp-accent:#4f46e5]",
-  "[--lp-shadow:0_18px_40px_-12px_rgb(0_0_0/0.22),0_0_0_1px_rgb(24_24_27/0.06)]",
+  "[--lp-edge:rgb(0_0_0/0.06)] [--lp-shadow:0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)]",
   "dark:[--lp-surface:#1f1f23] dark:[--lp-raised:#2a2a2f] dark:[--lp-field:#2e2e33] dark:[--lp-line:rgb(255_255_255/0.08)] dark:[--lp-ink:#fafafa] dark:[--lp-muted:#a1a1aa] dark:[--lp-quiet:#71717a] dark:[--lp-accent:#818cf8]",
-  "dark:[--lp-shadow:0_18px_40px_-12px_rgb(0_0_0/0.6),0_0_0_1px_rgb(255_255_255/0.08)]",
+  "dark:[--lp-edge:rgb(255_255_255/0.07)] dark:[--lp-shadow:0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)]",
   "font-sans",
 ].join(" ");
 
@@ -339,7 +339,7 @@ export function LabelPicker({
                   <Popover.Portal container={portal}>
                     <Popover.Positioner className={TOKENS} side="bottom" align="start" sideOffset={8}>
                       <Popover.Popup
-                        className="w-[236px] origin-(--transform-origin) rounded-[14px] bg-(--lp-raised) p-[5px] text-(--lp-ink) shadow-(--lp-shadow) outline-none [transition:opacity_0.16s,transform_0.24s_cubic-bezier(0.2,0.9,0.3,1.2)] data-ending-style:opacity-0 data-ending-style:[transform:scale(0.94)_translateY(-4px)] data-starting-style:opacity-0 data-starting-style:[transform:scale(0.94)_translateY(-4px)]"
+                        className="w-[236px] origin-(--transform-origin) rounded-[14px] border border-solid border-(--lp-edge) bg-(--lp-raised) p-[5px] text-(--lp-ink) shadow-(--lp-shadow) outline-none [transition:opacity_0.16s,transform_0.24s_cubic-bezier(0.2,0.9,0.3,1.2)] data-ending-style:opacity-0 data-ending-style:[transform:scale(0.94)_translateY(-4px)] data-starting-style:opacity-0 data-starting-style:[transform:scale(0.94)_translateY(-4px)]"
                         initialFocus={focusOnOpen ? inputRef : false}
                         finalFocus={focusOnOpen}
                         aria-label="Labels"

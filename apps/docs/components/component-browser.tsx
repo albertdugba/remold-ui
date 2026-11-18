@@ -41,7 +41,7 @@ const LANDING_COPY: Record<string, string> = {
   streak: "A grey ember grows into a flame as the day count and week fill in.",
   "send-a-message": "The composer becomes the sent message, then makes room for the reply.",
   "kitchen-ticket": "A ticket's ring fills as the order cooks, then closes with a check or a cross.",
-  "order-tracker": "The pot becomes the bag, the scooter, then your front door as the order moves along.",
+  "order-tracker": "Order a waakye and the button becomes the pot, then the bag, the scooter and your front door.",
   "particle-shapes": "A galaxy unwinds into a double helix, traces the Lorenz attractor, then becomes a honeybee, a butterfly and the Grok mark, all in turning 3D dots.",
   "payment-status": "The card becomes a lock while the bank confirms, then a receipt or a warning.",
   "send-money": "Digits, commas and the Send state all move with the amount you enter.",
