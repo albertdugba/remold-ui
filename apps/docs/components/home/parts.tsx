@@ -645,6 +645,17 @@ function allCards() {
   return (
     <>
       <PartCard
+        kicker="Canvas · Particles"
+        category="canvas"
+        title="Particle shapes"
+        docs="/docs/components/particle-shapes"
+        states={["Shapes"]}
+        wide
+        dark
+      >
+        {(_, playing) => <ParticleShapesDemo playing={playing} />}
+      </PartCard>
+      <PartCard
         featured
         kicker="Base UI · Motion"
         category="forms"
@@ -655,17 +666,6 @@ function allCards() {
         minHeight={640}
       >
         {(_, playing) => <ScheduledPaymentDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Canvas · Particles"
-        category="canvas"
-        title="Particle shapes"
-        docs="/docs/components/particle-shapes"
-        states={["Shapes"]}
-        wide
-        dark
-      >
-        {(_, playing) => <ParticleShapesDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Layout · Icon · Text"
