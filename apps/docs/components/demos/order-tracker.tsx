@@ -14,7 +14,7 @@ export const ORDER_STAGES: readonly StoryStage[] = [
     label: "Preparing",
     motion: { part: "origin-[76%_47%] animate-lid-rattle", soft: "animate-steam-puff" },
     title: "Preparing your order",
-    line: "Mama’s Kitchen is cooking it · arrives 12:45",
+    line: "Aunty Muni is cooking it · arrives 12:45",
     art: {
       soft: "M60 18c-5 6 5 10 0 18h5c5-8-5-12 0-18Z M76 10c-5 7 5 12 0 22h5c5-10-5-15 0-22Z M92 18c-5 6 5 10 0 18h5c5-8-5-12 0-18Z",
       ink: "M44 62h72v28a16 16 0 0 1 -16 16H60a16 16 0 0 1 -16 -16Z M30 67h14v9H30Z M116 67h14v9h-14Z M52 108h56v4H52Z",
@@ -197,7 +197,7 @@ function Details({ quantity, total, busy, onQuantity }: { quantity: number; tota
   return (
     <div className="grid gap-3.5 px-5 pt-4">
       <div className="flex items-center gap-2 text-[12px] text-(--fo-muted)">
-        <span className="font-semibold text-(--fo-ink)">Mama's Kitchen</span>
+        <span className="font-semibold text-(--fo-ink)">Aunty Muni</span>
         <span aria-hidden="true">·</span>
         <span className="flex items-center gap-1">
           <HugeiconsIcon icon={StarIcon} className="size-3 fill-amber-400 text-amber-400" aria-hidden="true" />
