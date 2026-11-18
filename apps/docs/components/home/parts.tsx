@@ -136,6 +136,22 @@ const TagInputDemo = dynamic(
   () => import("../demos/tag-input").then((m) => m.TagInputDemo),
   { ssr: false },
 );
+const ContextMenuDemo = dynamic(
+  () => import("../demos/context-menu").then((m) => m.ContextMenuDemo),
+  { ssr: false },
+);
+const UnsavedChangesDemo = dynamic(
+  () => import("../demos/unsaved-changes").then((m) => m.UnsavedChangesDemo),
+  { ssr: false },
+);
+const ScheduledPaymentDemo = dynamic(
+  () => import("../demos/scheduled-payment").then((m) => m.ScheduledPaymentDemo),
+  { ssr: false },
+);
+const CardRevealDemo = dynamic(
+  () => import("../demos/card-reveal").then((m) => m.CardRevealDemo),
+  { ssr: false },
+);
 const PopoverMenuDemo = dynamic(
   () => import("../demos/popover-menu").then((m) => m.PopoverMenuDemo),
   { ssr: false },
@@ -619,6 +635,18 @@ function allCards() {
   return (
     <>
       <PartCard
+        featured
+        kicker="Base UI · Motion"
+        category="forms"
+        title="Scheduled payment"
+        isNew
+        docs="/docs/components/scheduled-payment"
+        states={["Schedule"]}
+        minHeight={640}
+      >
+        {(_, playing) => <ScheduledPaymentDemo playing={playing} />}
+      </PartCard>
+      <PartCard
         kicker="Canvas · Particles"
         category="canvas"
         title="Particle shapes"
@@ -785,6 +813,39 @@ function allCards() {
         states={["Menu"]}
       >
         {(_, playing) => <PopoverMenuDemo playing={playing} />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion"
+        category="popovers"
+        title="Context menu"
+        isNew
+        docs="/docs/components/context-menu"
+        states={["Right-click"]}
+        minHeight={540}
+      >
+        {(_, playing) => <ContextMenuDemo playing={playing} preview />}
+      </PartCard>
+      <PartCard
+        kicker="Motion · Remold"
+        category="buttons"
+        title="Virtual card"
+        isNew
+        docs="/docs/components/card-reveal"
+        states={["Play"]}
+        minHeight={560}
+      >
+        {(_, playing) => <CardRevealDemo playing={playing} preview />}
+      </PartCard>
+      <PartCard
+        kicker="Base UI · Motion · Remold"
+        category="status"
+        title="Unsaved changes"
+        isNew
+        docs="/docs/components/unsaved-changes"
+        states={["Edit", "Save"]}
+        minHeight={620}
+      >
+        {(_, playing) => <UnsavedChangesDemo playing={playing} preview />}
       </PartCard>
       <PartCard
         featured

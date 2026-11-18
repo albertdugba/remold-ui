@@ -1,0 +1,34 @@
+---
+title: "Unsaved changes"
+description: "A workspace settings panel with a floating save bar. Change anything and a dark pill springs up counting your edits. Save turns into a spinner, then the pill re-letters to Saved, drops its buttons, shrinks and leaves. Discard puts everything back. Built on Base UI's Field, RadioGroup and Switch."
+status: "new"
+tags: ["Base UI", "Motion", "Remold"]
+---
+
+<Stage name="unsaved-changes" code={<Source demo="unsaved-changes" />} minHeight={600}>
+  <UnsavedChangesDemo />
+</Stage>
+
+## Things to try
+
+- **Change the name, accent or a switch.** The save bar springs up from below and counts your edits: "1 unsaved change", "2 unsaved changes".
+- **Change something back.** The count goes down, and if nothing is different any more the bar drops away by itself.
+- **Press Save.** The button spins, then the dot turns into a green tick, the text re-letters to Saved, the buttons fade out and the pill shrinks around it before it leaves.
+- **Press Discard.** Every field goes back to what was saved and the bar drops.
+
+## Install
+
+<AddCommand name="unsaved-changes" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="unsaved-changes" />
+
+## How it works
+
+- **Saved and draft live side by side.** The panel keeps what was last saved next to what you're editing. The bar shows whenever they differ, and the count is the number of settings that differ, so undoing a change by hand counts down.
+- **Base UI does the fields.** The name is a `Field`, the accent is a `RadioGroup` with a sliding ring, and the toggles are `Switch`es.
+- **One pill, resized by layout.** The bar is a single Motion element with `layout`, so when the buttons leave on save it shrinks around "Saved" instead of jumping. It enters and leaves with a short blur on a spring.
+- **The words re-letter.** The count and "Saved" use `Remold.Text`, so only the characters that change move.

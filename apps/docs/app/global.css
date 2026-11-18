@@ -1232,8 +1232,12 @@ html > body[data-scroll-locked] {
   --fd-layout-width: 100vw;
 }
 
+/* The article keeps a readable width and sits in the middle of the space between the sidebar and
+   "On this page", however wide the window is. */
 #nd-page {
-  max-width: none;
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
 }
 
 /* Landing cards: drawn at the landing card's width with their content centred in it, as there.

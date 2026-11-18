@@ -201,6 +201,37 @@ const PREVIEWS: Record<string, Preview> = {
     maxZoom: FORM_ZOOM,
   },
 
+  "context-menu": {
+    Component: load(() => import("./demos/context-menu").then((m) => m.ContextMenuDemo)),
+    width: 560,
+    surface: true,
+    props: { preview: true },
+  },
+
+  "unsaved-changes": {
+    Component: load(() => import("./demos/unsaved-changes").then((m) => m.UnsavedChangesDemo)),
+    width: 420,
+    surface: true,
+    props: { preview: true },
+    maxZoom: FORM_ZOOM,
+  },
+
+  "scheduled-payment": {
+    Component: load(() => import("./demos/scheduled-payment").then((m) => m.ScheduledPaymentDemo)),
+    width: 420,
+    surface: true,
+    props: { preview: true },
+    maxZoom: FORM_ZOOM,
+  },
+
+  "card-reveal": {
+    Component: load(() => import("./demos/card-reveal").then((m) => m.CardRevealDemo)),
+    width: 420,
+    surface: true,
+    props: { preview: true },
+    maxZoom: FORM_ZOOM,
+  },
+
   "sign-in": {
     Component: load(() => import("./demos/sign-in").then((m) => m.SignInDemo)),
     width: 420,

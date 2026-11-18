@@ -21,6 +21,26 @@ const ITEMS = [
     "A project-actions menu that grows from a compact trigger into an anchored popover.",
   ],
   [
+    "context-menu",
+    "Context menu",
+    "A notes sidebar right-click menu that nests three deep: add pages from templates, change icons, move, copy links, duplicate and delete.",
+  ],
+  [
+    "unsaved-changes",
+    "Unsaved changes",
+    "A settings panel whose save bar springs up when something changes, counts the edits, and morphs to Saved before dropping away. Built on Base UI's Field, RadioGroup and Switch.",
+  ],
+  [
+    "scheduled-payment",
+    "Scheduled payment",
+    "A web payment panel: flip Schedule for later to set a start date and repeat in fields that open inline stacked choices, with a plain sentence of what will happen.",
+  ],
+  [
+    "card-reveal",
+    "Virtual card",
+    "A virtual card that tilts toward the pointer and flips over in 3D to show its full details, each with a copy button, then turns back on its own.",
+  ],
+  [
     "split-amount",
     "Split amount",
     "A bill splitter: tap the people at the table and your share rolls to the new amount while the bar re-divides. Built on Base UI's ToggleGroup.",
@@ -243,7 +263,7 @@ const ITEMS = [
   [
     "send-money",
     "Send money",
-    "A keypad for sending money: digits roll in, an amount over your balance is refused with a shake, and Send becomes a spinner then a check.",
+    "A keypad for sending money: digits roll in, an amount over your balance is refused with a shake, and Send shows the transfer as a progress ring that closes in green round the recipient.",
   ],
   [
     "currency-converter",
