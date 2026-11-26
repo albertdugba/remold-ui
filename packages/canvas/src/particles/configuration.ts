@@ -1,5 +1,6 @@
 import type { AnimatedValue } from "@remold-ui/core";
 import { frames } from "@remold-ui/dom";
+import { asciiConfiguration } from "./ascii";
 import { cameraOf } from "./camera";
 import { paletteColors } from "./tones";
 import type { ParticlesOptions, ParticlesToOptions, ParticleTransition } from "./types";
@@ -21,6 +22,10 @@ function checkOptions(options: ParticlesOptions, radius: number, fit: NonNullabl
 
   if (options.camera && frame) throw new RangeError('particles: a camera works with fit "contain" or "none", not a frame');
 
+  if (options.shape !== undefined && options.shape !== "circle" && options.shape !== "square" && options.shape !== "ascii") {
+    throw new RangeError(`particles: shape must be "circle", "square" or "ascii", got ${String(options.shape)}`);
+  }
+
   if (options.blend !== undefined && options.blend !== "normal" && options.blend !== "add") {
     throw new RangeError(`particles: blend must be "normal" or "add", got ${String(options.blend)}`);
   }
@@ -39,6 +44,7 @@ export function createConfiguration(options: ParticlesOptions) {
     fit,
     padding: options.padding ?? DEFAULT_PADDING,
     shape: options.shape ?? "circle",
+    ascii: options.shape === "ascii" ? asciiConfiguration(options.ascii) : null,
     pointer:
       options.pointer === false
         ? null
