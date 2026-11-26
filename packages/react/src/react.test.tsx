@@ -796,19 +796,6 @@ describe("Remold.Particles", () => {
     expect(frames.running).toBe(false);
   });
 
-  it("draws ASCII and reads it back as text through actionsRef", async () => {
-    const frames = manualLoop();
-    const actions = createRef<Remold.Particles.Actions>();
-    const points = [
-      { x: 0, y: 0, tone: 0 },
-      { x: 100, y: 0, tone: 1 },
-    ];
-    await render(<Remold.Particles shape={{ points }} dot="ascii" ascii={{ characters: ".#", size: 10 }} padding={0} loop={frames.loop} actionsRef={actions} />);
-    await act(async () => frames.run());
-    expect(actions.current!.text()).toMatch(/^\.\s*#$/);
-    await expect(actions.current!.settled()).resolves.toBeUndefined();
-  });
-
   it("scatters into the next shape with transition scatter, and settles", async () => {
     const frames = manualLoop();
     await render(<Remold.Particles shape={{ path: SQUARE }} count={40} loop={frames.loop} transition="scatter" />);

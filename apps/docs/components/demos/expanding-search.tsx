@@ -1,323 +1,70 @@
 "use client";
 import { Autocomplete } from "@base-ui/react/autocomplete";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, ArrowRight01Icon, Cancel01Icon, Clock01Icon, Dish01Icon, Search01Icon, ShoppingBasket01Icon, Tick02Icon, UserCircleIcon } from "@hugeicons/core-free-icons";
+import {
+  Add01Icon,
+  ArrowUpLeft01Icon,
+  Cancel01Icon,
+  Clock01Icon,
+  Location01Icon,
+  Search01Icon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons";
 import { announce } from "@remold-ui/dom";
-import { Remold } from "@remold-ui/react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
-import { useMeasuredHeight } from "./use-measured-height";
+import { useId, useRef, useState } from "react";
 import { typing, useScene } from "./use-scene";
 
 interface Product {
   name: string;
-  place: string;
+  size: string;
   price: string;
-  photo: string;
-}
-
-interface Place {
-  name: string;
-  cuisine: string;
-  rating: string;
-  time: string;
-  freeDelivery: boolean;
-  photo: string;
+  emoji: string;
+  tint: string;
 }
 
 const PRODUCTS: Product[] = [
-  { name: "Jollof rice with chicken", place: "Auntie Muni's", price: "£9.50", photo: "photo-1665332195309-9d75071138f0" },
-  { name: "Double smash burger", place: "Smash Club", price: "£11.00", photo: "photo-1568901346375-23c9450c58cd" },
-  { name: "Salmon poke bowl", place: "Poke Theory", price: "£10.80", photo: "photo-1546069901-ba9599a7e63c" },
-  { name: "Margherita pizza", place: "Forno", price: "£12.50", photo: "photo-1574071318508-1cdbab80d002" },
-  { name: "Chicken ramen", place: "Ichiban Ramen", price: "£12.00", photo: "photo-1680593180878-e0cd1e99486e" },
-  { name: "Chicken shawarma wrap", place: "Beirut Grill", price: "£8.90", photo: "photo-1626700051175-6818013e1d4f" },
-  { name: "Crispy chicken strips", place: "Smash Club", price: "£7.50", photo: "photo-1562967916-eb82221dfb92" },
-  { name: "Pad thai", place: "Thai Basil", price: "£10.20", photo: "photo-1637806930600-37fa8892069d" },
-  { name: "Fish tacos", place: "Taqueria Sol", price: "£9.80", photo: "photo-1551504734-5ee1c4a1479b" },
+  { name: "Oat milk", size: "1 L", price: "£1.85", emoji: "🥛", tint: "#eef2ff" },
+  { name: "Avocados", size: "Pack of 2", price: "£2.20", emoji: "🥑", tint: "#ecfccb" },
+  { name: "Sourdough loaf", size: "800 g", price: "£3.10", emoji: "🍞", tint: "#fef3c7" },
+  { name: "Free-range eggs", size: "Box of 6", price: "£2.45", emoji: "🥚", tint: "#fff7ed" },
+  { name: "Plantain", size: "Each", price: "£0.90", emoji: "🍌", tint: "#fefce8" },
+  { name: "Oranges", size: "Pack of 5", price: "£1.75", emoji: "🍊", tint: "#ffedd5" },
+  { name: "Rolled oats", size: "1 kg", price: "£1.40", emoji: "🌾", tint: "#fef9c3" },
+  { name: "Ground coffee", size: "227 g", price: "£4.50", emoji: "☕", tint: "#f5f5f4" },
 ];
 
-const PLACES: Place[] = [
-  { name: "Auntie Muni's", cuisine: "Ghanaian", rating: "4.9", time: "20–30 min", freeDelivery: true, photo: "photo-1665332195309-9d75071138f0" },
-  { name: "Smash Club", cuisine: "Burgers", rating: "4.7", time: "15–25 min", freeDelivery: false, photo: "photo-1568901346375-23c9450c58cd" },
-  { name: "Poke Theory", cuisine: "Hawaiian", rating: "4.8", time: "25–35 min", freeDelivery: false, photo: "photo-1546069901-ba9599a7e63c" },
-  { name: "Forno", cuisine: "Pizza", rating: "4.6", time: "30–40 min", freeDelivery: true, photo: "photo-1574071318508-1cdbab80d002" },
+const RECENT = ["Plantain", "Free-range eggs", "Coffee"];
+
+const AISLES = [
+  { name: "Fruit", emoji: "🍓", tint: "#ffe4e6" },
+  { name: "Bakery", emoji: "🥐", tint: "#fef3c7" },
+  { name: "Dairy", emoji: "🧀", tint: "#fef9c3" },
+  { name: "Drinks", emoji: "🧃", tint: "#dcfce7" },
 ];
 
-const RECENT = ["Jollof", "Ramen", "Tacos"];
-const priceOf = (product: Product) => Number(product.price.slice(1));
-const BUDGET = PRODUCTS.filter((dish) => priceOf(dish) < 10).slice(0, 4);
+const PICKS = [PRODUCTS[1]!, PRODUCTS[2]!];
 
-const photo = (id: string, width: number) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=70`;
-const pounds = (value: number) => `£${value.toFixed(2)}`;
-
-const SPRING = { type: "spring" as const, duration: 0.5, bounce: 0.18 };
 const SETTLE = { type: "spring" as const, duration: 0.38, bounce: 0 };
-const OPEN_WIDTH = 560;
-const FIELD_HEIGHT = 40;
-const NARROW_FRAME = 480;
 
 const PALETTE = [
-  "[--xs-surface:#ffffff] [--xs-raised:#ffffff] [--xs-ink:#0a0a0b] [--xs-soft:#3f3f46] [--xs-muted:#6c6c75] [--xs-well:#f4f4f5] [--xs-line:rgb(10_10_11/0.07)] [--xs-edge:rgb(0_0_0/0.06)] [--xs-shadow:0_0_0_0.5px_rgb(0_0_0/0.06),0_24px_48px_-20px_rgb(0_0_0/0.25)] [--xs-dim:rgb(10_10_11/0.06)] [--xs-offer-ink:#9a5b13]",
-  "dark:[--xs-surface:#18181b] dark:[--xs-raised:#1f1f23] dark:[--xs-ink:#fafafa] dark:[--xs-soft:#d4d4d8] dark:[--xs-muted:#a1a1aa] dark:[--xs-well:#27272a] dark:[--xs-line:rgb(255_255_255/0.08)] dark:[--xs-edge:rgb(255_255_255/0.07)] dark:[--xs-shadow:0_0_0_0.5px_rgb(255_255_255/0.08),0_24px_48px_-20px_rgb(0_0_0/0.7)] dark:[--xs-dim:rgb(0_0_0/0.35)] dark:[--xs-offer-ink:#f0b968]",
+  "[--xs-surface:#ffffff] [--xs-ink:#0a0a0b] [--xs-soft:#3f3f46] [--xs-muted:#6c6c75] [--xs-well:#f4f4f5] [--xs-line:rgb(10_10_11/0.07)] [--xs-edge:rgb(0_0_0/0.06)]",
+  "dark:[--xs-surface:#18181b] dark:[--xs-ink:#fafafa] dark:[--xs-soft:#d4d4d8] dark:[--xs-muted:#a1a1aa] dark:[--xs-well:#27272a] dark:[--xs-line:rgb(255_255_255/0.08)] dark:[--xs-edge:rgb(255_255_255/0.07)]",
 ].join(" ");
 
-const FOCUS = "outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--xs-ink)";
-const KEY = "inline-grid h-5 min-w-5 place-items-center rounded-[6px] bg-(--xs-well) px-1 font-sans text-[11px] font-medium text-(--xs-muted)";
-const POP_IN = { initial: { opacity: 0, scale: 0.8 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.8 }, transition: SETTLE };
-
-interface PillRest {
-  left: number;
-  top: number;
-  width: number;
-  frameWidth: number;
-}
-
-function usePillRest(frame: RefObject<HTMLElement | null>, slot: RefObject<HTMLElement | null>) {
-  const [rest, setRest] = useState<PillRest | null>(null);
-
-  useLayoutEffect(() => {
-    const outer = frame.current;
-    const inner = slot.current;
-    if (!outer || !inner) return;
-
-    const measure = () => {
-      const frameBox = outer.getBoundingClientRect();
-      const slotBox = inner.getBoundingClientRect();
-      const scale = frameBox.width / outer.offsetWidth || 1;
-      setRest({ left: (slotBox.left - frameBox.left) / scale, top: (slotBox.top - frameBox.top) / scale, width: slotBox.width / scale, frameWidth: outer.offsetWidth });
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(outer);
-    observer.observe(inner);
-
-    return () => observer.disconnect();
-  }, [frame, slot]);
-
-  return rest;
-}
-
-function useSlashToFocus(frame: RefObject<HTMLElement | null>, input: RefObject<HTMLInputElement | null>) {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "/" || event.metaKey || event.ctrlKey) return;
-      if ((event.target as HTMLElement).closest("input, textarea, [contenteditable]")) return;
-
-      const box = frame.current?.getBoundingClientRect();
-      if (!box || box.bottom < 0 || box.top > window.innerHeight) return;
-
-      event.preventDefault();
-      input.current?.focus();
-    };
-
-    document.addEventListener("keydown", onKey);
-
-    return () => document.removeEventListener("keydown", onKey);
-  }, [frame, input]);
-}
-
-function useBasket(initial: string[]) {
-  const [names, setNames] = useState(initial);
-  const total = PRODUCTS.filter((product) => names.includes(product.name)).reduce((sum, product) => sum + priceOf(product), 0);
-
-  const toggle = (name: string) => {
-    announce(names.includes(name) ? `${name} removed from basket` : `${name} added to basket`);
-    setNames((current) => (current.includes(name) ? current.filter((other) => other !== name) : [...current, name]));
-  };
-
-  return { has: (name: string) => names.includes(name), count: names.length, total, toggle };
-}
+const LABEL = "mb-2.5 block text-[12.5px] font-semibold text-(--xs-muted)";
+const RECENT_ICON = "size-[17px] flex-none text-(--xs-muted)";
 
 function Match({ text, query }: { text: string; query: string }) {
   const typed = query.trim();
   const at = typed ? text.toLowerCase().indexOf(typed.toLowerCase()) : -1;
   if (at < 0) return <>{text}</>;
-
   return (
     <>
       {text.slice(0, at)}
       <mark>{text.slice(at, at + typed.length)}</mark>
       {text.slice(at + typed.length)}
     </>
-  );
-}
-
-function AddButton({ name, added, reduced, onToggle }: { name: string; added: boolean; reduced: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      data-added={added || undefined}
-      className="grid size-8 flex-none cursor-pointer place-items-center rounded-full border-0 bg-(--xs-well) p-0 text-(--xs-ink) outline-none transition-[background-color,color,scale] duration-200 ease-out group-data-highlighted/item:not-data-added:bg-(--xs-surface) focus-visible:shadow-[0_0_0_2px_var(--xs-surface),0_0_0_4px_var(--xs-ink)] active:scale-[0.97] data-added:bg-(--xs-ink) data-added:text-(--xs-surface) [&_svg]:size-[14px]"
-      aria-label={`Add ${name} to basket`}
-      aria-pressed={added}
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => {
-        event.stopPropagation();
-        onToggle();
-      }}
-    >
-      <AnimatePresence initial={false} mode="popLayout">
-        <motion.span
-          key={added ? "in" : "out"}
-          className="grid"
-          initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.4, rotate: -45 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.4, rotate: 45 }}
-          transition={{ type: "spring", duration: 0.35, bounce: 0.3 }}
-        >
-          <HugeiconsIcon icon={added ? Tick02Icon : Add01Icon} strokeWidth={2.6} aria-hidden="true" />
-        </motion.span>
-      </AnimatePresence>
-    </button>
-  );
-}
-
-function ProductItem({ item, index, query, highlighted, highlightId, added, reduced, onToggle }: { item: Product; index: number; query: string; highlighted: boolean; highlightId: string; added: boolean; reduced: boolean; onToggle: () => void }) {
-  return (
-    <Autocomplete.Item value={item} className="group/item relative cursor-pointer rounded-[14px] outline-none" render={<motion.div layout="position" transition={SETTLE} />}>
-      {highlighted && <motion.span layoutId={highlightId} className="absolute inset-0 rounded-[inherit] bg-(--xs-well)" transition={SETTLE} />}
-      <motion.span
-        className="relative flex min-h-[56px] items-center gap-3 px-2.5"
-        initial={reduced ? false : { opacity: 0, y: 6, filter: "blur(3px)" }}
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        transition={{ ...SETTLE, delay: reduced ? 0 : 0.08 + Math.min(index, 6) * 0.03 }}
-      >
-        <img src={photo(item.photo, 120)} alt="" width={44} height={44} draggable={false} className="size-11 flex-none rounded-[11px] bg-(--xs-well) object-cover" />
-        <span className="grid min-w-0 flex-1 gap-px">
-          <span className="truncate text-[14px] font-medium text-(--xs-soft) [&_mark]:bg-transparent [&_mark]:font-[650] [&_mark]:text-(--xs-ink)">
-            <Match text={item.name} query={query} />
-          </span>
-          <span className="truncate text-[12.5px] text-(--xs-muted)">{item.place}</span>
-        </span>
-        <span className="text-[13.5px] font-semibold tabular-nums">{item.price}</span>
-        <AddButton name={item.name} added={added} reduced={reduced} onToggle={onToggle} />
-      </motion.span>
-    </Autocomplete.Item>
-  );
-}
-
-function PlaceCard({ place }: { place: Place }) {
-  return (
-    <li className="grid min-w-0 gap-0.5">
-      <span className="relative mb-2 block overflow-hidden rounded-[14px] bg-(--xs-well)">
-        <img src={photo(place.photo, 480)} alt="" width={240} height={160} draggable={false} className="block aspect-[3/2] w-full object-cover" />
-        {place.freeDelivery && <span className="absolute top-2 left-2 rounded-full bg-(--xs-surface) px-2 py-0.5 text-[11px] font-semibold text-(--xs-offer-ink)">Free delivery</span>}
-      </span>
-
-      <span className="flex items-center justify-between gap-2">
-        <span className="truncate text-[14px] font-semibold">{place.name}</span>
-        <span className="flex-none rounded-full bg-(--xs-well) px-1.5 text-[11.5px] leading-5 font-semibold tabular-nums">{place.rating}</span>
-      </span>
-
-      <span className="truncate text-[12.5px] text-(--xs-muted)">
-        {place.cuisine} · {place.time}
-      </span>
-    </li>
-  );
-}
-
-function DishRow({ dish }: { dish: Product }) {
-  return (
-    <li className="flex min-w-0 items-center gap-3">
-      <img src={photo(dish.photo, 120)} alt="" width={48} height={48} draggable={false} className="size-12 flex-none rounded-[12px] bg-(--xs-well) object-cover" />
-      <span className="grid min-w-0 flex-1">
-        <span className="truncate text-[13.5px] font-semibold">{dish.name}</span>
-        <span className="truncate text-[12px] text-(--xs-muted)">{dish.place}</span>
-      </span>
-      <span className="text-[13px] font-semibold tabular-nums">{dish.price}</span>
-    </li>
-  );
-}
-
-function Storefront({ hidden }: { hidden: boolean }) {
-  return (
-    <div className="min-h-0 flex-1 px-6 pt-5" aria-hidden={hidden || undefined} inert={hidden}>
-      <div className="mb-3 flex items-baseline justify-between">
-        <h3 className="m-0 text-[18px] font-[650] tracking-[-0.02em]">Popular near you</h3>
-        <a href="#" className={`flex items-center gap-0.5 rounded-[6px] text-[12.5px] font-medium text-(--xs-muted) no-underline transition-[color] duration-150 hover:text-(--xs-ink) ${FOCUS}`} onClick={(event) => event.preventDefault()}>
-          See all
-          <HugeiconsIcon icon={ArrowRight01Icon} size={14} strokeWidth={2} aria-hidden="true" />
-        </a>
-      </div>
-
-      <ul className="m-0 grid list-none grid-cols-4 gap-4 p-0 @max-[620px]:grid-cols-2">
-        {PLACES.map((place) => (
-          <PlaceCard key={place.name} place={place} />
-        ))}
-      </ul>
-      <h3 className="m-0 mt-6 mb-3 text-[15px] font-[650] tracking-[-0.015em]">Under £10</h3>
-      <ul className="m-0 grid list-none grid-cols-2 gap-x-4 gap-y-2 p-0 @max-[620px]:grid-cols-1">
-        {BUDGET.map((dish) => (
-          <DishRow key={dish.name} dish={dish} />
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function Header({ slot, basketCount, basketTotal }: { slot: RefObject<HTMLDivElement | null>; basketCount: number; basketTotal: number }) {
-  return (
-    <header className="flex h-16 flex-none items-center gap-3 border-0 border-b border-solid border-(--xs-line) px-5">
-      <span className="flex items-center gap-2 text-[15px] font-[650] tracking-[-0.02em]">
-        <span className="grid size-7 place-items-center rounded-[9px] bg-(--xs-ink) text-(--xs-surface)" aria-hidden="true">
-          <HugeiconsIcon icon={Dish01Icon} size={16} strokeWidth={2} />
-        </span>
-        <span className="@max-[420px]:sr-only">Dishes</span>
-      </span>
-      <span className="flex-1" />
-      <div ref={slot} className="h-10 w-[280px] min-w-[120px] shrink @max-[560px]:w-[160px]" />
-      <button type="button" className={`grid size-10 flex-none cursor-pointer place-items-center rounded-[12px] border-0 bg-transparent text-(--xs-ink) transition-[background-color] duration-150 ease-out hover:bg-(--xs-well) @max-[480px]:hidden ${FOCUS}`} aria-label="Account">
-        <HugeiconsIcon icon={UserCircleIcon} size={20} strokeWidth={1.7} aria-hidden="true" />
-      </button>
-
-      <button
-        type="button"
-        className={`flex h-10 flex-none cursor-pointer items-center gap-2 rounded-full border-0 bg-(--xs-ink) pr-3.5 pl-3 font-sans text-[13px] font-semibold text-(--xs-surface) tabular-nums transition-[opacity] duration-150 ease-out hover:opacity-90 active:scale-[0.97] ${FOCUS}`}
-        aria-label={`Basket, ${basketCount} items, ${pounds(basketTotal)}`}
-      >
-        <HugeiconsIcon icon={ShoppingBasket01Icon} size={17} strokeWidth={1.9} aria-hidden="true" />
-        <Remold.Text>{pounds(basketTotal)}</Remold.Text>
-      </button>
-    </header>
-  );
-}
-
-function KeyHint({ keys, children }: { keys: string[]; children: ReactNode }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      {keys.map((key) => (
-        <kbd key={key} className={KEY}>
-          {key}
-        </kbd>
-      ))}
-      {children}
-    </span>
-  );
-}
-
-function RecentSearches({ reduced, onPick }: { reduced: boolean; onPick: (term: string) => void }) {
-  return (
-    <div className="mb-2 px-2.5 pt-1.5">
-      <span className="mb-2 block text-[12px] font-semibold text-(--xs-muted)">Recent</span>
-      <div className="flex flex-wrap gap-1.5">
-        {RECENT.map((term, index) => (
-          <motion.button
-            key={term}
-            type="button"
-            className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border-0 bg-(--xs-well) px-3 font-sans text-[13px] font-medium text-(--xs-soft) transition-[color,background-color] duration-150 ease-out hover:text-(--xs-ink) active:scale-[0.97] ${FOCUS}`}
-            initial={reduced ? false : { opacity: 0, y: 8, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ ...SETTLE, delay: 0.1 + index * 0.035 }}
-            onClick={() => onPick(term)}
-          >
-            <HugeiconsIcon icon={Clock01Icon} size={14} strokeWidth={1.8} className="text-(--xs-muted)" aria-hidden="true" />
-            {term}
-          </motion.button>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -328,21 +75,211 @@ export interface ExpandingSearchProps {
   onQueryChange: (query: string) => void;
 }
 
+function Greeting({ hidden }: { hidden: boolean }) {
+  return (
+    <div
+      className="grid grid-rows-[1fr] [transition:grid-template-rows_0.5s_cubic-bezier(0.32,0.72,0,1),opacity_0.25s_ease,filter_0.25s_ease] group-data-open:grid-rows-[0fr] group-data-open:opacity-0 group-data-open:blur-[4px] motion-reduce:duration-10"
+      aria-hidden={hidden || undefined}
+    >
+      <div className="min-h-0 overflow-hidden">
+        <div className="mb-[18px] flex items-center justify-between">
+          <span className="inline-flex h-[30px] items-center gap-[5px] rounded-full bg-(--xs-well) pr-[11px] pl-[9px] text-[12.5px] font-semibold [&_svg]:size-3.5">
+            <HugeiconsIcon icon={Location01Icon} strokeWidth={2} aria-hidden="true" />
+            Osu, Accra
+          </span>
+          <img
+            src="https://api.dicebear.com/9.x/notionists/svg?seed=Ama%20Mensah&backgroundColor=fde68a"
+            alt=""
+            width={32}
+            height={32}
+            className="rounded-full"
+            draggable={false}
+          />
+        </div>
+        <h3 className="m-0 mb-4 grid gap-0.5 text-[24px] leading-[1.15] font-[650] tracking-[-0.03em] [&_span]:font-medium [&_span]:text-(--xs-muted)">
+          Good evening, Ama.
+          <span>What are we picking up?</span>
+        </h3>
+      </div>
+    </div>
+  );
+}
+
+function RecentSearches({ reduced, onPick }: { reduced: boolean; onPick: (term: string) => void }) {
+  return (
+    <div className="mb-[22px] grid">
+      <span className={LABEL}>Recent</span>
+      {RECENT.map((term, index) => (
+        <motion.button
+          key={term}
+          type="button"
+          className="flex h-11 cursor-pointer items-center gap-3 border-0 border-b border-solid border-(--xs-line) bg-transparent pr-1 pl-0.5 text-left text-(--xs-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--xs-ink) focus-visible:[&_[data-term]]:underline focus-visible:[&_[data-term]]:underline-offset-[3px]"
+          initial={reduced ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...SETTLE, delay: 0.06 + index * 0.035 }}
+          onClick={() => onPick(term)}
+        >
+          <HugeiconsIcon icon={Clock01Icon} strokeWidth={1.8} className={RECENT_ICON} aria-hidden="true" />
+          <span data-term="" className="flex-1 text-[15px]">
+            {term}
+          </span>
+          <HugeiconsIcon icon={ArrowUpLeft01Icon} strokeWidth={1.8} className={RECENT_ICON} aria-hidden="true" />
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
+function ShopHome() {
+  return (
+    <>
+      <span className={LABEL}>Shop by aisle</span>
+      <div className="mb-6 grid grid-cols-4 gap-2.5">
+        {AISLES.map((aisle) => (
+          <span key={aisle.name} className="grid justify-items-center gap-[7px] text-[12.5px] font-medium text-(--xs-soft)">
+            <span
+              className="grid aspect-square w-full place-items-center rounded-[20px] text-[30px] leading-none"
+              style={{ background: aisle.tint }}
+              aria-hidden="true"
+            >
+              {aisle.emoji}
+            </span>
+            {aisle.name}
+          </span>
+        ))}
+      </div>
+
+      <span className={LABEL}>Picked for you</span>
+      <div className="grid grid-cols-2 gap-2.5">
+        {PICKS.map((item) => (
+          <span key={item.name} className="grid gap-0.5">
+            <span
+              className="mb-2 grid h-28 place-items-center rounded-[22px] text-[44px] leading-none"
+              style={{ background: item.tint }}
+              aria-hidden="true"
+            >
+              {item.emoji}
+            </span>
+            <span className="font-semibold">{item.name}</span>
+            <span className="flex items-baseline gap-1.5">
+              <span className="font-semibold">{item.price}</span>
+              <span className="text-[12.5px] text-(--xs-muted)">{item.size}</span>
+            </span>
+          </span>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function BasketButton({
+  item,
+  inBasket,
+  reduced,
+  onToggle,
+}: {
+  item: Product;
+  inBasket: boolean;
+  reduced: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-added={inBasket || undefined}
+      className="grid size-[34px] flex-none cursor-pointer place-items-center rounded-full border-0 bg-(--xs-well) p-0 text-(--xs-ink) outline-none transition-[background-color,color,scale] duration-200 group-data-highlighted/item:not-data-added:bg-(--xs-surface) focus-visible:shadow-[0_0_0_2px_var(--xs-surface),0_0_0_4px_var(--xs-ink)] active:scale-90 data-added:bg-[#16a34a] data-added:text-white [&_svg]:size-[15px]"
+      aria-label={`Add ${item.name} to basket`}
+      aria-pressed={inBasket}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle();
+      }}
+    >
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.span
+          key={inBasket ? "in" : "out"}
+          className="grid"
+          initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.4, rotate: -45 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.4, rotate: 45 }}
+          transition={{ type: "spring", duration: 0.35, bounce: 0.3 }}
+        >
+          <HugeiconsIcon icon={inBasket ? Tick02Icon : Add01Icon} strokeWidth={2.6} aria-hidden="true" />
+        </motion.span>
+      </AnimatePresence>
+    </button>
+  );
+}
+
+function ProductItem({
+  item,
+  index,
+  query,
+  highlighted,
+  highlightId,
+  inBasket,
+  reduced,
+  onToggleBasket,
+}: {
+  item: Product;
+  index: number;
+  query: string;
+  highlighted: boolean;
+  highlightId: string;
+  inBasket: boolean;
+  reduced: boolean;
+  onToggleBasket: () => void;
+}) {
+  return (
+    <Autocomplete.Item
+      value={item}
+      className="group/item relative cursor-pointer rounded-[18px] outline-none"
+      render={<motion.div layout="position" transition={SETTLE} />}
+    >
+      {highlighted && (
+        <motion.span
+          layoutId={highlightId}
+          className="absolute inset-0 rounded-[inherit] bg-(--xs-well)"
+          transition={SETTLE}
+        />
+      )}
+
+      <motion.span
+        className="relative flex min-h-16 items-center gap-[13px] pr-2.5 pl-2"
+        initial={reduced ? false : { opacity: 0, y: 8, filter: "blur(3px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ ...SETTLE, delay: reduced ? 0 : 0.1 + Math.min(index, 6) * 0.03 }}
+      >
+        <span
+          className="grid size-[46px] flex-none place-items-center rounded-[14px] text-[24px] leading-none"
+          style={{ background: item.tint }}
+          aria-hidden="true"
+        >
+          {item.emoji}
+        </span>
+        <span className="grid min-w-0 flex-1 gap-0.5">
+          <span className="truncate text-[15px] font-medium text-(--xs-soft) [&_mark]:bg-transparent [&_mark]:font-[650] [&_mark]:text-(--xs-ink)">
+            <Match text={item.name} query={query} />
+          </span>
+          <span className="text-[13px] text-(--xs-muted)">
+            {item.size} · {item.price}
+          </span>
+        </span>
+        <BasketButton item={item} inBasket={inBasket} reduced={reduced} onToggle={onToggleBasket} />
+      </motion.span>
+    </Autocomplete.Item>
+  );
+}
+
 export function ExpandingSearch({ open, onOpenChange, query, onQueryChange }: ExpandingSearchProps) {
   const reduced = useReducedMotion() ?? false;
   const id = useId();
-  const frame = useRef<HTMLElement>(null);
-  const slot = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const refocusing = useRef(false);
-  const [panel, setPanel] = useState<HTMLDivElement | null>(null);
-  const [measureResults, resultsHeight] = useMeasuredHeight();
+  const [results, setResults] = useState<HTMLDivElement | null>(null);
   const [highlighted, setHighlighted] = useState<Product | undefined>();
-  const basket = useBasket(["Jollof rice with chicken"]);
-  const rest = usePillRest(frame, slot);
-  useSlashToFocus(frame, input);
-
-  const narrow = rest ? rest.frameWidth < NARROW_FRAME : false;
+  const [added, setAdded] = useState<string[]>([]);
+  const refocusing = useRef(false);
 
   const close = (keepFocus: boolean) => {
     onQueryChange("");
@@ -354,179 +291,196 @@ export function ExpandingSearch({ open, onOpenChange, query, onQueryChange }: Ex
     }
   };
 
-  const shape = rest && (open ? cardShape(rest, resultsHeight ?? 0) : { left: rest.left, top: rest.top, width: rest.width, height: FIELD_HEIGHT, borderRadius: 12 });
+  const toggleBasket = (name: string) => {
+    announce(added.includes(name) ? `${name} removed from basket` : `${name} added to basket`);
+    setAdded((list) => (list.includes(name) ? list.filter((other) => other !== name) : [...list, name]));
+  };
+
+  const swap = reduced
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : {
+        initial: { opacity: 0, y: 10, filter: "blur(6px)" },
+        animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+        exit: { opacity: 0, y: -6, filter: "blur(4px)", transition: { duration: 0.14 } },
+      };
 
   return (
-    <MotionConfig transition={SPRING} reducedMotion="user">
+    <MotionConfig reducedMotion="user">
       <section
-        ref={frame}
         data-open={open || undefined}
-        className={`group @container relative flex h-[460px] w-[min(100%,820px)] flex-col overflow-clip rounded-[24px] border border-solid border-(--xs-edge) bg-(--xs-surface) text-[14px] tracking-[-0.006em] text-(--xs-ink) ${PALETTE}`}
-        aria-label="Food delivery"
+        className={`group flex h-[580px] w-[min(100%,380px)] flex-col overflow-hidden rounded-[36px] border border-solid border-(--xs-edge) bg-(--xs-surface) px-[18px] pt-[18px] text-[14px] tracking-[-0.006em] text-(--xs-ink) shadow-[0_1px_2px_rgb(0_0_0/0.05),0_12px_28px_-20px_rgb(0_0_0/0.16)] dark:shadow-[0_1px_2px_rgb(0_0_0/0.28),0_12px_28px_-20px_rgb(0_0_0/0.48)] ${PALETTE}`}
+        aria-label="Groceries"
       >
-        <Header slot={slot} basketCount={basket.count} basketTotal={basket.total} />
-        <Storefront hidden={open} />
-        <div
-          aria-hidden="true"
-          className={`absolute inset-0 z-10 bg-(--xs-dim) transition-opacity duration-300 ease-out motion-reduce:transition-none ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
-          onPointerDown={() => close(false)}
-        />
+        <Greeting hidden={open} />
 
         <Autocomplete.Root
           items={PRODUCTS}
           value={query}
-          onValueChange={onQueryChange}
+          onValueChange={(next) => onQueryChange(next)}
           open={open}
           onOpenChange={(next) => {
             if (next) onOpenChange(true);
             else if (!query) onOpenChange(false);
           }}
-          limit={query ? 5 : 3}
           autoHighlight
           onItemHighlighted={(item) => setHighlighted(item ?? undefined)}
           itemToStringValue={(item) => (item as Product).name}
         >
-          {shape && (
-            <motion.div className="absolute z-20 overflow-clip" initial={false} animate={shape} transition={reduced ? { duration: 0.12 } : { ...SPRING, delay: open ? 0 : 0.06 }}>
-              <span aria-hidden="true" className={`absolute inset-0 bg-(--xs-well) transition-opacity duration-200 ease-out motion-reduce:transition-none ${open ? "opacity-0" : "opacity-100"}`} />
-              <span aria-hidden="true" className={`absolute inset-0 rounded-[inherit] bg-(--xs-raised) shadow-(--xs-shadow) transition-opacity duration-100 ease-out motion-reduce:transition-none ${open ? "opacity-100" : "opacity-0"}`} />
-
-              <motion.div className="relative" initial={false} animate={{ padding: open ? 6 : 0 }}>
-                <Autocomplete.InputGroup
-                  className="flex cursor-text items-center gap-2.5 pr-2.5 pl-3.5"
-                  style={{ height: FIELD_HEIGHT }}
-                  onPointerDown={(event) => {
-                    if (event.target !== input.current) {
-                      event.preventDefault();
-                      input.current?.focus();
+          <div className="flex flex-none items-center">
+            <Autocomplete.InputGroup
+              className="flex h-12 min-w-0 flex-1 cursor-text items-center gap-[9px] rounded-2xl bg-(--xs-well) pr-3 pl-[15px] transition-[background-color,box-shadow] duration-200 group-data-open:bg-(--xs-surface) group-data-open:shadow-[inset_0_0_0_1.8px_var(--xs-ink)] has-[input:focus-visible]:shadow-[inset_0_0_0_1.8px_var(--xs-ink)] motion-reduce:duration-10"
+              onPointerDown={(event) => {
+                if (event.target !== input.current) {
+                  event.preventDefault();
+                  input.current?.focus();
+                }
+                onOpenChange(true);
+              }}
+            >
+              <HugeiconsIcon
+                icon={Search01Icon}
+                strokeWidth={2}
+                className="size-[18px] flex-none text-(--xs-muted)"
+                aria-hidden="true"
+              />
+              <Autocomplete.Input
+                ref={input}
+                className="h-full w-0 min-w-0 flex-1 border-0 bg-transparent p-0 text-[16px] text-(--xs-ink) outline-none placeholder:text-(--xs-muted)"
+                aria-label="Search groceries"
+                placeholder="Search 2,400 groceries"
+                onFocus={() => {
+                  if (refocusing.current) refocusing.current = false;
+                  else onOpenChange(true);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key !== "Escape") return;
+                  event.preventDefault();
+                  close(true);
+                }}
+              />
+              <AnimatePresence initial={false}>
+                {query && (
+                  <Autocomplete.Clear
+                    className="relative grid size-5 flex-none cursor-pointer place-items-center rounded-full border-0 bg-(--xs-muted) p-0 text-(--xs-surface) after:absolute after:-inset-0.5 after:content-[''] [&_svg]:size-2.5"
+                    aria-label="Clear search"
+                    render={
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.6 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.6 }}
+                        transition={SETTLE}
+                      />
                     }
-
-                    onOpenChange(true);
-                  }}
-                >
-                  <HugeiconsIcon icon={Search01Icon} strokeWidth={2} className="size-[17px] flex-none text-(--xs-muted)" aria-hidden="true" />
-                  <Autocomplete.Input
-                    ref={input}
-                    className="h-full w-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-[14.5px] text-(--xs-ink) outline-none placeholder:text-(--xs-muted)"
-                    aria-label="Search food"
-                    placeholder={narrow && !open ? "Search" : "Search dishes or restaurants"}
-                    onFocus={() => {
-                      if (refocusing.current) refocusing.current = false;
-                      else onOpenChange(true);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key !== "Escape") return;
-
-                      event.preventDefault();
-                      close(true);
-                    }}
-                  />
-
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {query ? (
-                      <Autocomplete.Clear
-                        key="clear"
-                        className="grid size-6 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-(--xs-muted) transition-[color] duration-150 hover:text-(--xs-ink) [&_svg]:size-3.5"
-                        aria-label="Clear search"
-                        render={<motion.button {...POP_IN} />}
-                      >
-                        <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.4} aria-hidden="true" />
-                      </Autocomplete.Clear>
-                    ) : (
-                      !narrow && (
-                        <motion.kbd key={open ? "esc" : "slash"} className={KEY} {...POP_IN}>
-                          {open ? "esc" : "/"}
-                        </motion.kbd>
-                      )
-                    )}
-                  </AnimatePresence>
-                </Autocomplete.InputGroup>
-              </motion.div>
-
-              <div ref={measureResults} className="relative">
-                <div ref={setPanel} />
-              </div>
-            </motion.div>
-          )}
-
-          <Autocomplete.Portal container={panel}>
-            <Autocomplete.Positioner className="static! w-auto! transform-none! outline-none" positionMethod="absolute">
-              <Autocomplete.Popup className="border-0 border-t border-solid border-(--xs-line) px-2 pt-2 pb-2 outline-none transition-[opacity,filter] delay-[90ms] duration-200 ease-out data-ending-style:opacity-0 data-ending-style:delay-0 data-ending-style:duration-100 data-ending-style:blur-[3px] data-starting-style:opacity-0 motion-reduce:transition-none">
-                {!query && (
-                  <RecentSearches
-                    reduced={reduced}
-                    onPick={(term) => {
-                      onQueryChange(term);
-                      input.current?.focus();
-                    }}
-                  />
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2.6} aria-hidden="true" />
+                  </Autocomplete.Clear>
                 )}
+              </AnimatePresence>
+            </Autocomplete.InputGroup>
 
-                <span className="mb-1.5 block px-2.5 pt-1.5 text-[12px] font-semibold text-(--xs-muted)" id={`${id}-label`}>
-                  {query ? "Dishes" : "Popular right now"}
-                </span>
-                <Autocomplete.Empty className="text-center text-[13.5px] text-(--xs-muted) not-empty:px-3 not-empty:py-6">Nothing matches “{query}”</Autocomplete.Empty>
-                <Autocomplete.List className="grid" aria-labelledby={`${id}-label`}>
-                  {(item: Product, index: number) => (
-                    <ProductItem
-                      key={item.name}
-                      item={item}
-                      index={index + (query ? 0 : 2)}
-                      query={query}
-                      highlighted={highlighted === item}
-                      highlightId={`${id}-highlight`}
-                      added={basket.has(item.name)}
+            <AnimatePresence initial={false}>
+              {open && (
+                <motion.button
+                  type="button"
+                  className="h-12 flex-none cursor-pointer overflow-hidden border-0 bg-transparent p-0 text-[15px] font-semibold whitespace-nowrap text-(--xs-ink) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--xs-ink) focus-visible:[&>span]:underline focus-visible:[&>span]:underline-offset-[3px]"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "auto", opacity: 1 }}
+                  exit={{ width: 0, opacity: 0, transition: { duration: 0.2 } }}
+                  transition={
+                    reduced ? { duration: 0 } : { ...SETTLE, opacity: { duration: 0.2, delay: 0.08 } }
+                  }
+                  onClick={(event) => close(event.currentTarget.matches(":focus-visible"))}
+                >
+                  <span className="block pl-3.5">Cancel</span>
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="relative -mx-[18px] min-h-0 flex-1 overflow-y-auto overscroll-contain px-[18px] pt-[22px] pb-[18px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <AnimatePresence initial={false} mode="popLayout">
+              {open ? (
+                <motion.div key="results" ref={setResults} className="grid content-start" {...swap} transition={SETTLE}>
+                  {!query && (
+                    <RecentSearches
                       reduced={reduced}
-                      onToggle={() => basket.toggle(item.name)}
+                      onPick={(term) => {
+                        onQueryChange(term);
+                        input.current?.focus();
+                      }}
                     />
                   )}
-                </Autocomplete.List>
+                </motion.div>
+              ) : (
+                <motion.div key="shop" className="grid" {...swap} transition={SETTLE}>
+                  <ShopHome />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                <div className="mt-1.5 flex items-center gap-4 border-0 border-t border-solid border-(--xs-line) px-2.5 pt-2.5 pb-1 text-[12px] text-(--xs-muted) max-[480px]:hidden">
-                  <KeyHint keys={["↑", "↓"]}>to move</KeyHint>
-                  <KeyHint keys={["↵"]}>to open</KeyHint>
-                  <KeyHint keys={["esc"]}>to close</KeyHint>
-                </div>
-              </Autocomplete.Popup>
-            </Autocomplete.Positioner>
-          </Autocomplete.Portal>
+            <Autocomplete.Portal container={results}>
+              <Autocomplete.Positioner className="static! w-auto! transform-none! outline-none" positionMethod="absolute">
+                <Autocomplete.Popup className="outline-none transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0">
+                  <span className={LABEL} id={`${id}-label`}>
+                    {query ? "Products" : "Popular this week"}
+                  </span>
+                  <Autocomplete.Empty className="text-center text-[14px] text-(--xs-muted) not-empty:px-3 not-empty:py-8">No groceries match “{query}”</Autocomplete.Empty>
+                  <Autocomplete.List className="-mx-2 grid" aria-labelledby={`${id}-label`}>
+                    {(item: Product, index: number) => (
+                      <ProductItem
+                        key={item.name}
+                        item={item}
+                        index={index}
+                        query={query}
+                        highlighted={highlighted === item}
+                        highlightId={`${id}-highlight`}
+                        inBasket={added.includes(item.name)}
+                        reduced={reduced}
+                        onToggleBasket={() => toggleBasket(item.name)}
+                      />
+                    )}
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </div>
         </Autocomplete.Root>
       </section>
     </MotionConfig>
   );
 }
 
-function cardShape(rest: PillRest, resultsHeight: number) {
-  const width = Math.min(OPEN_WIDTH, rest.frameWidth - 32);
-
-  return { left: (rest.frameWidth - width) / 2, top: rest.top - 6, width, height: FIELD_HEIGHT + 12 + resultsHeight, borderRadius: 20 };
-}
-
-interface SearchState {
+interface State {
   open: boolean;
   query: string;
 }
 
-const BEATS: readonly (SearchState & { ms: number })[] = [
+const BEATS: readonly (State & { ms: number })[] = [
   { open: false, query: "", ms: 1500 },
-  { open: true, query: "", ms: 1700 },
-  ...typing("chi", (query) => ({ open: true, query }), { every: 280, hold: 2000 }),
-  { open: false, query: "", ms: 1200 },
+  { open: true, query: "", ms: 1500 },
+  ...typing("oa", (query) => ({ open: true, query }), { every: 280, hold: 2000 }),
+  { open: false, query: "", ms: 1000 },
 ];
 
-const fromBeat = (step: number): SearchState => {
+const fromBeat = (step: number): State => {
   const { ms: _ms, ...state } = BEATS[step]!;
-
   return state;
 };
 
-const STILL: SearchState = { open: true, query: "chi" };
+const STILL: State = { open: true, query: "oa" };
 
-export function ExpandingSearchDemo({ playing, preview }: { playing?: boolean; preview?: boolean } = {}) {
-  const { ref, state, takeOver } = useScene(BEATS, fromBeat, playing, false, preview ? STILL : undefined);
+interface ExpandingSearchDemoProps {
+  playing?: boolean;
+  preview?: boolean;
+}
 
+export function ExpandingSearchDemo({ playing, preview: previewing }: ExpandingSearchDemoProps = {}) {
+  const scene = useScene(BEATS, fromBeat, playing, false, previewing ? STILL : undefined);
+  const preview = previewing && !scene.taken;
+  const { ref, takeOver } = scene;
+  const state = scene.state;
   return (
-    <div ref={ref} className="not-prose grid w-full grid-cols-[minmax(0,1fr)] place-items-center font-sans antialiased">
+    <div ref={ref} className="not-prose grid w-full place-items-center font-sans antialiased">
       <ExpandingSearch
         open={state.open}
         onOpenChange={(open) => takeOver((current) => ({ ...current, open }))}

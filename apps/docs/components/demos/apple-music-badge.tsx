@@ -13,8 +13,9 @@ const BADGE: CSSProperties = {
   gap: 6,
   height: 34,
   padding: "0 12px 0 9px",
-  borderRadius: 10,
+  borderRadius: 7,
   background: "#000",
+  boxShadow: "inset 0 0 0 1px #a6a6a6",
   color: "#fff",
   fontFamily:
     '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif',

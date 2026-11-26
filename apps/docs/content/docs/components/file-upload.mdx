@@ -1,6 +1,6 @@
 ---
 title: "File upload"
-description: "A drop zone that folds into a strip as files land in a list underneath. Each row fills as its file uploads and ends with a small tick, failed uploads shake and offer another try, removing one closes the gap, and the line at the top counts along."
+description: "A drop zone that folds into a strip as files land in a list underneath. Each row's progress bar turns into a check, failed uploads shake and offer another try, removing one closes the gap, and the line at the top counts along."
 status: "new"
 tags: ["Base UI", "Motion"]
 ---
@@ -11,14 +11,14 @@ tags: ["Base UI", "Motion"]
 
 ## Things to try
 
-- **Press "Try sample files".** The empty state folds into a slim "Add more files" strip, its icon and words moving to their new places, and five files drop into the list. The spreadsheet among them is refused straight away.
-- **Watch a row upload.** The row itself fills from the left while its size line counts up ("35% · 4.9 MB of 14.2 MB"). When it's done the fill fades, the size settles back in, and a small green tick pops in; hover the row and the tick turns back into the remove button.
-- **Watch the big PDF get turned away.** At 32.4 MB it's over the 25 MB limit, so its row shakes, turns red and offers Compress. Press it: the file shrinks to 14.2 MB and uploads.
+- **Press "Add sample files".** The empty state folds into a strip, its icon and words moving to their new places, and five files drop into the list. The spreadsheet among them is refused straight away.
+- **Watch a row finish.** Its bar pulls away to the right and a green check pops in where the percentage was.
+- **Watch the big PDF fail.** It stops at 62%, the row shakes and turns red, and a Retry button appears. Press it and it goes through.
 - **Drag files over the card.** A dashed drop area appears, the icon lifts and turns into an arrow, and the label counts what you're holding: "Let go to upload 3 files".
 - **Drop, paste or choose your own.** Only images and PDFs go in. Images show a thumbnail and PDFs get a red tile. Anything else, or anything over 25 MB, is refused with the reason.
 - **Drag something else over it.** Drag a spreadsheet or a video over the drop zone and it turns red and says it only takes images and PDFs, before you let go.
 - **Remove a row.** It fades and the rows below slide up. While a file is uploading, the same button cancels it.
-- **Read the top line.** It re-letters from "No files yet" to "Uploading 3 files", with how much is left beside it, to "4 files uploaded", or says how many failed.
+- **Read the top line.** It re-letters from "No files yet" to "Uploading 2 of 4" to "All 4 uploaded", or says how many failed.
 
 Nothing is sent anywhere: the uploads are simulated.
 
@@ -35,6 +35,6 @@ Nothing is sent anywhere: the uploads are simulated.
 - **You own the files.** The component shows a list of items with a status and a progress from 0 to 1, and tells you what was added, removed or retried. Wire those to your own upload code.
 - **The fold is a Remold morph.** The empty state and the strip are two layouts of the same button. `Remold.Morph` works out what became what, so the icon and words travel to their new places while the rest fades.
 - **The card follows its content.** The content is measured and the card's height springs to it, so rows arriving and leaving never make it jump.
-- **The row is the progress.** Base UI's `Progress` sits behind each row and fills it from the left, so there's no separate bar to push the text around. When the file is done the fill fades and a small green tick pops in; it gives way to the remove button on hover or focus.
+- **The bar becomes the check.** When a row finishes, the bar shrinks toward the right edge while the check springs in beside it, so it reads as one thing turning into the other.
 - **Rows make room.** Each row animates its position, so removing one slides the rest up while it fades.
 - **It works without a mouse.** The zone is a button that opens the file picker, pasting files works anywhere in the card, and removing a row moves focus to the next one.
