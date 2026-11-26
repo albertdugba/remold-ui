@@ -1,0 +1,39 @@
+---
+title: "Sidebar nav"
+description: "A workspace sidebar where teams fold open, their pages hang off connector lines, and the line to the page you're on lights up. It collapses to a rail of icons with flyouts."
+status: "new"
+tags: ["Motion", "Remold"]
+---
+
+<Stage name="sidebar-nav" code={<Source demo="sidebar-nav" />} minHeight={520}>
+  <SidebarNavDemo />
+</Stage>
+
+## Things to try
+
+- **Pick a page.** The highlight springs across to it, and the line from its team to it turns dark, so you can see where you are at a glance.
+- **Fold a team away.** Its pages leave, their lines draw back into the team's icon and everything below slides up. If the open page was inside, the highlight waits on the team.
+- **Open it again.** The pages drop back in one after another and the lines draw out to meet them.
+- **Collapse it** with the panel button at the top. The sidebar springs down to a rail of icons: the labels fade, the lines draw back into the team icons, the inbox count becomes a dot and the team you're in stays lit.
+- **Hover a team in the rail.** The tile under the pointer grows into a flyout of its pages, hung off the team's icon on the same lines; pick one and the flyout closes.
+
+## Install
+
+<AddCommand name="sidebar-nav" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="sidebar-nav" />
+
+## How it works
+
+- **One value.** `value` holds the `active` page, the `open` teams and whether it's `collapsed`. It works controlled or uncontrolled; pass your own `groups`.
+- **Lines from the data.** Each team's icon is a Remold `Anchor` and each page links to it, so `Remold.Connectors` draws a rounded elbow to every page. The open page's line carries `data-rm-line="lit"` and is styled darker.
+- **Lines that keep up.** Rows move with Motion's `layout`, and `useConnectorMotion` redraws the lines on every frame of that movement, so they never trail the rows.
+- **A rail, not a second sidebar.** Collapsing springs the width and fades the text in place, so every row keeps its spot. In the rail, the hover tile and the flyout share a Motion `layoutId`, so the tile grows into the menu and shrinks back; the words fade in once it's grown so they never stretch. The flyout has its own `Remold.Connectors`, and opens on hover, focus or click and closes on Escape.
+- **One highlight.** The open page's background is a single Motion `layoutId`, so it travels instead of blinking.
+- **Accessible.** It's a `nav` of buttons; teams say whether they're expanded, rail buttons are named after their page or team, and the open page is marked `aria-current="page"`.
+
+<Callout>The workspace and teams are made up.</Callout>

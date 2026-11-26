@@ -2187,20 +2187,22 @@
   box-shadow: none !important;
 }
 
-/* Hero: the headline large on the left, the pitch and the way in beside it, both on one baseline. */
+/* Hero: the headline large on the left, the pitch and the way in beside it, both on one baseline.
+   The pitch keeps a reading-width column and the headline takes the rest. */
 .hm-hero.split {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, min(460px, 38%));
   align-items: end;
   gap: clamp(32px, 5vw, 96px);
   padding: clamp(64px, 9vw, 128px) 0 clamp(48px, 6vw, 80px);
   border-bottom: 1px solid var(--hm-line);
 }
 
+/* Sized from the room the headline's column has, so each line always fits without wrapping. */
 .hm-hero.split h1 {
   max-width: none;
   margin-top: 28px;
-  font-size: clamp(48px, 7.2vw, 112px);
+  font-size: clamp(46px, 10.67vw - 55px, 112px);
   font-weight: 600;
   line-height: 0.92;
   letter-spacing: -0.06em;
@@ -2209,6 +2211,17 @@
 
 .hm-hero.split h1 > span:first-child {
   color: var(--hm-muted);
+}
+
+/* Under both columns: the agents that can install from the registry. */
+.hm-hero-agents {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 1001px) {
+  .hm-hero.split {
+    row-gap: clamp(32px, 3.4vw, 52px);
+  }
 }
 
 .hm-hero-side {
@@ -2264,8 +2277,48 @@
   }
 
   .hm-hero.split h1 {
-    font-size: clamp(44px, 11vw, 88px);
+    font-size: clamp(44px, 10.4vw, 88px);
     text-wrap: balance;
+  }
+}
+
+/* A phone: inset the hero from the screen edge and give each block room. The headline stands on
+   three lines so it can stay large, with the changing word on a line of its own. */
+@media (max-width: 640px) {
+  .hm-hero.split {
+    row-gap: 32px;
+    padding: 48px 8px 44px;
+  }
+
+  .hm-hero.split h1 {
+    margin-top: 22px;
+    font-size: clamp(30px, 10.6vw, 54px);
+    line-height: 1.02;
+    letter-spacing: -0.055em;
+  }
+
+  .hm-hero.split h1 .hm-line > span:first-child {
+    display: block;
+  }
+
+  .hm-hero.split .hm-lead {
+    font-size: 16.5px;
+    line-height: 1.6;
+  }
+
+  .hm-hero.split .hm-actions {
+    justify-self: stretch;
+    margin-top: 26px;
+  }
+
+  .hm-hero.split .hm-cta {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 0 14px;
+  }
+
+  .hm-hero.split .hm-install {
+    margin-top: 16px;
   }
 }
 

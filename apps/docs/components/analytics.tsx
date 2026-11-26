@@ -1,11 +1,16 @@
 "use client";
 
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { useEffect } from "react";
 import { track } from "@/lib/analytics";
 
+const GA_ID = process.env.NODE_ENV === "production" ? process.env.NEXT_PUBLIC_GA_ID : undefined;
+
+const currentPage = () => window.location.pathname.split("/").filter(Boolean).at(-1) ?? "";
+
 const LIBRARY_BUTTONS: Record<string, () => void> = {
-  "Copy Markdown": () => track("Copy markdown"),
-  "Copy Text": () => track("Copy code", { source: "code block" }),
+  "Copy Markdown": () => track("Copy markdown", { component: currentPage(), source: "page" }),
+  "Copy Text": () => track("Copy code", { component: currentPage(), source: "code block" }),
 };
 
 export function Analytics() {
@@ -18,5 +23,5 @@ export function Analytics() {
     return () => document.removeEventListener("click", onClick, { capture: true });
   }, []);
 
-  return null;
+  return GA_ID ? <GoogleAnalytics gaId={GA_ID} /> : null;
 }
