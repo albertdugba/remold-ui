@@ -7,7 +7,27 @@ Every example on this site is in a [shadcn](https://ui.shadcn.com/docs/registry)
 
 <AddCommand name="phone-input" />
 
-Assistants that use the shadcn MCP server can install them too: ask for "the Remold phone input" and point it at this registry.
+## With an AI assistant
+
+The registry follows the shadcn format, so any assistant that uses the [shadcn MCP server](https://ui.shadcn.com/docs/registry/mcp) can browse and install from it: Claude Code, Cursor, Codex, VS Code, OpenCode and other MCP clients.
+
+Connect the MCP server to your assistant. Swap `claude` for `cursor`, `codex`, `vscode` or `opencode`:
+
+```bash
+npx shadcn@latest mcp init --client claude
+```
+
+Add Remold to the `registries` in your project's `components.json`:
+
+```json
+{
+  "registries": {
+    "@remold": "https://remoldui.xyz/r/{name}.json"
+  }
+}
+```
+
+Then ask for what you want, for example "Add the podcast player from the remold registry." The same entry gives the CLI a short name too: `npx shadcn@latest add @remold/podcast-player`.
 
 ## What's in it
 

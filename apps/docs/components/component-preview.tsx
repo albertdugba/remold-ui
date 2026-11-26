@@ -95,7 +95,7 @@ const PREVIEWS: Record<string, Preview> = {
   },
   "expanding-search": {
     Component: load(() => import("./demos/expanding-search").then((m) => m.ExpandingSearchDemo)),
-    width: 440,
+    width: 860,
     props: { preview: true },
   },
   "booking-steps": {
@@ -161,7 +161,7 @@ const PREVIEWS: Record<string, Preview> = {
     ),
     width: 640,
     cover: true,
-    props: { source: "/api/music", height: 480 },
+    props: { source: "/api/podcasts", height: 480 },
   },
   "focus-timer": {
     Component: load(() => import("./demos/focus-timer").then((m) => m.FocusTimerDemo)),
@@ -206,6 +206,30 @@ const PREVIEWS: Record<string, Preview> = {
     width: 560,
     surface: true,
     props: { preview: true },
+  },
+
+  "rate-and-review": {
+    Component: load(() => import("./demos/rate-and-review").then((m) => m.RateAndReviewDemo)),
+    width: 420,
+    maxZoom: FORM_ZOOM,
+  },
+
+  "gift-note": {
+    Component: load(() => import("./demos/gift-note").then((m) => m.GiftNoteDemo)),
+    width: 480,
+    maxZoom: FORM_ZOOM,
+  },
+
+  pagination: {
+    Component: load(() => import("./demos/pagination").then((m) => m.PaginationDemo)),
+    width: 480,
+    maxZoom: FORM_ZOOM,
+  },
+
+  "sidebar-nav": {
+    Component: load(() => import("./demos/sidebar-nav").then((m) => m.SidebarNavDemo)),
+    width: 340,
+    maxZoom: FORM_ZOOM,
   },
 
   "unsaved-changes": {

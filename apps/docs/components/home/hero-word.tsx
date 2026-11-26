@@ -1,16 +1,15 @@
 "use client";
 /**
- * The headline's second line: a word that changes, then "themselves." Every word starts with "re",
- * so those letters stay put while the rest morphs (`Remold.Text`). The word's box glides to
- * the new word's width at the same time, so "themselves." slides along instead of jumping. It
- * changes while the hero is on screen, pauses while the pointer is over it, and holds still with
- * reduced motion. Screen readers hear the headline once, from the heading's label.
+ * The headline's second line: "give AI agents" and a word that changes. The letters the words share
+ * stay put while the rest morphs (`Remold.Text`). The word's box glides to the new word's width at
+ * the same time, so the full stop slides along instead of jumping. It changes while the hero is on
+ * screen, pauses while the pointer is over it, and holds still with reduced motion. Screen readers
+ * hear the headline once, from the heading's label.
  */
 import { Remold } from "@remold-ui/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-// Short words only, so the headline never re-wraps.
-const WORDS = ["remold", "reshape", "reflow", "regroup", "redraw"];
+const WORDS = ["taste", "motion", "polish", "craft"];
 const SPRING = { duration: 0.7, bounce: 0.1 };
 
 export function HeroWord() {
@@ -46,6 +45,7 @@ export function HeroWord() {
 
   return (
     <span ref={line} aria-hidden="true" className="hm-line">
+      <span>give AI agents</span>{" "}
       <span
         className="hm-word"
         style={width ? { width } : undefined}
@@ -56,8 +56,8 @@ export function HeroWord() {
         <span ref={ruler} className="hm-ruler">
           {WORDS[i]}
         </span>
-      </span>{" "}
-      <span>themselves.</span>
+      </span>
+      <span>.</span>
     </span>
   );
 }

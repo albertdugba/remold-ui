@@ -15,6 +15,9 @@ const SECTION: Record<string, string> = {};
 }
 
 const ORDER = [
+  "pagination",
+  "sidebar-nav",
+  "rate-and-review",
   "project-setup",
   "signature",
   "task-list",

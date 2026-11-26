@@ -1,22 +1,22 @@
 ---
-title: "Music player"
-description: "A mini now-playing bar that opens into the full player: the artwork grows from a thumbnail into the cover, the title, artist and play button settle into place, and sound waves move while it plays."
+title: "Podcast player"
+description: "A grid of new episodes that opens into a player: tap an episode and its own tile grows into the player, the artwork becoming the cover while the other tiles step aside. Go back and it shrinks home."
 status: "new"
-tags: ["Motion", "Icon", "Real audio"]
+tags: ["Morph", "Icon", "Real audio"]
 ---
 
 <Stage name="podcast-player" code={<Source demo="podcast-player" />}>
-  <PodcastPlayerDemo source="/api/music" credit={<AppleMusicBadge />} />
+  <PodcastPlayerDemo source="/api/podcasts" credit="Episodes from Apple Podcasts" />
 </Stage>
 
-Press play, or tap the bar, to open the player; the chevron folds it back.
+Tap an episode to open its player; the arrow takes you back to the list.
 
 ## Things to try
 
-- **Open the player.** The thumbnail grows into the cover, the title and artist lift into place under it, and the play button settles into the middle of the controls.
-- **Press play.** The sound waves start to move, and the part already played darkens. The player has a scrubber, skip back 15 and forward 30, and on this page it plays the real song preview.
-- **Fold it back** with the chevron. The cover shrinks back into exactly the thumbnail it came from.
-- **Open it halfway through closing.** Every change starts from where things are on screen, so it just turns around.
+- **Open an episode.** Its tile grows to fill the panel: the artwork becomes the cover, the title lifts into place beside it with a short description of the episode under it, and the other episodes fade away. The blurred backdrop takes on that episode's colours.
+- **Press play.** The sound waves start to move, and the part already played darkens. The player has a scrubber, skip back 15 and forward 30, and on this page it plays the real episode.
+- **Go back** with the arrow. The cover shrinks back into exactly the tile it came from, and the other episodes return around it.
+- **Open another** straight away. Every change starts from where things are on screen, so it never has to finish one move before starting the next.
 
 ## Install
 
@@ -28,11 +28,12 @@ Press play, or tap the bar, to open the player; the chevron folds it back.
 
 ## How it works
 
-- The mini bar and full player are different markup. A Motion `LayoutGroup` gives the artwork, title, show and play control matching `layoutId`s, so the compact player genuinely expands rather than being swapped.
-- The play button is the same dark disc in both shapes, only bigger, so it reads as one control. Play and pause are one [Icon](/docs/primitives/icon) that morphs between the two symbols.
-- `episodes` takes `{ id, show, title, artwork, colors, audio, seconds }`, and the first one plays. With `audio` the player plays the file; without it, play just runs the clock.
+- **One list, two shapes.** The grid and the player are the same list. Open an episode and the list holds just that one, laid out as a player; [Morph](/docs/primitives/morph) works out that its tile is still the same element and moves and resizes it, so the cover never fades or jumps.
+- **The backdrop follows the episode.** The artwork is drawn again, blurred and saturated, behind everything, and fades to the next one when you open a different episode.
+- Play and pause are one [Icon](/docs/primitives/icon) that morphs between the two symbols.
+- `episodes` takes `{ id, show, title, artwork, colors, audio, seconds }`. With `audio` the player plays the file; without it, play just runs the clock. When an episode ends, the next one starts.
 
 <Callout>
-  On this page the songs are Kofi Kinaata's 30-second previews from Apple Music, through a small cached server route; the music and
-  artwork belong to their creators. Installed, the component shows a made-up show with drawn artwork.
+  On this page the episodes are recent software engineering podcasts from Apple Podcasts, through a small cached server route; the
+  audio and artwork belong to their creators. Installed, the component shows made-up shows with drawn artwork.
 </Callout>
