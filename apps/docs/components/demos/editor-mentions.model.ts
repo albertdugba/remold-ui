@@ -33,29 +33,44 @@ export type MentionsAction =
 export const people: MentionPerson[] = [
   { id: "ama", name: "Ama Mensah", role: "Design lead", online: true },
   { id: "abena", name: "Abena Osei", role: "Product manager" },
-  { id: "akua", name: "Akua Asante", role: "Copywriter", online: true },
-  { id: "kwame", name: "Kwame Owusu", role: "Engineer", online: true },
-  { id: "kofi", name: "Kofi Agyeman", role: "Finance" },
-  { id: "esi", name: "Esi Ofori", role: "Research" },
+  { id: "akua", name: "Akua Asante", role: "Frontend", online: true },
+  { id: "kwame", name: "Kwame Owusu", role: "Payments", online: true },
+  { id: "kofi", name: "Kofi Agyeman", role: "QA" },
+  { id: "esi", name: "Esi Ofori", role: "Security" },
 ];
 
-const firstPost: MentionPost = {
-  id: "p0",
-  who: "Akua Asante",
-  segs: [
-    {
-      kind: "text",
-      text: "Pricing page v3 is ready. The yearly toggle copy still feels long to me.",
-    },
-  ],
-  when: "10:42",
-};
+const firstPosts: MentionPost[] = [
+  {
+    id: "p-2",
+    who: "Abena Osei",
+    segs: [{ kind: "text", text: "Can this ship before the holiday code freeze on Friday?" }],
+    when: "9:58",
+  },
+  {
+    id: "p-1",
+    who: "Kwame Owusu",
+    segs: [{ kind: "text", text: "Yes, if review lands today. Merchant validation is the last piece." }],
+    when: "10:04",
+  },
+  {
+    id: "p0",
+    who: "Kwame Owusu",
+    segs: [{ kind: "text", text: "Apple Pay is wired into checkout behind a flag. Tested on Safari and iOS 18." }],
+    when: "10:31",
+  },
+  {
+    id: "p1",
+    who: "Akua Asante",
+    segs: [{ kind: "text", text: "The Pay button jumps when the wallet sheet closes. Can someone look before we merge?" }],
+    when: "10:42",
+  },
+];
 
 export const initialMentionsState: MentionsState = {
   segs: [],
   query: null,
   active: 0,
-  posts: [firstPost],
+  posts: firstPosts,
   made: 0,
 };
 
@@ -68,20 +83,26 @@ export function personById(id: string): MentionPerson {
 export function avatarUrl(name: string): string {
   const colours = ["e0e7ff", "fce7f3", "d1fae5", "fef3c7"];
   const background = colours[name.length % colours.length]!;
-  return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(
-    name,
-  )}&backgroundColor=${background}`;
+  return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=${background}`;
 }
 
-export function matchingPeople(query: string): MentionPerson[] {
+export const mentionedIds = (segs: readonly MentionSegment[]): string[] => [
+  ...new Set(segs.flatMap((segment) => (segment.kind === "mention" ? [segment.id] : []))),
+];
+
+export function matchingPeople(query: string, taken: readonly string[] = []): MentionPerson[] {
   const lowerQuery = query.toLowerCase();
-  return people.filter((person) =>
-    person.name
-      .toLowerCase()
-      .split(" ")
-      .some((word) => word.startsWith(lowerQuery)),
+  return people.filter(
+    (person) =>
+      !taken.includes(person.id) &&
+      person.name
+        .toLowerCase()
+        .split(" ")
+        .some((word) => word.startsWith(lowerQuery)),
   );
 }
+
+const available = (state: MentionsState) => matchingPeople(state.query ?? "", mentionedIds(state.segs));
 
 function appendText(segs: MentionSegment[], text: string): MentionSegment[] {
   const last = segs.at(-1);
@@ -118,7 +139,7 @@ export function reduceMentions(state: MentionsState, action: MentionsAction): Me
     }
     case "move": {
       if (state.query === null) return state;
-      const count = matchingPeople(state.query).length;
+      const count = available(state).length;
       return count
         ? {
             ...state,
@@ -128,8 +149,8 @@ export function reduceMentions(state: MentionsState, action: MentionsAction): Me
     }
     case "pick": {
       if (state.query === null) return state;
-      const id = action.id ?? matchingPeople(state.query)[state.active]?.id;
-      if (!id) return state;
+      const id = action.id ?? available(state)[state.active]?.id;
+      if (!id || mentionedIds(state.segs).includes(id)) return state;
       return {
         ...state,
         query: null,
@@ -159,7 +180,7 @@ export function reduceMentions(state: MentionsState, action: MentionsAction): Me
         ...state,
         segs: [],
         query: null,
-        posts: [...state.posts, post].slice(-3),
+        posts: [...state.posts, post].slice(-12),
       };
     }
   }

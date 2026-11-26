@@ -11,24 +11,24 @@ import { useFocusAfterChange } from "./use-focus-after-change";
 import { typing, useScene } from "./use-scene";
 
 const CODES: Record<string, { off: number; label: string } | { expired: true }> = {
+  FRIDAY50: { off: 0.5, label: "50% off" },
   SAVE20: { off: 0.2, label: "20% off" },
   WELCOME10: { off: 0.1, label: "10% off" },
   SUMMER: { expired: true },
 };
 
-const SHOWING = {
-  title: "Prison Break",
-  episode: "Season 4",
-  when: "Thu 24 Dec · 8:15 pm",
-  where: "Cineworld · Screen 4",
+const EVENT = {
+  kind: "Live jazz",
+  title: "Highlife Nights",
+  when: "Sat 12 Dec · Doors 7:00 pm",
+  where: "Jazz Cafe, Camden",
+  section: "Stalls",
   row: "F",
   seats: [7, 8],
-  poster:
-    "https://static.wikia.nocookie.net/prisonbreak/images/8/89/Prison-break-season-4-cast-promotional.jpg/revision/latest?cb=20080829043733",
 };
 
-const SEATS = SHOWING.seats.length;
-const PRICE = 13.5;
+const SEATS = EVENT.seats.length;
+const PRICE = 24;
 const SUBTOTAL = SEATS * PRICE;
 const FEE = 1.5;
 const CHECKING_FOR = 550;
@@ -60,6 +60,8 @@ const TICKET_MASK = {
     "radial-gradient(circle 10px at 100% calc(100% - 76px), transparent 9.5px, #000 10px) right / 51% 100% no-repeat",
   ].join(", "),
 };
+const POSTER =
+  "bg-[#ffe3c2] bg-[repeating-radial-gradient(circle_at_100%_0%,rgb(255_255_255/0.55)_0_2px,transparent_2px_15px),linear-gradient(135deg,#ffe9c9,#ffd0b5_55%,#f9c3d6)]";
 const GOOD_INK = "text-[color-mix(in_oklab,var(--fk-good)_85%,var(--fk-ink))]";
 
 const money = (amount: number) => `£${amount.toFixed(2)}`;
@@ -75,43 +77,88 @@ export interface PromoCodeProps {
 
 type Offer = (typeof CODES)[string];
 
+function Instruments() {
+  return (
+    <svg viewBox="0 0 356 168" preserveAspectRatio="xMaxYMid slice" className="absolute inset-0 size-full" aria-hidden="true">
+      <g fill="#fff" fillOpacity="0.8" stroke="#fff" strokeOpacity="0.8" strokeWidth="2.2" strokeLinecap="round">
+        <g transform="translate(58 44)">
+          <ellipse rx="5" ry="3.8" transform="rotate(-20)" stroke="none" />
+          <ellipse cx="17" cy="-4" rx="5" ry="3.8" transform="rotate(-20 17 -4)" stroke="none" />
+          <path d="M4.4 -1.4V-22l17 -4V-5.4" fill="none" />
+          <path d="M4.4 -22l17 -4" fill="none" strokeWidth="4.4" strokeLinecap="butt" />
+        </g>
+        <g transform="translate(26 70) scale(0.8)">
+          <ellipse rx="5" ry="3.8" transform="rotate(-20)" stroke="none" />
+          <path d="M4.4 -1.4V-22c6 2 9 6 8 12" fill="none" />
+        </g>
+        <g transform="translate(238 26) scale(0.85)">
+          <ellipse rx="5" ry="3.8" transform="rotate(-20)" stroke="none" />
+          <path d="M4.4 -1.4V-22c6 2 9 6 8 12" fill="none" />
+        </g>
+      </g>
+
+      <g transform="translate(112 51) rotate(-20) scale(0.95)">
+        <rect x="32" y="22" width="40" height="17" rx="8.5" fill="none" stroke="#c96a22" strokeWidth="4" />
+        <path d="M82 17.5C95 17.5 104 12 112 3V38C104 29 95 23.5 82 23.5Z" fill="#e58a37" />
+        <ellipse cx="112" cy="20.5" rx="3.2" ry="17.5" fill="#b2591a" />
+        <rect x="9" y="17.5" width="76" height="6" rx="3" fill="#e58a37" />
+        <path d="M10 17.5L3 15V26L10 23.5Z" fill="#b2591a" />
+        {[40, 50, 60].map((x) => (
+          <g key={x}>
+            <rect x={x} y="7" width="6" height="30" rx="3" fill="#c96a22" />
+            <circle cx={x + 3} cy="5.5" r="3.6" fill="#fff3da" />
+          </g>
+        ))}
+      </g>
+
+      <g transform="translate(250 12) rotate(9) scale(1.06)">
+        <path d="M61 26C61 9 50 4 39 9" fill="none" stroke="#b87420" strokeWidth="6" strokeLinecap="round" />
+        <path d="M40 8.5L28 14" fill="none" stroke="#3b1d2a" strokeWidth="5" strokeLinecap="round" />
+        <path d="M57 22H66L70 98C72 127 36 131 24 108L6 72L40 66L36 96C38 108 53 108 55 96Z" fill="#d6922f" />
+        <ellipse cx="23" cy="69" rx="17.5" ry="5.5" transform="rotate(-10 23 69)" fill="#8f5413" />
+        <path d="M66.5 30L69.5 96" fill="none" stroke="#f3c877" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.7" />
+        {[38, 52, 66, 80].map((y, index) => (
+          <circle key={y} cx={61 + index * 0.7} cy={y} r="3.4" fill="#fff3da" />
+        ))}
+        <circle cx="25" cy="90" r="4.2" fill="#fff3da" />
+      </g>
+    </svg>
+  );
+}
+
 function TicketLines({ discount }: { discount: number }) {
   return (
     <>
-      <header className="relative -mx-3.5 -mt-3.5 mb-0.5 grid h-[196px] overflow-clip rounded-[18px] bg-[#16222b] text-white after:absolute after:inset-0 after:bg-[linear-gradient(to_top,rgb(0_0_0/0.82),rgb(0_0_0/0.2)_60%,transparent_85%)] after:content-['']">
-        <img
-          src={SHOWING.poster}
-          alt=""
-          draggable={false}
-          className="absolute inset-0 size-full object-cover object-[center_30%] select-none"
-        />
-        <span className="relative z-1 grid gap-0.5 self-end px-4 py-3.5">
-          <span className="text-[11px] font-bold tracking-[0.1em] text-[#ffc98a] uppercase">{SHOWING.episode}</span>
-          <h3 className="m-0 text-[24px] leading-[1.1] font-extrabold tracking-[-0.03em]">{SHOWING.title}</h3>
-          <span className="text-[12.5px] font-medium text-white/80">
-            {SHOWING.when} · {SHOWING.where}
+      <header className={`relative -mx-3.5 -mt-3.5 mb-0.5 grid h-[172px] content-end overflow-clip rounded-[18px] px-4 py-3.5 text-[#2a1a12] ${POSTER}`}>
+        <Instruments />
+
+        <span className="relative grid gap-1">
+          <span className="text-[11px] font-bold tracking-[0.1em] text-[#b0481c] uppercase">
+            {EVENT.kind} · {EVENT.where}
           </span>
+          <h3 className="m-0 text-[26px] leading-[1.05] font-extrabold tracking-[-0.03em]">{EVENT.title}</h3>
+          <span className="text-[12.5px] font-medium text-[#2a1a12]/70">{EVENT.when}</span>
         </span>
       </header>
 
       <dl className="m-0 grid text-[13.5px]">
-        <div className="flex items-center justify-between pb-1.5">
+        <div className="flex items-center justify-between pb-3">
           <dt className="flex min-w-0 items-center gap-3 text-(--fk-ink)">
             <span className="flex gap-1" aria-hidden="true">
-              {SHOWING.seats.map((seat) => (
+              {EVENT.seats.map((seat) => (
                 <span
                   key={seat}
                   className="grid h-8 w-[30px] place-items-center rounded-[10px_10px_6px_6px] bg-(--fk-ink) pb-1 text-[11px] font-bold tracking-[0.02em] text-(--fk-surface) shadow-[inset_0_-5px_0_color-mix(in_oklab,var(--fk-surface)_18%,transparent)]"
                 >
-                  {SHOWING.row}
+                  {EVENT.row}
                   {seat}
                 </span>
               ))}
             </span>
             <span className="grid min-w-0 gap-px">
-              <b className="text-[13.5px] font-semibold">{SEATS} × Standard</b>
+              <b className="text-[13.5px] font-semibold">{SEATS} × {EVENT.section}</b>
               <span className="text-[12px] whitespace-nowrap text-(--fk-muted)">
-                Row {SHOWING.row} · {money(PRICE)} each
+                Row {EVENT.row} · {money(PRICE)} each
               </span>
             </span>
           </dt>
@@ -403,7 +450,7 @@ export function PromoCode({
       <section
         className={`grid w-[min(100%,372px)] gap-4 rounded-[26px] bg-(--fk-surface) p-[22px] ${FORM_KIT}`}
         style={TICKET_MASK}
-        aria-label="Your cinema tickets"
+        aria-label="Your tickets"
       >
         <TicketLines discount={discount} />
 
@@ -472,8 +519,8 @@ const BEATS: readonly (State & { ms: number })[] = [
   { draft: "", applied: null, error: null, ms: 900 },
   ...typing("SUMMER", (draft) => ({ draft, applied: null, error: null }), { every: 90, hold: 900 }),
   { draft: "SUMMER", applied: null, error: "“SUMMER” ended on 31 August.", ms: 1600 },
-  ...typing("SAVE20", (draft) => ({ draft, applied: null, error: null }), { every: 90, hold: 800 }),
-  { draft: "SAVE20", applied: "SAVE20", error: null, ms: 3000 },
+  ...typing("FRIDAY50", (draft) => ({ draft, applied: null, error: null }), { every: 90, hold: 800 }),
+  { draft: "FRIDAY50", applied: "FRIDAY50", error: null, ms: 3000 },
 ];
 
 const fromBeat = (step: number): State => {
