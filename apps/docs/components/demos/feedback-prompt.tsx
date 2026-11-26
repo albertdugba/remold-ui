@@ -159,7 +159,7 @@ function SendButton({ sending, reduced }: { sending: boolean; reduced: boolean }
   return (
     <Button
       type="submit"
-      className={`grid h-10 min-w-[80px] flex-none cursor-pointer place-items-center rounded-full border-0 bg-(--fbp-ink) px-[18px] text-[14.5px] font-semibold text-(--fbp-surface) outline-none transition-[scale] duration-150 active:scale-[0.96] data-sending:cursor-progress ${RING}`}
+      className={`grid h-10 min-w-[80px] cursor-pointer place-items-center rounded-full border-0 bg-(--fbp-ink) px-[18px] text-[14.5px] font-semibold text-(--fbp-surface) outline-none transition-[scale] duration-150 active:scale-[0.96] data-sending:cursor-progress ${RING}`}
       data-sending={sending || undefined}
       aria-busy={sending || undefined}
       aria-disabled={sending || undefined}
@@ -297,7 +297,7 @@ function FeedbackForm({
       </motion.div>
 
       <motion.div className="flex items-center justify-between gap-3" {...fadeIn(reduced, 0.22)}>
-        <span className="min-w-0 pl-0.5 text-[13px] text-balance text-(--fbp-muted)">Anonymous · helps us fix this page</span>
+        <span className="pl-0.5 text-[13px] text-(--fbp-muted)">Anonymous · helps us fix this page</span>
         <SendButton sending={sending} reduced={reduced} />
       </motion.div>
     </motion.form>
@@ -362,7 +362,7 @@ export function FeedbackPrompt({
 
   return (
     <div
-      className={`@container relative flex w-full justify-center font-sans text-[14px] text-(--fbp-ink) antialiased ${PALETTE}`}
+      className={`relative inline-flex font-sans text-[14px] text-(--fbp-ink) antialiased ${PALETTE}`}
     >
       <LayoutGroup id={id}>
         <motion.div
@@ -377,7 +377,7 @@ export function FeedbackPrompt({
           <div
             ref={content}
             data-phase={phase}
-            className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 data-[phase=form]:w-[min(380px,100cqw)]"
+            className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 data-[phase=form]:w-[380px]"
           >
             <AnimatePresence initial={false} mode="popLayout">
               {phase === "idle" && (

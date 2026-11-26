@@ -15,9 +15,6 @@ const field = (value: unknown) => (typeof value === "string" ? value.slice(0, MA
 
 const isEvent = (value: unknown): value is UsageEvent => (EVENTS as readonly unknown[]).includes(value);
 
-// The first word of the user agent: "shadcn" for the CLI, and "curl", "node" or a crawler's name for the rest.
-const clientOf = (request: Request) => field(request.headers.get("User-Agent")?.split(/[\s/]/)[0]) || "unknown";
-
 function record(env: Env, request: Request, event: string, { component = "", source = "", detail = "" }: EventProps) {
   env.USAGE.writeDataPoint({
     indexes: [event],
@@ -30,10 +27,9 @@ async function recordInstall(request: Request, env: Env) {
   const response = await env.ASSETS.fetch(request);
   const component = new URL(request.url).pathname.match(REGISTRY_ITEM)?.[1];
 
-  const openedInBrowser = request.headers.get("Sec-Fetch-Mode") === "navigate";
-
-  if (request.method === "GET" && response.ok && component && component !== "registry" && !openedInBrowser) {
-    record(env, request, "Registry install", { component, source: "shadcn", detail: clientOf(request) });
+  if (request.method === "GET" && response.ok && component && component !== "registry") {
+    const client = request.headers.get("Sec-Fetch-Mode") === "navigate" ? "browser" : "cli";
+    record(env, request, "Registry install", { component, source: "shadcn", detail: client });
   }
 
   return response;

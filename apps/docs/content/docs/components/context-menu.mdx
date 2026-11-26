@@ -1,22 +1,22 @@
 ---
 title: "Context menu"
-description: "An ads workspace sidebar: campaigns in nested folders, with a right-click menu that goes three deep. New ▸ From template ▸ Retargeting ▸ Cart abandoners drops a campaign into the folder you clicked, Status recolours its dot, and Move to walks folders inside folders. Menus spring out from where you pressed. Built on Base UI's Context Menu."
+description: "A notes sidebar with a right-click menu that nests three deep. Add ▸ From template ▸ Meetings ▸ Weekly sync drops a new page under the one you clicked, Icon swaps its emoji in place, and Move to, Copy link, Duplicate and Delete do what you'd expect. Menus spring out from where you pressed. Built on Base UI's Context Menu."
 status: "new"
 tags: ["Base UI", "Motion", "Remold"]
 ---
 
-<Stage name="context-menu" code={<Source demo="context-menu" />} minHeight={560}>
+<Stage name="context-menu" code={<Source demo="context-menu" />} minHeight={460}>
   <ContextMenuDemo />
 </Stage>
 
 ## Things to try
 
-- **Click a folder** to open or close it. The chevron turns and the rows slide.
-- **Right-click a campaign or folder.** On a phone, press and hold it. The menu springs out from where you pressed, and the row you picked lights up.
-- **Go three levels deep.** New ▸ From template ▸ Retargeting ▸ Cart abandoners. The new campaign slides into the folder, opening it if it was closed.
-- **Change its status.** Status ▸ Active. The dot turns green and Paused re-letters into its daily budget.
-- **Move it.** Move to lists folders, and folders with folders inside open their own submenu, so you can walk Q4 Holiday ▸ Black Friday.
-- **Copy, duplicate or archive.** Copy link shows its address in the pill under the workspace. Duplicate slides a draft copy in beside it. Archiving a folder takes everything inside it, and Undo brings it all back.
+- **Right-click a page.** On a phone, press and hold it. The menu springs out from where you pressed, and the page you picked turns blue.
+- **Go three levels deep.** Add ▸ From template ▸ Meetings ▸ Weekly sync. The new page slides in under the one you clicked, opening it if it was closed.
+- **Change its icon.** Icon shows an emoji grid. Pick one and the page's emoji spins into the new one.
+- **Move it.** Move to lists the other top-level pages. The page slides out of one place and into the other.
+- **Copy, duplicate or delete.** Copy link puts its address in the pill under the sidebar. Duplicate slides a copy in beside it. Deleting a page takes its sub-pages too, and Undo brings them all back.
+- **Click a page with sub-pages** to open or close it. The chevron turns and the rows slide.
 
 ## Install
 
@@ -30,10 +30,7 @@ The install command adds these for you. If you copy the code by hand, install th
 
 ## How it works
 
-- **Base UI does the menu.** `ContextMenu` opens on right-click and long-press, positions the menu at the pointer, and handles the keyboard, focus and dismissal. `SubmenuRoot` nests menus three deep under New and as deep as your folders go under Move to. Status is a `RadioGroup`, so it reads as one choice.
-- **A few small pieces build every menu.** `Panel` is the glass with its own sliding highlight, `Submenu` is a row that opens another panel, and `Item` is an icon, a label and shortcut keys. The highlight comes from context, so nested panels each get their own.
+- **Base UI does the menu.** `ContextMenu` opens on right-click and long-press, positions the menu at the pointer, and handles the keyboard, focus and dismissal. `SubmenuRoot` nests menus, three deep under Add. The emoji grid is a `RadioGroup`, so it reads as one choice.
+- **A few small pieces build every menu.** `Panel` is the glass with its own sliding highlight, `Submenu` is a row that opens another panel, and `Item` is an icon or emoji, a label and shortcut keys. The highlight comes from context, so nested panels each get their own.
 - **It opens from where you pressed.** Base UI puts the pointer's position in `--transform-origin`, and the menu scales up from that point on a springy Motion entrance. Each submenu grows out of the row that opened it.
-- **Rows slide in and out.** New, moved, duplicated and archived rows animate their height, so the rows around them move instead of jumping. Budgets and the status pill re-letter with `Remold.Text`.
-- **One value.** `value` holds the entries, which folders are open, whether the menu is open and on which row, and the last change for Undo. `addEntry`, `setStatus`, `moveEntry`, `duplicateEntry` and `archiveEntry` are plain functions, so the same changes can be scripted.
-
-<Callout>The campaigns, folders and budgets are made up.</Callout>
+- **Rows slide in and out.** New, moved, duplicated and deleted pages animate their height, so the rows around them move instead of jumping. The status pill re-letters with `Remold.Text` to say what changed.

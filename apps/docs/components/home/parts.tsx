@@ -15,6 +15,7 @@ import { useAutoplay } from "@remold-ui/react";
 import { motion } from "motion/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { AppleMusicBadge } from "../demos/apple-music-badge";
 import { ORB_STEPS } from "../demos/voice-orb-steps";
 import {
   Children,
@@ -122,26 +123,6 @@ const EventRsvpDemo = dynamic(
 );
 const FeedbackPromptDemo = dynamic(
   () => import("../demos/feedback-prompt").then((m) => m.FeedbackPromptDemo),
-  { ssr: false },
-);
-const RateAndReviewDemo = dynamic(
-  () => import("../demos/rate-and-review").then((m) => m.RateAndReviewDemo),
-  { ssr: false },
-);
-const GiftNoteDemo = dynamic(
-  () => import("../demos/gift-note").then((m) => m.GiftNoteDemo),
-  { ssr: false },
-);
-const ExpandingSearchDemo = dynamic(
-  () => import("../demos/expanding-search").then((m) => m.ExpandingSearchDemo),
-  { ssr: false },
-);
-const PaginationDemo = dynamic(
-  () => import("../demos/pagination").then((m) => m.PaginationDemo),
-  { ssr: false },
-);
-const SidebarNavDemo = dynamic(
-  () => import("../demos/sidebar-nav").then((m) => m.SidebarNavDemo),
   { ssr: false },
 );
 const PromoCodeDemo = dynamic(
@@ -390,6 +371,7 @@ function PartCard({
   );
 }
 
+const APPLE_MUSIC_BADGE = <AppleMusicBadge />;
 
 const LOGO = [0, 1, 2, 3, 4, 5, 6].map((brand) => ({ brand, form: "logo" as const }));
 
@@ -712,17 +694,6 @@ function allCards() {
         {(_, playing) => <PromoCodeDemo playing={playing} />}
       </PartCard>
       <PartCard
-        kicker="Base UI · Motion · Remold"
-        category="forms"
-        title="Rate and review"
-        isNew
-        docs="/docs/components/rate-and-review"
-        states={["Rate"]}
-        minHeight={480}
-      >
-        {(_, playing) => <RateAndReviewDemo playing={playing} />}
-      </PartCard>
-      <PartCard
         kicker="Base UI · Motion"
         category="forms"
         title="Split amount"
@@ -785,40 +756,6 @@ function allCards() {
         minHeight={460}
       >
         {(_, playing) => <PeelRewardDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Base UI · Motion · Remold"
-        category="forms"
-        title="Gift note"
-        isNew
-        docs="/docs/components/gift-note"
-        states={["Write"]}
-        minHeight={500}
-      >
-        {(_, playing) => <GiftNoteDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Motion · Text"
-        category="lists"
-        title="Pagination"
-        isNew
-        docs="/docs/components/pagination"
-        states={["Page"]}
-        minHeight={280}
-      >
-        {(_, playing) => <PaginationDemo playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Base UI · Motion"
-        category="forms"
-        title="Expanding search"
-        isNew
-        wide
-        docs="/docs/components/expanding-search"
-        states={["Search"]}
-        minHeight={540}
-      >
-        {(_, playing) => <ExpandingSearchDemo playing={playing} />}
       </PartCard>
       <PartCard
         kicker="Layout · Text"
@@ -1068,14 +1005,21 @@ function allCards() {
       <PartCard
         kicker="Motion · Media"
         category="morphing"
-        title="Episode to player"
+        title="Mini player to full"
         docs="/docs/components/podcast-player"
-        states={["Episodes", "Player", "Episodes", "Player"]}
+        states={["Mini", "Player", "Mini", "Player"]}
         every={2600}
         bleed
-        wide
       >
-        {(i) => <PodcastPlayer source="/api/podcasts" scene={i} height={660} />}
+        {(i) => (
+          <PodcastPlayer
+            source="/api/music"
+            credit={APPLE_MUSIC_BADGE}
+            scene={i}
+            height="100%"
+            compact
+          />
+        )}
       </PartCard>
       <PartCard
         featured
@@ -1110,17 +1054,6 @@ function allCards() {
         states={["Comments"]}
       >
         {(_, playing) => <CommentThread variant="preview" playing={playing} />}
-      </PartCard>
-      <PartCard
-        kicker="Motion · Connectors"
-        category="lists"
-        title="Sidebar nav"
-        isNew
-        docs="/docs/components/sidebar-nav"
-        states={["Navigate"]}
-        minHeight={520}
-      >
-        {(_, playing) => <SidebarNavDemo playing={playing} />}
       </PartCard>
       <PartCard
         featured

@@ -23,7 +23,7 @@ const ITEMS = [
   [
     "context-menu",
     "Context menu",
-    "An ad campaigns tree with a right-click menu that nests three deep: new campaigns from templates, status, moving between nested folders, copy link, duplicate and archive. Built on Base UI's Context Menu, Motion and Remold Text.",
+    "A notes sidebar right-click menu that nests three deep: add pages from templates, change icons, move, copy links, duplicate and delete.",
   ],
   [
     "unsaved-changes",
@@ -123,7 +123,7 @@ const ITEMS = [
   [
     "file-upload",
     "File upload",
-    "A drop zone that folds into a strip as files land in a list, each row filling as it uploads and ending with a green tick, Compress for files over the limit, retry for failures and a summary that counts along. Built on Base UI's Progress and Button.",
+    "A drop zone that folds into a strip as files land in a list, each with a progress bar that turns into a check, retry for failures and a summary that counts along. Built on Base UI's Progress and Button.",
   ],
   [
     "sign-in",
@@ -137,8 +137,8 @@ const ITEMS = [
   ],
   [
     "podcast-player",
-    "Podcast player",
-    "A grid of episodes that opens into a player: tap one and its own tile grows into the player, the artwork becoming the cover, then shrinks home when you go back. Built on Remold's Morph.",
+    "Podcast",
+    "A mini now-playing bar that opens into the full player: the artwork grows from a thumbnail into the cover and the title, show and play button settle into place, matched with no ids.",
   ],
   [
     "share-link",
@@ -148,7 +148,7 @@ const ITEMS = [
   [
     "expanding-search",
     "Expanding search",
-    "A food delivery search that grows out of its pill: the field and its results are one shape that springs open into a card and folds back into the pill. Built on Base UI's Autocomplete and Motion.",
+    "A search that takes over its screen: the greeting folds away, the field rises with Cancel beside it, and the shop gives way to results. Built on Base UI's Autocomplete.",
   ],
   [
     "booking-steps",
@@ -163,27 +163,7 @@ const ITEMS = [
   [
     "peel-reward",
     "Peel-off reward",
-    "A coupon under a foil sticker: drag to peel it back by the corner, the paper folding along a real crease with its pale back showing, and past halfway it springs off in a burst of dots while the discount rolls up and the code is yours to copy. Built on Motion, Remold's Particles and Base UI's Button.",
-  ],
-  [
-    "rate-and-review",
-    "Rate and review",
-    "Rate, then review, in one card: pick a star and the big stars fly up into the header while the card grows into a short review, then the form folds into the posted review. Built on Base UI's RadioGroup, ToggleGroup and Field, Motion and Remold Text.",
-  ],
-  [
-    "gift-note",
-    "Gift note",
-    "A gift note for an order: the card you pick grows into the note you write on, then slips into an envelope that seals and tucks into the order as one line. Built on Base UI's Field and Button, Motion and Remold Text.",
-  ],
-  [
-    "pagination",
-    "Pagination",
-    "Page numbers that keep their place: the current page slides to the one you pick, numbers shift in and out as the window moves, and the … buttons turn into arrows that jump five pages. Built on Motion and Remold Text.",
-  ],
-  [
-    "sidebar-nav",
-    "Sidebar nav",
-    "A workspace sidebar with teams that fold open: each team's pages hang off its icon on Remold Connectors, the line to the open page lights up and the highlight springs to whatever you pick. It collapses to a rail of icons, where the tile under the pointer grows into a flyout of that team's pages. Built on Motion and Remold Connectors.",
+    "A reward under a sticker: drag to peel it back by the corner, the paper folding along a real crease with its pale back showing, and past halfway it springs off and the code is yours to copy. Built on Motion and Base UI's Button.",
   ],
   [
     "notification-inbox",

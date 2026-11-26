@@ -18,7 +18,7 @@ const type = (text: string, duration = 55): ScriptStep[] =>
   }));
 const script: ScriptStep[] = [
   { action: null, duration: 1300 },
-  ...type("Good catch. "),
+  ...type("Agree. "),
   { action: { type: "type", character: "@" }, duration: 650 },
   { action: { type: "type", character: "a" }, duration: 420 },
   { action: { type: "type", character: "m" }, duration: 700 },
@@ -29,7 +29,7 @@ const script: ScriptStep[] = [
   { action: { type: "move", direction: 1 }, duration: 260 },
   { action: { type: "move", direction: -1 }, duration: 500 },
   { action: { type: "pick" }, duration: 900 },
-  ...type("take a look?"),
+  ...type("check the totals?"),
   { action: null, duration: 700 },
   { action: { type: "send" }, duration: 2800 },
 ];

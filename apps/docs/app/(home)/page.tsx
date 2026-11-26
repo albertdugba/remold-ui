@@ -5,7 +5,6 @@ import { X_HANDLE, X_URL } from "@/lib/layout.shared";
 import { FavouriteIcon, GithubIcon, StarIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { InstallCommand } from "@/components/home/install-command";
-import { Agents } from "@/components/home/agents";
 import { Flavors } from "@/components/home/flavors";
 import { Parts } from "@/components/home/parts";
 import { Kicker, Rail, Rails, Selected, SpecSheet, SpringSpecimen } from "@/components/home/drafting";
@@ -88,11 +87,9 @@ export default async function HomePage() {
             <div className="hm-hero-title">
               <Kicker className="mb-0">
                 100% free and open source
-                <span aria-hidden="true" className="max-[479px]:hidden">
-                  ·
-                </span>
+                <span aria-hidden="true">·</span>
                 <a
-                  className="inline-flex max-[479px]:hidden items-center gap-1.5 text-(--hm-ink) underline decoration-(--hm-line) underline-offset-4 transition-colors duration-150 ease-out hover:decoration-(--hm-ink)"
+                  className="inline-flex items-center gap-1.5 text-(--hm-ink) underline decoration-(--hm-line) underline-offset-4 transition-colors duration-150 ease-out hover:decoration-(--hm-ink)"
                   href={REPO_URL}
                   target="_blank"
                   rel="noreferrer"
@@ -101,16 +98,16 @@ export default async function HomePage() {
                   Star on GitHub
                 </a>
               </Kicker>
-              <h1 aria-label="UI components that give AI agents taste.">
-                <span aria-hidden="true">UI components that</span>
+              <h1 aria-label="Components that remold themselves.">
+                <span aria-hidden="true">Components that</span>
                 <br />
                 <HeroWord />
               </h1>
             </div>
             <div className="hm-hero-side">
               <p className="hm-lead">
-                Animated React components for the screens you actually ship. Copy them into your app, or let your AI agent
-                install them instead of inventing its own. Built with Motion and Base UI, with Remold for the morphing.
+                Animated React components for the screens you actually ship, ready to copy into your app. Built with Motion and
+                Base UI, with Remold for the morphing: text, icons, shapes, particles and canvas scenes.
               </p>
               <div className="hm-actions">
                 <Link className="hm-cta primary" href="/docs/quick-start">
@@ -124,8 +121,6 @@ export default async function HomePage() {
                 <InstallCommand />
               </div>
             </div>
-
-            <Agents />
           </section>
         </div>
       </div>

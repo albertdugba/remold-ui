@@ -71,14 +71,12 @@ export {
 } from "./object-looks";
 export { loadPixels } from "./particles/pixels";
 export {
-  DEFAULT_ASCII_CHARACTERS,
   particles,
   sampleElementPoints,
   sampleImagePoints,
   sampleTextPoints,
   type ElementSampleOptions,
   type ImageSampleOptions,
-  type ParticleAscii,
   type ParticleCamera,
   type ParticleFill,
   type ParticleFit,

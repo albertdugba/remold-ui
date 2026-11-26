@@ -1,6 +1,6 @@
 /**
  * Real podcast episodes for the docs' player demo, from the iTunes Search API: the newest episodes
- * about software engineering, one per show, with artwork, length and the audio file. Cached for six hours.
+ * about design, one per show, with artwork, length and the audio file. Cached for six hours.
  */
 export const dynamic = "force-static";
 
@@ -16,23 +16,9 @@ interface Result {
   description?: string;
 }
 
-const SPONSORS = /^brought to you by\b.*? — /i;
-const AD_CHOICES = /Learn more about your ad choices\.\s*Visit \S+/gi;
-
-/** The episode's own words: no sponsor credits or ad notices, ending on a whole sentence or a whole word. */
-function summarise(text: string): string {
-  const clean = text.replace(/\s+/g, " ").replace(SPONSORS, "").replace(AD_CHOICES, "").trim().slice(0, 400);
-  if (!clean || /[.!?…]["”’)]?$/.test(clean)) return clean;
-
-  const sentences = clean.match(/^.*[.!?]["”’)]?(?=\s)/)?.[0] ?? "";
-  if (sentences.length >= 120) return sentences;
-
-  return clean.includes(" ") ? `${clean.replace(/\s+\S*$/, "")}…` : clean;
-}
-
 export async function GET() {
   try {
-    const res = await fetch("https://itunes.apple.com/search?media=podcast&entity=podcastEpisode&term=software+engineering&limit=60&country=gb", {
+    const res = await fetch("https://itunes.apple.com/search?media=podcast&entity=podcastEpisode&term=design&limit=60&country=gb", {
       cache: "force-cache",
     });
     const data = (await res.json()) as { results?: Result[] };
@@ -49,7 +35,7 @@ export async function GET() {
         audio: r.episodeUrl,
         seconds: Math.round((r.trackTimeMillis ?? 0) / 1000),
         date: r.releaseDate ?? null,
-        summary: summarise(r.description || r.shortDescription || ""),
+        summary: (r.shortDescription || r.description || "").replace(/\s+/g, " ").trim().slice(0, 400),
       });
       if (episodes.length === 8) break;
     }

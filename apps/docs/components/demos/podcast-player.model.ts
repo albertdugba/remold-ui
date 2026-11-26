@@ -103,9 +103,7 @@ export function usePodcastPlayer({
   const [open, setOpen] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
-  const [chosen, setChosen] = useState<string | null>(null);
   const audio = useRef<HTMLAudioElement>(null);
-  const autoplay = useRef(false);
 
   useEffect(() => {
     if (!source) return;
@@ -118,24 +116,17 @@ export function usePodcastPlayer({
     };
   }, [source]);
 
-  const list = episodes ?? remoteEpisodes ?? SAMPLE_EPISODES;
-  const at = Math.max(0, list.findIndex((item) => item.id === chosen));
-  const episode = list[at]!;
+  const episode = (episodes ?? remoteEpisodes ?? SAMPLE_EPISODES)[0]!;
 
   useEffect(() => {
     if (scene === undefined) return;
-
-    const step = scene % 4;
-
     setPlaying(false);
-    if (step % 2 === 1) setChosen(list[((step - 1) / 2) % list.length]!.id);
-    setOpen(step % 2 === 1);
-  }, [scene, list.length]);
+    setOpen(scene % 2 === 1);
+  }, [scene]);
 
   useEffect(() => {
     setTime(0);
-    setPlaying(autoplay.current);
-    autoplay.current = false;
+    setPlaying(false);
   }, [episode.id]);
 
   useEffect(() => {
@@ -157,35 +148,15 @@ export function usePodcastPlayer({
     setTime(clamped);
   };
 
-  const openEpisode = (id: string) => {
-    setChosen(id);
-    setOpen(true);
-  };
-
-  const close = () => {
-    setPlaying(false);
-    setOpen(false);
-  };
-
-  const next = () => {
-    if (list.length < 2) return setPlaying(false);
-
-    autoplay.current = true;
-    setChosen(list[(at + 1) % list.length]!.id);
-  };
-
   return {
     audio,
     episode,
-    episodes: list,
-    openEpisode,
-    close,
-    next,
     hasRemoteEpisodes: remoteEpisodes !== null,
     open,
     playing,
     progress: Math.min(1, time / Math.max(1, episode.seconds)),
     seek,
+    setOpen,
     setPlaying,
     setTime,
     time,

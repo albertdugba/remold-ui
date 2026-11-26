@@ -4,10 +4,13 @@ import { NIGHT_STAGE } from "../demos/night-stage";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, ArrowDown01Icon, Delete02Icon, Download01Icon, Layers01Icon, PauseIcon, PlayIcon, Redo02Icon, CheckIcon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { Menu } from "@base-ui/react/menu";
+import { NumberField } from "@base-ui/react/number-field";
+import { Slider } from "@base-ui/react/slider";
 import { Tabs } from "@base-ui/react/tabs";
+import { ToggleGroup } from "@base-ui/react/toggle-group";
+import { Toggle } from "@base-ui/react/toggle";
 import { Remold } from "@remold-ui/react/canvas";
-import { useEffect, useMemo, useState } from "react";
-import { Choice, Num, Range, Row } from "./fields";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { PALETTES, resolvePoses, sceneKey, toSceneProps, validateDocument, type PaletteName, type Pose, type SceneDocument } from "./document";
 import { addStep, removeStep, setMotion, setPose, updateDocument, updateObject, updateStep, type Scope } from "./edit";
 import { toJSON, toReact } from "./export";
@@ -446,6 +449,71 @@ function ObjectFields({
       <Range label="Hop" value={motion.arc ?? 0} min={0} max={140} step={5} format={(v) => (v ? `${v}` : "none")} onChange={(v) => onEdit(setMotion(doc, at, id, { arc: v }), `arc:${at}:${id}`)} />
       <Range label="Wait" value={motion.delay ?? 0} min={0} max={1.5} step={0.05} format={(v) => (v ? `${v.toFixed(2)}s` : "none")} onChange={(v) => onEdit(setMotion(doc, at, id, { delay: v }), `delay:${at}:${id}`)} />
     </>
+  );
+}
+
+function Row({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="st-row">
+      <span className="st-label">{label}</span>
+      <span className="st-control">{children}</span>
+    </div>
+  );
+}
+
+function Num({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  return (
+    <NumberField.Root className="st-num" value={Math.round(value)} step={1} largeStep={10} onValueChange={(v) => v !== null && onChange(v)}>
+      <NumberField.ScrubArea className="st-num-label">
+        <label>{label}</label>
+      </NumberField.ScrubArea>
+      <NumberField.Input className="st-num-input" aria-label={label} />
+    </NumberField.Root>
+  );
+}
+
+function Range({
+  label,
+  value,
+  min,
+  max,
+  step,
+  format,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  format: (v: number) => string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="st-row">
+      <span className="st-label">{label}</span>
+      <Slider.Root className="st-slider" value={value} min={min} max={max} step={step} onValueChange={(v) => onChange(Array.isArray(v) ? v[0]! : v)}>
+        <Slider.Control className="st-slider-control">
+          <Slider.Track className="st-slider-track">
+            <Slider.Indicator className="st-slider-fill" />
+            <Slider.Thumb className="st-slider-thumb" aria-label={label} />
+          </Slider.Track>
+        </Slider.Control>
+      </Slider.Root>
+      <span className="st-value">{format(value)}</span>
+    </div>
+  );
+}
+
+function Choice({ value, options, onChange }: { value: string; options: { value: string; label: string }[]; onChange: (v: string) => void }) {
+  return (
+    <ToggleGroup className="st-choice" value={[value]} onValueChange={(v) => v[0] && onChange(v[0])}>
+      {options.map((o) => (
+        <Toggle key={o.value} value={o.value} className="st-choice-item">
+          {o.label}
+        </Toggle>
+      ))}
+    </ToggleGroup>
   );
 }
 

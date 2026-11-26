@@ -1,6 +1,6 @@
 ---
 title: "Promo code"
-description: "A promo code field on a gig ticket: apply a code and the field springs down into a green ticket chip with the code and what it's worth, while the discount line opens and the total rolls down. A code that doesn't work shakes the field and says why."
+description: "A promo code field on a cinema ticket: apply a code and the field springs down into a green ticket chip with the code and what it's worth, while the discount line opens and the total rolls down. A code that doesn't work shakes the field and says why."
 status: "new"
 tags: ["Base UI", "Motion"]
 ---
@@ -12,7 +12,7 @@ tags: ["Base UI", "Motion"]
 ## Things to try
 
 - **Try SUMMER.** The field gives a small shake and says the code has ended, keeping what you typed.
-- **Try FRIDAY50.** It's the Black Friday code from the [Peel-off reward](/docs/components/peel-reward). It checks the code, then the field springs down into a green ticket chip, “FRIDAY50 · 50% off”, the discount line opens and the total rolls down, with the old price struck through and a “Saved” badge beside it.
+- **Try SAVE20.** It checks the code, then the field springs down into a green ticket chip, “SAVE20 · 20% off”, the discount line opens and the total rolls down, with the old price struck through and a “Saved” badge beside it.
 - **Press ×.** The chip springs back out into the empty field and the total rolls back up.
 
 ## Install
@@ -33,4 +33,4 @@ The install command adds these for you. If you copy the code by hand, install th
 - **Torn like a ticket.** The total sits on a stub: a dashed tear line between two notches cut into the card with a CSS mask.
 - **One spring.** Everything that changes shape shares it, with a little bounce. The total rolls with the Odometer, and the shake runs on a wrapper so it never fights the spring.
 
-<Callout>FRIDAY50, SAVE20 and WELCOME10 work; SUMMER has expired. Swap the timeout in `apply` for a request to your own API, and `EVENT` for your own.</Callout>
+<Callout>SAVE20 and WELCOME10 work; SUMMER has expired. Swap the timeout in `apply` for a request to your own API.</Callout>

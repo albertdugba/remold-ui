@@ -1,21 +1,21 @@
 ---
 title: "Expanding search"
-description: "A food delivery search that grows out of its pill: the field and its results are one shape that springs open into a card, and folds back into the pill when you're done."
+description: "A search that takes over its screen, the way it does in the apps you use every day: the greeting folds away, the field rises to the top with Cancel beside it, and the shop gives way to results."
 status: "new"
 tags: ["Base UI", "Motion"]
 ---
 
-<Stage name="expanding-search" code={<Source demo="expanding-search" />} minHeight={560}>
+<Stage name="expanding-search" code={<Source demo="expanding-search" />} minHeight={640}>
   <ExpandingSearchDemo />
 </Stage>
 
 ## Things to try
 
-- **Click the search pill, or press /.** The pill springs wider and taller into a card, with the field still at its top; then your recent searches and what's popular right now rise in inside it, and the page behind dims a little.
-- **Pick a recent search** to fill the field, or **type "chi"**. The list narrows to the chicken dishes, each with its photo and restaurant; what you typed is picked out, and the rows that stay slide into place.
-- **Press a +.** It fills in as the dish goes in your basket, and the total on the basket button rolls.
+- **Tap the search field.** The greeting above it folds away, the field rises to the top, Cancel slides in beside it, and the shop gives way to your recent searches and what's popular.
+- **Type "oa".** The list narrows to oat milk, sourdough loaf and rolled oats. What you typed stays quiet and the rest of each name is picked out, and the rows that stay slide into place.
+- **Press a +.** It turns into a green tick as the product goes in your basket.
 - **Use the arrow keys.** One highlight slides from row to row, and Enter picks it.
-- **Press Escape, or click outside.** The results fade first, then the card folds back into the pill.
+- **Press Cancel or Escape.** The greeting unfolds and the shop comes back.
 
 ## Install
 
@@ -27,9 +27,6 @@ tags: ["Base UI", "Motion"]
 
 ## How it works
 
-- **One shape.** The pill and the card are the same element: it springs from where the pill rests to a centred card sized to its results, and its fill crossfades from the pill's grey to the card's white as it grows. Its height follows the results, so typing makes it shrink or grow to fit.
-- **Contents follow the shape.** It's Base UI's Autocomplete, with the popup rendered inside the card. Its contents wait a beat on the way in so they arrive once there's room, and leave first on the way out, so the card never shrinks over them.
-- **A calm backdrop.** The page dims slightly while you search; clicking it closes the search.
-- **Built for the keyboard.** The field is a combobox: "/" focuses it from anywhere on the page, the first match is highlighted as you type so Enter picks it, Escape closes, and the footer says so. Each add button says what it adds.
-
-<Callout>The restaurants and prices are made up. The food photos are from Unsplash, loaded from their CDN.</Callout>
+- **Nothing stretches.** The greeting only folds its height, the field only shortens to make room for Cancel, and Cancel only grows its width from nothing. The shop and the results cross-fade in place.
+- **Results where the shop was.** It's Base UI's Autocomplete, with the matches rendered into the screen itself rather than a floating menu, so it reads as the screen changing rather than something opening over it.
+- **Built for the keyboard.** The field is a combobox, the first match is highlighted as you type so Enter picks it, Escape closes, and the recent searches are buttons that fill the field. Each add button says what it adds.

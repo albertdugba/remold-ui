@@ -16,19 +16,6 @@ export interface ParticlePoint {
 /** Colours for dots: a list a tone picks from (0 is the first, 1 the last), or colours by name. */
 export type ParticlePalette = readonly string[] | Readonly<Record<string, string>>;
 
-/**
- * Dots drawn as text on a monospace grid, one character per cell. A dot's tone picks its character,
- * from the first (lightest) to the last (densest); where dots share a cell the densest shows.
- */
-export interface ParticleAscii {
-  /** From lightest to densest. Default `".:-=+*#%@"`. */
-  characters?: string;
-  /** The height of a cell, in CSS pixels. Default 12. */
-  size?: number;
-  /** A monospace font stack. */
-  font?: string;
-}
-
 export type ParticleFit = "contain" | "none" | { x?: number; y?: number; width: number; height: number };
 
 export interface ParticlesToOptions {
@@ -68,10 +55,8 @@ export interface ParticlesOptions extends PointCloudOptions {
   padding?: number;
   /** Dot radius at full size, in CSS pixels. */
   radius?: number;
-  /** Default `"circle"`. Squares are cheaper to draw for very large clouds; `"ascii"` draws each dot as a character. */
-  shape?: "circle" | "square" | "ascii";
-  /** How `shape: "ascii"` draws: which characters, how big, in what font. */
-  ascii?: ParticleAscii;
+  /** Default `"circle"`. Squares are cheaper to draw for very large clouds. */
+  shape?: "circle" | "square";
   /** The dots' colour, or a function that creates one for the canvas size. */
   color?: ParticleFill | ((context: CanvasRenderingContext2D, size: CanvasSize) => ParticleFill);
   /** Colours by tone. Replaces `color`. */
@@ -96,8 +81,6 @@ export interface Particles {
   to(points: readonly ParticlePoint[], options?: ParticlesToOptions): void;
   /** Redraw now. */
   render(): void;
-  /** With `shape: "ascii"`, what's on screen as plain text, one line per row. Empty for other shapes. */
-  text(): string;
   /** Change the camera of a cloud made with one: `{ spin: 0 }` to stop it turning, say. */
   setCamera(camera: ParticleCamera): void;
   /** Swap the palette: for colours found in an image after the cloud was made, say. */

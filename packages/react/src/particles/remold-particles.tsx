@@ -1,9 +1,9 @@
-import { forwardRef, useImperativeHandle, useMemo, useRef, useState, type CanvasHTMLAttributes, type ForwardedRef, type MutableRefObject, type Ref } from "react";
+import { forwardRef, useMemo, useRef, useState, type CanvasHTMLAttributes, type ForwardedRef, type MutableRefObject } from "react";
 import { particles as createParticles, type ParticleCamera, type ParticlePalette, type Particles, type ParticlesOptions } from "@remold-ui/canvas";
 import { useIsoLayoutEffect, useLatest } from "../utils/hooks.js";
 import { useRenderElement } from "../utils/use-render-element.js";
 import { keyOf, labelOf, sample, type Sampled } from "./sampling.js";
-import type { ParticleShape, RemoldParticlesActions, RemoldParticlesProps, RemoldParticlesState } from "./types.js";
+import type { ParticleShape, RemoldParticlesProps, RemoldParticlesState } from "./types.js";
 
 interface ShapeRequest {
   shape: ParticleShape;
@@ -100,17 +100,6 @@ function useShapeSync(instance: Particles | null, key: string, request: MutableR
   }, [instance, key]);
 }
 
-function useParticlesActions(actionsRef: Ref<RemoldParticlesActions> | undefined, instance: Particles | null) {
-  useImperativeHandle(
-    actionsRef,
-    () => ({
-      text: () => instance?.text() ?? "",
-      settled: () => instance?.settled() ?? Promise.resolve(),
-    }),
-    [instance],
-  );
-}
-
 /** Thousands of dots that rebuild themselves into each new `shape`. */
 export const RemoldParticles = forwardRef(function RemoldParticles(
   componentProps: RemoldParticles.Props,
@@ -124,7 +113,6 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
     transition,
     radius,
     dot,
-    ascii,
     color,
     palette,
     fit,
@@ -137,7 +125,6 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
     maxPixelRatio,
     camera,
     blend,
-    actionsRef,
     render,
     className,
     ...elementProps
@@ -149,7 +136,6 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
   const mountOptions = useLatest<ParticlesOptions>({
     radius,
     shape: dot,
-    ascii,
     color,
     palette,
     fit,
@@ -170,7 +156,6 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
   usePaletteSync(instance, palette);
   useCameraSync(instance, camera, mountOptions);
   useShapeSync(instance, keyOf(shape, count), request);
-  useParticlesActions(actionsRef, instance);
 
   const state = useMemo<RemoldParticles.State>(() => ({}), []);
 
@@ -186,7 +171,6 @@ export const RemoldParticles = forwardRef(function RemoldParticles(
 });
 
 export namespace RemoldParticles {
-  export type Actions = RemoldParticlesActions;
   export type State = RemoldParticlesState;
   export type Props = RemoldParticlesProps;
 }
