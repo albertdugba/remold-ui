@@ -1,4 +1,4 @@
-import type { CanvasHTMLAttributes } from "react";
+import type { CanvasHTMLAttributes, RefObject } from "react";
 import type { ParticlesOptions, ParticlesToOptions } from "@remold-ui/canvas";
 import type { ParticlePoint } from "@remold-ui/canvas";
 import type { Shape } from "@remold-ui/core";
@@ -25,6 +25,13 @@ export type ParticleShape =
 
 export type RemoldParticlesState = Record<string, never>;
 
+export interface RemoldParticlesActions {
+  /** With `dot="ascii"`, what's on screen as plain text, one line per row. */
+  text(): string;
+  /** Resolves once the dots have stopped moving. */
+  settled(): Promise<void>;
+}
+
 export interface RemoldParticlesProps
   extends BaseProps<RemoldParticlesState, HTMLCanvasElement>,
     Omit<CanvasHTMLAttributes<HTMLCanvasElement>, "className" | "color">,
@@ -44,8 +51,12 @@ export interface RemoldParticlesProps
   transition?: ParticlesToOptions["transition"];
   /** Dot radius in CSS pixels. */
   radius?: number;
-  /** Dot shape. Default `"circle"`; squares are cheaper for very large clouds. */
-  dot?: "circle" | "square";
+  /** Dot shape. Default `"circle"`; squares are cheaper for very large clouds; `"ascii"` draws characters. */
+  dot?: "circle" | "square" | "ascii";
+  /** With `dot="ascii"`: which characters, how big, in what font. Read when the canvas mounts. */
+  ascii?: ParticlesOptions["ascii"];
   /** Turn the dots in 3D and draw them with perspective; give `{ points }` a `z` for depth. */
   camera?: ParticlesOptions["camera"];
+  /** Read the ASCII as text, or wait for the dots to settle. */
+  actionsRef?: RefObject<RemoldParticlesActions | null>;
 }

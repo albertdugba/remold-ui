@@ -1,0 +1,39 @@
+---
+title: "Gift note"
+description: "A gift note for an order. Pick a card and it grows into the note you write on; add it and the note slips into an envelope that seals, then tucks into the order as one line."
+status: "new"
+tags: ["Base UI", "Motion", "Remold"]
+---
+
+<Stage name="gift-note" code={<Source demo="gift-note" />} minHeight={500}>
+  <GiftNoteDemo />
+</Stage>
+
+## Things to try
+
+- **Pick a card.** The one you tap grows into a full-size note, and the cursor is already in it.
+- **Write a few words** on the ruled note. Stuck? Tap a starter like "Happy birthday" to fill in a first line; the starters step aside once you've written something.
+- **Switch cards with the dots** under the note. It takes the new colour and keeps your words, and the main button follows.
+- **Add the note.** It slips down into an envelope, the flap folds shut and a seal in the card's colour presses onto it. A moment later the envelope tucks into the order, with your message shown as a small note underneath.
+- **Edit or remove it** from that line.
+
+## Install
+
+<AddCommand name="gift-note" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="gift-note" />
+
+## How it works
+
+- **One value.** `value` holds the `stage` (`pick`, `write`, `sealing` or `added`), the chosen `design` and the `message`. It works controlled or uncontrolled; sealing finishes on its own and reports `reason: "timer"`. Pass the `designs`, and who it's `to` and `from`.
+- **One note, three sizes.** The small card, the note you write on and the note in the envelope share a Motion `layoutId`, so the card you picked is the one you write on and the one that's sealed. The envelope shares one with the icon in the order line.
+- **A flap that folds.** The envelope's flap is a triangle turned back on its hinge that springs shut once the note is in, then the seal pops on.
+- **A gentle theme.** The main button starts a soft pink and takes on a deeper tone of the card you pick; each design passes its own `accent`.
+- **Springy, like the rest.** Parts arrive a little small and blurred and settle on the shared spring; the card's height springs to whatever it holds.
+- **Accessible.** The designs are buttons named after them, the message is a Base UI `Field` labelled with who it's to, focus moves into it when it opens, and adding the note is announced.
+
+<Callout>The order, the people and the message are made up.</Callout>

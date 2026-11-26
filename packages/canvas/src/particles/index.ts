@@ -13,7 +13,9 @@ import type { ParticlePoint, Particles, ParticlesOptions, ParticlesToOptions } f
 
 export { sampleImagePoints, sampleTextPoints, type ImageSampleOptions, type TextSampleOptions } from "./sampling";
 export { sampleElementPoints, type ElementSampleOptions } from "./element";
+export { DEFAULT_ASCII_CHARACTERS } from "./ascii";
 export type {
+  ParticleAscii,
   ParticleCamera,
   ParticleFill,
   ParticlePalette,
@@ -99,6 +101,7 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
     color: options.color,
     getPalette: () => palette,
     shape: configuration.shape,
+    ascii: configuration.ascii,
     blend: configuration.blend,
     project: configuration.camera
       ? (x, y, z) => project({ x, y, z, camera: camera!, angle: turn, size, padding: configuration.padding })
@@ -242,6 +245,8 @@ export function particles(canvas: HTMLCanvasElement, options: ParticlesOptions =
     to: transitionTo,
 
     render: renderer.render,
+
+    text: renderer.text,
 
     setPalette(next) {
       if (destroyed) return;

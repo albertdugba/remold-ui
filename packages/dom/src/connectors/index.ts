@@ -524,6 +524,14 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
     return raw === "loop" ? onScreen : pulse.since !== null;
   }
 
+  const rising: Line[] = [];
+
+  /** Draws a line with a state over the plain ones, so lines sharing a trunk don't hide it. */
+  function raise(line: Line) {
+    under(line.path);
+    if (line.pulse) under(line.pulse.path);
+  }
+
   function newLine(): Line {
     const path = svgElement("path", LINE_PATH);
 
@@ -604,7 +612,10 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
 
     const state = to.getAttribute(LINE_ATTRIBUTE);
 
-    if (state !== line.path.getAttribute("data-line")) setOrRemove(line.path, "data-line", state);
+    if (state !== line.path.getAttribute("data-line")) {
+      setOrRemove(line.path, "data-line", state);
+      if (state !== null) rising.push(line);
+    }
 
     syncArrow(line, to);
     labelLine(line, to.getAttribute(LABEL_ATTRIBUTE));
@@ -656,6 +667,9 @@ export function connectors(root: HTMLElement, svg: SVGSVGElement, options: Conne
     for (const [key, target] of current) {
       if (updateLine(key, target, frame, scale, dt)) changed = true;
     }
+
+    // Once every line is in place, so lines made later in the same frame don't cover it.
+    for (const line of rising.splice(0)) raise(line);
 
     if (stepLines(current, dt)) changed = true;
 

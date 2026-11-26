@@ -1,0 +1,38 @@
+---
+title: "Rate and review"
+description: "Rate, then review, in one card. Pick a star and the big stars shrink up into the header while the card grows into a short review; post it and the form folds into the review as it will read."
+status: "new"
+tags: ["Base UI", "Motion", "Remold"]
+---
+
+<Stage name="rate-and-review" code={<Source demo="rate-and-review" />} minHeight={480}>
+  <RateAndReviewDemo />
+</Stage>
+
+## Things to try
+
+- **Pick a star.** Hover to preview, then tap: the stars fill one after another, then all five shrink and fly up into the header beside a word for your rating, as the card grows into the review.
+- **Change your mind.** The small stars in the header still work, and the word changes with them.
+- **Write a little.** Tap a few quick notes, add a sentence, and post. The button says it's posting, then the form folds into your review: your words quoted, your notes underneath, and Edit to open it again.
+- **Not now** puts the card back to the big stars.
+
+## Install
+
+<AddCommand name="rate-and-review" />
+
+## Dependencies
+
+The install command adds these for you. If you copy the code by hand, install them yourself.
+
+<Dependencies demo="rate-and-review" />
+
+## How it works
+
+- **One value.** `value` holds the `stage` (`rate`, `write`, `posting` or `posted`), the `rating`, the chosen `tags` and the `text`. It works controlled or uncontrolled. Posting is yours to finish: set the stage to `posted` when your server says so; the demo waits a moment.
+- **The same five stars, in two places.** The big row and the header row are two renderings of the same stars, each star sharing a Motion `layoutId` across them. Rating hands them over, so each star flies to its new place, a few milliseconds behind the one before.
+- **The card grows to fit.** Its height springs to whatever it holds, measured as it changes, the way the table booking card does. The form's parts arrive a little small and blurred and settle, one after another.
+- **Words that change in place.** The line above the item's name goes from the delivery date to a word for your rating, and the button from "Post review" to "Posting", with `Remold.Text`.
+- **A shop's colours.** Orange stars, a yellow Post button and teal links and focus rings, the way a big marketplace does it. They are six variables at the top of the file: `--rr-star`, `--rr-star-edge`, `--rr-action`, `--rr-action-hover`, `--rr-on-action` and `--rr-link`.
+- **Accessible.** The stars are a Base UI `RadioGroup`, so arrow keys move between them and each says what it means. The quick notes are a `ToggleGroup` and the text box a `Field`. Focus moves into the text box when the form opens and to Edit once it's posted, and each step is announced.
+
+<Callout>The jacket and the review are made up.</Callout>

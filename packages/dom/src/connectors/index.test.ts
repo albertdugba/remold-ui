@@ -146,6 +146,25 @@ describe("connectors", () => {
     c.destroy();
   });
 
+  it("draws a line with a state over the plain lines that share its trunk", async () => {
+    const { root, svg, paths } = setUp(tree);
+    const frames = manualLoop();
+    const c = connectors(root, svg, { loop: frames.loop });
+    root.querySelector('[data-rm-anchor="a"]')!.setAttribute("data-rm-line", "lit");
+    await Promise.resolve();
+    frames.step();
+    expect(paths().at(-1)!.getAttribute("data-line")).toBe("lit");
+    c.destroy();
+  });
+
+  it("draws a line that starts with a state over the lines made after it", () => {
+    const { root, svg, paths } = setUp(tree);
+    root.querySelector('[data-rm-anchor="a"]')!.setAttribute("data-rm-line", "lit");
+    const c = connectors(root, svg, { loop: manualLoop().loop });
+    expect(paths().at(-1)!.getAttribute("data-line")).toBe("lit");
+    c.destroy();
+  });
+
   it("can end lines at the top of the element, for timelines", () => {
     const { root, svg, paths } = setUp(`
       <div data-rm-anchor="one" data-box="0 0 20 20"></div>

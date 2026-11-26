@@ -1,6 +1,6 @@
 ---
 title: "Peel-off reward"
-description: "A reward under a sticker: peel it back by the corner, and past halfway it springs off and the code is yours to copy."
+description: "A Black Friday coupon under a foil sticker: peel it back by the corner, and past halfway it springs off in a burst of gold while the discount rolls up and the code is yours to copy."
 status: "new"
 tags: ["Motion", "Icon", "Text"]
 ---
@@ -13,7 +13,10 @@ tags: ["Motion", "Icon", "Text"]
 
 - **Grab the sticker** anywhere and drag up and to the left. Its corner follows you, folding back along a crease, with the sticker's pale paper back showing.
 - **Let go early** and it springs back to rest, with just its corner lifted.
-- **Peel past halfway** and let go: the whole sticker comes away, and the code sharpens.
+- **Watch the foil.** A band of light slides across the sticker as you pull the corner, like a holographic label.
+- **Peel past halfway** and let go: the whole sticker comes away in a burst of gold dots, the discount rolls up to 50% and the code sharpens.
+- **Watch the clock.** The line under the name counts down to Friday at midnight, second by second.
+- **Take the code with you.** FRIDAY50 works in the [Promo code](/docs/components/promo-code) demo.
 - **Copy the code.** The button turns green and its icon becomes a tick.
 - **Use the keyboard,** or skip the fun: Peel it for me plays the whole peel.
 
@@ -28,7 +31,7 @@ tags: ["Motion", "Icon", "Text"]
 ## Usage
 
 ```tsx
-<PeelReward code="XMAS-25" prize="A free hot chocolate" image="/christmas.jpg" onReveal={() => track("reward_revealed")} />
+<PeelReward code="FRIDAY50" percent={50} prize="everything, this weekend" onReveal={() => track("reward_revealed")} />
 ```
 
 ## How it works
@@ -36,6 +39,8 @@ tags: ["Motion", "Icon", "Text"]
 - **A peel is a fold.** Pulling the corner to a point folds the paper along the line halfway between where the corner was and where it is now, just like real paper.
 - **Two layers, one shape.** The part still stuck down is the sticker, clipped to its side of the crease. The part that's lifted is clipped to the other side, then mirrored across the crease so it lies folded back over the sticker, painted as the paper back with shading that runs from the crease out to its tip and a soft shadow underneath.
 - **It's all springs.** The corner's position is two Motion values. Dragging sets them directly; letting go springs them back to rest, or, past halfway, on past the far corner until nothing is stuck down.
+- **The burst is the library's own.** When the sticker lets go, [Particles](/docs/primitives/particles) throws a ring of gold dots outwards and fades them, in step with the discount rolling up on an odometer. With reduced motion there is no burst.
+- **The foil is one gradient.** A diagonal band of light sits over the sticker and moves with the corner you're pulling, blended on with `mix-blend-mode: screen`. Pass `image` to print a photo on the sticker instead.
 - **The code is real text** under the sticker, so it's selectable and copyable once revealed. The Copy button's icon morphs into a tick with [Icon](/docs/primitives/icon), and its words change with [Text](/docs/primitives/text).
 
 <Callout>The café and the code are made up.</Callout>

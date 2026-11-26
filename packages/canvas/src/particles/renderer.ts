@@ -1,5 +1,6 @@
 import { CLOUD_STRIDE, type AnimatedValue, type PointCloud } from "@remold-ui/core";
 import type { CanvasSize } from "../canvas-size";
+import { createAsciiAtlases, drawAscii, type AsciiConfiguration, type LocatePoint } from "./ascii";
 import type { ParticlePointer } from "./pointer";
 import type { ParticleFill } from "./types";
 
@@ -13,6 +14,7 @@ export function createParticleRenderer({
   color,
   getPalette,
   shape,
+  ascii,
   blend,
   project,
   pointerEffect,
@@ -27,14 +29,17 @@ export function createParticleRenderer({
   getSize: () => CanvasSize;
   color: ParticleFill | ((context: CanvasRenderingContext2D, size: CanvasSize) => ParticleFill) | undefined;
   getPalette: () => readonly string[] | undefined;
-  shape: "circle" | "square";
+  shape: "circle" | "square" | "ascii";
+  ascii: AsciiConfiguration | null;
   blend: "normal" | "add";
   project: ((x: number, y: number, z: number) => { x: number; y: number; scale: number }) | null;
   pointerEffect: { radius: number; strength: number } | null;
   reducedMotion: () => boolean;
   isDestroyed: () => boolean;
-}): { render: () => void; resetFill: () => void } {
+}): { render: () => void; resetFill: () => void; text: () => string } {
   let fill: ParticleFill | null = null;
+  let shownText: () => string = () => "";
+  const atlases = ascii ? createAsciiAtlases(ascii) : null;
 
   const resolveFill = (drawingContext: CanvasRenderingContext2D) => {
     const resolved = typeof color === "function" ? color(drawingContext, getSize()) : color;
@@ -56,12 +61,24 @@ export function createParticleRenderer({
     if (!context || isDestroyed()) return;
 
     const size = getSize();
-    const drawParticle = createParticleDrawer({ context, cloud, radius, pointer, shape, project, pointerEffect, reducedMotion });
+    const locate = createLocator({ cloud, pointer, project, pointerEffect, reducedMotion });
     const palette = getPalette();
 
     context.setTransform(size.pixelRatio, 0, 0, size.pixelRatio, 0, 0);
     context.clearRect(0, 0, size.width, size.height);
     context.globalCompositeOperation = blend === "add" ? "lighter" : "source-over";
+
+    if (ascii && atlases) {
+      const tone = (index: number) => cloud.data[index * CLOUD_STRIDE + 3]!;
+      const solid = !palette || palette.length === 1 ? singleFill(context, palette) : null;
+      const fillOf = (index: number): ParticleFill => solid ?? palette![paletteIndex(tone(index), palette!.length)]!;
+
+      shownText = drawAscii({ context, configuration: ascii, atlases, size, count: cloud.length, locate, tone, fillOf });
+      context.globalCompositeOperation = "source-over";
+      return;
+    }
+
+    const drawParticle = createParticleDrawer({ context, locate, radius, shape });
 
     if (!palette || palette.length === 1) drawSolid(context, singleFill(context, palette), cloud.length, drawParticle);
     else drawPalette({ context, cloud, palette, drawParticle });
@@ -69,37 +86,38 @@ export function createParticleRenderer({
     context.globalCompositeOperation = "source-over";
   };
 
-  return { render, resetFill: () => (fill = null) };
+  return {
+    render,
+    text: () => shownText(),
+    resetFill: () => {
+      fill = null;
+      atlases?.clear();
+    },
+  };
 }
 
-function createParticleDrawer({
-  context,
+function createLocator({
   cloud,
-  radius,
   pointer,
-  shape,
   project,
   pointerEffect,
   reducedMotion,
 }: {
-  context: CanvasRenderingContext2D;
   cloud: PointCloud;
-  radius: AnimatedValue;
   pointer: ParticlePointer;
-  shape: "circle" | "square";
   project: ((x: number, y: number, z: number) => { x: number; y: number; scale: number }) | null;
   pointerEffect: { radius: number; strength: number } | null;
   reducedMotion: () => boolean;
-}) {
+}): LocatePoint {
   const leaning = pointerEffect !== null && !reducedMotion() && pointer.presence.current > 0.01;
   const strength = (pointerEffect?.strength ?? 0) * pointer.presence.current;
   const reach = pointerEffect?.radius ?? 0;
 
-  return (index: number) => {
+  return (index) => {
     const offset = index * CLOUD_STRIDE;
     const scale = cloud.data[offset + 2]!;
 
-    if (scale < 0.02) return;
+    if (scale < 0.02) return null;
 
     const seen = project ? project(cloud.data[offset]!, cloud.data[offset + 1]!, cloud.data[offset + 4]!) : null;
     const point = leanPoint({
@@ -110,7 +128,28 @@ function createParticleDrawer({
       reach,
       strength,
     });
-    const particleRadius = radius.current * scale * (seen ? seen.scale : 1);
+
+    return { x: point.x, y: point.y, scale: scale * (seen ? seen.scale : 1) };
+  };
+}
+
+function createParticleDrawer({
+  context,
+  locate,
+  radius,
+  shape,
+}: {
+  context: CanvasRenderingContext2D;
+  locate: LocatePoint;
+  radius: AnimatedValue;
+  shape: "circle" | "square" | "ascii";
+}) {
+  return (index: number) => {
+    const point = locate(index);
+
+    if (!point) return;
+
+    const particleRadius = radius.current * point.scale;
 
     if (shape === "square") {
       context.rect(point.x - particleRadius, point.y - particleRadius, particleRadius * 2, particleRadius * 2);
@@ -121,6 +160,8 @@ function createParticleDrawer({
     context.arc(point.x, point.y, particleRadius, 0, Math.PI * 2);
   };
 }
+
+const paletteIndex = (tone: number, count: number) => Math.min(count - 1, Math.max(0, Math.round(tone * (count - 1))));
 
 function leanPoint({
   x,
@@ -174,7 +215,7 @@ function drawPalette({
   const buckets = Array.from({ length: palette.length }, (): number[] => []);
 
   for (let index = 0; index < cloud.length; index++) {
-    const colorIndex = Math.min(lastColor, Math.max(0, Math.round(cloud.data[index * CLOUD_STRIDE + 3]! * lastColor)));
+    const colorIndex = paletteIndex(cloud.data[index * CLOUD_STRIDE + 3]!, palette.length);
 
     buckets[colorIndex]!.push(index);
   }
