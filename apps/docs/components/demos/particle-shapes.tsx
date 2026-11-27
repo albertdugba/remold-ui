@@ -1,20 +1,13 @@
 "use client";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
-import { shapes } from "@remold-ui/core";
+import { shapes, type Shape, type Vec3 } from "@remold-ui/core";
 import { Remold } from "@remold-ui/react/canvas";
 import { MotionConfig, motion } from "motion/react";
 import { useEffect, useId, useState } from "react";
 import { useScene } from "./use-scene";
 
 const PALETTE = {
-  core: "#fff1d6",
-  armInner: "#a5b4fc",
-  armMiddle: "#8b5cf6",
-  armOuter: "#6d28d9",
-  strandA: "#67e8f9",
-  strandB: "#f0abfc",
-  rung: "#64748b",
   pathA: "#fbbf24",
   pathB: "#fb7185",
   pathC: "#f472b6",
@@ -26,13 +19,20 @@ const PALETTE = {
   wingEdge: "#9a3412",
   grokFace: "#f4f4f5",
   grokEdge: "#71717a",
+  bagFace: "#52525b",
+  bagEdge: "#d4d4d8",
+  dealGold: "#fcd34d",
+  dealEdge: "#f59e0b",
+  handle: "#fbbf24",
+  roseFace: "#9f1239",
+  roseEdge: "#fda4af",
+  tag: "#fb7185",
+  sparkle: "#fef3c7",
+  headline: "#fafafa",
+  offer: "#fcd34d",
+  dragonGlow: "#6366f1",
 };
 
-const galaxy = shapes
-  .spiral({ arms: 3 })
-  .tone(({ group, along }) => (group === 3 ? "core" : along < 0.4 ? "armInner" : along < 0.7 ? "armMiddle" : "armOuter"));
-
-const helix = shapes.helix({ strands: 2, rungs: 26 }).tone(({ group }) => ["strandA", "strandB", "rung"][group]!);
 
 const lorenz = shapes
   .attractor("lorenz")
@@ -100,18 +100,163 @@ const GROK =
   "M70.3 23.1A33.4 33.4 0 0 0 20.8 65.6C18.5 70 22 80 5.2 93L33.6 68A24.8 24.8 0 0 1 60.6 27.8Z";
 const grok = shapes.fromPath(GROK, { depth: 0.32 }).tone(({ z }) => (Math.abs(z) > 0.15 ? "grokFace" : "grokEdge"));
 
-const SHAPES = { galaxy, helix, lorenz, bee, butterfly, grok };
+const BAG = "M18 30L82 30L88 96L12 96Z";
+const BAG_DEPTH = 0.42;
 
-export const PARTICLE_SHAPES = ["galaxy", "helix", "lorenz", "bee", "butterfly", "grok"] as const;
+const ring = (x: number, y: number, outer: number, inner: number) =>
+  `M${x - outer} ${y}A${outer} ${outer} 0 1 0 ${x + outer} ${y}A${outer} ${outer} 0 1 0 ${x - outer} ${y}Z` +
+  `M${x - inner} ${y}A${inner} ${inner} 0 1 1 ${x + inner} ${y}A${inner} ${inner} 0 1 1 ${x - inner} ${y}Z`;
+const PERCENT = `${ring(36, 52, 11, 5.5)}${ring(64, 78, 11, 5.5)}M66 40L74 40L34 90L26 90Z`;
+
+const handle = shapes
+  .curve({
+    through: [
+      [-0.3, 0.86, BAG_DEPTH / 2],
+      [-0.27, 1.12, BAG_DEPTH / 2],
+      [-0.14, 1.27, BAG_DEPTH / 2],
+      [0.14, 1.27, BAG_DEPTH / 2],
+      [0.27, 1.12, BAG_DEPTH / 2],
+      [0.3, 0.86, BAG_DEPTH / 2],
+    ],
+  })
+  .mirror("z")
+  .tone("handle");
+
+const TAG = "M8 30L30 4L96 4L96 56L30 56ZM24 30A6 6 0 1 0 36 30A6 6 0 1 0 24 30Z";
+const SPARKLE = "M50 0L58 42L100 50L58 58L50 100L42 58L0 50L42 42Z";
+
+const heroBag = shapes.compose([
+  { share: 40, shape: shapes.fromPath(BAG, { depth: BAG_DEPTH }).tone(({ z }) => (Math.abs(z) > BAG_DEPTH / 2 - 0.02 ? "bagFace" : "bagEdge")) },
+  {
+    share: 22,
+    shape: shapes
+      .fromPath(PERCENT, { depth: 0.08, fillRule: "evenodd" })
+      .scale(0.64)
+      .at([0, -0.03, BAG_DEPTH / 2 + 0.06])
+      .tone(({ z }) => (z > BAG_DEPTH / 2 + 0.09 ? "dealGold" : "dealEdge")),
+  },
+  { share: 7, shape: handle },
+]);
+
+const sideBag = shapes
+  .compose([
+    { share: 14, shape: shapes.fromPath(BAG, { depth: 0.34 }).tone(({ z }) => (Math.abs(z) > 0.15 ? "roseFace" : "roseEdge")) },
+    { share: 3, shape: handle.tone("roseEdge") },
+  ])
+  .scale(0.74)
+  .rotate({ y: 26 })
+  .at([-1.02, -0.26, -0.36]);
+
+const priceTag = shapes.compose([
+  { share: 6, shape: shapes.fromPath(TAG, { depth: 0.06, fillRule: "evenodd" }).tone("tag").scale(0.4).rotate({ z: -58 }).at([1.16, 0.5, 0.26]) },
+  { share: 1, shape: shapes.curve({ through: [[0.3, 1.0, 0.21], [0.72, 0.98, 0.24], [1.06, 0.68, 0.26]] }).tone("handle") },
+]);
+
+const sparkle = (at: Vec3, size: number) => shapes.fromPath(SPARKLE, { depth: 0.04 }).scale(size).at(at).tone("sparkle");
+
+const SPARKLES: readonly [Vec3, number][] = [
+  [[-0.95, 1.05, 0.25], 0.13],
+  [[0.95, 1.25, -0.1], 0.1],
+  [[1.3, -0.45, 0.3], 0.08],
+  [[-1.45, 0.55, 0.15], 0.07],
+  [[0.2, 1.5, -0.05], 0.06],
+];
+
+const sparkles = shapes.compose(SPARKLES.map(([at, size]) => ({ share: size, shape: sparkle(at, size) })));
+
+const haul = shapes.compose([
+  { share: 69, shape: heroBag },
+  { share: 17, shape: sideBag },
+  { share: 7, shape: priceTag },
+  { share: 5, shape: sparkles },
+]);
+
+const blackFriday = haul.scale(0.78).at([0.06, -0.16, 0]);
+
+const TEXT_SIZE = 160;
+
+function lettering(text: string, weight: number, tracking: number) {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  const font = `${weight} ${TEXT_SIZE}px ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif`;
+  context.font = font;
+  context.letterSpacing = `${tracking}px`;
+  canvas.width = Math.ceil(context.measureText(text).width) + TEXT_SIZE / 4;
+  canvas.height = Math.ceil(TEXT_SIZE * 1.25);
+  context.font = font;
+  context.letterSpacing = `${tracking}px`;
+  context.textBaseline = "middle";
+  context.fillText(text, TEXT_SIZE / 8, canvas.height / 2);
+  return shapes.fromPixels(context.getImageData(0, 0, canvas.width, canvas.height), { by: "alpha", depth: 0.14 });
+}
+
+function blackFridayPoster() {
+  const headline = lettering("BLACK FRIDAY", 900, 6);
+  const offer = lettering("UP TO 40% OFF", 800, 10);
+  if (!headline || !offer) return blackFriday;
+  return shapes.compose([
+    { share: 36, shape: headline.tone("headline").scale(1.42).at([0, 1.2, 0.1]) },
+    { share: 46, shape: haul.scale(0.6).at([0.05, 0.02, 0]) },
+    { share: 18, shape: offer.tone("offer").scale(0.92).at([0, -0.98, 0.1]) },
+  ]);
+}
+
+function useBlackFriday() {
+  const [poster, setPoster] = useState<Shape>(blackFriday);
+  useEffect(() => setPoster(blackFridayPoster()), []);
+  return poster;
+}
+
+const DRAGON_IMAGE = "/particles/dragon.webp";
+const DRAGON_DOTS = 5;
+
+const dragonPlaceholder = shapes.ellipsoid({ radii: [0.7, 1, 0.4] }).fuzz(0.08).tone("dragonGlow");
+
+function useDragon() {
+  const [dragon, setDragon] = useState<{ shape: Shape; palette: Record<string, string> } | null>(null);
+  useEffect(() => {
+    let live = true;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = DRAGON_IMAGE;
+    image
+      .decode()
+      .then(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context || !live) return;
+        context.drawImage(image, 0, 0);
+        const portrait = shapes.fromPixels(context.getImageData(0, 0, canvas.width, canvas.height), {
+          by: "alpha",
+          colors: 64,
+          depth: 0.08,
+          bulge: 0.28,
+        });
+        setDragon({ shape: portrait.scale(1.08), palette: { ...portrait.palette } });
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+  return dragon;
+}
+
+const SHAPES = { blackFriday, lorenz, bee, butterfly, grok, dragon: dragonPlaceholder };
+
+export const PARTICLE_SHAPES = ["blackFriday", "lorenz", "bee", "butterfly", "grok", "dragon"] as const;
 export type ParticleShape = (typeof PARTICLE_SHAPES)[number];
 
 const NAMES: Record<ParticleShape, string> = {
-  galaxy: "Spiral galaxy",
-  helix: "Double helix",
+  blackFriday: "Black Friday",
   lorenz: "Lorenz attractor",
   bee: "Honeybee",
   butterfly: "Butterfly",
   grok: "Grok",
+  dragon: "Dragon",
 };
 
 const SLIDE = { type: "spring" as const, duration: 0.45, bounce: 0.18 };
@@ -175,6 +320,8 @@ export function ParticleShapes({
   pointer = true,
 }: ParticleShapesProps) {
   const [dots, setDots] = useState(count);
+  const poster = useBlackFriday();
+  const dragon = useDragon();
   const id = useId();
   useEffect(() => {
     setDots(window.matchMedia("(max-width: 520px)").matches ? Math.round(count * 0.6) : count);
@@ -182,7 +329,7 @@ export function ParticleShapes({
 
   const turning = paused ? 0 : spin;
   const camera =
-    shape === "grok"
+    shape === "grok" || shape === "blackFriday" || shape === "dragon"
       ? { spin: turning, tilt: tilt / 3, sway: 28, angle: 0, distance }
       : { spin: turning, tilt, sway: 0, distance };
 
@@ -192,10 +339,10 @@ export function ParticleShapes({
         {stars && <Remold.Canvas draw={drawStars} className={CANVAS} aria-hidden="true" />}
         <Remold.Particles
           key={[radius, dot, glow, duration, bounce, pointer].join()}
-          shape={SHAPES[shape]}
-          count={dots}
+          shape={shape === "blackFriday" ? poster : shape === "dragon" && dragon ? dragon.shape : SHAPES[shape]}
+          count={shape === "dragon" ? dots * DRAGON_DOTS : dots}
           label={`Particles forming a ${NAMES[shape].toLowerCase()}`}
-          palette={PALETTE}
+          palette={dragon ? { ...PALETTE, ...dragon.palette } : PALETTE}
           pairing={pairing}
           transition={transition === "scatter" ? { type: "scatter", spread, hold, stagger } : "direct"}
           camera={camera}
@@ -232,12 +379,12 @@ export function ParticleShapes({
 }
 
 const BEATS: readonly { shape: ParticleShape; ms: number }[] = [
-  { shape: "galaxy", ms: 6000 },
-  { shape: "helix", ms: 6000 },
+  { shape: "blackFriday", ms: 7000 },
   { shape: "lorenz", ms: 7000 },
   { shape: "bee", ms: 7000 },
   { shape: "butterfly", ms: 7000 },
   { shape: "grok", ms: 7000 },
+  { shape: "dragon", ms: 7000 },
 ];
 
 const fromBeat = (step: number) => BEATS[step]!.shape;
