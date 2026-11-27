@@ -8,8 +8,8 @@ import { ContextMenuDemo } from "@/components/demos/context-menu";
 
 type Point = readonly [x: number, y: number];
 
-const GLIDE = { type: "spring" as const, duration: 0.75, bounce: 0.08 };
-const PRESS = { type: "spring" as const, duration: 0.25, bounce: 0 };
+const GLIDE = { type: "spring" as const, duration: 0.48, bounce: 0.06 };
+const PRESS = { type: "spring" as const, duration: 0.16, bounce: 0 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -78,9 +78,9 @@ export function Stage() {
       await glide(point);
       await press();
       target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: point[0], clientY: point[1], button: 2 }));
-      await wait(650);
+      await wait(420);
     };
-    const through = async (label: string, pause = 520) => {
+    const through = async (label: string, pause = 320) => {
       const item = await find(() => menuItem(label));
       const point = pointOn(item);
       await glide(point);
@@ -88,20 +88,20 @@ export function Stage() {
       await wait(pause);
     };
     const choose = async (label: string) => {
-      await through(label, 260);
+      await through(label, 140);
       await press();
       menuItem(label)?.click();
-      await wait(1500);
+      await wait(1050);
     };
 
     setTake((count) => count + 1);
     setPlaying(true);
     try {
-      await wait(500);
+      await wait(300);
       const start: Point = [window.innerWidth * 0.62, window.innerHeight * 0.72];
       await animate(cursor.current, { x: start[0], y: start[1], opacity: 0, scale: 1 }, { duration: 0 });
-      await animate(cursor.current, { opacity: 1 }, { duration: 0.3 });
-      await wait(400);
+      await animate(cursor.current, { opacity: 1 }, { duration: 0.2 });
+      await wait(250);
 
       await rightClick("doorbusters");
       await through("Status");
